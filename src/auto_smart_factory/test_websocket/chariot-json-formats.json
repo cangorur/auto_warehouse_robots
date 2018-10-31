@@ -1,0 +1,91 @@
+// tray
+{
+    "requester": {
+        "id": "device-id",
+    },
+    "requestee": {
+        "id": "tray-service",
+    },
+    "request": {
+        "status": "getStatusOf",
+        "type": "input-tray|storage-tray|delivery-tray"
+    },
+    "response": {
+        "tray-id": {
+            status: ""
+        },
+        "tray-id": {
+            status: ""
+        },
+    }
+}
+/// conveyerbelt
+{
+    "requester": {
+        "id": "conveyerbelt-driver-id",
+    },
+    "requestee": {
+        "id": "conveyerbelt-service",
+    },
+    "request": {
+        "switch": "on/off",
+        "speed": "0.020 - 1"
+    },
+    "response": {
+        "conveyer-belt-id": {
+            status: "on/off",
+            speed: "currentValue"
+        }
+    }
+}
+// deliveryrobot
+{
+    "requester": {
+        "id": "deliveryrobot-driver-id",
+    },
+    "requestee": {
+        "id": "delivery-robot-service",
+    },
+    "request": {
+        "status": "getStatusAll"
+    },
+    "response": {
+        "deliveryrobot-id": {
+            status: "on/off",
+            batteryLevel: "%",
+        }
+    }
+} {
+    "requester": {
+        "id": "container-driver-id",
+    },
+    "requestee": {
+        "id": "delivery-robot-service",
+    },
+    "request": {
+        "status": "getStatusAll"
+    },
+    "response": {
+        "deliveryrobot-id": {
+            status: "on/off",
+            batteryLevel: "%",
+        }
+    }
+}
+// chargingstation
+{
+    "requester": {
+        "id": "chargingstation-driver-id",
+    },
+    "requestee": {
+        "id": "chargingstation-service",
+    },
+    "request": {
+        "status": "getStatusAll"
+    },
+    "response": {
+        "chargingstation-id": {
+            status: "occupied|non-occupied",
+        }
+    }
+}

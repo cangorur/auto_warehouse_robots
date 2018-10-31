@@ -1,0 +1,5 @@
+geometry_msgs/Point posStart
+geometry_msgs/Point posEnd
+string robotId
+---
+float32 resultETA

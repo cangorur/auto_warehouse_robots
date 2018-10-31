@@ -1,0 +1,43 @@
+<launch>
+	<!-- Warehouse Management -->
+	<node pkg="auto_smart_factory" type="warehouse_management" name="warehouse_management"/>
+
+	<!-- Roadmap Planner -->
+	<node pkg="auto_smart_factory" type="RoadmapPlanner.py" name="roadmap_planner" />
+
+	<!-- Package Generator -->
+	<node pkg="auto_smart_factory" type="package_generator" name="package_generator" output="screen" />
+
+	<!-- Package Manipulator -->
+	<node pkg="auto_smart_factory" type="PackageManipulator.py" name="package_manipulator" output="screen" />
+	
+	<!-- Storage Management -->
+	<node pkg="auto_smart_factory" type="storage_management" name="storage_management" output="screen"/>
+	
+	<!-- Task Planner -->
+	<node pkg="auto_smart_factory" type="task_planner" name="task_planner" output="screen">
+		<!-- this flag tells whether to use the robot offer with the shortest estimated duration (true) or just random choice (false) -->
+		<param name="use_best_eta" value="true" />
+	</node>
+
+	<!-- Charging Management -->
+	<node pkg="auto_smart_factory" type="charging_management" name="charging_management" output="screen"/>
+
+	<!-- Configuration Server -->
+	<node pkg="auto_smart_factory" type="config_server" name="config_server">
+
+        <!-- configuration files -->
+        <param name="map_config_file" value="$(find auto_smart_factory)/../../configs/simple_warehouse_config.json" />
+        <param name="robot_config_file" value="$(find auto_smart_factory)/../../configs/robot_config.json" />
+        <param name="package_config_file" value="$(find auto_smart_factory)/../../configs/package_config.json" />
+        
+        <!-- resolution (meters per cell) of the occupancy map -->
+        <param name="occupancy_map_resolution" value="0.1" />
+	</node>
+
+	<!-- Agents -->
+	<node pkg="auto_smart_factory" type="agent" name="robot_1" args="robot_1" output="screen" />
+	<node pkg="auto_smart_factory" type="agent" name="robot_2" args="robot_2" output="screen" />
+	<node pkg="auto_smart_factory" type="agent" name="robot_3" args="robot_3" output="screen" />
+
+</launch>

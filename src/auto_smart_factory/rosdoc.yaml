@@ -1,0 +1,4 @@
+- builder: doxygen
+  name: Auto Smart Factory
+  file_patterns: '*.c *.cpp *.h *.cc *.hh *.py *.md *.dox'
+  

@@ -1,0 +1,6 @@
+geometry_msgs/Point p1
+geometry_msgs/Point p2
+RobotConfiguration robot
+---
+geometry_msgs/Point[] resultPoints
+float64 length

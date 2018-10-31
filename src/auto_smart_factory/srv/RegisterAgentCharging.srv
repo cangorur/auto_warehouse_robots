@@ -1,0 +1,5 @@
+string agent_id
+RobotConfiguration robot_configuration
+float32 battery_level
+---
+bool success

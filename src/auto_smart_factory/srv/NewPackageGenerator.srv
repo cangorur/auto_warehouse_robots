@@ -1,0 +1,8 @@
+# tray targetted for package generation
+Tray tray
+
+# the package
+Package package
+---
+bool success
+

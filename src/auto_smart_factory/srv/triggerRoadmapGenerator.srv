@@ -1,0 +1,5 @@
+# This service requests the RoadmapGenerator to create a new roadmap graph.
+
+WarehouseConfiguration warehouse_configuration
+---
+bool success

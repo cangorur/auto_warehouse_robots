@@ -1,0 +1,19 @@
+{
+    "requester": {
+        "id": "conveyorbelt-driver-1"
+    },
+    "requestee": {
+        "id": "conveyorbelt-service"
+    },
+    "request": {
+        "switch": "on",
+        "speed": "0.020"
+    },
+    "response": {
+        "conveyorbelt-1": {
+            "status": "off",
+            "speed": "currentValue"
+        }
+    }
+}
+

@@ -1,0 +1,17 @@
+{
+    "requester": {
+        "id": "deliveryrobot-driver-2"
+    },
+    "requestee": {
+        "id": "deliveryrobot-service"
+    },
+    "request": {
+        "status": "getStatusAll"
+    },
+    "response": {
+        "deliveryrobot-2": {
+            "status": "on/off",
+            "batteryLevel": "%"
+        }
+    }
+}

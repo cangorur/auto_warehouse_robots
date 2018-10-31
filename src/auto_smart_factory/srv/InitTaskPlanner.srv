@@ -1,0 +1,5 @@
+WarehouseConfiguration warehouse_configuration
+RobotConfiguration[] robot_configurations
+PackageConfiguration[] package_configurations
+---
+bool success

@@ -1,0 +1,11 @@
+# roadmap_planner/get_charging_paths
+
+geometry_msgs/Point posStart
+geometry_msgs/Point posGoal
+RobotConfiguration robot
+auto_smart_factory/Tray[] chargingStations
+---
+geometry_msgs/Point[] pointsToChargingStation
+geometry_msgs/Point[] pointsToGoal
+uint32 chargingStationId
+float64 length

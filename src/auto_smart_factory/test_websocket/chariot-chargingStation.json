@@ -1,0 +1,12 @@
+{
+    "requester": {
+        "id": "chargingstation-driver-id"
+    },
+    "requestee": {
+        "id": "chargingstation-service"
+    },
+    "request": {
+        "status": "getStatusAll"
+    },
+    "response": "{}"
+}

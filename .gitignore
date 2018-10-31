@@ -1,0 +1,9 @@
+build/*
+devel/*
+install/*
+doc/html/*
+.catkin_workspace
+src/CMakeLists.txt
+*.swp
+*.orig
+*.pyc

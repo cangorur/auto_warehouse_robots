@@ -1,0 +1,6 @@
+int64 task_id
+int64 input_id
+int64 free_storage
+---
+int64 storage_id
+int64 estimated_time

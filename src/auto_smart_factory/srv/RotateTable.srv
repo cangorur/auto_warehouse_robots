@@ -1,0 +1,5 @@
+# degrees
+int32 degrees
+---
+# success of rotating the table
+bool success

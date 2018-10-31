@@ -1,0 +1,31 @@
+delivery robot response:
+
+{"requestee":{"id":"deliveryrobot-service"},"request":{"status":"getStatusAll"},"response":{"deliveryrobot-8":{"batteryLevel":"29.017057"}},"requester":{"id":"deliveryrobot-driver-8"}}
+----------------------
+
+
+
+storage trays response:
+{"requestee":{"id":"storage-service"},"request":{"status":"getStatusOf","type":"storage-tray"},"response":{"storagestates":{"tray_1":{"status":"Free"},"tray_2":{"status":"Free"},"tray_3":{"status":"Free"},"tray_4":{"status":"Free"},"tray_5":{"status":"Free"},"tray_6":{"status":"Free"},"tray_7":{"status":"Free"},"tray_8":{"status":"Free"},"tray_9":{"status":"Free"},"tray_10":{"status":"Free"},"tray_11":{"status":"Free"},"tray_12":{"status":"Free"},"tray_13":{"status":"Free"},"tray_14":{"status":"Free"},"tray_15":{"status":"Free"},"tray_16":{"status":"Free"},"tray_17":{"status":"Free"},"tray_18":{"status":"Free"},"tray_19":{"status":"Free"}}},"requester":{"id":"storage-driver-id"}}
+-------------------------
+
+
+input container response:
+
+{"requestee":{"id":"input-container-service"},"request":{"status":"getStatusAll","type":"input-container-tray"},"response":{"inputcontainerstates":{"tray_1":{"status":"Occupied"},"tray_2":{"status":"Occupied"},"tray_3":{"status":"Occupied"},"tray_4":{"status":"Occupied"},"tray_5":{"status":"Occupied"},"tray_6":{"status":"Free"},"tray_7":{"status":"Free"},"tray_8":{"status":"Free"}}},"requester":{"id":"input-container-driver-id"}}
+-------------------------
+
+
+delivery container response:
+{"requestee":{"id":"delivery-container-service"},"request":{"status":"getStatusOf","type":"delivery-container-tray"},"response":{"deliverycontainerstates":{"tray_1":{"status":"Free"}}},"requester":{"id":"delivery-container-driver-id"}}
+--------------------------
+
+
+charging station response:
+{"requestee":{"id":"chargingstation-service"},"request":{"status":"getStatusAll"},"response":{"chargingstationstates":{"chargingstation_4":{"status":"Free"},"chargingstation_5":{"status":"Free"},"chargingstation_7":{"status":"Free"},"chargingstation_8":{"status":"Free"},"chargingstation_1":{"status":"Reserved"},"chargingstation_2":{"status":"Reserved"},"chargingstation_3":{"status":"Reserved"},"chargingstation_6":{"status":"Reserved"}}},"requester":{"id":"chargingstation-driver-id"}}
+---------------------------
+
+
+conveyor belt response:
+NOT YET ACCOMPLISHED :D
+

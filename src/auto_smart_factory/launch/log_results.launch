@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="rosbag" type="record" name="rosbag_record_results"
+       args="record --lz4 -O $(find auto_smart_factory)/logs/auto_smart_factory.bag /task_planner/status /robot_heartbeats" />
+</launch>

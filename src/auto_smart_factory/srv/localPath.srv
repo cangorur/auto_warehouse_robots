@@ -1,0 +1,8 @@
+uint32 trayID
+geometry_msgs/Point obstacleLeft
+geometry_msgs/Point obstacleFront
+geometry_msgs/Point obstacleRight
+RobotConfiguration robot
+---
+geometry_msgs/Point[] pointsToTray
+float64 length

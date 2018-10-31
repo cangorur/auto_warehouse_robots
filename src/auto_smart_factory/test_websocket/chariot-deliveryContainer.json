@@ -1,0 +1,18 @@
+{
+    "requester": {
+        "id": "delivery-container-driver-id"
+    },
+    "requestee": {
+        "id": "delivery-container-service"
+    },
+    "request": {
+        "status": "getStatusOf",
+        "type": "delivery-container-tray"
+    },
+    "response": {
+        "deliverycontainerstates": {
+		"tray-1":{"status": "Free"},
+		"tray-2":{"status": "Occupied"}
+	}
+    }
+}

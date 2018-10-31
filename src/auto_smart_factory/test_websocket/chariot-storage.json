@@ -1,0 +1,18 @@
+{
+    "requester": {
+        "id": "storage-driver-id"
+    },
+    "requestee": {
+        "id": "storage-service"
+    },
+    "request": {
+        "status": "getStatusOf",
+        "type": "storage-tray"
+    },
+    "response": {
+        "storagestates": {
+		"tray-1":{"status": "Free"},
+		"tray-2":{"status": "Occupied"}
+	}
+    }
+}

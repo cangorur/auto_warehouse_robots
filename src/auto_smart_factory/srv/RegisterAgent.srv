@@ -1,0 +1,4 @@
+string agent_id
+RobotConfiguration robot_configuration
+---
+bool success

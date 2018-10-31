@@ -1,0 +1,12 @@
+string agent_id
+geometry_msgs/Point[] robots_path
+RobotConfiguration robot_config
+geometry_msgs/Point next_position
+geometry_msgs/Point goal_position
+geometry_msgs/Point robot_position
+
+# each obstacle consists of several following elements
+geometry_msgs/Point[] obstacles
+---
+geometry_msgs/Point[] path
+float64 length
