@@ -310,7 +310,7 @@ Note: The package weights and the robots carriage capacities are not currently c
 ## Brief overview of the system
 
 System Architecture drawing of the new version of the project, also showing the nodes to be updated for the student developments
-![ngrok](https://gitlab.tubit.tu-berlin.de/app-ras/smart_factory_ws14_g3/blob/master/doc/system_architecture.png)
+![ngrok](https://gitlab.tubit.tu-berlin.de/app-ras/smart_factory_ws14_g3/tree/master/doc/system_architecture.png)
 
 Advertised services/topics are listed below the corresponding node (THE LIST IS OLD, NEEDS TO BE UPDATED, see the ros service documentation folder under code documentation !!!).
 
