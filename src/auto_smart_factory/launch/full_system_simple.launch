@@ -5,9 +5,6 @@
 	<!-- Roadmap Generator: NEW, comes with V2 -->
 	<node pkg="auto_smart_factory" type="RoadmapGenerator.py" name="roadmap_generator" />
 	
-	<!-- Path Planner: NEW, comes with V2 -->
-	<node pkg="auto_smart_factory" type="path_planner" name="path_planner" />
-	
 	<!-- Package Generator -->
 	<node pkg="auto_smart_factory" type="package_generator" name="package_generator" />
 
@@ -25,9 +22,6 @@
 		<!-- this flag tells whether to use the robot offer with the shortest estimated duration (true) or just random choice (false) -->
 		<param name="use_best_eta" value="true" />
 	</node>
-	
-	<!-- Charging Management -->
-	<node pkg="auto_smart_factory" type="charging_management" name="charging_management" />
 
 	<!-- Warehouse Gateway -->
 	<!--<node pkg="auto_smart_factory" type="warehouse_gateway" name="warehouse_gateway" /> -->
