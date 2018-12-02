@@ -18,6 +18,7 @@
 #include <math.h>
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/Twist.h"
+#include "geometry_msgs/Point.h"
 #include "std_msgs/Float32.h"
 #include "sensor_msgs/LaserScan.h"
 #include "auto_smart_factory/RobotHeartbeat.h"
@@ -25,16 +26,12 @@
 #include "auto_smart_factory/AdditionalTime.h"
 #include "auto_smart_factory/InitAgent.h"
 #include "auto_smart_factory/RegisterAgent.h"
-#include "auto_smart_factory/shortestPath.h"
-#include "auto_smart_factory/bestGoal.h"
 #include "auto_smart_factory/StorePackage.h"
 #include "auto_smart_factory/RetrievePackage.h"
 #include "auto_smart_factory/AssignTask.h"
 #include "auto_smart_factory/PerformTaskTest.h"
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotConfiguration.h>
-#include "auto_smart_factory/RegisterAgentCharging.h"
-#include "auto_smart_factory/AssignChargingTask.h"
 #include <auto_smart_factory/CollisionAction.h>
 
 /// defines the task id type
@@ -47,7 +44,7 @@ typedef uint32_t TaskId;
  * motion acutator and gripper. The agent implementation currently handles the charging request and
  * communications with the charging manager to assign for a charging task (a station as a destination)
  */
-class Agent{
+class Agent {
 public:
 	/**
 	 * Constructor that sets up the initialize service and hands over the agents id.
@@ -77,6 +74,9 @@ public:
 	 * That is why it is called every tick (see AgentNode.cpp).
 	 */
 	void update();
+
+	// tmp
+	bool isPathSet = false;
 
 protected:
 

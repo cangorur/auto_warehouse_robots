@@ -17,54 +17,38 @@ Agent::~Agent(){
 }
 
 void Agent::update(){
-	/*
 	if(initialized){
-
 		//register at taskplanner if not already done
 		if(!registered && registerAgent())
 			setupTaskHandling();
-
-		//register at charging stations if not already done
-		 if(!registeredCharging && registerAgentCharging())
-		 		setupChargingHandling();
 
 		//send heartbeat if the time has come to do so
 		if(isTimeForHeartbeat())
 			sendHeartbeat();
 
-		//handle idle state.
-		//currentPlan variable holds the existing plan. It may be used for ETA calculation. Once it is executed robot directly navigates there
-		int pathLength = static_cast<int>(currentPlan.getLength());
-		if(currentPlan.isDone() && pathLength != 0){
-		    if(currentPath.isDone()) {
-		        if(pathsStack.empty()) {
-		            this->motionPlanner->enable(false);
-		            if(initialTimeOfCurrentTask > 0.0) {
-                        double currentTime = ros::Time::now().toSec();
-                        ROS_INFO("finalTimeOfTask %s %i %.2f", agentID.c_str(), currentPath.getTaskId(), currentTime);
-                        ROS_INFO("durationOfTask %s %i %.2f", agentID.c_str(), currentPath.getTaskId(), currentTime - initialTimeOfCurrentTask);
-                        initialTimeOfCurrentTask = 0.0;
-		            }
-					setState(true);    // Set to idle state if no paths
-                    }
-		        else {
-		            setCurrentPath(pathsStack.top());
-		            pathsStack.pop();
-					ROS_WARN("[%s]Start new path, size: %lu",agentID.c_str(), pathsStack.size());
-					setState(false);    // Remain not idle if has path
-		            getTheNextPath();
-		        }
-		    }
-		    else {
-		        getTheNextPath();
-		    }
-		}
-		//handle current_plan
-		if(!currentPlan.isDone()) {
-			currentPlan.execute(position, batteryLevel);
+		if(!isPathSet) {
+			if(getCurrentPosition().x != 0) {
+				// code for dummy path following
+				std::vector<geometry_msgs::Point> path;
+				geometry_msgs::Point p1;
+					p1.x = this->getCurrentPosition().x - 8;
+					p1.y = this->getCurrentPosition().y - 1;
+				geometry_msgs::Point p2;
+					p2.x = this->getCurrentPosition().x - 10;
+					p2.y = this->getCurrentPosition().y + 1;
+				geometry_msgs::Point p3;
+					p2.x = this->getCurrentPosition().x - 11;
+					p2.y = this->getCurrentPosition().y;
+				path.push_back(p1);
+				path.push_back(p2);
+				this->motionPlanner->newPath(this->getCurrentPosition(), path, p3, false);
+				this->motionPlanner->enable(true);
+				this->motionPlanner->start();
+
+				isPathSet = true;
+			}
 		}
 	}
-	*/
 }
 
 bool Agent::init(auto_smart_factory::InitAgent::Request  &req,
@@ -137,7 +121,7 @@ bool Agent::registerAgent(){
 	srv.request.robot_configuration = robotConfig;
 	ros::service::waitForService(srv_name.c_str());
 
-        // for testing register just one agent
+    // for testing register just one agent
 	//if (agentID.compare("robot_1") == 0 && client.call(srv)){
 	if (client.call(srv)) {
 			if(!registered){
