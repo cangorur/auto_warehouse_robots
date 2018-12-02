@@ -4,8 +4,6 @@
 #include "agent/MotionPlanner.h"
 #include "agent/Gripper.h"
 #include "agent/ObstacleDetection.h"
-#include "agent/Plan.h"
-#include "agent/Path.h"
 
 #include <random>
 #include "ros/ros.h"
@@ -106,13 +104,6 @@ protected:
 	bool registerAgent();
 
 	/**
-	 * Calls a service to register the agent at the charging stations, so this agent is able to receive
-	 * requests to charge itself.
-	 * @return True if this agent has been registered successfully at the charging manager.
-	 */
-	bool registerAgentCharging();
-
-	/**
 	 * Sets up the services to be able to receive task related requests by the task planner.
 	 */
 	void setupTaskHandling();
@@ -145,47 +136,9 @@ protected:
 	void updateTimer();
 
 	/**
-	 * Sets up the services to be able to receive charging requests by charging management.
-	 */
-	void setupChargingHandling();
-
-	/**
-	 * Handles the purpose to take care of charging.
-	 */
-	void getChargingPaths();
-
-	/**
-	 * Sends a request to the roadmap planner to choose one of the available charging stations and
-	 * calculate the paths that are necessary for being able to charge the robot's battery &
-	 * reserves the chosen charging station & converts the response of the roadmap planner
-	 * to a plan or modifies the current plan to handle the charging purpose immediately.
-	 * @param free_charging_stations: list of available charging stations
-	 * @return True if
-	 */
-	bool sendChargingPathsRequest(std::vector<auto_smart_factory::Tray> free_charging_stations);
-
-	/**
-	 * Requests the reserve charging station service at the charging management.
-	 * @param charging_station_id: the id of the desired charging station
-	 * @return True if the charging station with the given id has been reserved successfully
-	 */
-	bool reserveChargingStation(unsigned int charging_station_id);
-
-	/**
 	 * Handles the idle state which leads to driving back to the robots idle position.
 	 */
 	void handleIdleState();
-
-	/**
-	 * Requests the shortest path service at the roadmap planner and converts the response to a plan
-	 * immediately and overwrites the agents current plan. Used for idle state purposes only for now.
-	 * @param start_position: start position of the requested path
-	 * @param end_position: goal position of the requested path
-	 * @param end_direction_point: point the robot should look to when it reached the goal position
-	 * @return True if the paths has successfully been requested and current plan was overwritten
-	 */
-	bool getShortestPath(geometry_msgs::Point start_position, geometry_msgs::Point end_position,
-			geometry_msgs::Point end_direction_point);
 
 	/**
 	 * Store package service handler.
@@ -197,21 +150,6 @@ protected:
 			auto_smart_factory::StorePackage::Response &res);
 
 	/**
-	 * Requests the input path service at the roadmap planner to get to know how the input task
-	 * can be fullfilled and converts the response to a plan, which is saved together with the
-	 * corresponding task id.
-	 * @param task_id: the id of the specified task
-	 * @param start_position: the start position of the robot for this input task
-	 * @param input_tray_ids: list of id's of possible trays to retrieve the desired package from
-	 * 			  (for now only first element is considered)
-	 * @param storage_tray_ids: list of id's of possible trays to put the package to
-	 * @return True if input path has successfully been requested and response is valid
-	 */
-	bool getInputPath(unsigned int task_id, geometry_msgs::Point start_position,
-			std::vector<unsigned int> input_tray_ids,
-			std::vector<unsigned int> storage_tray_ids);
-
-	/**
 	 * Retrieve package service handler.
 	 * @param req Request object
 	 * @param res Response object
@@ -219,21 +157,6 @@ protected:
 	 */
 	bool retrievePackage(auto_smart_factory::RetrievePackage::Request  &req,
 			auto_smart_factory::RetrievePackage::Response &res);
-
-	/**
-	 * Requests the output path service at the roadmap planner to get to know how the output task
-	 * can be fullfilled and converts the response to a plan, which is saved together with the
-	 * corresponding task id.
-	 * @param task_id: the id of the specified task
-	 * @param start_position: the start position of the robot for this output task
-	 * @param storage_tray_ids: list of id's of possible trays to retrieve the desired package from
-	 * @param output_tray_ids: list of id's of possible trays to put the package to
-	 * 			  (for now only first element is considered)
-	 * @return True if output path has successfully been requested and response is valid
-	 */
-	bool getOutputPath(unsigned int task_id, geometry_msgs::Point start_position,
-			std::vector<unsigned int> storage_tray_ids,
-			std::vector<unsigned int> output_tray_ids);
 
 	/**
 	 * Assign task service handler. If agent is idle it replaces the current plan with the plan
@@ -247,19 +170,6 @@ protected:
 	bool assignTask(auto_smart_factory::AssignTask::Request  &req,
 			auto_smart_factory::AssignTask::Response &res);
 
-
-	/**
-	 * Assign charging task service handler.
-	 * See AssignChargingTask.srv implementation for the request and response
-	 * @param req Request object: assigned/available charging station (along with the location)
-	 * @param res Request object: The state (boolean)
-	 * @todo The end position needs to be adjusted in a way that the robot always approaches to the tray facing front
-	 * Imagine that the charging contact points are on the front side of the robot. (line 259)
-	 * @todo The agent needs to decide what to do if it is on a load / unload task (line 275)
-	 * @return True if the task has successfully been assigned
-	 */
-	bool assignChargingTask(auto_smart_factory::AssignChargingTask::Request  &req,
-			auto_smart_factory::AssignChargingTask::Response &res);
 	/**
 	 * Returns the tray with the given tray id.
 	 * @param tray_id: id of the specified tray
@@ -295,40 +205,12 @@ protected:
     void collisionAlertCallback(const auto_smart_factory::CollisionAction& msg);
 
 	/**
-	* Sets the currentPath value to the new_path
-	* @param Path: new Path to be assigned to the agent
-	**/
-	void setCurrentPath(Path new_path);
-
-    /**
-    * Request a new path (segment or full based on the design) from the Path Planner to continue driving the current Path activating the
-    * motion_planner. With every path a new drive Plan is created.
-    * @todo This function needs to be adjusted towards the directives given and the path planner design.
-    * Please resolve the TODOs and make sure the connection of the Agent to a PathPlanner is satisfied successfully. The other TODOs are
-    * referring to the TODOs within the Agent class (see Agent.cpp)
-    * @todo Based on the path planner design, update the request_new_path service response and request variables. (line 368)
-    * @todo examine the Plan class to see how to construct a Plan object to have the robot navigate when executed. (line 398)
-    * @todo for the last path loading, unloading, charging has to be considered for the robot to position accordingly. (line 400)
-    * @todo Double check if the response provided the last path/chunk. (line 410)
-    * @todo The path is only computed by path planner to the ApproachPoint. From there to the tray you need to provide a mechanism to approach (line 414)
-	* @return bool indicating if a new path was successfully assigned to the agent
-    **/
-	bool getTheNextPath();
-
-	/**
     * Calculates the time to run a distance given distance and velocity
 	* @param double: distance value
 	* @param double: velocity value
 	* @return double value representing the calculated time
     **/
     double calculateTimeFromDistanceAndVelocity(double distance, double velocity);
-
-    /**
-    * Turn goal enum to string for easy test printing
-	* @param goal: enum GOAL
-	* @return string of the goal
-    **/
-	std::string GoalToString (GOAL goal);
 
     /**
     * Generate random float number between min and max (used for local collision handling)
@@ -425,12 +307,6 @@ protected:
 	/// current orientation of this agent
 	geometry_msgs::Quaternion orientation;
 
-	/// map of all previous calculated tasks corresponding to this agent
-	std::map<TaskId, Plan> tasks;
-
-	/// current plan the agent deals with
-	Plan currentPlan;
-
 	/// heartbeat related timestamp - time in seconds
 	unsigned long lastTimestamp = 0;
 
@@ -446,17 +322,8 @@ protected:
 	/// Flag that shows if the agent is waiting for a charging response
 	bool waitingForChargingRequest = false;
 
-    /// Stack storing the main path the Agent has to travel to complete a task
-	std::stack<Path> pathsStack;
-
-	// Main current path the agent has to travel
-	Path currentPath;
-
 	// indicates whether the agent has ever moved
 	bool hasDriven;
-
-	// save the chunks corresponding to the currentPath
-	std::deque<Plan> currentChunks;
 
 	/// Indicates whether to generate a charging plan or not
 	bool generateChargingPlan = false;

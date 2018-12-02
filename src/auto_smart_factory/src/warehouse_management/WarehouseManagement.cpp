@@ -26,7 +26,6 @@ void WarehouseManagement::start(){
 	initStorageManagement(warehouseConfig, packageConfigs);
 	initTaskPlanner(warehouseConfig, robotConfigs, packageConfigs);
 	initRoadmapGenerator(warehouseConfig);
-	initChargingManagement(warehouseConfig);
 
 	// initialize agents/robots
 	for (auto_smart_factory::Robot robot : warehouseConfig.robots) {
@@ -210,24 +209,6 @@ bool WarehouseManagement::initStorageManagement(
 	auto_smart_factory::InitStorageManagement srv;
 	srv.request.warehouse_configuration = warehouse_configuration;
 	srv.request.package_configurations = package_configurations;
-	ros::service::waitForService(srv_name.c_str());
-	if (client.call(srv)){
-		ROS_INFO("[warehouse management]: %s | success: %s", 
-				srv_name.c_str(), ((bool)srv.response.success ? "true" : "false"));
-		return true;
-	}else{
-		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
-	    	return false;
-	}
-}
-
-bool WarehouseManagement::initChargingManagement(
-		auto_smart_factory::WarehouseConfiguration warehouse_configuration){
-	std::string srv_name = "charging_management/init";
-	ros::ServiceClient client = n.serviceClient<auto_smart_factory::InitChargingManagement>
-		(srv_name.c_str());
-	auto_smart_factory::InitChargingManagement srv;
-	srv.request.warehouse_configuration = warehouse_configuration;
 	ros::service::waitForService(srv_name.c_str());
 	if (client.call(srv)){
 		ROS_INFO("[warehouse management]: %s | success: %s", 

@@ -93,11 +93,6 @@ protected:
 	bool initStorageManagement(auto_smart_factory::WarehouseConfiguration warehouse_configuration, std::vector<auto_smart_factory::PackageConfiguration> package_configurations);
 
 	/**
-	 * Initialize charging management component.
-	 */
-	bool initChargingManagement(auto_smart_factory::WarehouseConfiguration warehouse_configuration);
-
-	/**
 	 * Initialize agent/robot.
 	 */
 	bool initWarehouseGateway(auto_smart_factory::WarehouseConfiguration warehouse_configuration);

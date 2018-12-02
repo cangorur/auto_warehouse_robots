@@ -17,6 +17,7 @@ Agent::~Agent(){
 }
 
 void Agent::update(){
+	/*
 	if(initialized){
 
 		//register at taskplanner if not already done
@@ -63,6 +64,7 @@ void Agent::update(){
 			currentPlan.execute(position, batteryLevel);
 		}
 	}
+	*/
 }
 
 bool Agent::init(auto_smart_factory::InitAgent::Request  &req,
@@ -152,29 +154,6 @@ bool Agent::registerAgent(){
 	return registered;
 }
 
-bool Agent::registerAgentCharging(){
-	std::string srv_name = "charging_management/register_agent_charging_management";
-	ros::ServiceClient client = n.serviceClient<auto_smart_factory::RegisterAgentCharging>(srv_name.c_str());
-	auto_smart_factory::RegisterAgentCharging srv;
-	srv.request.agent_id = agentID;
-	srv.request.robot_configuration = robotConfig;
-	srv.request.battery_level = batteryLevel;
-	ros::service::waitForService(srv_name.c_str());
-	if (client.call(srv)){
-		if(!registeredCharging){
-			registeredCharging = (bool) srv.response.success;
-			if(registeredCharging)
-				ROS_INFO("[%s]: Succesfully registered at charging station!", agentID.c_str());
-			else
-				ROS_ERROR("[%s]: Failed to register at charging station!", agentID.c_str());
-		} else
-  			ROS_WARN("[%s]: Has already been registered at charging station!", agentID.c_str());
-	} else {
-		ROS_ERROR("[%s]: Failed to call service %s!", agentID.c_str(), srv_name.c_str());
-	}
-	return registeredCharging;
-}
-
 /*
  * Sets up services to communicate with task planner.
  */
@@ -225,126 +204,6 @@ void Agent::updateTimer() {
 	lastTimestamp = time.tv_sec;
 }
 
-// Below ETA was a previous example. Needs to be updated with more sophisticated solutions
-/* float Agent::getETA(){
-    float eta_value;
-    try {
-        if (currentPlan.isDone()) {
-            eta_value = 0;
-
-        } else {
-            eta_value = currentPlan.getLength();
-        }
-    } catch (...) {
-        eta_value = -1;
-    }
-    return  eta_value;
-}
-*/
-
-/*
- * Sets up services to communicate with charging station.
- */
-void Agent::setupChargingHandling(){
-	ros::NodeHandle pn("~");
-	pn.setParam(agentID, "~assign_charging_task");  //?
-	this->assign_charging_task_srv = pn.advertiseService("assign_charging_task", &Agent::assignChargingTask, this);
-}
-
-bool Agent::assignChargingTask(auto_smart_factory::AssignChargingTask::Request  &req,
-			 					auto_smart_factory::AssignChargingTask::Response &res){
-
-	auto_smart_factory::Tray charging_tray = getTray(req.tray_id);
-
-	if(req.end){  //End charging task
-		if(currentPath.getPathGoal() == GOAL::CHARGE){
-			currentPlan.setDone(true);
-			setState(true); //Set to idle state?
-			res.success = true;
-			ROS_INFO("[%s]Successfully end charging task", agentID.c_str());
-			return true;
-		}
-		else {
-			ROS_INFO("[%s]: Charging management trying to end a non exist charging plan!", agentID.c_str());
-			res.success = false;
-			return false;
-		}
-	}
-	ROS_INFO("[%s]: Handling charging task", agentID.c_str());
-	// This is the end position of this (charging) task
-	// TODO: UPDATE THE CODE BELOW. The end position needs to be adjusted in a way that the robot always approaches to the tray facing front
-	// Imagine that the charging contact points are on the front side of the robot.
-	geometry_msgs::Point charging_tray_position, charging_dir_position;
-	double charging_dx = cos(charging_tray.orientation * PI / 180);
-    double charging_dy = sin(charging_tray.orientation * PI / 180);
-    charging_tray_position.x = charging_tray.x + 0.5 * charging_dx;
-    charging_tray_position.y = charging_tray.y + 0.5 * charging_dy;
-
-	charging_dir_position.x = charging_tray.x + 1.5 * charging_dx;  //Face to opposite of charging tray in case of carrying
-    charging_dir_position.y = charging_tray.y + 1.5 * charging_dy;
-
-	//Check if the Agent is performing a task
-	if (!isIdle) {
-		ROS_INFO("[%s] getting a charging task while having task", agentID.c_str());
-
-        // Check if the current Path is a load/unload or already a charging task
-        // TODO: UPDATE BELOW The agent needs to decide what to do when a charging is needed while on a load / unload task
-    	// ...
-	    switch(currentPath.getPathGoal()) {
-	        case GOAL::LOAD:{
-				ROS_INFO("[%s] Need to go charge with the LOAD", agentID.c_str());
-				Path path_to_charge(agentID, chargeTaskID, GOAL::CHARGE, position,
-								charging_tray_position, charging_tray_position, charging_dir_position, charging_tray_position, false);
-
-				 //Back start from charging position
-				Path path_from_charge(agentID, currentPath.getTaskId(), GOAL::LOAD, charging_tray_position,
-								currentPath.getEndPosition(), currentPath.getApproachPoint(), currentPath.getDirectionPoint(), currentPath.getDriveBackPoint(), false);
-				pathsStack.push(path_from_charge);
-				setCurrentPath(path_to_charge);
-			}
-	            break;
-	        case GOAL::UNLOAD:{
-				Path path_to_charge(agentID, chargeTaskID, GOAL::CHARGE, currentPath.getDriveBackPoint(),
-								charging_tray_position, charging_tray_position, charging_dir_position, charging_tray_position, false);
-				pathsStack.push(path_to_charge);
-			}
-	            break;
-	        case GOAL::CHARGE:
-				ROS_WARN("Got another charging assignment when charging!");
-				break;
-	        case GOAL::IDLE:{
-				currentPlan.setDone(true);
-				Path charging_path(agentID, chargeTaskID, GOAL::CHARGE, position, charging_tray_position, charging_tray_position, charging_dir_position, charging_tray_position, false);
-    			setCurrentPath(charging_path);
-
-				if(pathsStack.top().getPathGoal() == GOAL::CHARGE)
-				ROS_INFO("[%s] IDLE + CHARGE -> next path goal: CHARGE ",agentID.c_str());
-				else ROS_WARN("WRONG at IDLE + charge");
-			}
-				break;
-	        default: ROS_INFO("Other cases exists!!! %s for charging",agentID.c_str());
-	            break;
-	    }
-	}
-	else {
-			Path charging_path(agentID, chargeTaskID, GOAL::CHARGE, position, charging_tray_position, charging_tray_position, charging_dir_position, charging_tray_position, true);
-    		setCurrentPath(charging_path);
-	}
-
-    //Create and set new current_path
-    ROS_INFO("[%s]: Generating new path to charging station ID %d (x: %f, y: %f)", agentID.c_str(),req.tray_id, charging_tray_position.x, charging_tray_position.y);
-
-    //Generate first chunk
-    ROS_INFO("[%s]: Setting the first path chunk to charging station.", agentID.c_str());
-    chargingStationId = req.tray_id;
-    generateChargingPlan = true;
-	setState(false);
-	res.success = getTheNextPath();
-	ROS_INFO("[%s]: Task charging assigned! success: %d", agentID.c_str(), res.success);
-	return true;
-}
-
-
 void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& msg) {
 	// TODO: this callback halts the motion when a collision detected. But currently there is no topic publishing such an alert
 	// This function is left here as a hint. This alert can be sent by the obstacle detector, or by the central path/traffic planer.
@@ -361,102 +220,6 @@ void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& ms
         }
 
     }
-}
-
-bool Agent::getTheNextPath() {
-    // Requests a path from the Path_Planner
-    // TODO: Based on the path planner design, update the request_new_path service response and request variables.
-    std::string srv_name = "path_planner/request_new_path";
-    ros::ServiceClient client = n.serviceClient<auto_smart_factory::RequestNewPath>(srv_name.c_str());
-    auto_smart_factory::RequestNewPath srv;
-
-    geometry_msgs::Point start_position = position;
-	geometry_msgs::Point end_position = currentPath.getApproachPoint();      //request from path planner only until approach point
-	// currentPath is an instance of Path class. Holds the paths / chunks assigned for the robot (see Path.cpp for more)
-	bool next_chunk = !currentPath.isFirstChunk();
-
-    srv.request.agent_id = agentID;
-    srv.request.next_chunk = next_chunk;
-    srv.request.start_node = start_position;
-    srv.request.end_node = end_position;
-
-    ros::service::waitForService(srv_name.c_str());
-	if (client.call(srv)){
-		ROS_INFO("[%s]: Successfully started to calculate path!", agentID.c_str());
-
-        // ROS_INFO("[%s]: Path --> StartPoint (x=%f, y=%f)", agentID.c_str(), srv.response.new_path_nodes.begin()->x, srv.response.new_path_nodes.begin()->y);
-
-		double min_time_take = calculateTimeFromDistanceAndVelocity(srv.response.main_path_length, robotConfig.min_linear_vel);
-
-		if(min_time_take >= 0) {
-			if(min_time_take == 0) {
-				ROS_ERROR("[%s]: Path length is 0: %s!", agentID.c_str(), srv_name.c_str());
-			}
-
-			int last_value_index = srv.response.new_path_nodes.size()-1;
-
-			// TODO: examine the Plan class to see how to construct a Plan object to have the robot navigate when executed.
-	        Plan plan = Plan();
-	        // TODO: for the last path loading, unloading, charging has to be considered for the robot to position accordingly.
-	        // if (srv.response.is_last_chunk) {
-	        //		currentPath.setDone(true);
-	        // 		std::vector<geometry_msgs::Point> path_to_goal;
-	        //      path_to_goal=srv.response.new_path_nodes;
-	        //      path_to_goal.push_back(currentPath.getEndPosition());
-			  	// TODO: The path is only computed by path planner to the ApproachPoint. After the approach point, there is a hand coded motion starts(going straight to the tray)
-	        // From there to the tray the robot drives just straight.
-	        // E.g. An intermediate point might be added in this straight part to verify
-	        // a smoother ride with the MotionPlanner
-        	// You can check if the path is a LOAD, UNLOAD or CHARGING path as below
-          //		  switch(currentPath.getPathGoal()) {
-        	//          // TODO: fill the strategies for LOAD, UNLOAD or CHARGING, if any different.
-        	//			case GOAL::LOAD: {} break;
-        	//			case GOAL::UNLOAD: {
-	        //                  ROS_INFO("[%s]: Generating an unload plan for the last main-path chunk.", agentID.c_str());
-	        //					// BELOW IS AN EXAMPLE OF HOW A PLAN OBJECT IS CONSTRUCTED !
-	        //                  plan = Plan(agentID,
-	        //                  *motionPlanner,
-	        //                  *gripper,
-	        //                  false,
-	        //                  start_position,
-	        //                  path_to_goal,
-	        //                  currentPath.getDirectionPoint(),
-	        //                  currentPath.getDriveBackPoint(),
-	        //                  min_time_take);
-	        //              }
-	        //              break;
-	        //				case GOAL::CHARGE: {} break;
-	        // } else {
-                // Constructor for a plan to drive to a certain goal position.
-            //  plan = Plan(agentID, *motionPlanner, start_position, srv.response.new_path_nodes,
-            //  srv.response.new_path_nodes[last_value_index], length);
-            // }
-	        // The rest of the variable assignments, motion and obstacle detector initiators/enablers should stay for the functionality
-            currentPlan = plan;
-			this->motionPlanner->enable(true);
-			this->motionPlanner->start();
-			this->obstacleDetection->enable(true);
-
-            if (currentPath.isFirstChunk()) {
-                // After getting the first chunk of the path set first chunk value of the currentPath to false
-                currentPath.setFirstChunk(false);
-            }
-            ROS_INFO("[%s]: Next path chunk was generated.", agentID.c_str());
-            return true;
-		}
-		else {
-			ROS_WARN("[%s]: No path found: %s!", agentID.c_str(), srv_name.c_str());
-		}
-	}
-	else {
-		ROS_ERROR("[%s]: Failed to call service %s!", agentID.c_str(), srv_name.c_str());
-	}
-
-	return false;
-}
-
-void Agent::setCurrentPath(Path new_path) {
-    currentPath = new_path;
 }
 
 bool Agent::assignTask(auto_smart_factory::AssignTask::Request &req,
@@ -506,24 +269,24 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request &req,
             storage_approach_point.y = storage_tray_position.y + 1.5 * storage_dy;
 
 
-            Path path_to_input_tray(agentID, task_id, GOAL::LOAD, position, input_drive_point, input_approach_point, input_tray_position, input_drive_back_point, true);
+            //Path path_to_input_tray(agentID, task_id, GOAL::LOAD, position, input_drive_point, input_approach_point, input_tray_position, input_drive_back_point, true);
 
             //    When Robot arrived at input_tray it will start traveling from input tray to output tray
-            Path path_to_storage_tray(agentID, task_id, GOAL::UNLOAD, input_drive_back_point,
-                        storage_drive_point, storage_approach_point, storage_tray_position, storage_drive_back_point, false);
+            //Path path_to_storage_tray(agentID, task_id, GOAL::UNLOAD, input_drive_back_point,
+            //            storage_drive_point, storage_approach_point, storage_tray_position, storage_drive_back_point, false);
 
             // 2- Set currentPath
-            setCurrentPath(path_to_input_tray);
-            hasDriven = true;
+            //setCurrentPath(path_to_input_tray);
+            //hasDriven = true;
 
             // 3- Add the remaining paths to the pathsStack
-            pathsStack.push(path_to_storage_tray);
+            //pathsStack.push(path_to_storage_tray);
 
 			ROS_INFO("[%s]: Task %i successfully assigned!", agentID.c_str(), req.task_id);
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
 			ROS_INFO("assignTask %s %.2f %i", agentID.c_str(), initialTimeOfCurrentTask, task_id);
 			setState(false);     //Set to non idle if a task is assigned
-			res.success = getTheNextPath();
+			res.success = false;
 		} else {
 			ROS_WARN("[%s]: Is busy! - Task %i has not been assigned!",
 					agentID.c_str(), req.task_id);
@@ -572,21 +335,6 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 
 double Agent::calculateTimeFromDistanceAndVelocity(double distance, double velocity) {
     return distance/velocity;
-}
-
-std::string Agent::GoalToString (GOAL goal){
-	if (goal == GOAL::LOAD){
-		return "LOAD";
-	}
-	else if(goal == GOAL::UNLOAD){
-		return "UNLOAD";
-	}
-	else if(goal == GOAL::CHARGE){
-		return "CHARGE";
-	}
-	else if(goal == GOAL::IDLE){
-	return "IDLE";
-	}
 }
 
 float Agent::randomFloat(float min, float max){
