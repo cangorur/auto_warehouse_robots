@@ -251,7 +251,8 @@ add_executable(agent_node
   src/agent/ChargingManagement.cpp
 	src/agent/MotionPlanner.cpp
 	src/agent/Gripper.cpp
-	src/agent/ObstacleDetection.cpp
+  src/agent/ObstacleDetection.cpp
+  src/agent/Path.cpp
 )
 set_target_properties(agent_node PROPERTIES OUTPUT_NAME agent PREFIX "")
 add_dependencies(agent_node auto_smart_factory_gencpp ${${PROJECT_NAME}_EXPORTED_TARGETS})
