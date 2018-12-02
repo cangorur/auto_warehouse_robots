@@ -262,9 +262,7 @@ add_executable(agent_node
 	src/agent/MotionPlanner.cpp
 	src/agent/Gripper.cpp
 	src/agent/ObstacleDetection.cpp
-	src/agent/Plan.cpp
-	src/agent/Path.cpp
-	src/agent/SubPlan.cpp)
+)
 set_target_properties(agent_node PROPERTIES OUTPUT_NAME agent PREFIX "")
 add_dependencies(agent_node auto_smart_factory_gencpp ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(agent_node ${catkin_LIBRARIES})
@@ -300,15 +298,6 @@ set_target_properties(storage_management_node PROPERTIES OUTPUT_NAME storage_man
 add_dependencies(storage_management_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(storage_management_node ${catkin_LIBRARIES})
 
-# Path Planner
-add_executable(path_planning_node
-	src/path_planning/PathPlannerNode.cpp
-	src/path_planning/PathPlanner.cpp
-)
-set_target_properties(path_planning_node PROPERTIES OUTPUT_NAME path_planner PREFIX "")
-add_dependencies(path_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(path_planning_node ${catkin_LIBRARIES})
-
 # cpptest
 #add_executable(test_service_node
 #    src/path_planning/testService.cpp
@@ -337,15 +326,6 @@ target_link_libraries(task_planner_node
   tray_allocation
   ${catkin_LIBRARIES}
 )
-
-# Charging Management
-add_executable(charging_management_node
-	src/charging_management/ChargingManagementNode.cpp
-	src/charging_management/ChargingManagement.cpp
-)
-set_target_properties(charging_management_node PROPERTIES OUTPUT_NAME charging_management PREFIX "")
-add_dependencies(charging_management_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(charging_management_node ${catkin_LIBRARIES})
 
 add_custom_target(${PROJECT_NAME}_doc
     rosdoc_lite ${PROJECT_SOURCE_DIR}
