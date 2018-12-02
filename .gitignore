@@ -7,4 +7,7 @@ src/CMakeLists.txt
 *.swp
 *.orig
 *.pyc
+
+#Clion
 .idea
+cmake-build-debug/*
