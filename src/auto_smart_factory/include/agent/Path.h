@@ -1,8 +1,8 @@
 #ifndef AGENT_PATH_H_
 #define AGENT_PATH_H_
 
-#include <tuple>
-#include <list>
+#include <vector>
+#include "geometry_msgs/Point.h"
 
 class Path {
 
@@ -10,8 +10,7 @@ public:
     Path();
     virtual ~Path();
 
-private:
-    std::list<std::tuple<float, float>> points;
+    std::vector<geometry_msgs::Point> points;
 
 };
 
