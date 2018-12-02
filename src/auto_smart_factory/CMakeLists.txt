@@ -258,7 +258,9 @@ target_link_libraries(warehouse_management_node ${catkin_LIBRARIES})
 # Agent
 add_executable(agent_node
 	src/agent/AgentNode.cpp
-	src/agent/Agent.cpp
+  src/agent/Agent.cpp
+  src/agent/PathPlanner.cpp
+  src/agent/ChargingManagement.cpp
 	src/agent/MotionPlanner.cpp
 	src/agent/Gripper.cpp
 	src/agent/ObstacleDetection.cpp
