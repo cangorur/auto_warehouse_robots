@@ -35,7 +35,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation){
 }
 
 void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path,
-		geometry_msgs::Point end_direction_point, bool drive_backwards){
+	geometry_msgs::Point end_direction_point, bool drive_backwards){
 	startPosition = start_position;
 	driveBackwards = drive_backwards;
 	path = new_path;
