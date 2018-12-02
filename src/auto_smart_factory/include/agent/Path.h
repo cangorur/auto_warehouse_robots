@@ -12,6 +12,8 @@ public:
 
     std::vector<geometry_msgs::Point> points;
 
+    void addPoint(geometry_msgs::Point p);
+
 };
 
 #endif /* AGENT_PATH_H_ */
