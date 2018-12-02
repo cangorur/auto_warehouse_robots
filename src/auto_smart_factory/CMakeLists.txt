@@ -94,8 +94,6 @@ add_message_files(
   StorageUpdate.msg
   GripperState.msg
   RoadmapGraph.msg
-  Path.msg
-  PlannedPath.msg
   CollisionAction.msg
 )
 
@@ -107,12 +105,10 @@ add_service_files(
    InitPathPlanner.srv
    InitStorageManagement.srv
    InitPackageGenerator.srv
-   InitChargingManagement.srv
    RegisterAgent.srv
    StorePackage.srv
    RetrievePackage.srv
    AssignTask.srv
-   GetFreeChargingStations.srv
    GetWarehouseConfig.srv
    GetRobotConfigurations.srv
    GetPackageConfigurations.srv
@@ -127,19 +123,11 @@ add_service_files(
    MovePackage.srv
    MoveGripper.srv
    initRoadmapPlanner.srv
-   shortestPath.srv
-   bestGoal.srv
    outputRequest.srv
    inputRequest.srv
-   GetLocalPath.srv
-   localPath.srv
    triggerRoadmapGenerator.srv
-   CalculateETA.srv
-   RequestNewPath.srv
    #testService.srv
    PerformTaskTest.srv
-   RegisterAgentCharging.srv
-   AssignChargingTask.srv
    SetConveyorSpeed.srv
    RotateTable.srv
 )
