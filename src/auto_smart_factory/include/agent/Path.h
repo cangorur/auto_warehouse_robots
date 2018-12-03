@@ -2,18 +2,19 @@
 #define AGENT_PATH_H_
 
 #include <vector>
-#include "geometry_msgs/Point.h"
+#include "agent/Point.h"
 
 class Path {
 
 public:
-    Path();
-    virtual ~Path();
+  Path(std::vector<Point> points = {});
+  virtual ~Path();
 
-    std::vector<geometry_msgs::Point> points;
+  void update(std::vector<Point> points);
+  const std::vector<Point>& getPoints(void);
 
-    void addPoint(geometry_msgs::Point p);
-
+private:
+    std::vector<Point> points;
 };
 
 #endif /* AGENT_PATH_H_ */
