@@ -11,7 +11,7 @@ public:
   virtual ~Path();
 
   void update(std::vector<Point> points);
-  const std::vector<Point> getPoints(void);
+  const std::vector<Point>& getPoints(void);
 
 private:
     std::vector<Point> points;

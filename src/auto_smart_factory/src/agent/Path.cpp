@@ -8,8 +8,8 @@ void Path::update(std::vector<Point> points) {
     points = points;
 }
 
-const std::vector<Point> Path::getPoints() {
-    return (const std::vector<Point>) points;
+const std::vector<Point>& Path::getPoints() {
+    return points;
 }
 
 Path::~Path() {
