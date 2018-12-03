@@ -7,13 +7,14 @@
 class Path {
 
 public:
-    Path();
-    virtual ~Path();
+  Path(std::vector<Point> points = {});
+  virtual ~Path();
 
+  void update(std::vector<Point> points);
+  const std::vector<Point> getPoints(void);
+
+private:
     std::vector<Point> points;
-
-    void append(Point p);
-    void append(std::vector<Point> points);
 };
 
 #endif /* AGENT_PATH_H_ */
