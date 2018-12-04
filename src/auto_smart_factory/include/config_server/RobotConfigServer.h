@@ -19,6 +19,7 @@
 class RobotConfigServer {
 public:
 	RobotConfigServer();
+
 	virtual ~RobotConfigServer();
 
 protected:
@@ -28,7 +29,8 @@ protected:
 	 * @param res Response object
 	 * @return Success (always true)
 	 */
-	bool configCallback(auto_smart_factory::GetRobotConfigurations::Request& req, auto_smart_factory::GetRobotConfigurations::Response& res);
+	bool configCallback(auto_smart_factory::GetRobotConfigurations::Request& req,
+	                    auto_smart_factory::GetRobotConfigurations::Response& res);
 
 	/**
 	 * Reads the JSON formatted robot configs from file.

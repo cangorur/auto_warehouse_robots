@@ -3,7 +3,7 @@
 #include <config_server/RobotConfigServer.h>
 #include <config_server/PackageConfigServer.h>
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
 	ros::init(argc, argv, argv[1]);
 	ros::NodeHandle nh;
 

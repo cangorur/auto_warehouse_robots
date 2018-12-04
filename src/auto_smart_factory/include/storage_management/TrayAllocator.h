@@ -13,6 +13,7 @@
 #include <auto_smart_factory/Package.h>
 
 class TrayAllocator;
+
 typedef std::shared_ptr<TrayAllocator> TrayAllocatorPtr;
 
 /**
@@ -64,7 +65,7 @@ public:
 	 * @param pkg Package information (id and type)
 	 * @return Success of the storage management service call
 	 */
-	bool setPackage(const auto_smart_factory::Package &pkg);
+	bool setPackage(const auto_smart_factory::Package& pkg);
 
 	/**
 	 * Get package information of the allocated tray.

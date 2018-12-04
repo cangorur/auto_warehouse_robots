@@ -19,7 +19,7 @@
  * roadmap planner if some dynamic obstacle has been sensed, so if it's necesarry an alternative
  * path could be chosen for the robot.
  */
-class ObstacleDetection{
+class ObstacleDetection {
 
 public:
 	/**
@@ -30,10 +30,10 @@ public:
 	 * @param robot_config: information about the role of the agent this obstacle detection belongs to
 	 * @param warehouse_config: information about the current warehouse map
 	 */
-	ObstacleDetection(std::string agent_id, 
-			MotionPlanner &motion_planner, 
-			auto_smart_factory::RobotConfiguration robot_config, 
-			auto_smart_factory::WarehouseConfiguration warehouse_config);
+	ObstacleDetection(std::string agent_id,
+	                  MotionPlanner& motion_planner,
+	                  auto_smart_factory::RobotConfiguration robot_config,
+	                  auto_smart_factory::WarehouseConfiguration warehouse_config);
 
 	virtual ~ObstacleDetection();
 
@@ -44,8 +44,8 @@ public:
 	 * @param orientation: current orientation of the agent
 	 * @param msg: current laser data
 	 */
-	void update(geometry_msgs::Point& position, double orientation, 
-			const sensor_msgs::LaserScan& msg);
+	void update(geometry_msgs::Point& position, double orientation,
+	            const sensor_msgs::LaserScan& msg);
 
 	/**
 	 * Enables / disables this obstacle detection instance.
@@ -82,8 +82,8 @@ protected:
 	 * @todo Come up with strategies when the obstacles are unknown to the agent (probably another agent)
 	 * Todo so please go to the function dealWithObstacles.
 	 */
-	void analyzeLaserScan(geometry_msgs::Point& position, double orientation, 
-			const sensor_msgs::LaserScan& msg);
+	void analyzeLaserScan(geometry_msgs::Point& position, double orientation,
+	                      const sensor_msgs::LaserScan& msg);
 
 	/**
 	 * Translates the given laser ranges into points in the x-y coordinate plane considering the
@@ -94,7 +94,7 @@ protected:
 	 * @return list of the points the lasers point to
 	 */
 	std::vector<geometry_msgs::Point> getPointList(geometry_msgs::Point position, double orientation,
-		       	const sensor_msgs::LaserScan& msg);
+	                                               const sensor_msgs::LaserScan& msg);
 
 	/**
 	 * Compares the given points with the static obstacles of the current map given by the 
@@ -104,7 +104,7 @@ protected:
 	 * 	   with the border laser indexes that point to them
 	 *  	   (right and left border index of each obstacle)
 	 */
-	std::vector<std::vector<int>> detectObstacle(std::vector<geometry_msgs::Point> &points);
+	std::vector<std::vector<int>> detectObstacle(std::vector<geometry_msgs::Point>& points);
 
 	/**
 	 * Your strategies to avoid such dynamic unknown obstacles.
@@ -117,10 +117,10 @@ protected:
 	void dealWithObstacles(std::vector<geometry_msgs::Point> obstacles);
 
 	/// id of the agent this obstacle detection instance belongs to
-	std::string agentID; 
+	std::string agentID;
 
 	/// pointer to the motion planner instance
-	MotionPlanner *motionPlanner;
+	MotionPlanner* motionPlanner;
 
 	/// information about the role of the agent this obstacle detection instance belongs to
 	auto_smart_factory::RobotConfiguration robotConfig;

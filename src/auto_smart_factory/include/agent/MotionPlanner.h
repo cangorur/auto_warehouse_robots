@@ -11,6 +11,7 @@
 #include <auto_smart_factory/RobotConfiguration.h>
 
 class Agent;
+
 /**
  * The motion planner component manages all movement related stuff ongoing at the agents side.
  * It coverts information about the current position as well as orientation and  a list of points
@@ -20,7 +21,7 @@ class Agent;
  * some path correction while driving straight forward or backward.
  * The motion planner needs to be fed continously with current pose data to work as expected.
  */
-class MotionPlanner{
+class MotionPlanner {
 
 public:
 	/**
@@ -29,7 +30,8 @@ public:
 	 * @param robot_config: information about the role of the agent this motion planner belongs to
 	 * @param motion_pub: publisher for the motion actuator topic
 	 */
-	MotionPlanner(Agent *agent, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher *motion_pub);
+	MotionPlanner(Agent* agent, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub);
+
 	virtual ~MotionPlanner();
 
 	/**
@@ -49,13 +51,14 @@ public:
 	 * @param drive_backwares: whether the given plan shall be driven backwards or not
 	 */
 	void newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path,
-			geometry_msgs::Point end_direction_point, bool drive_backwards = false);
+	             geometry_msgs::Point end_direction_point, bool drive_backwards = false);
 
 	/**
 	 * Smooths a path provided as input
 	 * @param path: the path to smooth
 	 */
-	void smoothPath(std::vector<geometry_msgs::Point> &path,double weight_data = 0.5,double  weight_smooth = 0.1,double  tolerance = 0.000001);
+	void smoothPath(std::vector<geometry_msgs::Point>& path, double weight_data = 0.5, double weight_smooth = 0.1,
+	                double tolerance = 0.000001);
 
 	/**
  	 * Returns if the given path is equal to the current path.
@@ -216,7 +219,8 @@ public:
 	 * @return calculated velocities
 	 */
 	geometry_msgs::Twist driveStraight(double p_x, double p_y, double t_x, double t_y,
-			double orientation);
+	                                   double orientation);
+
 	/**
 	 * Increases the current target index and resets turning related variables.
 	 */
@@ -233,7 +237,7 @@ public:
 	 * @return calculated turning velocities
 	 */
 	geometry_msgs::Twist turnOnSpot(double p_x, double p_y, double t_x, double t_y,
-			double orientation);
+	                                double orientation);
 
 	/**
 	 * Scale the given speed to fit into the given constraints: min <= speed <= max.
@@ -307,7 +311,7 @@ public:
 	auto_smart_factory::RobotConfiguration robotConfig;
 
 	/// Publisher for the motion actuator topic
-	ros::Publisher *motionPub;
+	ros::Publisher* motionPub;
 
 	/// start position of the current path
 	geometry_msgs::Point startPosition;
@@ -395,10 +399,10 @@ public:
 
 protected:
 	/// The agent to which this motion planner belongs
-  Agent *agent;
+	Agent* agent;
 
 	/// agent ID variable set by Agent.cpp
-  std::string agentID;
+	std::string agentID;
 
 };
 

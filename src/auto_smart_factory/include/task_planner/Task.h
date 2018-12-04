@@ -106,19 +106,19 @@ protected:
 	 * Used to receive storage updates.
 	 * @param msg Storage update
 	 */
-	void receiveLoadStorageUpdate(const auto_smart_factory::StorageUpdate &msg);
+	void receiveLoadStorageUpdate(const auto_smart_factory::StorageUpdate& msg);
 
 	/**
 	 * Used to receive storage updates.
 	 * @param msg Storage update
 	 */
-	void receiveUnloadStorageUpdate(const auto_smart_factory::StorageUpdate &msg);
+	void receiveUnloadStorageUpdate(const auto_smart_factory::StorageUpdate& msg);
 
 	/**
 	 * Receive robot gripper updates
 	 * @param msg Robot gripper update
 	 */
-	void receiveRobotGripperUpdate(const auto_smart_factory::GripperState &msg);
+	void receiveRobotGripperUpdate(const auto_smart_factory::GripperState& msg);
 
 protected:
 	/// the task state

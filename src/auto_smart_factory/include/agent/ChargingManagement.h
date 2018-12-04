@@ -11,13 +11,14 @@
  * The charging management component manages all charging stations, provides information about free
  * charging stations and offers a service to reserve charging stations.
  */
-class ChargingManagement{
+class ChargingManagement {
 public:
 	/**
 	 * Default constructor.
 	 * Sets up the initialize service.
 	 */
 	ChargingManagement();
+
 	virtual ~ChargingManagement();
 
 };

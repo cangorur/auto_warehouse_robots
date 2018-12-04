@@ -4,11 +4,13 @@
 class Point {
 public:
 	explicit Point();
-    explicit Point(float x, float y);
-    virtual ~Point();
 
-    float x;
-    float y;
+	explicit Point(float x, float y);
+
+	virtual ~Point();
+
+	float x;
+	float y;
 };
 
 #endif /* AGENT_POINT_H_ */

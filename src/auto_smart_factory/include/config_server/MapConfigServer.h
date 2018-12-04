@@ -20,6 +20,7 @@
 class MapConfigServer {
 public:
 	MapConfigServer();
+
 	virtual ~MapConfigServer();
 
 protected:
@@ -30,7 +31,8 @@ protected:
 	 * @param res Response object
 	 * @return Success of service call (always true)
 	 */
-	bool configCallback(auto_smart_factory::GetWarehouseConfig::Request& req, auto_smart_factory::GetWarehouseConfig::Response& res);
+	bool configCallback(auto_smart_factory::GetWarehouseConfig::Request& req,
+	                    auto_smart_factory::GetWarehouseConfig::Response& res);
 
 	/**
 	 * Reads the JSON formatted map/warehouse configuration from file.
@@ -54,7 +56,7 @@ protected:
 	 * @param height Height of the obstacle (in y direction) [meters]
 	 * @param grid The occupancy grid used to set the occupied cells
 	 */
-	static void setRectangularObstacle(float x, float y, float width, float height, nav_msgs::OccupancyGrid &grid);
+	static void setRectangularObstacle(float x, float y, float width, float height, nav_msgs::OccupancyGrid& grid);
 
 	/**
 	 * Sets the value of a single cell in the grid.
@@ -66,7 +68,7 @@ protected:
 	 * @param cellProbability Occupancy probability to be used for the cell (0 or 100).
 	 * @param grid The occupancy grid used to set the occupied cell
 	 */
-	static void setMapCell(unsigned int x, unsigned int y, int8_t cellProbability, nav_msgs::OccupancyGrid &grid);
+	static void setMapCell(unsigned int x, unsigned int y, int8_t cellProbability, nav_msgs::OccupancyGrid& grid);
 
 	/**
 	 * Adds the static obstacles defined in the map configuration to the occupancy map.

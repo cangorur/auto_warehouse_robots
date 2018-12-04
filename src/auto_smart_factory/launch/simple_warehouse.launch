@@ -2,9 +2,6 @@
 	<!-- Warehouse Management -->
 	<node pkg="auto_smart_factory" type="warehouse_management" name="warehouse_management"/>
 
-	<!-- Roadmap Planner -->
-	<node pkg="auto_smart_factory" type="RoadmapPlanner.py" name="roadmap_planner" />
-
 	<!-- Package Generator -->
 	<node pkg="auto_smart_factory" type="package_generator" name="package_generator" output="screen" />
 

@@ -26,13 +26,14 @@
  * Removes packages from output trays automatically.
  * This component could be replaced by or integrated into a real package flow.
  */
-class PackageGenerator{
+class PackageGenerator {
 public:
 	/**
 	 * Default constructor.
 	 * Sets up the initialize service.
 	 */
 	PackageGenerator();
+
 	virtual ~PackageGenerator();
 
 	/**
@@ -49,8 +50,9 @@ protected:
 	 * @param res Response object
 	 * @return True if initialization was successful
 	 */
-	bool init(auto_smart_factory::InitPackageGenerator::Request  &req, 
-			auto_smart_factory::InitPackageGenerator::Response &res);
+	bool init(auto_smart_factory::InitPackageGenerator::Request& req,
+	          auto_smart_factory::InitPackageGenerator::Response& res);
+
 	/**
 	 * Initializes package generator, intern package list, sets up request plan
 	 * & subscribes to storage update topic.
@@ -58,8 +60,9 @@ protected:
 	 * @param package_configurations all different package configurations
 	 * @return True if initialization was successful
 	 */
-	bool initialize(auto_smart_factory::WarehouseConfiguration warehouse_configuration, 
-			std::vector<auto_smart_factory::PackageConfiguration> package_configurations);
+	bool initialize(auto_smart_factory::WarehouseConfiguration warehouse_configuration,
+	                std::vector<auto_smart_factory::PackageConfiguration> package_configurations);
+
 	/**
 	 * Initializes intern package list: externalPackages.
 	 * For every tray a package of each type is considered to exist.
@@ -81,7 +84,7 @@ protected:
 	 * Receive storage updates & updates the internal storage state.
 	 * @param msg Storage update
 	 */
-	void updateTrayState(const auto_smart_factory::StorageUpdate &msg);
+	void updateTrayState(const auto_smart_factory::StorageUpdate& msg);
 
 	/**
 	 * Tells whether the time has come for a new request generation.
@@ -100,9 +103,9 @@ protected:
 	 * output trays are able to carry.
 	 * @todo This service has not been tested yet! See the factory_gateway for its example (yet not implemented) usage
 	 */
-	bool generateService(auto_smart_factory::NewPackageGenerator::Request &req, 
-				auto_smart_factory::NewPackageGenerator::Response &res);
-	
+	bool generateService(auto_smart_factory::NewPackageGenerator::Request& req,
+	                     auto_smart_factory::NewPackageGenerator::Response& res);
+
 	/**
 	 * The function that randomly generates new requests (see the service version above), 
 	 * depending on the storage state & package types the input & output trays are able to carry.
@@ -127,8 +130,8 @@ protected:
 	 * @param package: concrete package to move to the given input tray
 	 * @return True if new request has been generated
 	 */
-	bool newPackageInput(auto_smart_factory::Tray tray, auto_smart_factory::Package package); 
-	
+	bool newPackageInput(auto_smart_factory::Tray tray, auto_smart_factory::Package package);
+
 	/**
 	 * Tries to create a new package input ON THE CONVEYOR BELT request processing tray allocation, package movement &
 	 * taskplanner request.
@@ -146,7 +149,7 @@ protected:
 	 * @param package: package with desired package type
 	 * @return True if new request has been generated
 	 */
-	bool newPackageOutput(int output_tray_id, auto_smart_factory::Package package); 
+	bool newPackageOutput(int output_tray_id, auto_smart_factory::Package package);
 
 	/**
 	 * Clears output tray after it has been occupied.
@@ -186,13 +189,13 @@ protected:
 	 * @return tray state of the tray with the given id
 	 */
 	auto_smart_factory::TrayState getTrayState(unsigned int tray_id);
-	
+
 	/// ROS Nodehandle
 	ros::NodeHandle n;
 
 	/// Server for initialization
-	ros::ServiceServer initSrv; 
-	
+	ros::ServiceServer initSrv;
+
 	/// Package generator service
 	ros::ServiceServer generateNewPackageServer;
 

@@ -14,7 +14,8 @@
 
 using namespace auto_smart_factory;
 
-TrayAllocator::TrayAllocator(unsigned int trayId) : trayId(trayId) {
+TrayAllocator::TrayAllocator(unsigned int trayId)
+		: trayId(trayId) {
 	ros::NodeHandle n;
 	ros::ServiceClient client = n.serviceClient<ReserveStorageTray>(
 			"/storage_management/reserve_tray");
@@ -25,7 +26,7 @@ TrayAllocator::TrayAllocator(unsigned int trayId) : trayId(trayId) {
 }
 
 TrayAllocator::~TrayAllocator() {
-	if (valid) {
+	if(valid) {
 		ros::NodeHandle n;
 		ros::ServiceClient client = n.serviceClient<ReserveStorageTray>(
 				"/storage_management/end_reservation");
@@ -47,7 +48,7 @@ unsigned int TrayAllocator::getId() const {
 	return trayId;
 }
 
-bool TrayAllocator::setPackage(const auto_smart_factory::Package &pkg) {
+bool TrayAllocator::setPackage(const auto_smart_factory::Package& pkg) {
 	ros::NodeHandle n;
 	ros::ServiceClient client = n.serviceClient<SetPackage>(
 			"/storage_management/set_package");

@@ -51,6 +51,7 @@ public:
 	 * @param agent_id: id of this agent
 	 */
 	Agent(std::string agent_id);
+
 	virtual ~Agent();
 
 	/**
@@ -80,7 +81,7 @@ public:
 
 protected:
 
-	bool init(auto_smart_factory::InitAgent::Request  &req, auto_smart_factory::InitAgent::Response &res);
+	bool init(auto_smart_factory::InitAgent::Request& req, auto_smart_factory::InitAgent::Response& res);
 
 	/**
 	 * Initializes this agent and sets up sensors & actuators.
@@ -88,7 +89,7 @@ protected:
 	 * @param robot_configuration: information about the robot role this agent has
 	 */
 	bool initialize(auto_smart_factory::WarehouseConfiguration warehouse_configuration,
-			auto_smart_factory::RobotConfiguration robot_configuration);
+	                auto_smart_factory::RobotConfiguration robot_configuration);
 
 	/**
 	 * Extracts the idle position of this agent from the warehouse config.
@@ -146,8 +147,8 @@ protected:
 	 * @param res Response object
 	 * @return True if store package task calculation has been succesful
 	 */
-	bool storePackage(auto_smart_factory::StorePackage::Request &req,
-			auto_smart_factory::StorePackage::Response &res);
+	bool storePackage(auto_smart_factory::StorePackage::Request& req,
+	                  auto_smart_factory::StorePackage::Response& res);
 
 	/**
 	 * Retrieve package service handler.
@@ -155,8 +156,8 @@ protected:
 	 * @param res Response object
 	 * @return True if retrieve package task calculation has been succesful
 	 */
-	bool retrievePackage(auto_smart_factory::RetrievePackage::Request  &req,
-			auto_smart_factory::RetrievePackage::Response &res);
+	bool retrievePackage(auto_smart_factory::RetrievePackage::Request& req,
+	                     auto_smart_factory::RetrievePackage::Response& res);
 
 	/**
 	 * Assign task service handler. If agent is idle it replaces the current plan with the plan
@@ -167,8 +168,8 @@ protected:
 	 * @param res Request object
 	 * @return True if the task has successfully been assigned
 	 */
-	bool assignTask(auto_smart_factory::AssignTask::Request  &req,
-			auto_smart_factory::AssignTask::Response &res);
+	bool assignTask(auto_smart_factory::AssignTask::Request& req,
+	                auto_smart_factory::AssignTask::Response& res);
 
 	/**
 	 * Returns the tray with the given tray id.
@@ -195,14 +196,14 @@ protected:
 	 */
 	void batteryCallback(const std_msgs::Float32& msg);
 
-    /**
-    * Collision msg Callback handler. Disables the obstacle_detection and stops the motion_planner instances for the
-    * time_to_halt specified in the msg. If there is not time_to_halt specified in the msg. That means that the agent has
-    * to wait until a new path chunk is assigned to it to continue performing its task
+	/**
+	* Collision msg Callback handler. Disables the obstacle_detection and stops the motion_planner instances for the
+	* time_to_halt specified in the msg. If there is not time_to_halt specified in the msg. That means that the agent has
+	* to wait until a new path chunk is assigned to it to continue performing its task
 	* @param msg: indicates to an agent for how long it has to halt
 	* @todo this callback can be updated to take another strategies to avoid the a collision.
-    **/
-    void collisionAlertCallback(const auto_smart_factory::CollisionAction& msg);
+	**/
+	void collisionAlertCallback(const auto_smart_factory::CollisionAction& msg);
 
 	/**
     * Calculates the time to run a distance given distance and velocity
@@ -210,15 +211,15 @@ protected:
 	* @param double: velocity value
 	* @return double value representing the calculated time
     **/
-    double calculateTimeFromDistanceAndVelocity(double distance, double velocity);
+	double calculateTimeFromDistanceAndVelocity(double distance, double velocity);
 
-    /**
-    * Generate random float number between min and max (used for local collision handling)
+	/**
+	* Generate random float number between min and max (used for local collision handling)
 	* @param min: minimum float value
 	* @param max: maximum float value
 	* @return random generated float number
-    **/
-   float randomFloat (float min, float max);
+	**/
+	float randomFloat(float min, float max);
 
 	/// ROS Nodehandle
 	ros::NodeHandle n;
@@ -266,7 +267,7 @@ protected:
 	ros::ServiceServer assign_task_srv;
 
 	/// Server for receive charging tasks from charging management
-    ros::ServiceServer assign_charging_task_srv;
+	ros::ServiceServer assign_charging_task_srv;
 
 	/// Subscriber for pose sensor topic
 	ros::Subscriber pose_sub;
@@ -293,13 +294,13 @@ protected:
 	ros::Publisher heartbeat_pub;
 
 	/// pointer to instance of the motion planner
-	MotionPlanner *motionPlanner;
+	MotionPlanner* motionPlanner;
 
 	/// pointer to instance of the gripper
-	Gripper *gripper;
+	Gripper* gripper;
 
 	/// pointer to instance of obstacle detection
-	ObstacleDetection *obstacleDetection;
+	ObstacleDetection* obstacleDetection;
 
 	/// current position of this agent
 	geometry_msgs::Point position;
@@ -349,8 +350,9 @@ protected:
 	/// current orientation of this agent (sampled in local collision check)
 	geometry_msgs::Quaternion sample_orientation;
 
-    /// Stores the time when the current task was assigned to the agent
+	/// Stores the time when the current task was assigned to the agent
 	float initialTimeOfCurrentTask = -1.0;
 
 };
+
 #endif /* AUTO_SMART_FACTORY_SRC_AGENT_H_ */
