@@ -5,16 +5,16 @@
 #include "agent/path_planning/Point.h"
 
 class Path {
-
-public:
-  Path(std::vector<Point> points = {});
-  virtual ~Path();
-
-  void update(std::vector<Point> points);
-  const std::vector<Point>& getPoints(void);
-
 private:
-    std::vector<Point> points;
+	std::vector<Point> points;
+	float length;
+	
+public:
+	explicit Path(std::vector<Point> points);
+	virtual ~Path() = default;
+	
+	const std::vector<Point>& getPoints() const;
+	float getLength() const;
 };
 
 #endif /* AGENT_PATH_H_ */

@@ -1,17 +1,20 @@
+#include <utility>
+
 #include <agent/path_planning/Path.h>
+#include <include/agent/path_planning/Path.h>
 
-Path::Path(std::vector<Point> points) : points(points) {
+Path::Path(std::vector<Point> points_) :
+	points(std::move(points_)) {
 
+	for(Point& point : points) {
+		// TODO getDistance...
+	}
 }
 
-void Path::update(std::vector<Point> points) {
-    points = points;
+const std::vector<Point>& Path::getPoints() const {
+	return points;
 }
 
-const std::vector<Point>& Path::getPoints() {
-    return points;
-}
-
-Path::~Path() {
-
+float Path::getLength() const {
+	return length;
 }
