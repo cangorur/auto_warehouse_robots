@@ -31,19 +31,61 @@ void Agent::update() {
 		if(!isPathSet) {
 			if(getCurrentPosition().x != 0) {
 				// code for dummy path following
+				//ROS_ERROR("Position: %.2f, %.2f", getCurrentPosition().x, getCurrentPosition().y);
 				std::vector<geometry_msgs::Point> path;
 				geometry_msgs::Point p1;
-				p1.x = this->getCurrentPosition().x - 8;
-				p1.y = this->getCurrentPosition().y - 1;
+				p1.x = 14.0;
+				p1.y = 5.0;
 				geometry_msgs::Point p2;
-				p2.x = this->getCurrentPosition().x - 10;
-				p2.y = this->getCurrentPosition().y + 1;
+				p2.x = 12.5;
+				p2.y = 2.0;
 				geometry_msgs::Point p3;
-				p2.x = this->getCurrentPosition().x - 11;
-				p2.y = this->getCurrentPosition().y;
+				p3.x = 0.0;
+				p3.y = 2.0;
+				geometry_msgs::Point p4;
+				p4.x = 0.0;
+				p4.y = 13.0;
+				geometry_msgs::Point p5;
+				p5.x = 12.5;
+				p5.y = 14.0;
+
+				if(agentID == "robot_2") {
+					ros::Duration(3).sleep();
+					p5.y = 13.5;
+				}
+				if(agentID == "robot_3") {
+					ros::Duration(8).sleep();
+					p5.y = 13.0;
+				}
+				if(agentID == "robot_4") {
+					ros::Duration(13).sleep();
+					p5.y = 12.5;
+				}
+				if(agentID == "robot_5") {
+					ros::Duration(18).sleep();
+					p5.y = 12.0;
+				}
+				if(agentID == "robot_6") {
+					ros::Duration(23).sleep();
+					p5.y = 11.5;
+				}
+				if(agentID == "robot_7") {
+					ros::Duration(28).sleep();
+					p5.y = 11.0;
+				}
+				if(agentID == "robot_8") {
+					ros::Duration(33).sleep();
+					p5.y = 10.5;
+				}
+
+
 				path.push_back(p1);
 				path.push_back(p2);
-				this->motionPlanner->newPath(this->getCurrentPosition(), path, p3, false);
+				path.push_back(p3);
+				path.push_back(p4);
+				path.push_back(p5);				
+
+				this->motionPlanner->newPath(this->getCurrentPosition(), path, p5, false);
 				this->motionPlanner->enable(true);
 				this->motionPlanner->start();
 
