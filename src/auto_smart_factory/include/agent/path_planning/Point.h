@@ -1,11 +1,10 @@
 #ifndef AGENT_POINT_H_
 #define AGENT_POINT_H_
 
-class Point
-{
-
-  public:
-    Point(float x = 0.0f, float y = 0.0f);
+class Point {
+public:
+	explicit Point();
+    explicit Point(float x, float y);
     virtual ~Point();
 
     float x;

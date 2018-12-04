@@ -1,4 +1,4 @@
-#include <agent/Path.h>
+#include <agent/path_planning/Path.h>
 
 Path::Path(std::vector<Point> points) : points(points) {
 

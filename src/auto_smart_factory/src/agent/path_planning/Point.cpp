@@ -1,9 +1,14 @@
-#include <agent/Point.h>
+#include <agent/path_planning/Point.h>
 
-Point::Point(float x, float y) : x(x), y(y)
-{
+Point::Point(float x, float y) :
+	x(x),
+	y(y) {
 }
 
-Point::~Point()
-{
+Point::Point() :
+		x(0),
+		y(0) {
+}
+
+Point::~Point() {
 }

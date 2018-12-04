@@ -2,7 +2,7 @@
 #define AGENT_PATH_H_
 
 #include <vector>
-#include "agent/Point.h"
+#include "agent/path_planning/Point.h"
 
 class Path {
 

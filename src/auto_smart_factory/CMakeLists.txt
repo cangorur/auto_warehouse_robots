@@ -8,39 +8,37 @@ add_definitions(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
-  nav_msgs
-  roscpp
-  roslib
-  rospy
-  sensor_msgs
-  std_msgs
-  message_generation
-  tf
-)
-
+        geometry_msgs
+        nav_msgs
+        roscpp
+        roslib
+        rospy
+        sensor_msgs
+        std_msgs
+        message_generation
+        tf
+        )
 
 ## System dependencies are found with CMake's conventions
 set(BOOST_COMPONENTS
-		system
-		coroutine
-		context
-		thread
-		graph
-		)
+        system
+        coroutine
+        context
+        thread
+        graph
+        )
 find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 
 if(APPLE)
-  set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl")
+    set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl")
 endif()
 
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 find_package(Threads REQUIRED)
-
-include_directories(.)
+include_directories(. ${THREEADS_INCLUDE_DIR})
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -73,63 +71,63 @@ catkin_python_setup()
 
 ## Generate messages in the 'msg' folder
 add_message_files(
-  FILES
-  TrayGeometry.msg
-  Tray.msg
-  Package.msg
-  RequestStatus.msg
-  TaskState.msg
-  TaskPlannerState.msg
-  TraySensor.msg
-  PackagePool.msg
-  Robot.msg
-  IdlePosition.msg
-  WarehouseConfiguration.msg
-  RobotConfiguration.msg
-  RobotHeartbeat.msg
-  AdditionalTime.msg
-  PackageConfiguration.msg
-  TrayState.msg
-  StorageState.msg
-  StorageUpdate.msg
-  GripperState.msg
-  RoadmapGraph.msg
-  CollisionAction.msg
+        FILES
+        TrayGeometry.msg
+        Tray.msg
+        Package.msg
+        RequestStatus.msg
+        TaskState.msg
+        TaskPlannerState.msg
+        TraySensor.msg
+        PackagePool.msg
+        Robot.msg
+        IdlePosition.msg
+        WarehouseConfiguration.msg
+        RobotConfiguration.msg
+        RobotHeartbeat.msg
+        AdditionalTime.msg
+        PackageConfiguration.msg
+        TrayState.msg
+        StorageState.msg
+        StorageUpdate.msg
+        GripperState.msg
+        RoadmapGraph.msg
+        CollisionAction.msg
 )
 
 ## Generate services in the 'srv' folder
 add_service_files(
-   FILES
-   InitAgent.srv
-   InitTaskPlanner.srv
-   InitPathPlanner.srv
-   InitStorageManagement.srv
-   InitPackageGenerator.srv
-   RegisterAgent.srv
-   StorePackage.srv
-   RetrievePackage.srv
-   AssignTask.srv
-   GetWarehouseConfig.srv
-   GetRobotConfigurations.srv
-   GetPackageConfigurations.srv
-   GetStorageState.srv
-   GetTrayState.srv
-   ReserveStorageTray.srv
-   GetPackage.srv
-   SetPackage.srv
-   NewPackageGenerator.srv
-   NewPackageInput.srv
-   NewPackageOutput.srv
-   MovePackage.srv
-   MoveGripper.srv
-   initRoadmapPlanner.srv
-   outputRequest.srv
-   inputRequest.srv
-   triggerRoadmapGenerator.srv
-   #testService.srv
-   PerformTaskTest.srv
-   SetConveyorSpeed.srv
-   RotateTable.srv
+        FILES
+        InitAgent.srv
+        InitTaskPlanner.srv
+        InitPathPlanner.srv
+        InitStorageManagement.srv
+        InitPackageGenerator.srv
+        RegisterAgent.srv
+        StorePackage.srv
+        RetrievePackage.srv
+        AssignTask.srv
+        GetWarehouseConfig.srv
+        GetRobotConfigurations.srv
+        GetPackageConfigurations.srv
+        GetStorageState.srv
+        GetTrayState.srv
+        ReserveStorageTray.srv
+        GetPackage.srv
+        SetPackage.srv
+        NewPackageGenerator.srv
+        NewPackageInput.srv
+        NewPackageOutput.srv
+        MovePackage.srv
+        MoveGripper.srv
+        initRoadmapPlanner.srv
+        outputRequest.srv
+        inputRequest.srv
+        triggerRoadmapGenerator.srv
+        #testService.srv
+        PerformTaskTest.srv
+        SetConveyorSpeed.srv
+        RotateTable.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -141,11 +139,11 @@ add_service_files(
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
-  DEPENDENCIES
-  geometry_msgs
-  nav_msgs
-  sensor_msgs
-  std_msgs
+        DEPENDENCIES
+        geometry_msgs
+        nav_msgs
+        sensor_msgs
+        std_msgs
 )
 
 ################################################
@@ -192,9 +190,9 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  include
-  ${Boost_INCLUDE_DIR}
-  ${catkin_INCLUDE_DIRS}
+        include
+        ${Boost_INCLUDE_DIR}
+        ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -203,12 +201,12 @@ include_directories(
 # )
 
 add_library(tray_allocation
-  src/storage_management/TrayAllocator.cpp
-)
+        src/storage_management/TrayAllocator.cpp
+        )
 add_dependencies(tray_allocation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(tray_allocation
-  ${catkin_LIBRARIES}
-)
+        ${catkin_LIBRARIES}
+        )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -237,54 +235,57 @@ target_link_libraries(tray_allocation
 
 # Warehouse Management
 add_executable(warehouse_management_node
-	src/warehouse_management/WarehouseManagementNode.cpp
-	src/warehouse_management/WarehouseManagement.cpp)
+        src/warehouse_management/WarehouseManagementNode.cpp
+        src/warehouse_management/WarehouseManagement.cpp)
 set_target_properties(warehouse_management_node PROPERTIES OUTPUT_NAME warehouse_management PREFIX "")
 add_dependencies(warehouse_management_node auto_smart_factory_gencpp ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(warehouse_management_node ${catkin_LIBRARIES})
 
 # Agent
 add_executable(agent_node
-	src/agent/AgentNode.cpp
-  src/agent/Agent.cpp
-  src/agent/PathPlanner.cpp
-  src/agent/ChargingManagement.cpp
-	src/agent/MotionPlanner.cpp
-	src/agent/Gripper.cpp
-  src/agent/ObstacleDetection.cpp
-  src/agent/Path.cpp
-)
+        src/agent/path_planning/OrientedPoint.cpp
+        src/agent/path_planning/Path.cpp
+        src/agent/path_planning/PathPlanner.cpp
+        src/agent/path_planning/Point.cpp
+
+        src/agent/Agent.cpp
+        src/agent/AgentNode.cpp
+        src/agent/ChargingManagement.cpp
+        src/agent/Gripper.cpp
+        src/agent/MotionPlanner.cpp
+        src/agent/ObstacleDetection.cpp
+        )
 set_target_properties(agent_node PROPERTIES OUTPUT_NAME agent PREFIX "")
 add_dependencies(agent_node auto_smart_factory_gencpp ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(agent_node ${catkin_LIBRARIES})
 
 # Package Generator
 add_executable(package_generator_node
-	src/package_generator/PackageGenerator.cpp
-	src/package_generator/PackageGeneratorNode.cpp)
+        src/package_generator/PackageGenerator.cpp
+        src/package_generator/PackageGeneratorNode.cpp)
 set_target_properties(package_generator_node PROPERTIES OUTPUT_NAME package_generator PREFIX "")
 add_dependencies(package_generator_node auto_smart_factory_gencpp ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(package_generator_node
-  tray_allocation
-  ${catkin_LIBRARIES}
-)
+        tray_allocation
+        ${catkin_LIBRARIES}
+        )
 
 # Map Server
 add_executable(config_server_node
-	src/config_server/ConfigServerNode.cpp
-	src/config_server/MapConfigServer.cpp
-	src/config_server/RobotConfigServer.cpp
-	src/config_server/PackageConfigServer.cpp
-)
+        src/config_server/ConfigServerNode.cpp
+        src/config_server/MapConfigServer.cpp
+        src/config_server/RobotConfigServer.cpp
+        src/config_server/PackageConfigServer.cpp
+        )
 set_target_properties(config_server_node PROPERTIES OUTPUT_NAME config_server PREFIX "")
 add_dependencies(config_server_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(config_server_node ${catkin_LIBRARIES})
 
 # Storage Management
 add_executable(storage_management_node
-	src/storage_management/StorageManagementNode.cpp
-	src/storage_management/StorageManagement.cpp
-)
+        src/storage_management/StorageManagementNode.cpp
+        src/storage_management/StorageManagement.cpp
+        )
 set_target_properties(storage_management_node PROPERTIES OUTPUT_NAME storage_management PREFIX "")
 add_dependencies(storage_management_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(storage_management_node ${catkin_LIBRARIES})
@@ -301,32 +302,32 @@ target_link_libraries(storage_management_node ${catkin_LIBRARIES})
 
 # Task Planner
 add_executable(task_planner_node
-	src/task_planner/TaskPlannerNode.cpp
-	src/task_planner/TaskPlanner.cpp
-	src/task_planner/RobotCandidate.cpp
-	src/task_planner/Request.cpp
-	src/task_planner/Task.cpp
-	src/task_planner/TaskData.cpp
-	src/task_planner/TaskRequirements.cpp
-	src/task_planner/InputTaskRequirements.cpp
-	src/task_planner/OutputTaskRequirements.cpp
-)
+        src/task_planner/TaskPlannerNode.cpp
+        src/task_planner/TaskPlanner.cpp
+        src/task_planner/RobotCandidate.cpp
+        src/task_planner/Request.cpp
+        src/task_planner/Task.cpp
+        src/task_planner/TaskData.cpp
+        src/task_planner/TaskRequirements.cpp
+        src/task_planner/InputTaskRequirements.cpp
+        src/task_planner/OutputTaskRequirements.cpp
+        )
 set_target_properties(task_planner_node PROPERTIES OUTPUT_NAME task_planner PREFIX "")
 add_dependencies(task_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(task_planner_node
-  tray_allocation
-  ${catkin_LIBRARIES}
-)
+        tray_allocation
+        ${catkin_LIBRARIES}
+        )
 
 add_custom_target(${PROJECT_NAME}_doc
-    rosdoc_lite ${PROJECT_SOURCE_DIR}
-)
+        rosdoc_lite ${PROJECT_SOURCE_DIR}
+        )
 
 # Factory Gateway
 add_executable(factory_gateway_node
-	src/factory_gateway/FactoryGatewayNode.cpp
-	src/factory_gateway/FactoryGateway.cpp
-)
+        src/factory_gateway/FactoryGatewayNode.cpp
+        src/factory_gateway/FactoryGateway.cpp
+        )
 set_target_properties(factory_gateway_node PROPERTIES OUTPUT_NAME factory_gateway PREFIX "")
 add_dependencies(factory_gateway_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(factory_gateway_node ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OPENSSL_CRYPTO_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
@@ -339,19 +340,19 @@ target_link_libraries(factory_gateway_node ${catkin_LIBRARIES} ${Boost_LIBRARIES
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 # Please add your new python nodes to here as a catkin_install
 catkin_install_python(PROGRAMS
-	src/package_generator/PackageManipulator.py
-   	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+        src/package_generator/PackageManipulator.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        )
 
 catkin_install_python(PROGRAMS
-		src/agent/GripperManipulator.py
-		DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+        src/agent/GripperManipulator.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        )
 
 catkin_install_python(PROGRAMS
         src/roadmap_generator/RoadmapGenerator.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+        )
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
@@ -373,6 +374,11 @@ catkin_install_python(PROGRAMS
 #   FILES_MATCHING PATTERN "*.h"
 #   PATTERN ".svn" EXCLUDE
 # )
+
+install(DIRECTORY include include/agent include/config_server include/factory_gateway include/package_generator include/storage_management include/task_planner include/warehouse_management
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+        PATTERN ".git" EXCLUDE
+        )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES

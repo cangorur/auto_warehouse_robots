@@ -1,12 +1,11 @@
 #ifndef AGENT_ORIENTEDPOINT_H_
 #define AGENT_ORIENTEDPOINT_H_
 
-class Point
-{
-
-  public:
-    Point(float x = 0.0f, float y = 0.0f, float o = 0.0f);
-    virtual ~Point();
+class OrientedPoint {
+public:
+	explicit OrientedPoint();
+	explicit OrientedPoint(float x, float y, float o);
+    virtual ~OrientedPoint();
 
     float x;
     float y;
