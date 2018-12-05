@@ -36,15 +36,44 @@ void Agent::update() {
 				geometry_msgs::Point p1;
 				p1.x = 14.0;
 				p1.y = 5.0;
-				geometry_msgs::Point p2;
-				p2.x = 12.5;
-				p2.y = 2.0;
-				geometry_msgs::Point p3;
-				p3.x = 0.0;
-				p3.y = 2.0;
-				geometry_msgs::Point p4;
-				p4.x = 0.0;
-				p4.y = 13.0;
+				path.push_back(p1);
+				
+				p1.x = 12.5;
+				p1.y = 2.0;
+				path.push_back(p1);
+
+				p1.x = 1.3;
+				p1.y = 1.7;
+				path.push_back(p1);
+				p1.x = 1.2;
+				p1.y = 1.8;
+				path.push_back(p1);
+				p1.x = 1.1;
+				p1.y = 1.9;
+				path.push_back(p1);
+
+				p1.x = 1.0;
+				p1.y = 2.0;
+				path.push_back(p1);
+				
+				p1.x = 0.9;
+				p1.y = 2.1;
+				path.push_back(p1);
+				p1.x = 0.8;
+				p1.y = 2.2;
+				path.push_back(p1);
+				p1.x = 0.7;
+				p1.y = 2.3;
+				path.push_back(p1);
+				p1.x = 0.6;
+				p1.y = 2.4;
+				path.push_back(p1);
+				
+				p1.x = 0.0;
+				p1.y = 13.0;
+				path.push_back(p1);
+				
+				// End point
 				geometry_msgs::Point p5;
 				p5.x = 12.5;
 				p5.y = 14.0;
@@ -79,10 +108,8 @@ void Agent::update() {
 				}
 
 
-				path.push_back(p1);
-				path.push_back(p2);
-				path.push_back(p3);
-				path.push_back(p4);
+				
+				
 				path.push_back(p5);				
 
 				this->motionPlanner->newPath(this->getCurrentPosition(), path, p5, false);
