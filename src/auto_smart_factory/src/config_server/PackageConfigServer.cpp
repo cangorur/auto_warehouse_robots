@@ -21,7 +21,8 @@ PackageConfigServer::PackageConfigServer() {
 PackageConfigServer::~PackageConfigServer() {
 }
 
-bool PackageConfigServer::configCallback(auto_smart_factory::GetPackageConfigurations::Request& req, auto_smart_factory::GetPackageConfigurations::Response& res) {
+bool PackageConfigServer::configCallback(auto_smart_factory::GetPackageConfigurations::Request& req,
+                                         auto_smart_factory::GetPackageConfigurations::Response& res) {
 	res.configs = packageConfigs;
 	return true;
 }
@@ -31,7 +32,7 @@ void PackageConfigServer::readPackageConfigs(std::string file) {
 
 	try {
 		read_json(file, configTree);
-	} catch(json_parser::json_parser_error &e) {
+	} catch(json_parser::json_parser_error& e) {
 		ROS_FATAL("Cannot read package configuration file %s. Message: %s", file.c_str(), e.what());
 		return;
 	}

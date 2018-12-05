@@ -28,7 +28,8 @@ RobotConfigServer::RobotConfigServer() {
 RobotConfigServer::~RobotConfigServer() {
 }
 
-bool RobotConfigServer::configCallback(auto_smart_factory::GetRobotConfigurations::Request& req, auto_smart_factory::GetRobotConfigurations::Response& res) {
+bool RobotConfigServer::configCallback(auto_smart_factory::GetRobotConfigurations::Request& req,
+                                       auto_smart_factory::GetRobotConfigurations::Response& res) {
 	res.configs = robotConfigs;
 	return true;
 }
@@ -38,7 +39,7 @@ void RobotConfigServer::readRobotConfigs(std::string file) {
 
 	try {
 		read_json(file, configTree);
-	} catch(json_parser::json_parser_error &e) {
+	} catch(json_parser::json_parser_error& e) {
 		ROS_FATAL("Cannot read robot configuration file %s. Message: %s", file.c_str(), e.what());
 		return;
 	}

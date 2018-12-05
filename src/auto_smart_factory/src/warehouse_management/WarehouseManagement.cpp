@@ -2,35 +2,34 @@
 
 #include <tf/transform_datatypes.h>
 
-WarehouseManagement::WarehouseManagement(){
+WarehouseManagement::WarehouseManagement() {
 	ros::NodeHandle n;
 	ros::NodeHandle pn("~");
 	occupancyMapPub = pn.advertise<nav_msgs::OccupancyGrid>("occupancy_map", 1, true);
 	markerPub = pn.advertise<visualization_msgs::MarkerArray>("abstract_visualization", 1000);
-	robotHeartbeatSub = n.subscribe("robot_heartbeats", 1000, 
-			&WarehouseManagement::receiveHeartbeat, this);
-	taskplannerStateSub = n.subscribe("task_planner/status", 10, 
-			&WarehouseManagement::receiveTaskPlannerState, this);
-	vizPublicationTimer = pn.createTimer(ros::Duration(5.0), 
-			&WarehouseManagement::publishVisualization, this);
+	robotHeartbeatSub = n.subscribe("robot_heartbeats", 1000,
+	                                &WarehouseManagement::receiveHeartbeat, this);
+	taskplannerStateSub = n.subscribe("task_planner/status", 10,
+	                                  &WarehouseManagement::receiveTaskPlannerState, this);
+	vizPublicationTimer = pn.createTimer(ros::Duration(5.0),
+	                                     &WarehouseManagement::publishVisualization, this);
 }
 
-WarehouseManagement::~WarehouseManagement(){
+WarehouseManagement::~WarehouseManagement() {
 }
 
-void WarehouseManagement::start(){
+void WarehouseManagement::start() {
 
 	getConfigs();
 
 	initPackageGenerator(warehouseConfig, packageConfigs);
 	initStorageManagement(warehouseConfig, packageConfigs);
 	initTaskPlanner(warehouseConfig, robotConfigs, packageConfigs);
-	initRoadmapGenerator(warehouseConfig);
 
 	// initialize agents/robots
-	for (auto_smart_factory::Robot robot : warehouseConfig.robots) {
-		for (auto_smart_factory::RobotConfiguration robotConfig : robotConfigs) {
-			if (robotConfig.type_name == robot.type) {
+	for(auto_smart_factory::Robot robot : warehouseConfig.robots) {
+		for(auto_smart_factory::RobotConfiguration robotConfig : robotConfigs) {
+			if(robotConfig.type_name == robot.type) {
 				initAgent(robot.id, warehouseConfig, robotConfig);
 				break;
 			}
@@ -41,39 +40,39 @@ void WarehouseManagement::start(){
 	createTrayMarker();
 }
 
-void WarehouseManagement::getConfigs(){
+void WarehouseManagement::getConfigs() {
 	getWarehouseConfiguration();
 	getRobotConfigurations();
 	getPackageConfigurations();
 }
 
-bool WarehouseManagement::getWarehouseConfiguration(){
+bool WarehouseManagement::getWarehouseConfiguration() {
 	std::string srv_name = "config_server/get_map_configuration";
 	ros::ServiceClient client = n.serviceClient<auto_smart_factory::GetWarehouseConfig>
-		(srv_name.c_str());
+			(srv_name.c_str());
 	auto_smart_factory::GetWarehouseConfig srv;
 	ros::service::waitForService(srv_name.c_str());
-	if (client.call(srv)){
+	if(client.call(srv)) {
 		ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
 		warehouseConfig = srv.response.warehouse_configuration;
 		return true;
-	}else{
+	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
 		return false;
 	}
 }
 
-bool WarehouseManagement::getRobotConfigurations(){
+bool WarehouseManagement::getRobotConfigurations() {
 	std::string srv_name = "config_server/get_robot_configurations";
 	ros::ServiceClient client = n.serviceClient<auto_smart_factory::GetRobotConfigurations>
-		(srv_name.c_str());
+			(srv_name.c_str());
 	auto_smart_factory::GetRobotConfigurations srv;
 	ros::service::waitForService(srv_name.c_str());
-	if (client.call(srv)){
+	if(client.call(srv)) {
 		ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
 		robotConfigs = srv.response.configs;
 		return true;
-	}else{
+	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
 		return false;
 	}
@@ -82,38 +81,18 @@ bool WarehouseManagement::getRobotConfigurations(){
 bool WarehouseManagement::getPackageConfigurations() {
 	std::string srv_name = "config_server/get_package_configurations";
 	ros::ServiceClient client = n.serviceClient<auto_smart_factory::GetPackageConfigurations>
-		(srv_name.c_str());
+			(srv_name.c_str());
 	auto_smart_factory::GetPackageConfigurations srv;
 	ros::service::waitForService(srv_name.c_str());
-	if (client.call(srv)){
+	if(client.call(srv)) {
 		ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
 		packageConfigs = srv.response.configs;
 		return true;
-	}else{
+	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
 		return false;
 	}
 }
-
-
-bool WarehouseManagement::initRoadmapGenerator(
-        auto_smart_factory::WarehouseConfiguration warehouse_configuration) {
-
-     std::string srv_name = "roadmap_generator/trigger_roadmap_generator";
-     ros::ServiceClient client = n.serviceClient<auto_smart_factory::triggerRoadmapGenerator> (srv_name.c_str());
-     auto_smart_factory::triggerRoadmapGenerator srv;
-     srv.request.warehouse_configuration = warehouse_configuration;
-     ros::service::waitForService(srv_name.c_str());
-
-     if (client.call(srv)) {
-		ROS_INFO("[warehouse management]: %s | success: %s",
-				srv_name.c_str(), ((bool)srv.response.success ? "true" : "false"));
-		return true;
-	} else {
-		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
-	    return false;
-	}
-	}
 
 /*
  * This is not used in this version of the code. We have roadmap generator, path planner, traffic planner
@@ -140,9 +119,9 @@ bool WarehouseManagement::initRoadmapPlanner(
 */
 
 bool WarehouseManagement::initTaskPlanner(
-		auto_smart_factory::WarehouseConfiguration warehouse_configuration, 
-		std::vector<auto_smart_factory::RobotConfiguration> robot_configurations, 
-		std::vector<auto_smart_factory::PackageConfiguration> package_configurations){
+		auto_smart_factory::WarehouseConfiguration warehouse_configuration,
+		std::vector<auto_smart_factory::RobotConfiguration> robot_configurations,
+		std::vector<auto_smart_factory::PackageConfiguration> package_configurations) {
 	std::string srv_name = "task_planner/init";
 	ros::ServiceClient client = n.serviceClient<auto_smart_factory::InitTaskPlanner>(srv_name.c_str());
 	auto_smart_factory::InitTaskPlanner srv;
@@ -150,73 +129,73 @@ bool WarehouseManagement::initTaskPlanner(
 	srv.request.robot_configurations = robot_configurations;
 	srv.request.package_configurations = package_configurations;
 	ros::service::waitForService(srv_name.c_str());
-	if (client.call(srv)){
-		ROS_INFO("[warehouse management]: %s | success: %s", 
-				srv_name.c_str(), ((bool)srv.response.success ? "true" : "false"));
+	if(client.call(srv)) {
+		ROS_INFO("[warehouse management]: %s | success: %s",
+		         srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
 		return true;
-	}else{
+	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
-	    	return false;
+		return false;
 	}
 }
 
 
-bool WarehouseManagement::initAgent(std::string agent_id, 
-		auto_smart_factory::WarehouseConfiguration warehouse_configuration, 
-		auto_smart_factory::RobotConfiguration robot_configuration){
+bool WarehouseManagement::initAgent(std::string agent_id,
+                                    auto_smart_factory::WarehouseConfiguration warehouse_configuration,
+                                    auto_smart_factory::RobotConfiguration robot_configuration) {
 	std::string srv_name = agent_id + "/init";
-  	ros::ServiceClient client = n.serviceClient<auto_smart_factory::InitAgent>(srv_name.c_str());
+	ros::ServiceClient client = n.serviceClient<auto_smart_factory::InitAgent>(srv_name.c_str());
 	auto_smart_factory::InitAgent srv;
 	srv.request.warehouse_configuration = warehouse_configuration;
 	srv.request.robot_configuration = robot_configuration;
 	ros::service::waitForService(srv_name.c_str());
-	if (client.call(srv)){
-		ROS_INFO("[warehouse management]: %s | success: %s", 
-				srv_name.c_str(), ((bool)srv.response.success ? "true" : "false"));
+	if(client.call(srv)) {
+		ROS_INFO("[warehouse management]: %s | success: %s",
+		         srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
 		return true;
-	}else{
+	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
-	    	return false;
+		return false;
 	}
 }
 
 bool WarehouseManagement::initPackageGenerator(
-		auto_smart_factory::WarehouseConfiguration warehouse_configuration, 
-		std::vector<auto_smart_factory::PackageConfiguration> package_configurations){
+		auto_smart_factory::WarehouseConfiguration warehouse_configuration,
+		std::vector<auto_smart_factory::PackageConfiguration> package_configurations) {
 	std::string srv_name = "package_generator/init";
 	ros::ServiceClient client = n.serviceClient<auto_smart_factory::InitPackageGenerator>
-		(srv_name.c_str());
+			(srv_name.c_str());
 	auto_smart_factory::InitPackageGenerator srv;
 	srv.request.warehouse_configuration = warehouse_configuration;
 	srv.request.package_configurations = package_configurations;
 	ros::service::waitForService(srv_name.c_str());
-	if (client.call(srv)){
-		ROS_INFO("[warehouse management]: %s | success: %s", 
-				srv_name.c_str(), ((bool)srv.response.success ? "true" : "false"));
+	if(client.call(srv)) {
+		ROS_INFO("[warehouse management]: %s | success: %s",
+		         srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
 		return true;
-	}else{
+	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
-	    	return false;
+		return false;
 	}
 }
 
 bool WarehouseManagement::initStorageManagement(
-		auto_smart_factory::WarehouseConfiguration warehouse_configuration, 
-		std::vector<auto_smart_factory::PackageConfiguration> package_configurations){
+		auto_smart_factory::WarehouseConfiguration warehouse_configuration,
+		std::vector<auto_smart_factory::PackageConfiguration> package_configurations) {
 	std::string srv_name = "storage_management/init";
 	ros::ServiceClient client = n.serviceClient<auto_smart_factory::InitStorageManagement>
-		(srv_name.c_str());
+			(srv_name.c_str());
 	auto_smart_factory::InitStorageManagement srv;
 	srv.request.warehouse_configuration = warehouse_configuration;
 	srv.request.package_configurations = package_configurations;
 	ros::service::waitForService(srv_name.c_str());
-	if (client.call(srv)){
-		ROS_INFO("[warehouse management]: %s | success: %s", 
-				srv_name.c_str(), ((bool)srv.response.success ? "true" : "false"));
+	if(client.call(srv)) {
+		ROS_INFO("[warehouse management]: %s | success: %s",
+		         srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
 		return true;
-	}else{
+	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
-	    	return false;
+		return false;
 	}
 }
 
@@ -245,7 +224,7 @@ void WarehouseManagement::createTrayMarker() {
 	m.lifetime = ros::Duration(0);
 	m.frame_locked = true;
 
-	for(const auto_smart_factory::Tray &tray : warehouseConfig.trays) {
+	for(const auto_smart_factory::Tray& tray : warehouseConfig.trays) {
 		// tray marker
 		geometry_msgs::Point p;
 		p.x = tray.x;
@@ -413,13 +392,13 @@ void WarehouseManagement::receiveTaskPlannerState(auto_smart_factory::TaskPlanne
 
 	ROS_INFO("Pending requests:");
 
-	for (const auto_smart_factory::RequestStatus &req : msg.requests) {
+	for(const auto_smart_factory::RequestStatus& req : msg.requests) {
 		ROS_INFO("- [R %d] Type: %s    Status: %s", req.id, req.type.c_str(), req.status.c_str());
 	}
 
 	ROS_INFO("Current Tasks:");
 
-	for (const auto_smart_factory::TaskState &task : msg.tasks) {
+	for(const auto_smart_factory::TaskState& task : msg.tasks) {
 		ROS_INFO("- [T %d] Status: %s", task.id, task.status.c_str());
 	}
 

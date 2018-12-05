@@ -12,6 +12,7 @@
 class PackageConfigServer {
 public:
 	PackageConfigServer();
+
 	virtual ~PackageConfigServer();
 
 protected:
@@ -21,7 +22,8 @@ protected:
 	 * @param res Response object
 	 * @return Success (always true)
 	 */
-	bool configCallback(auto_smart_factory::GetPackageConfigurations::Request& req, auto_smart_factory::GetPackageConfigurations::Response& res);
+	bool configCallback(auto_smart_factory::GetPackageConfigurations::Request& req,
+	                    auto_smart_factory::GetPackageConfigurations::Response& res);
 
 	/**
 	 * Reads the JSON formatted package configurations from file.

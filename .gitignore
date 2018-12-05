@@ -11,3 +11,6 @@ src/CMakeLists.txt
 #Clion
 .idea
 cmake-build-debug/*
+
+# vscode
+.vscode/*

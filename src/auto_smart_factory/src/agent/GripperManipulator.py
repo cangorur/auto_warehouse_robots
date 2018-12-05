@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-#Created by M.AL Dakhil
+# Created by M.AL Dakhil
 
 from auto_smart_factory.srv import *
 import rospy
 import pymorse
 
 mutex1 = 0
+
 
 def handleMoveGripper(req):
     '''
@@ -18,7 +19,7 @@ def handleMoveGripper(req):
     '''
     global mutex1
     rospy.loginfo(req.gripper_id)
-    while mutex1==1:
+    while mutex1 == 1:
         rospy.loginfo("waiting")
     mutex1 = 1
     success = True
@@ -31,8 +32,10 @@ def handleMoveGripper(req):
     mutex1 = 0
     return MoveGripperResponse(success)
 
+
 def addMoveGripperServer():
     s = rospy.Service('~move_gripper', MoveGripper, handleMoveGripper)
+
 
 if __name__ == "__main__":
     mutex1 = 0

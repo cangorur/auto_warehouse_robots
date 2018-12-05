@@ -11,14 +11,15 @@ using namespace auto_smart_factory;
 
 OutputTaskRequirements::OutputTaskRequirements(
 		auto_smart_factory::PackageConfiguration pkgConfig,
-		unsigned int outputTrayId) :
+		unsigned int outputTrayId)
+		:
 		TaskRequirements(pkgConfig), outputTrayId(outputTrayId) {
 }
 
 OutputTaskRequirements::~OutputTaskRequirements() {
 }
 
-bool OutputTaskRequirements::isLegalSourceTray(const Tray &tray) const {
+bool OutputTaskRequirements::isLegalSourceTray(const Tray& tray) const {
 	bool legal = true;
 
 	// is storage or input tray
@@ -27,7 +28,7 @@ bool OutputTaskRequirements::isLegalSourceTray(const Tray &tray) const {
 	// is suitable
 	//legal &= (pkgConfig.weight <= tray.max_load);
 
-	if (!legal) {
+	if(!legal) {
 		return false;
 	}
 
@@ -46,7 +47,7 @@ bool OutputTaskRequirements::isLegalSourceTray(const Tray &tray) const {
 	return legal;
 }
 
-bool OutputTaskRequirements::isLegalTargetTray(const Tray &tray) const {
+bool OutputTaskRequirements::isLegalTargetTray(const Tray& tray) const {
 	bool legal = true;
 
 	// is desired output tray
@@ -55,7 +56,7 @@ bool OutputTaskRequirements::isLegalTargetTray(const Tray &tray) const {
 	// is output tray
 	legal &= (tray.type == "output");
 
-	if (!legal) {
+	if(!legal) {
 		return false;
 	}
 
@@ -75,7 +76,7 @@ bool OutputTaskRequirements::isLegalTargetTray(const Tray &tray) const {
 }
 
 bool OutputTaskRequirements::checkAllocatedSourceTray(
-		const auto_smart_factory::Tray &tray) const {
+		const auto_smart_factory::Tray& tray) const {
 	bool legal = true;
 
 	// is storage or input tray
@@ -84,7 +85,7 @@ bool OutputTaskRequirements::checkAllocatedSourceTray(
 	// is suitable
 	//legal &= (pkgConfig.weight <= tray.max_load);
 
-	if (!legal) {
+	if(!legal) {
 		return false;
 	}
 
@@ -104,7 +105,7 @@ bool OutputTaskRequirements::checkAllocatedSourceTray(
 }
 
 bool OutputTaskRequirements::checkAllocatedTargetTray(
-		const auto_smart_factory::Tray &tray) const {
+		const auto_smart_factory::Tray& tray) const {
 	bool legal = true;
 
 	// is desired output tray
@@ -113,7 +114,7 @@ bool OutputTaskRequirements::checkAllocatedTargetTray(
 	// is output tray
 	legal &= (tray.type == "output");
 
-	if (!legal) {
+	if(!legal) {
 		return false;
 	}
 

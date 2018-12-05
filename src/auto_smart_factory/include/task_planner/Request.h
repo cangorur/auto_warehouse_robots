@@ -32,7 +32,7 @@ public:
 	 * @param taskRequirements The task requirements object defining the properties of this request
 	 * @param type String representation of the task type, e.g. 'input' or 'output'
 	 */
-	Request(TaskPlanner *tp, TaskRequirementsConstPtr taskRequirements, std::string type);
+	Request(TaskPlanner* tp, TaskRequirementsConstPtr taskRequirements, std::string type);
 
 	virtual ~Request();
 
@@ -76,7 +76,7 @@ protected:
 	 * @return True if candidate list is non-empty
 	 */
 	bool findSourceCandidates(
-			std::vector<auto_smart_factory::Tray> &sourceTrayCandidates) const;
+			std::vector<auto_smart_factory::Tray>& sourceTrayCandidates) const;
 
 	/**
 	 * Creates a list of possible target tray candidates for this request.
@@ -84,7 +84,7 @@ protected:
 	 * @return True if candidate list is non-empty
 	 */
 	bool findTargetCandidates(
-			std::vector<auto_smart_factory::Tray> &targetTrayCandidates) const;
+			std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
 
 	/**
 	 * Creates a list of possible robot candidates using lists of source and target tray candidates.
@@ -94,11 +94,11 @@ protected:
 	 * @param targetTrayCandidates List of output tray candidates
 	 * @return True if robot candidate list is non-empty
 	 */
-	bool getRobotCandidates(std::vector<RobotCandidate> &robotCandidates,
-			const std::vector<auto_smart_factory::Tray> &sourceTrayCandidates,
-			const std::vector<auto_smart_factory::Tray> &targetTrayCandidates) const;
+	bool getRobotCandidates(std::vector<RobotCandidate>& robotCandidates,
+	                        const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
+	                        const std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
 
-    /**
+	/**
 	 * Sends requests to ETAServer to get an estimated duration for a task.
 	 * @param robotId Id of the robot
 	 * @param cand Output of the robot response
@@ -109,9 +109,9 @@ protected:
 	 * parts mentioned in function in the source (Request.cpp line 229) to successfully call a ROS
 	 * service to be implemented under ETA server. 
 	 */
-    bool getRobotETA(std::string robotId, RobotCandidate &cand,
-			const std::vector<auto_smart_factory::Tray> &sourceTrayCandidates,
-			const std::vector<auto_smart_factory::Tray> &targetTrayCandidates) const;
+	bool getRobotETA(std::string robotId, RobotCandidate& cand,
+	                 const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
+	                 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
 
 	/**
 	 * Sends a request to one robot using source and target tray candidates
@@ -122,9 +122,9 @@ protected:
 	 * @param targetTrayCandidates target tray candidates
 	 * @return
 	 */
-	bool sendRobotRequest(std::string robotId, RobotCandidate &cand,
-			const std::vector<auto_smart_factory::Tray> &sourceTrayCandidates,
-			const std::vector<auto_smart_factory::Tray> &targetTrayCandidates) const;
+	bool sendRobotRequest(std::string robotId, RobotCandidate& cand,
+	                      const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
+	                      const std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
 
 	/**
 	 * Assign request/task to robot for includes the setup of the task in the robot.
@@ -139,7 +139,7 @@ protected:
 	auto_smart_factory::RequestStatus status;
 
 	/// reference to the task planner
-	TaskPlanner *taskPlanner;
+	TaskPlanner* taskPlanner;
 
 	/// requirements that need to be fulfilled
 	TaskRequirementsConstPtr requirements;

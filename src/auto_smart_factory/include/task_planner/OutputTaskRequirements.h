@@ -13,7 +13,7 @@
 /**
  * This class encapsulates the requirements to resources that an output request has.
  */
-class OutputTaskRequirements: public TaskRequirements {
+class OutputTaskRequirements : public TaskRequirements {
 public:
 	/**
 	 * Creates output request requirements.
@@ -31,7 +31,7 @@ public:
 	 * @param tray The tray to be checked
 	 * @return Result of the check
 	 */
-	bool isLegalSourceTray(const auto_smart_factory::Tray &tray) const;
+	bool isLegalSourceTray(const auto_smart_factory::Tray& tray) const;
 
 	/**
 	 * Checks if the specified tray is the legal target tray, i.e.
@@ -40,7 +40,7 @@ public:
 	 * @param tray The tray to be checked
 	 * @return Result of the check
 	 */
-	bool isLegalTargetTray(const auto_smart_factory::Tray &tray) const;
+	bool isLegalTargetTray(const auto_smart_factory::Tray& tray) const;
 
 	/**
 	 * Checks if an allocated (reserved) tray still fulfills the requirements for the source tray.
@@ -48,7 +48,7 @@ public:
 	 * @param tray The allocated tray to be checked
 	 * @return Result of the check
 	 */
-	bool checkAllocatedSourceTray(const auto_smart_factory::Tray &tray) const;
+	bool checkAllocatedSourceTray(const auto_smart_factory::Tray& tray) const;
 
 	/**
 	 * Checks if an allocated (reserved) tray still fulfills the requirements for the target tray.
@@ -56,7 +56,7 @@ public:
 	 * @param tray The allocated tray to be checked
 	 * @return Result of the check
 	 */
-	bool checkAllocatedTargetTray(const auto_smart_factory::Tray &tray) const;
+	bool checkAllocatedTargetTray(const auto_smart_factory::Tray& tray) const;
 
 	/**
 	 * This is only used to determine which request to send to the agent.

@@ -13,7 +13,8 @@
 
 using namespace auto_smart_factory;
 
-Task::Task(unsigned int id, TaskData taskData) :
+Task::Task(unsigned int id, TaskData taskData)
+		:
 		taskData(taskData) {
 	// init task state
 	state.id = id;
@@ -118,42 +119,44 @@ bool Task::superviseExecution() {
 	return true;
 }
 
-void Task::receiveLoadStorageUpdate(const StorageUpdate &msg) {
-	if (msg.state.id == taskData.robotOffer.source.id && msg.action == StorageUpdate::DEOCCUPATION) {
+void Task::receiveLoadStorageUpdate(const StorageUpdate& msg) {
+	if(msg.state.id == taskData.robotOffer.source.id && msg.action == StorageUpdate::DEOCCUPATION) {
 		loadAck = true;
 		ROS_INFO("[task %d] Received tray load ack from tray %d.", getId(), msg.state.id);
-	} else
-	if (msg.state.id == taskData.robotOffer.source.id && msg.action == StorageUpdate::OCCUPATION) {
+	} else if(msg.state.id == taskData.robotOffer.source.id && msg.action == StorageUpdate::OCCUPATION) {
 		loadAck = false;
 		ROS_WARN("[task %d] Package that should be removed from tray %d was again put into it.", getId(), msg.state.id);
 	}
 }
 
-void Task::receiveUnloadStorageUpdate(const StorageUpdate &msg) {
-	if (msg.state.id == taskData.robotOffer.target.id && msg.action == StorageUpdate::OCCUPATION) {
+void Task::receiveUnloadStorageUpdate(const StorageUpdate& msg) {
+	if(msg.state.id == taskData.robotOffer.target.id && msg.action == StorageUpdate::OCCUPATION) {
 		unloadAck = true;
 		ROS_INFO("[task %d] Received tray unload ack from tray %d.", getId(), msg.state.id);
-	} else
-	if (msg.state.id == taskData.robotOffer.target.id && msg.action == StorageUpdate::DEOCCUPATION) {
+	} else if(msg.state.id == taskData.robotOffer.target.id && msg.action == StorageUpdate::DEOCCUPATION) {
 		unloadAck = false;
 		ROS_WARN("[task %d] Package that should be put into tray %d was again removed from it.", getId(), msg.state.id);
 	}
 }
 
-void Task::receiveRobotGripperUpdate(const auto_smart_factory::GripperState &msg) {
-	if (msg.loaded) {
+void Task::receiveRobotGripperUpdate(const auto_smart_factory::GripperState& msg) {
+	if(msg.loaded) {
 		robotGrabAck = true;
 		ROS_INFO("[task %d] Received gripper grab ack from robot.", getId());
 
-		if (msg.package.id != taskData.package.id || msg.package.type_id != taskData.package.type_id) {
-			ROS_ERROR("[task %d] Grabbed package is not the package this task got assigned! (assigned package id=%d type=%d, grabbed package id=%d type=%d)", getId(), taskData.package.id, taskData.package.type_id, msg.package.id, msg.package.type_id);
+		if(msg.package.id != taskData.package.id || msg.package.type_id != taskData.package.type_id) {
+			ROS_ERROR(
+					"[task %d] Grabbed package is not the package this task got assigned! (assigned package id=%d type=%d, grabbed package id=%d type=%d)",
+					getId(), taskData.package.id, taskData.package.type_id, msg.package.id, msg.package.type_id);
 		}
 	} else {
 		robotReleaseAck = true;
 		ROS_INFO("[task %d] Received gripper release ack from robot.", getId());
 
-		if (msg.package.id != taskData.package.id || msg.package.type_id != taskData.package.type_id) {
-			ROS_ERROR("[task %d] Released package is not the package this task got assigned! (assigned package id=%d type=%d, released package id=%d type=%d)", getId(), taskData.package.id, taskData.package.type_id, msg.package.id, msg.package.type_id);
+		if(msg.package.id != taskData.package.id || msg.package.type_id != taskData.package.type_id) {
+			ROS_ERROR(
+					"[task %d] Released package is not the package this task got assigned! (assigned package id=%d type=%d, released package id=%d type=%d)",
+					getId(), taskData.package.id, taskData.package.type_id, msg.package.id, msg.package.type_id);
 		}
 	}
 }
@@ -163,13 +166,15 @@ bool Task::waitForLoadAck() {
 	loadAck = false;
 	robotGrabAck = false;
 
-	ros::Subscriber storageUpdateSub = n.subscribe("/storage_management/storage_update", 1000, &Task::receiveLoadStorageUpdate, this);
-	ros::Subscriber robotGripperUpdateSub = n.subscribe("/" + taskData.robotOffer.robotId  + "/gripper_state", 1000, &Task::receiveRobotGripperUpdate, this);
+	ros::Subscriber storageUpdateSub = n.subscribe("/storage_management/storage_update", 1000,
+	                                               &Task::receiveLoadStorageUpdate, this);
+	ros::Subscriber robotGripperUpdateSub = n.subscribe("/" + taskData.robotOffer.robotId + "/gripper_state", 1000,
+	                                                    &Task::receiveRobotGripperUpdate, this);
 
 	ros::Rate r(0.5);
-	while (!(loadAck && robotGrabAck)) {
+	while(!(loadAck && robotGrabAck)) {
 		// TODO: timeout?
-		if (false) {
+		if(false) {
 			return false;
 		}
 
@@ -184,13 +189,15 @@ bool Task::waitForUnloadAck() {
 	unloadAck = false;
 	robotReleaseAck = false;
 
-	ros::Subscriber storageUpdateSub = n.subscribe("/storage_management/storage_update", 1000, &Task::receiveUnloadStorageUpdate, this);
-	ros::Subscriber robotGripperUpdateSub = n.subscribe("/" + taskData.robotOffer.robotId  + "/gripper_state", 1000, &Task::receiveRobotGripperUpdate, this);
+	ros::Subscriber storageUpdateSub = n.subscribe("/storage_management/storage_update", 1000,
+	                                               &Task::receiveUnloadStorageUpdate, this);
+	ros::Subscriber robotGripperUpdateSub = n.subscribe("/" + taskData.robotOffer.robotId + "/gripper_state", 1000,
+	                                                    &Task::receiveRobotGripperUpdate, this);
 
 	ros::Rate r(0.5);
-	while (!(unloadAck && robotReleaseAck)) {
+	while(!(unloadAck && robotReleaseAck)) {
 		// TODO: timeout?
-		if (false) {
+		if(false) {
 			return false;
 		}
 

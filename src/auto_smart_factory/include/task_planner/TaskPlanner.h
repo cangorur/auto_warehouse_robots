@@ -68,7 +68,7 @@ public:
 	 * Get list of all registered robots with their idle status.
 	 * @return Map of registered robots <robot id, (robot configuration, idle status)>
 	 */
-	const std::map< std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> >& getRegisteredRobots() const;
+	const std::map<std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> >& getRegisteredRobots() const;
 
 private:
 	/**
@@ -77,19 +77,19 @@ private:
 	 * @param res Response object
 	 * @return True if initialization was successful
 	 */
-	bool initialize(auto_smart_factory::InitTaskPlannerRequest &req, auto_smart_factory::InitTaskPlannerResponse &res);
+	bool initialize(auto_smart_factory::InitTaskPlannerRequest& req, auto_smart_factory::InitTaskPlannerResponse& res);
 
 	/**
 	 * Receive storage updates.
 	 * @param update Storage update
 	 */
-	void receiveStorageUpdate(const auto_smart_factory::StorageUpdate &update);
+	void receiveStorageUpdate(const auto_smart_factory::StorageUpdate& update);
 
 	/**
 	 * Receive robot heartbeats.
 	 * @param hb Heartbeast message
 	 */
-	void receiveRobotHeartbeat(const auto_smart_factory::RobotHeartbeat &hb);
+	void receiveRobotHeartbeat(const auto_smart_factory::RobotHeartbeat& hb);
 
 	/**
 	 * Handle new input request.
@@ -100,7 +100,8 @@ private:
 	 * @param res Response object
 	 * @return Always true
 	 */
-	bool newInputRequest(auto_smart_factory::NewPackageInputRequest &req, auto_smart_factory::NewPackageInputResponse &res);
+	bool
+	newInputRequest(auto_smart_factory::NewPackageInputRequest& req, auto_smart_factory::NewPackageInputResponse& res);
 
 	/**
 	 * Handle new output request.
@@ -108,7 +109,8 @@ private:
 	 * @param res Response object
 	 * @return Always true
 	 */
-	bool newOutputRequest(auto_smart_factory::NewPackageOutputRequest &req, auto_smart_factory::NewPackageOutputResponse &res);
+	bool newOutputRequest(auto_smart_factory::NewPackageOutputRequest& req,
+	                      auto_smart_factory::NewPackageOutputResponse& res);
 
 	/**
 	 * Called by robots. Registers a robot to the task planner.
@@ -116,7 +118,7 @@ private:
 	 * @param res Response object
 	 * @return Always true
 	 */
-	bool registerAgent(auto_smart_factory::RegisterAgentRequest &req, auto_smart_factory::RegisterAgentResponse &res);
+	bool registerAgent(auto_smart_factory::RegisterAgentRequest& req, auto_smart_factory::RegisterAgentResponse& res);
 
 	/**
 	 * Get current storage state from the storage management.
@@ -128,7 +130,7 @@ private:
 	 * Every 10 seconds this event triggers checking of all requests.
 	 * @param e
 	 */
-	void rescheduleEvent(const ros::TimerEvent &e);
+	void rescheduleEvent(const ros::TimerEvent& e);
 
 	/**
 	 * This method is called whenever new resources get available.
@@ -142,7 +144,7 @@ private:
 	 * status containing request and task states.
 	 * @param e
 	 */
-	void taskStateUpdateEvent(const ros::TimerEvent &e);
+	void taskStateUpdateEvent(const ros::TimerEvent& e);
 
 	/**
 	 * Starts a created task.
@@ -158,7 +160,7 @@ private:
 
 private:
 	/// all registered robots: mapping their id to their configuration and their state (idle/busy with idle = true)
-	std::map< std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> > registeredRobots;
+	std::map<std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> > registeredRobots;
 
 	/// List of pending input requests
 	std::vector<Request> inputRequests;

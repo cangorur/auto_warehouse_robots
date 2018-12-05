@@ -33,6 +33,7 @@ typedef uint32_t TrayId;
 class StorageManagement {
 public:
 	StorageManagement();
+
 	virtual ~StorageManagement();
 
 protected:
@@ -43,8 +44,8 @@ protected:
 	 * @param res Response object
 	 * @return Always true
 	 */
-	bool init(auto_smart_factory::InitStorageManagementRequest &req,
-			auto_smart_factory::InitStorageManagementResponse &res);
+	bool init(auto_smart_factory::InitStorageManagementRequest& req,
+	          auto_smart_factory::InitStorageManagementResponse& res);
 
 	/**
 	 * Initializes the internal storage state using the warehouse configuration.
@@ -72,8 +73,8 @@ protected:
 	 * @param res Response object containing state
 	 * @return Success (always true)
 	 */
-	bool getStorageInformation(auto_smart_factory::GetStorageState::Request &req,
-			auto_smart_factory::GetStorageState::Response &res);
+	bool getStorageInformation(auto_smart_factory::GetStorageState::Request& req,
+	                           auto_smart_factory::GetStorageState::Response& res);
 
 	/**
 	 * Service handler to return the state of a single tray.
@@ -81,8 +82,8 @@ protected:
 	 * @param res Response object with tray state
 	 * @return Success (true if specified tray exists)
 	 */
-	bool getTrayState(auto_smart_factory::GetTrayStateRequest &req,
-			auto_smart_factory::GetTrayStateResponse &res);
+	bool getTrayState(auto_smart_factory::GetTrayStateRequest& req,
+	                  auto_smart_factory::GetTrayStateResponse& res);
 
 	/**
 	 * Service handler to reserve a specified tray.
@@ -90,8 +91,8 @@ protected:
 	 * @param res Response object with success (true if tray exists and is not already reserved)
 	 * @return Always true
 	 */
-	bool reserveTray(auto_smart_factory::ReserveStorageTrayRequest &req,
-			auto_smart_factory::ReserveStorageTrayResponse &res);
+	bool reserveTray(auto_smart_factory::ReserveStorageTrayRequest& req,
+	                 auto_smart_factory::ReserveStorageTrayResponse& res);
 
 	/**
 	 * Service handler to end reservation of tray.
@@ -99,8 +100,8 @@ protected:
 	 * @param res Response object with success (true if tray exists and was reserved before)
 	 * @return Always true
 	 */
-	bool endTrayReservation(auto_smart_factory::ReserveStorageTrayRequest &req,
-			auto_smart_factory::ReserveStorageTrayResponse &res);
+	bool endTrayReservation(auto_smart_factory::ReserveStorageTrayRequest& req,
+	                        auto_smart_factory::ReserveStorageTrayResponse& res);
 
 	/**
 	 * Service handler to set package information for a specific tray.
@@ -108,8 +109,8 @@ protected:
 	 * @param res Response object
 	 * @return Success (true if tray exists)
 	 */
-	bool setPackage(auto_smart_factory::SetPackageRequest &req,
-			auto_smart_factory::SetPackageResponse &res);
+	bool setPackage(auto_smart_factory::SetPackageRequest& req,
+	                auto_smart_factory::SetPackageResponse& res);
 
 	/**
 	 * Service handler to get package information for a specific tray.
@@ -117,7 +118,7 @@ protected:
 	 * @param res Response object with package information
 	 * @return Success (true if tray exists)
 	 */
-	bool getPackage(auto_smart_factory::GetPackageRequest &req, auto_smart_factory::GetPackageResponse &res);
+	bool getPackage(auto_smart_factory::GetPackageRequest& req, auto_smart_factory::GetPackageResponse& res);
 
 	/**
 	 * Message receive handler for tray sensor messages. These messages are sent
@@ -125,7 +126,7 @@ protected:
 	 * The internal tray states are updated accordingly.
 	 * @param msg The sensor message
 	 */
-	void receiveTraySensorMsg(const auto_smart_factory::TraySensor &msg);
+	void receiveTraySensorMsg(const auto_smart_factory::TraySensor& msg);
 
 	/**
 	 * Packs current storage state into the message format.
@@ -139,8 +140,8 @@ protected:
 	 * @param tray_state New state of the tray
 	 * @param action The action that led to this update (reservation, de-reservation, occupation or de-occupation)
 	 */
-	void publishStorageUpdate(auto_smart_factory::TrayState &tray_state,
-			uint8_t action);
+	void publishStorageUpdate(auto_smart_factory::TrayState& tray_state,
+	                          uint8_t action);
 
 	/**
 	 * Converts a string of the format 'pkgx_x' to package information.
