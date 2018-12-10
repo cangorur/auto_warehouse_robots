@@ -106,9 +106,6 @@ void Agent::update() {
 					ros::Duration(33).sleep();
 					p5.y = 10.5;
 				}
-
-
-				
 				
 				path.push_back(p5);				
 
