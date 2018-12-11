@@ -78,16 +78,17 @@ bool MotionPlanner::hasPath() {
 
 bool MotionPlanner::driveCurrentPath(Point currentPosition, double orientation) {
 	geometry_msgs::Twist motion;
-	
+
 	float distToTarget = Math::getDistance(currentPosition, currentTarget);
-	
-	/*float desiredRotation = Math::getRotation(currentTarget - currentPosition);
+
+	// WTF
+	orientation = orientation / (PI / 2.0);
+	float desiredRotation = Math::getRotation(currentTarget - currentPosition);
 	float currentRotation = getRotationFromOrientation(orientation);
 	float rotationToTarget = Math::getAngleDifference(currentRotation, desiredRotation);
-	float rotationSign = rotationToTarget < 0.f ? -1.f : 1.f;
-	rotationToTarget = std::fabs(rotationToTarget);*/
 
-	float rotationToTarget = getRotationToTarget(currentPosition, currentTarget, orientation);
+	//float rotationToTarget = getRotationToTarget(currentPosition, currentTarget, orientation);
+	
 	float rotationSign = rotationToTarget < 0.f ? -1.f : 1.f;
 	rotationToTarget = std::fabs(rotationToTarget);
 	
