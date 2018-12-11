@@ -10,9 +10,9 @@ Position::Position(double x, double y, double o, ros::Time t)
 
 Position::Position()
 		:
-		x(0),
-		y(0),
-		o(0),
+		x(0.0),
+		y(0.0),
+		o(0.0),
         t(ros::Time::now()) {
 }
 
