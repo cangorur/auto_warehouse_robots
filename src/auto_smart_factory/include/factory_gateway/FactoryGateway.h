@@ -15,7 +15,7 @@
 //#include <auto_smart_factory/Tray.h>
 //#include <auto_smart_factory/StorageUpdate.h>
 #include <auto_smart_factory/GetStorageState.h>
-#include <auto_smart_factory/GetFreeChargingStations.h>
+//#include <auto_smart_factory/GetFreeChargingStations.h>
 #include <auto_smart_factory/TrayState.h>
 #include <auto_smart_factory/NewPackageInput.h>
 #include <auto_smart_factory/NewPackageGenerator.h>
@@ -78,7 +78,7 @@ private:
 	 * Get state of charging stations, occupied or not. Takes a json ptree and returns it back with station info
 	 * @return Storage state
 	 */
-	boost::property_tree::ptree GetStateOfChargingStations(boost::property_tree::ptree message_pt);
+	//boost::property_tree::ptree GetStateOfChargingStations(boost::property_tree::ptree message_pt);
 
 	/**
 	 * Get state of delivery robots. Takes a json ptree and returns it back with robot info

@@ -43,12 +43,10 @@ void FactoryGateway::initialize() {
 	ros::NodeHandle pn("~");
 
 	storageStates = n.serviceClient<auto_smart_factory::GetStorageState>("/storage_management/get_storage_information");
-	freeChargingStations = n.serviceClient<auto_smart_factory::GetFreeChargingStations>(
-			"/charging_management/get_free_charging_stations");
+	//freeChargingStations = n.serviceClient<auto_smart_factory::GetFreeChargingStations>("/charging_management/get_free_charging_stations");
 	toggleConveyor1 = n.serviceClient<std_srvs::Trigger>("/conveyor_1/switch_on_off");
 	toggleConveyor2 = n.serviceClient<std_srvs::Trigger>("/conveyor_2/switch_on_off");
-	generateNewPackageClient = n.serviceClient<auto_smart_factory::NewPackageGenerator>(
-			"package_generator/new_package_generator");
+	generateNewPackageClient = n.serviceClient<auto_smart_factory::NewPackageGenerator>("package_generator/new_package_generator");
 	// subscribe to the robot battery topics
 	// TODO: new robot battery topic/service will be written under charging management and it will be initialized here called below necessary.
 	robot1_battery = n.subscribe("/robot_1/battery", 1000, &FactoryGateway::receiveRobot1Battery, this);
@@ -116,9 +114,9 @@ void FactoryGateway::SetWebSocketServer() {
 		if(sender_name == "delivery-container-service") {
 			message_pt = GetStateOfDeliveryContainers(message_pt);
 		}
-		if(sender_name == "chargingstation-service") {
-			message_pt = GetStateOfChargingStations(message_pt);
-		}
+		//if(sender_name == "chargingstation-service") {
+		//	message_pt = GetStateOfChargingStations(message_pt);
+		//}
 		if(sender_name == "deliveryrobot-service") {
 			message_pt = GetStateOfDeliveryRobots(message_pt);
 		}
@@ -335,7 +333,7 @@ boost::property_tree::ptree FactoryGateway::GetStateOfDeliveryContainers(boost::
 	return message_pt;
 }
 
-boost::property_tree::ptree FactoryGateway::GetStateOfChargingStations(boost::property_tree::ptree message_pt) {
+//boost::property_tree::ptree FactoryGateway::GetStateOfChargingStations(boost::property_tree::ptree message_pt) {
 
 	//TODO: this function calls the services and subscriptions to hold the last up-to-date values
 	//BASED ON THE MESSAGE RECEIVED ???
@@ -347,6 +345,7 @@ boost::property_tree::ptree FactoryGateway::GetStateOfChargingStations(boost::pr
 				srv.response.state.occupied);
 		return false;
 	}*/
+	/*
 	auto_smart_factory::GetFreeChargingStations srv_charging;
 	freeChargingStations.call(srv_charging);
 	boost::property_tree::ptree station_node;
@@ -380,7 +379,7 @@ boost::property_tree::ptree FactoryGateway::GetStateOfChargingStations(boost::pr
 	message_pt.put_child("response", chargingstation_state_node);
 	ROS_INFO("The up-to-date Charging Station occupancies has been shared!");
 	return message_pt;
-}
+}*/
 
 boost::property_tree::ptree FactoryGateway::GetStateOfDeliveryRobots(boost::property_tree::ptree message_pt) {
 
