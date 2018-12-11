@@ -21,7 +21,7 @@ private:
 	//ThetaStarMap thetaStarMap;	
 
 public:
-	Map(float width, float height, float margin, float resolutionThetaStar);
+	Map(float width, float height, float margin, float resolutionThetaStar, std::vector<Rectangle> obstacles);
 
 	//void draw(sf::RenderWindow& renderWindow) override;
 	

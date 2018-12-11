@@ -47,6 +47,11 @@ void MapConfigServer::readMapConfig(std::string file) {
 	warehouseConfig.width = configTree.get<float>("map.width");
 	warehouseConfig.height = configTree.get<float>("map.height");
 	
+	warehouseConfig.map_configuration.width = configTree.get<float>("map.width");
+	warehouseConfig.map_configuration.height = configTree.get<float>("map.height");
+	// Hardcoded in robots_config radius as 0.25
+	warehouseConfig.map_configuration.margin = 0.5f; 
+	
 	// read tray config
 	warehouseConfig.tray_geometry.width = configTree.get<float>("tray_geometry.width");
 	warehouseConfig.tray_geometry.height = configTree.get<float>("tray_geometry.height");
@@ -104,8 +109,10 @@ void MapConfigServer::readMapConfig(std::string file) {
 }
 
 void MapConfigServer::addStaticObstacles() {
-	float trayOffsetX = warehouseConfig.tray_geometry.width / 2.0;
-	float trayOffsetY = warehouseConfig.tray_geometry.height / 2.0;
+	warehouseConfig.map_configuration.obstacles.clear();
+	
+	float trayOffsetX = warehouseConfig.tray_geometry.width / 2.0f;
+	float trayOffsetY = warehouseConfig.tray_geometry.height / 2.0f;
 
 	for(const auto_smart_factory::Tray& tray : warehouseConfig.trays) {
 		float x = tray.x - trayOffsetX;
@@ -119,8 +126,15 @@ void MapConfigServer::setRectangularObstacle(float x, float y, float width, floa
 	ROS_ASSERT(y >= 0);
 	ROS_ASSERT(width >= 0);
 	ROS_ASSERT(height >= 0);
-	
 
+	auto_smart_factory::Rectangle rectangle;
+	rectangle.posX = x;
+	rectangle.posY = y;
+	rectangle.sizeX = width;
+	rectangle.sizeY = height;
+	rectangle.rotation = rotation;	
+	
+	warehouseConfig.map_configuration.obstacles.push_back(rectangle);
 }
 
 bool MapConfigServer::configCallback(auto_smart_factory::GetWarehouseConfig::Request& req, auto_smart_factory::GetWarehouseConfig::Response& res) {

@@ -47,7 +47,7 @@ protected:
 	 * @param height Height of the obstacle (in y direction) [meters]
 	 * @param grid The occupancy grid used to set the occupied cells
 	 */
-	static void setRectangularObstacle(float x, float y, float width, float height, float rotation);
+	void setRectangularObstacle(float x, float y, float width, float height, float rotation);
 
 	/**  Adds the static obstacles defined in the map configuration to the occupancy map.
 	 * This comprises trays and charging stations. */

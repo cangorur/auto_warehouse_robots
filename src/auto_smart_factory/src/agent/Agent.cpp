@@ -154,6 +154,15 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		this->obstacleDetection = new ObstacleDetection(agentID, *motionPlanner, robotConfig, warehouseConfig);
 		this->obstacleDetection->enable(false);
 		
+		// Generate map
+		std::vector<Rectangle> obstacles;
+		
+		for(auto o : warehouseConfig.map_configuration.obstacles) {
+			obstacles.emplace_back(Point(o.posX, o.posY), Point(o.sizeX, o.sizeY), o.rotation);
+		}
+		
+		map = Map(warehouseConfig.map_configuration.width, warehouseConfig.map_configuration.height, warehouseConfig.map_configuration.margin, warehouseConfig.map_configuration.resolutionThetaStar, obstacles);
+		
 		return true;
 	} catch(...) {
 		ROS_ERROR("[%s]: Exception occured!", agentID.c_str());

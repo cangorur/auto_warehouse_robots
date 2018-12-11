@@ -1,4 +1,8 @@
+#include <utility>
+
 #include <iostream>
+#include <include/agent/path_planning/Map.h>
+
 
 #include "Math.h"
 #include "agent/path_planning/Rectangle.h"
@@ -6,10 +10,11 @@
 #include "agent/path_planning/Point.h"
 //#include "ThetaStar/ThetaStarPathPlanner.hpp"
 
-Map::Map(float width, float height, float margin, float resolutionThetaStar) :
+Map::Map(float width, float height, float margin, float resolutionThetaStar, std::vector<Rectangle> obstacles) :
 		width(width),
 		height(height),
-		margin(margin) {
+		margin(margin),
+		obstacles(std::move(obstacles)) {
 	
 	//obstacles.emplace_back(Point(0, -10), Point(8, 40), 90);
 	
