@@ -28,6 +28,8 @@ void Agent::update() {
 			sendHeartbeat();
 		}
 
+		setState(true);
+
 		if(!isPathSet) {
 			if(getCurrentPosition().x != 0) {
 				// code for dummy path following
@@ -314,7 +316,7 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
 			ROS_INFO("assignTask %s %.2f %i", agentID.c_str(), initialTimeOfCurrentTask, task_id);
 			setState(false);     //Set to non idle if a task is assigned
-			res.success = false;
+			res.success = true;
 		} else {
 			ROS_WARN("[%s]: Is busy! - Task %i has not been assigned!",
 			         agentID.c_str(), req.task_id);

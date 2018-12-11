@@ -105,6 +105,7 @@ TaskData Request::allocateResources() {
 
 			// allocate robot (try to assign task)
 			if(!allocateRobot(cand)) {
+				ROS_WARN("[request %d] robot allocation fail", status.id);
 				continue;
 			}
 
@@ -244,10 +245,10 @@ bool Request::getRobotETA(std::string robotId, RobotCandidate& cand,
 
 	//TODO: Differentiate between input and output task and call getBestTargetTray or getBestSourceTray from pathPlanner
 
-	/*
+	
 	// TODO: Below is the call for an example service implemented for an ETA server (in earlier versions).
 	// You may use the same service see CalculateETA.srv file.
-	CalculateETA srv;
+	/*CalculateETA srv;
 	srv.request.robotId = robotId;
 	srv.request.posStart.x = sourceTrayCandidate.x;
 	srv.request.posStart.y = sourceTrayCandidate.y;
@@ -263,8 +264,11 @@ bool Request::getRobotETA(std::string robotId, RobotCandidate& cand,
 		return true;
 	}
 	*/
-
-	return false;
+	cand.robotId = robotId;
+	cand.source = sourceTrayCandidate;
+	cand.target = targetTrayCandidate;
+	cand.estimatedDuration = ros::Duration(1);
+	return true;
 }
 
 bool Request::allocateRobot(RobotCandidate candidate) const {
