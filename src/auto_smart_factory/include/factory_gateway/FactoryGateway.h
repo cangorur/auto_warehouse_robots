@@ -15,7 +15,7 @@
 //#include <auto_smart_factory/Tray.h>
 //#include <auto_smart_factory/StorageUpdate.h>
 #include <auto_smart_factory/GetStorageState.h>
-#include <auto_smart_factory/GetFreeChargingStations.h>
+//#include <auto_smart_factory/GetFreeChargingStations.h>
 #include <auto_smart_factory/TrayState.h>
 #include <auto_smart_factory/NewPackageInput.h>
 #include <auto_smart_factory/NewPackageGenerator.h>

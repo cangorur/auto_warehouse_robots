@@ -9,7 +9,7 @@ ObstacleDetection::ObstacleDetection(std::string agent_id, MotionPlanner& motion
 	warehouseConfig = warehouse_config;
 
 	//build grid matrix
-	int index = 0;
+	/*int index = 0;
 	for(int i = 0; i < warehouseConfig.occupancy_map.info.height; i++) {
 		std::vector<float> row;
 		for(int j = 0; j < warehouseConfig.occupancy_map.info.width; j++) {
@@ -17,7 +17,7 @@ ObstacleDetection::ObstacleDetection(std::string agent_id, MotionPlanner& motion
 			index++;
 		}
 		occupancyGrid.push_back(row);
-	}
+	}*/
 
 	//initialize random seed for rand()
 	srand(time(NULL));

@@ -8,8 +8,8 @@ Tray[] trays
 # Info about the tray geometry
 TrayGeometry tray_geometry
 
-# The occupancy map of the warehouse
-nav_msgs/OccupancyGrid occupancy_map
+# The map of the warehouse
+MapConfiguration map_configuration
 
 # The package pool
 PackagePool package_pool

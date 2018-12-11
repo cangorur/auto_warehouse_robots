@@ -114,8 +114,7 @@ void Agent::update() {
 	}
 }
 
-bool Agent::init(auto_smart_factory::InitAgent::Request& req,
-                 auto_smart_factory::InitAgent::Response& res) {
+bool Agent::init(auto_smart_factory::InitAgent::Request& req, auto_smart_factory::InitAgent::Response& res) {
 	if(!initialized) {
 		initialized = initialize(req.warehouse_configuration, req.robot_configuration);
 		if(initialized) {
@@ -129,8 +128,7 @@ bool Agent::init(auto_smart_factory::InitAgent::Request& req,
 	return true;
 }
 
-bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_configuration,
-                       auto_smart_factory::RobotConfiguration robot_configuration) {
+bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_configuration, auto_smart_factory::RobotConfiguration robot_configuration) {
 	ros::NodeHandle pn("~");
 	warehouseConfig = warehouse_configuration;
 	robotConfig = robot_configuration;
@@ -151,8 +149,11 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	try {
 		this->motionPlanner = new MotionPlanner(this, this->robotConfig, &(this->motion_pub));
 		this->gripper = new Gripper(this, &(this->gripper_state_pub));
-		this->obstacleDetection = new ObstacleDetection(agentID, *motionPlanner,
-		                                                robotConfig, warehouseConfig);
+
+		// Disable to prevent crash because obstacleDetections was not initialized properly because no occupancy map is available
+		this->obstacleDetection = new ObstacleDetection(agentID, *motionPlanner, robotConfig, warehouseConfig);
+		this->obstacleDetection->enable(false);
+		
 		return true;
 	} catch(...) {
 		ROS_ERROR("[%s]: Exception occured!", agentID.c_str());
@@ -361,11 +362,12 @@ auto_smart_factory::Tray Agent::getTray(unsigned int tray_id) {
 void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 	position = msg.pose.position;
 	orientation = msg.pose.orientation;
+	
 	if(this->motionPlanner->isEnabled()) {
-		this->obstacleDetection->enable(true);
+		//this->obstacleDetection->enable(true);
 		this->motionPlanner->update(position, asin(orientation.z));
 	} else {
-		this->obstacleDetection->enable(false);
+		//this->obstacleDetection->enable(false);
 	}
 }
 

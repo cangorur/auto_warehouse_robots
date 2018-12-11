@@ -29,8 +29,7 @@
 class WarehouseManagement {
 public:
 	WarehouseManagement();
-
-	virtual ~WarehouseManagement();
+	virtual ~WarehouseManagement() = default;
 
 	/**
 	 * Start the warehouse and initialize all components.
@@ -131,9 +130,6 @@ protected:
 
 	/// Publisher of the visualization markers
 	ros::Publisher markerPub;
-
-	/// Publisher of the occupancy map
-	ros::Publisher occupancyMapPub;
 
 	/// Robot heartbeat subscriber
 	ros::Subscriber robotHeartbeatSub;
