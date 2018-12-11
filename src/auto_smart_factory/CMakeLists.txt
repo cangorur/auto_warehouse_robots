@@ -91,8 +91,9 @@ add_message_files(
 		StorageState.msg
 		StorageUpdate.msg
 		GripperState.msg
-		#RoadmapGraph.msg
 		CollisionAction.msg
+		MapConfiguration.msg
+		Rectangle.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -120,11 +121,8 @@ add_service_files(
 		NewPackageOutput.srv
 		MovePackage.srv
 		MoveGripper.srv
-#		initRoadmapPlanner.srv
 		outputRequest.srv
 		inputRequest.srv
-#		triggerRoadmapGenerator.srv
-		#testService.srv
 		PerformTaskTest.srv
 		SetConveyorSpeed.srv
 		RotateTable.srv
@@ -247,6 +245,8 @@ add_executable(agent_node
 		src/agent/path_planning/Path.cpp
 		src/agent/path_planning/PathPlanner.cpp
 		src/agent/path_planning/Point.cpp
+		src/agent/path_planning/Map.cpp
+		src/agent/path_planning/Rectangle.cpp
 
 		src/agent/Agent.cpp
 		src/agent/AgentNode.cpp
@@ -254,7 +254,6 @@ add_executable(agent_node
 		src/agent/Gripper.cpp
 		src/agent/MotionPlanner.cpp
 		src/agent/ObstacleDetection.cpp
-		
 		src/agent/PidController.cpp
 		src/agent/Position.cpp
 
