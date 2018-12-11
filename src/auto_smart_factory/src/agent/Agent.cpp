@@ -37,39 +37,31 @@ void Agent::update() {
 				p1.x = 14.0;
 				p1.y = 5.0;
 				path.push_back(p1);
-				
 				p1.x = 12.5;
 				p1.y = 2.0;
 				path.push_back(p1);
+				
+				
+				p1.x = 1.9;
+				p1.y = 1.0;
+				path.push_back(p1);
+				p1.x = 1.5;
+				p1.y = 1.11;
+				path.push_back(p1);
 
-				p1.x = 1.3;
-				p1.y = 1.7;
+				p1.x = 1.25;
+				p1.y = 1.25;
 				path.push_back(p1);
-				p1.x = 1.2;
-				p1.y = 1.8;
+				
+				p1.x = 1.11;
+				p1.y = 1.5;
 				path.push_back(p1);
-				p1.x = 1.1;
+				p1.x = 1.0;
 				p1.y = 1.9;
 				path.push_back(p1);
 
+				
 				p1.x = 1.0;
-				p1.y = 2.0;
-				path.push_back(p1);
-				
-				p1.x = 0.9;
-				p1.y = 2.1;
-				path.push_back(p1);
-				p1.x = 0.8;
-				p1.y = 2.2;
-				path.push_back(p1);
-				p1.x = 0.7;
-				p1.y = 2.3;
-				path.push_back(p1);
-				p1.x = 0.6;
-				p1.y = 2.4;
-				path.push_back(p1);
-				
-				p1.x = 0.7;
 				p1.y = 13.0;
 				path.push_back(p1);
 				
@@ -106,6 +98,9 @@ void Agent::update() {
 					ros::Duration(35).sleep();
 					p5.y = 10.5;
 				}
+
+
+				
 				
 				path.push_back(p5);				
 
