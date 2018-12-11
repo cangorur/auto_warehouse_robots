@@ -254,7 +254,9 @@ add_executable(agent_node
 		src/agent/Gripper.cpp
 		src/agent/MotionPlanner.cpp
 		src/agent/ObstacleDetection.cpp
+		
 		src/agent/PidController.cpp
+		src/agent/Position.cpp
 
 		src/Math.cpp
 		)
