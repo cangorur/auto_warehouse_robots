@@ -37,43 +37,33 @@ void PidController::update(Position* current) {
     if (targetReached(current) == true)
     {
         ROS_INFO("GOAL ACHIEVED");
-        publishVelocity(0.0,0.0);
+        publishVelocity(0.0, 0.0);
         return;
     }
 
     if (iterations == 0) {
-        start->x = current->x;
-        start->y = current->y;
-        start->t = current->t;
-        start->o = current->o;
-        last->x = current->x;
-        last->y = current->y;
-        last->t = current->t;
-        last->o = current->o;
+        *start = *current;
+        *last = *current;
     }
     iterations++;
 
     //Calculation of action intervention.
     if (fabs(targetDistance) > posTolerance) {
-    speedCommand = calculatePSD(current,start->getDistance(current)*copysign(1.0, targetDistance),start->getDistance(last)*copysign(1.0, targetDistance),targetDistance,F_KP,F_KD,F_KI,&sumDistance);
+        newSpeed = calculatePSD(current, start->getDistance(current) * copysign(1.0, targetDistance), start->getDistance(last) * copysign(1.0, targetDistance), targetDistance, F_KP, F_KD, F_KI, &sumDistance);
     }
 
-    if (current->o-last->o < -PI) {
-        current->o += 2*PI;
-    } else if (current->o-last->o > PI) {
-        current->o -= 2*PI;
+    if (current->o - last->o < -M_PI) {
+        current->o += 2*M_PI;
+    } else if (current->o - last->o > M_PI) {
+        current->o -= 2*M_PI;
     }
 
-    angleCommand = calculatePSD(current,current->o-start->o, last->o-start->o,targetAngle,R_KP,R_KD,R_KI,&sumAngle);
+    newAngle = calculatePSD(current, current->o - start->o, last->o - start->o, targetAngle, R_KP, R_KD, R_KI, &sumAngle);
 
-    //Saving position to last
-    last->x = current->x;
-    last->y = current->y;
-    last->o = current->o;
-    last->t = current->t;
+    *last = *current;
 
-    //Invoking method for publishing message
-    publishVelocity(fmin(maxAngleSpeed,angleCommand), fmin(maxSpeed,speedCommand));
+    // publish velocity message
+    publishVelocity(fmin(maxAngleSpeed, newAngle), fmin(maxSpeed, newSpeed));
 }
 
 bool PidController::targetReached(Position* current) {
@@ -85,8 +75,8 @@ bool PidController::targetReached(Position* current) {
     }
 
     if (fabs(targetAngle - (current->o - start->o)) > angleTolerance &
-    fabs(targetAngle - (current->o - start->o) + 2*PI) > angleTolerance &
-    fabs(targetAngle - (current->o - start->o) - 2*PI) > angleTolerance) {
+    fabs(targetAngle - (current->o - start->o) + 2*M_PI) > angleTolerance &
+    fabs(targetAngle - (current->o - start->o) - 2*M_PI) > angleTolerance) {
         return false;
     }
 
@@ -106,4 +96,6 @@ double PidController::calculatePSD(Position* current, double currentValue, doubl
 }
 
 PidController::~PidController() {
+    delete start;
+    delete last;
 }

@@ -1,11 +1,11 @@
 #ifndef AGENT_PIDCONTROLLER_H_
 #define AGENT_PIDCONTROLLER_H_
 
+#include <math.h>
 #include "ros/ros.h"
 #include "agent/Position.h"
 #include "geometry_msgs/Twist.h"
 
-#define PI 3.141592
 #define F_KP 2.58  	// P constant for PSD translation controller
 #define F_KD 0.047  // D constant for PSD translation controller
 #define F_KI 0.0  	// S constant for PSD translation controller
