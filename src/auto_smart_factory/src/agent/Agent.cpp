@@ -69,7 +69,7 @@ void Agent::update() {
 				p1.y = 2.4;
 				path.push_back(p1);
 				
-				p1.x = 0.0;
+				p1.x = 0.7;
 				p1.y = 13.0;
 				path.push_back(p1);
 				
@@ -79,31 +79,31 @@ void Agent::update() {
 				p5.y = 14.0;
 
 				if(agentID == "robot_2") {
-					ros::Duration(3).sleep();
+					ros::Duration(5).sleep();
 					p5.y = 13.5;
 				}
 				if(agentID == "robot_3") {
-					ros::Duration(8).sleep();
+					ros::Duration(10).sleep();
 					p5.y = 13.0;
 				}
 				if(agentID == "robot_4") {
-					ros::Duration(13).sleep();
+					ros::Duration(15).sleep();
 					p5.y = 12.5;
 				}
 				if(agentID == "robot_5") {
-					ros::Duration(18).sleep();
+					ros::Duration(20).sleep();
 					p5.y = 12.0;
 				}
 				if(agentID == "robot_6") {
-					ros::Duration(23).sleep();
+					ros::Duration(25).sleep();
 					p5.y = 11.5;
 				}
 				if(agentID == "robot_7") {
-					ros::Duration(28).sleep();
+					ros::Duration(30).sleep();
 					p5.y = 11.0;
 				}
 				if(agentID == "robot_8") {
-					ros::Duration(33).sleep();
+					ros::Duration(35).sleep();
 					p5.y = 10.5;
 				}
 				

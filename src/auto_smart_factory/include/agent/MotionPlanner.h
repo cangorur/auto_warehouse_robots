@@ -66,6 +66,7 @@ private:
 	bool driveCurrentPath(Point currentPosition, double orientation);
 	
 	float getRotationFromOrientation(double orientation);
+	float getRotationFromOrientationDifference(double orientation);
 	
 	bool isCurrentPointLastPoint();
 	void advanceToNextPathPoint();
@@ -92,20 +93,22 @@ private:
 	bool hasFinishedCurrentPath = true;
 	bool standStill = true;
 
-	float minTurningSpeed = 0.02;
+	float minTurningSpeed = 0.08;
 	
 	float maxTurningSpeed; // = 1;
 	float minDrivingSpeed; // = 0.2;
 	float maxDrivingSpeed; // = 1;
 
-	float distToReachPoint = 0.1f;
-	float distToReachFinalPoint = 0.05f;
+	float distToReachPoint = 0.2f;
+	float distToReachFinalPoint = 0.2f;
+	float distToSlowDown = 0.9f;
 
-	float maxRotationDifference = 45;
+	//float maxRotationDifference = 45;
+	float maxRotationDifference = 0.38f;
 	
 	/* Accuracy that determines the allowed orientaion difference of the current robot
 	 * orientation while driving & the direction of the goal position to not steer.*/
-	float allowedRotationDifference = 0.03f;
+	float allowedRotationDifference = 0.001f;
 
 protected:
 	Agent* agent;

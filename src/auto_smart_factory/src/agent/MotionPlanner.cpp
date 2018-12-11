@@ -83,17 +83,18 @@ bool MotionPlanner::driveCurrentPath(Point currentPosition, double orientation) 
 
 	// WTF
 	orientation = orientation / (PI / 2.0);
-	float desiredRotation = Math::getRotation(currentTarget - currentPosition);
-	float currentRotation = getRotationFromOrientation(orientation);
-	float rotationToTarget = Math::getAngleDifference(currentRotation, desiredRotation);
+	
+	//float desiredRotation = Math::getRotation(currentTarget - currentPosition);
+	//float currentRotation = getRotationFromOrientation(orientation);
+	//float rotationToTarget = Math::getAngleDifference(currentRotation, desiredRotation);
 
-	//float rotationToTarget = getRotationToTarget(currentPosition, currentTarget, orientation);
+	float rotationToTarget = getRotationToTarget(currentPosition, currentTarget, orientation);
 	
 	float rotationSign = rotationToTarget < 0.f ? -1.f : 1.f;
 	rotationToTarget = std::fabs(rotationToTarget);
 	
 	if(rotationToTarget < allowedRotationDifference) {
-		//rotationToTarget = 0;
+		rotationToTarget = 0;
 	}
 	
 	// has reached next point?
@@ -110,17 +111,27 @@ bool MotionPlanner::driveCurrentPath(Point currentPosition, double orientation) 
 	}
 	
 	// Totally wrong direction
-	/*if(rotationToTarget >= maxRotationDifference) {
+	if(rotationToTarget >= maxRotationDifference) {
 		motion.angular.z = Math::clamp(rotationToTarget, 0, maxTurningSpeed) * rotationSign;
+		motion.linear.x = 0;
 	} else {
 		float rotationAlpha = Math::clamp(rotationToTarget/maxRotationDifference, 0, 1);
 		motion.angular.z = Math::lerp(minTurningSpeed, maxTurningSpeed, rotationAlpha) * rotationSign;
 		
-		float forwardSpeedAlpha = 1.f - rotationAlpha;
-		motion.linear.x = Math::lerp(minDrivingSpeed, maxDrivingSpeed, forwardSpeedAlpha);		
-	}*/
-	
-	motion.angular.z = rotationSign * Math::clamp(rotationToTarget, minTurningSpeed, maxTurningSpeed);
+		float speedAlphaThroughRotation = 1.f - rotationAlpha;
+		if(speedAlphaThroughRotation < 0.9f) {
+			speedAlphaThroughRotation /= 3.f;
+		}
+		
+		float speedAlphaThroughDist = 1.f;
+		if(distToTarget <= distToSlowDown) {
+			speedAlphaThroughDist = Math::clamp((distToTarget - distToReachPoint) / (distToSlowDown - distToReachPoint), 0, 1.f);
+		}
+		
+		float speedAlpha = std::min(speedAlphaThroughDist, speedAlphaThroughRotation);
+		
+		motion.linear.x = Math::lerp(minDrivingSpeed, maxDrivingSpeed, speedAlpha);
+	}
 	
 	motionPub->publish(motion);
 	return false;
@@ -153,32 +164,10 @@ float MotionPlanner::getRotationFromOrientation(double orientation) {
 		return static_cast<float>(360.f - orientation * 180.f);
 	}
 }
-/*
-double MotionPlanner::getDirection(double p_x, double p_y, double t_x, double t_y) {
-	return (std::atan2(t_y - p_y, t_x - p_x)) / PI;
-}
 
-double MotionPlanner::getOrientationDiff(double orientation, double direction) {
-	double diff;
-	if(orientation >= 0 && direction >= 0) {
-		diff = direction - orientation;
-	} else if(orientation < 0 && direction < 0) {
-		diff = direction - orientation;
-	} else if(orientation >= 0 && direction < 0) {
-		if(orientation - direction <= 1) {
-			diff = direction - orientation;
-		} else {
-			diff = (1 - orientation) + (1 + direction);
-		}
-	} else if(orientation < 0 && direction >= 0) {
-		if(direction - orientation <= 1) {
-			diff = direction - orientation;
-		} else {
-			diff = direction - orientation - 2;
-		}
-	}
-	return diff;
-}*/
+float MotionPlanner::getRotationFromOrientationDifference(double orientation) {
+	return static_cast<float>(orientation * 180.f);
+}
 
 void MotionPlanner::advanceToNextPathPoint() {
 	currentTargetIndex++;
@@ -214,7 +203,7 @@ float MotionPlanner::getRotationToTarget(Point currentPosition, Point targetPosi
 			diff = direction - orientation - 2;
 		}
 	}
-	
-	return getRotationFromOrientation(diff);	
+
+	return static_cast<float>(diff);
 }
 
