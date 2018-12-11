@@ -9,18 +9,10 @@ public:
 
 	float x;
 	float y;
-
-	// Overloaded functions
-	/*Point operator -(const Point& right);
-	Point operator +(const Point& right);
-	Point operator *(float factor);
-
-	Point& operator -=(const Point& right);
-	Point& operator +=(const Point& right);*/
 };
 
-void test(int a);
-
+// Overloaded operators
+Point operator -(const Point& right);
 Point operator -(const Point& left, const Point& right);
 Point operator +(const Point& left, const Point& right);
 Point operator *(float factor, const Point& left);

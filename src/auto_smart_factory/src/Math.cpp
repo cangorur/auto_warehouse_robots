@@ -1,4 +1,6 @@
 #include <time.h>
+#include <include/Math.h>
+
 #include "Math.h"
 #include "agent/path_planning/Point.h"
 
@@ -193,7 +195,7 @@ float Math::toDeg(float angle) {
 	return dotProduct(line, startToPoint) / lengthSquared;
 }*/
 
-/*float Math::getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
+float Math::getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
 	Point line = lEnd - lStart;
 	Point startToPoint = point - lStart;
 	float lengthSquared = getDistanceSquared(lStart, lEnd);
@@ -206,10 +208,10 @@ float Math::toDeg(float angle) {
 	} else {
 		return getDistance(point, lStart + t * line);
 	}
-}*/
+}
 
-float Math::getAngleMedian(float angle1, float angle2) {
-	float diff = angle2 - angle1;
+float Math::getAngleMedian(float a1, float a2) {
+	float diff = a2 - a1;
 
 	if(diff > 180) {
 		diff = diff - 360;
@@ -217,5 +219,25 @@ float Math::getAngleMedian(float angle1, float angle2) {
 		diff = diff + 360;
 	}
 
-	return angle1 + diff/2.f;
+	return a1 + diff/2.f;
+}
+
+float Math::lerp(float start, float end, float alpha) {
+	return start + (end-start) * alpha;
+}
+
+float Math::clamp(float value, float min, float max) {
+	return std::max(min, std::min(max, value));
+}
+
+float Math::getAngleDifference(float source, float target) {
+	float angle = target - source;
+
+	if(angle > 180) {
+		angle = angle - 360;
+	} else if(angle < -180){
+		angle = angle + 360;
+	}
+
+	return angle;
 }
