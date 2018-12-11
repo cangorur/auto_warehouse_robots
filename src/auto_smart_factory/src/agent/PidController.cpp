@@ -31,8 +31,8 @@ void PidController::publishVelocity(double speed, double angle) {
 }
 
 void PidController::update(Position* current) {
-    double angleCommand = 0;
-    double speedCommand = 0;
+    double newAngle = 0.0;
+    double newSpeed = 0.0;
 
     if (targetReached(current) == true)
     {
