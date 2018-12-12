@@ -59,6 +59,8 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 
 	robotHeartbeatSub = n.subscribe("/robot_heartbeats", 1000,
 	                                &TaskPlanner::receiveRobotHeartbeat, this);
+	taskResponseSub = n.subscribe("/task_response", 1000, 
+									&TaskPlanner::receiveTaskResponse, this);
 
 	newInputTaskServer = pn.advertiseService("new_input_task",
 	                                         &TaskPlanner::newInputRequest, this);
@@ -66,7 +68,9 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 	                                          &TaskPlanner::newOutputRequest, this);
 	registerAgentServer = pn.advertiseService("register_agent",
 	                                          &TaskPlanner::registerAgent, this);
+
 	statusUpdatePub = pn.advertise<TaskPlannerState>("status", 1);
+	taskAnnouncerPub = pn.advertise<TaskAnnouncement>("task_broadcast", 1);
 
 	rescheduleTimer = n.createTimer(ros::Duration(10.0),
 	                                &TaskPlanner::rescheduleEvent, this);
@@ -378,4 +382,8 @@ bool TaskPlanner::idleRobotAvailable() const {
 		}
 	}
 	return false;
+}
+
+void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
+	// TODO: find request id and put robot in list if it is not rejecting the task
 }

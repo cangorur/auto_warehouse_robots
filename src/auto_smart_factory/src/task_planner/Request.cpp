@@ -198,6 +198,7 @@ bool Request::getRobotCandidates(std::vector<RobotCandidate>& robotCandidates,
 		}
 	}
 
+	// TODO: get tray candidates
 	robotCandidates.clear();
 	for(std::string robot : suitableRobots) {
 		RobotCandidate cand;
