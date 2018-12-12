@@ -13,7 +13,7 @@ Rectangle::Rectangle(Point pos_, Point size_, float rotation_) :
 		isAxisAligned = true;
 	}
 	
-	Point sizeInflated = Point(size.x + ROBOT_DIAMETER * 2, size.y + ROBOT_DIAMETER * 2);
+	Point sizeInflated = Point(static_cast<float>(size.x + ROBOT_DIAMETER * 2), static_cast<float>(size.y + ROBOT_DIAMETER * 2));
 
 	/*
 	rectangleShape = sf::RectangleShape(Point(size.x, size.y));
@@ -29,7 +29,7 @@ Rectangle::Rectangle(Point pos_, Point size_, float rotation_) :
 	rectangleShapeInflated.setFillColor(sf::Color(color.r, color.g, color.b, 80));*/
 	
 	// Generate inflated points
-	Point diagonalInflated = Point(size.x + ROBOT_DIAMETER * 2, size.y + ROBOT_DIAMETER * 2) * 0.5f;
+	Point diagonalInflated = Point(static_cast<float>(size.x + ROBOT_DIAMETER * 2), static_cast<float>(size.y + ROBOT_DIAMETER * 2)) * 0.5f;
 	Point diagonalInflatedMirrored = Point(diagonalInflated.x, -diagonalInflated.y);
 	
 	pointsInflated[0] = pos + Math::rotateVector(diagonalInflated, rotation);

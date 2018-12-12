@@ -3,7 +3,8 @@
 
 #include "agent/path_planning/Point.h"
 
-#define ROBOT_DIAMETER 3
+// Defined as 0.25 + error margin
+#define ROBOT_DIAMETER 0.3
 
 class Rectangle {
 private:	

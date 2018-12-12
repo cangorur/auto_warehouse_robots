@@ -11,7 +11,6 @@ private:
 	float length;
 
 public:
-	explicit Path() = default;
 	explicit Path(std::vector<Point> points);
 	virtual ~Path() = default;
 

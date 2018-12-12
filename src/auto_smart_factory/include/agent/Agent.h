@@ -290,9 +290,6 @@ protected:
 	// ID of the Charging station assigned to the agent
 	unsigned int chargingStationId;
 
-	// value of PI
-	const double PI = 3.141592653589793238463;
-
 	// counter to indicate how long an agent stuck in one place (used for local collision handling for static/dynamic obstacles)
 	int stuck_Counter = 0;
 

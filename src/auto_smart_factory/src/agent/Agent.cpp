@@ -1,6 +1,9 @@
-#include <agent/Agent.h>
+#include "Math.h"
+#include "agent/Agent.h"
 
-Agent::Agent(std::string agent_id) {
+Agent::Agent(std::string agent_id) :
+	map(0, 0, 0, 0, {})
+{
 	agentID = agent_id;
 	position.z = -1;
 

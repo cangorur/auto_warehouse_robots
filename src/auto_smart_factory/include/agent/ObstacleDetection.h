@@ -151,9 +151,6 @@ protected:
 
 	/// Flag whether an obstacle has been currently detected
 	bool obstacleDetected = false;
-
-	/// pi
-	const double PI = 3.141592653589793238463;
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_OBSTACLEDETECTION_H_ */

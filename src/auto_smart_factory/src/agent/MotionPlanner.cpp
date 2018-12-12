@@ -13,7 +13,9 @@
 #include <ros/console.h>
 
 
-MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) {
+MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
+	pathObject(Path({}))
+{
 	robotConfig = std::move(robot_config);
 	
 	minDrivingSpeed = robotConfig.min_linear_vel;

@@ -4,9 +4,11 @@
 #include <vector>
 
 #include "agent/path_planning/Rectangle.h"
-/*#include "ThetaStar/GridNode.hpp"
-#include "ThetaStar/ThetaStarMap.hpp"
-#include "AnyAnglePath.hpp"
+#include "agent/path_planning/GridNode.h"
+#include "agent/path_planning/ThetaStarMap.h"
+#include "agent/path_planning/Path.h"
+
+/*
 #include "Dubins/OrientationPoint.hpp"
 #include "Dubins/DubinsTrajectory.hpp"
 #include "PathFlowField.hpp"*/
@@ -18,7 +20,7 @@ private:
 	float margin;
 	
 	std::vector<Rectangle> obstacles;
-	//ThetaStarMap thetaStarMap;	
+	ThetaStarMap thetaStarMap;	
 
 public:
 	Map(float width, float height, float margin, float resolutionThetaStar, std::vector<Rectangle> obstacles);
@@ -33,7 +35,7 @@ public:
 	//OrientationPoint getRandomFreeOrientationPoint() const;
 	//OrientationPoint getRandomFreeOrientationPointAlongPath(PathFlowField& pathFlowField) const;
 	
-	//AnyAnglePath getThetaStarPath(const Point& start, const Point& end);
+	Path getThetaStarPath(const Point& start, const Point& end);
 	
 	// Getter
 	float getWidth() const;

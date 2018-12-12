@@ -1,3 +1,4 @@
+#include "Math.h"
 #include "agent/ObstacleDetection.h"
 
 ObstacleDetection::ObstacleDetection(std::string agent_id, MotionPlanner& motion_planner,

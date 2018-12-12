@@ -1,14 +1,11 @@
 #include <utility>
-
 #include <iostream>
-#include <include/agent/path_planning/Map.h>
-
 
 #include "Math.h"
 #include "agent/path_planning/Rectangle.h"
 #include "agent/path_planning/Map.h"
 #include "agent/path_planning/Point.h"
-//#include "ThetaStar/ThetaStarPathPlanner.hpp"
+#include "agent/path_planning/ThetaStarPathPlanner.h"
 
 Map::Map(float width, float height, float margin, float resolutionThetaStar, std::vector<Rectangle> obstacles) :
 		width(width),
@@ -16,9 +13,7 @@ Map::Map(float width, float height, float margin, float resolutionThetaStar, std
 		margin(margin),
 		obstacles(std::move(obstacles)) {
 	
-	//obstacles.emplace_back(Point(0, -10), Point(8, 40), 90);
-	
-	//thetaStarMap = ThetaStarMap(Point(width, height), this, resolutionThetaStar);
+	thetaStarMap = ThetaStarMap(Point(width, height), this, resolutionThetaStar);
 }
 
 /*void Map::draw(sf::RenderWindow& renderWindow) {
@@ -126,10 +121,10 @@ float Map::getMargin() const {
 	return margin;
 }
 
-/*AnyAnglePath Map::getThetaStarPath(const Point& start, const Point& end) {
+Path Map::getThetaStarPath(const Point& start, const Point& end) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap);
 	return thetaStarPathPlanner.findPath(start, end);
-}*/
+}
 
 bool Map::isPointInMap(const Point& pos) const {
 	return pos.x >= margin && pos.x <= width - margin && pos.y >= margin && pos.y <= height - margin;
