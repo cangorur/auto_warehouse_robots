@@ -15,8 +15,6 @@
 #include <auto_smart_factory/InitTaskPlanner.h>
 #include <auto_smart_factory/PackageConfiguration.h>
 #include <auto_smart_factory/Tray.h>
-#include <auto_smart_factory/TaskAnnouncement.h>
-#include <auto_smart_factory/TaskRating.h>
 #include <auto_smart_factory/RobotConfiguration.h>
 #include <auto_smart_factory/RobotHeartbeat.h>
 #include <auto_smart_factory/StorageUpdate.h>
@@ -160,12 +158,6 @@ private:
 	 */
 	bool idleRobotAvailable() const;
 
-	/*
-	 * Receive response to an task announcement
-	 * @param TODO!!
-	*/
-	void receiveTaskResponse(const auto_smart_factory::TaskRating& tr);
-
 
 private:
 	/// all registered robots: mapping their id to their configuration and their state (idle/busy with idle = true)
@@ -193,10 +185,7 @@ private:
 	ros::Timer rescheduleTimer;
 
 	/// Task planner status publisher
-	ros::Publisher statusUpdatePub;
-
-	/// Task planner task announcement publisher
-	ros::Publisher taskAnnouncerPub; 
+	ros::Publisher statusUpdatePub; 
 
 	/// Task planner status update timer
 	ros::Timer statusUpdateTimer;
@@ -206,9 +195,6 @@ private:
 
 	/// Subscriber to robot heartbeat topic
 	ros::Subscriber robotHeartbeatSub;
-
-	/// Subscriber to robot task response topic
-	ros::Subscriber taskResponseSub;
 
 	/// Server for new input request
 	ros::ServiceServer newInputTaskServer;

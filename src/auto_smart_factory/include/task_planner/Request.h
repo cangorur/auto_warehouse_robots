@@ -18,6 +18,9 @@
 #include <task_planner/OutputTaskRequirements.h>
 #include <task_planner/TaskData.h>
 
+#include <auto_smart_factory/TaskAnnouncement.h>
+#include <auto_smart_factory/TaskRating.h>
+
 class TaskPlanner;
 
 /**
@@ -68,6 +71,12 @@ public:
 	 * @return Requirements object
 	 */
 	TaskRequirementsConstPtr getRequirements() const;
+
+	/*
+	 * Receive response to an task announcement
+	 * @param TODO!!
+	*/
+	void receiveTaskResponse(const auto_smart_factory::TaskRating& tr);
 
 protected:
 	/**
@@ -148,6 +157,11 @@ protected:
 	/// estimated duration (true) or just random choice (false)
 	bool useBestETA;
 
+	/// Task planner task announcement publisher
+	ros::Publisher taskAnnouncerPub;
+
+	/// Subscriber to robot task response topic
+	ros::Subscriber taskResponseSub;
 protected:
 	/// used to generate unique ids
 	static unsigned int nextId;

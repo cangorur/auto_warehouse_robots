@@ -31,6 +31,12 @@ Request::Request(TaskPlanner* tp, TaskRequirementsConstPtr taskRequirements, std
 
 	ros::NodeHandle pn("~");
 	pn.param("use_best_eta", useBestETA, true);
+	
+	ros::NodeHandle n;
+	taskResponseSub = n.subscribe("/task_response", 1000, 
+									&Request::receiveTaskResponse, this);
+
+	taskAnnouncerPub = pn.advertise<TaskAnnouncement>("task_broadcast", 1);
 
 	ROS_INFO("[request %d] Use best ETA: %s", getId(), std::to_string(useBestETA).c_str());
 }
@@ -305,4 +311,17 @@ auto_smart_factory::RequestStatus Request::getStatus() const {
 
 TaskRequirementsConstPtr Request::getRequirements() const {
 	return requirements;
+}
+
+void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
+	// TODO: put robot in list if it is not rejecting the task
+	if(status.id != tr.request_id){
+		ROS_INFO("[Request %d] received answer to request %d from robot %s", status.id, tr.request_id, tr.robot_id.c_str());
+		return;
+	}
+	if(tr.reject){
+		// TODO: mark as rejected
+	} else {
+		// TODO: mark save score into robot candidates
+	}
 }
