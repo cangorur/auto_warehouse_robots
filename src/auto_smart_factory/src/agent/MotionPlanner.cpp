@@ -4,7 +4,6 @@
 
 #include "agent/Agent.h"
 #include <visualization_msgs/Marker.h>
-#include <include/agent/MotionPlanner.h>
 
 #include "agent/MotionPlanner.h"
 #include "Math.h"
@@ -82,7 +81,7 @@ bool MotionPlanner::driveCurrentPath(Point currentPosition, double orientation) 
 	float distToTarget = Math::getDistance(currentPosition, currentTarget);
 
 	// WTF
-	orientation = orientation / (PI / 2.0);
+	//orientation = orientation / (PI / 2.0);
 	
 	//float desiredRotation = Math::getRotation(currentTarget - currentPosition);
 	//float currentRotation = getRotationFromOrientation(orientation);
@@ -183,27 +182,9 @@ bool MotionPlanner::isDrivingBackwards() {
 }
 
 float MotionPlanner::getRotationToTarget(Point currentPosition, Point targetPosition, double orientation) {
-	double direction = (std::atan2(targetPosition.y - currentPosition.y, targetPosition.x - currentPosition.x)) / PI;
+	double direction = (std::atan2(targetPosition.y - currentPosition.y, targetPosition.x - currentPosition.x));
 
-	double diff = 0;
-	if(orientation >= 0 && direction >= 0) {
-		diff = direction - orientation;
-	} else if(orientation < 0 && direction < 0) {
-		diff = direction - orientation;
-	} else if(orientation >= 0 && direction < 0) {
-		if(orientation - direction <= 1) {
-			diff = direction - orientation;
-		} else {
-			diff = (1 - orientation) + (1 + direction);
-		}
-	} else if(orientation < 0 && direction >= 0) {
-		if(direction - orientation <= 1) {
-			diff = direction - orientation;
-		} else {
-			diff = direction - orientation - 2;
-		}
-	}
-
-	return static_cast<float>(diff);
+	//return static_cast<float>(direction - orientation);
+	return static_cast<float>(Math::getAngleDifferenceInRad(orientation, direction));
 }
 

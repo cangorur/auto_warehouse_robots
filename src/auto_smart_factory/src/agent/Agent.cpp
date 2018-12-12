@@ -1,4 +1,5 @@
 #include <agent/Agent.h>
+#include "Math.h"
 
 Agent::Agent(std::string agent_id) {
 	agentID = agent_id;
@@ -361,9 +362,11 @@ auto_smart_factory::Tray Agent::getTray(unsigned int tray_id) {
 void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 	position = msg.pose.position;
 	orientation = msg.pose.orientation;
+	//ROS_INFO("[%s] Orientation rad: %.4f | Orientation degree: %.2f", agentID.c_str(), 2*asin(orientation.z), Math::toDeg(2*asin(orientation.z)));
+
 	if(this->motionPlanner->isEnabled()) {
 		this->obstacleDetection->enable(true);
-		this->motionPlanner->update(position, asin(orientation.z));
+		this->motionPlanner->update(position, 2*asin(orientation.z));
 	} else {
 		this->obstacleDetection->enable(false);
 	}
