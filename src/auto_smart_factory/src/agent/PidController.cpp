@@ -1,6 +1,6 @@
 #include "agent/PidController.h"
 
-PidController::PidController(ros::Publisher pub, double posTolerance, double angleTolerance, double maxSpeed, double maxAngleSpeed) 
+PidController::PidController(ros::Publisher* pub, double posTolerance, double angleTolerance, double maxSpeed, double maxAngleSpeed) 
     :
     pubVelocity(pub),
     posTolerance(posTolerance),
@@ -27,25 +27,25 @@ void PidController::publishVelocity(double speed, double angle) {
     msg.linear.x = speed;
     msg.angular.z = angle;
 
-    pubVelocity.publish(msg);
+    pubVelocity->publish(msg);
 }
 
-void PidController::update(Position* current) {
+bool PidController::update(Position* current) {
     double newAngle = 0.0;
     double newSpeed = 0.0;
 
-    if (targetReached(current) == true)
+    if (targetReached(current))
     {
         ROS_INFO("GOAL ACHIEVED");
         publishVelocity(0.0, 0.0);
-        return;
+        return true;
     }
 
     if (iterations == 0) {
         *start = *current;
         *last = *current;
     }
-    iterations++;
+    iterations = 1;
 
     //Calculation of action intervention.
     if (fabs(targetDistance) > posTolerance) {
@@ -64,6 +64,8 @@ void PidController::update(Position* current) {
 
     // publish velocity message
     publishVelocity(fmin(maxAngleSpeed, newAngle), fmin(maxSpeed, newSpeed));
+
+    return false;
 }
 
 bool PidController::targetReached(Position* current) {
@@ -75,8 +77,8 @@ bool PidController::targetReached(Position* current) {
     }
 
     if (fabs(targetAngle - (current->o - start->o)) > angleTolerance &
-    fabs(targetAngle - (current->o - start->o) + 2*M_PI) > angleTolerance &
-    fabs(targetAngle - (current->o - start->o) - 2*M_PI) > angleTolerance) {
+                fabs(targetAngle - (current->o - start->o) + 2*M_PI) > angleTolerance &
+                fabs(targetAngle - (current->o - start->o) - 2*M_PI) > angleTolerance) {
         return false;
     }
 

@@ -7,7 +7,7 @@
 #include "geometry_msgs/Twist.h"
 
 #define F_KP 2.58  	// P constant for PSD translation controller
-#define F_KD 0.047  // D constant for PSD translation controller
+#define F_KD 0.047 	// D constant for PSD translation controller
 #define F_KI 0.0  	// S constant for PSD translation controller
 #define R_KP 2.0  	// P constant for PSD rotation controller
 #define R_KD 0.1  	// D constant for PSD rotation controller
@@ -15,13 +15,13 @@
 
 class PidController {
 public:
-	PidController(ros::Publisher pub, double posTolerance, double angleTolerance, double maxSpeed, double maxAngleSpeed);
+	PidController(ros::Publisher* pub, double posTolerance, double angleTolerance, double maxSpeed, double maxAngleSpeed);
 
 	void setTarget(double distance, double angle);
 
 	void publishVelocity(double speed, double angle);
 
-	void update(Position* pos);
+	bool update(Position* pos);
 
 	bool targetReached(Position* current);
 
@@ -41,7 +41,7 @@ public:
 	double sumDistance;
 	double sumAngle;
 	int iterations;
-	ros::Publisher pubVelocity;
+	ros::Publisher* pubVelocity;
 
 };
 
