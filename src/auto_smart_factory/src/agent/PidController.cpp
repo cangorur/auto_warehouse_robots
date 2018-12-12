@@ -1,4 +1,5 @@
 #include "agent/PidController.h"
+#include "Math.h"
 
 PidController::PidController(ros::Publisher* pub, double posTolerance, double angleTolerance, double maxSpeed, double maxAngleSpeed) 
     :
@@ -16,10 +17,34 @@ PidController::PidController(ros::Publisher* pub, double posTolerance, double an
     last(new Position()) {
 }
 
-void PidController::setTarget(double distance, double angle) {
+void PidController::reset() {
+    iterations = 0;
+    sumDistance = 0.0;
+    sumAngle = 0.0;
+    delete start;
+    delete last;
+    start = new Position();
+    last = new Position();
+}
+
+void PidController::setTargetValue(double distance, double angle) {
     targetDistance = distance;
     targetAngle = angle;
 }
+
+void PidController::setTargetPoint(Point target, Position position) {
+    float distToTarget = Math::getDistance(Point(position.x, position.y), target);
+	float rotationToTarget = getRotationToTarget(Point(position.x, position.y), target, position.o);
+
+    setTargetValue(distToTarget, rotationToTarget);
+}
+
+float PidController::getRotationToTarget(Point currentPosition, Point targetPosition, double orientation) {
+	double direction = std::atan2(targetPosition.y - currentPosition.y, targetPosition.x - currentPosition.x);
+
+	return static_cast<float>(Math::getAngleDifferenceInRad(orientation, direction));
+}
+
 
 void PidController::publishVelocity(double speed, double angle) {
     geometry_msgs::Twist msg;
@@ -45,7 +70,7 @@ bool PidController::update(Position* current) {
         *start = *current;
         *last = *current;
     }
-    iterations = 1;
+    iterations++;
 
     //Calculation of action intervention.
     if (fabs(targetDistance) > posTolerance) {
@@ -63,7 +88,7 @@ bool PidController::update(Position* current) {
     *last = *current;
 
     // publish velocity message
-    publishVelocity(fmin(maxAngleSpeed, newAngle), fmin(maxSpeed, newSpeed));
+    publishVelocity(fmin(maxSpeed, newSpeed), fmin(maxAngleSpeed, newAngle));
 
     return false;
 }
@@ -92,7 +117,8 @@ double PidController::calculatePSD(Position* current, double currentValue, doubl
     double dt = current->t.toSec() - last->t.toSec();
     double derivative = (error - previousError)/dt;
     *sum = *sum + error*dt;
-    speed = kP*error + kD*derivative + kS*(*sum);
+    //speed = kP*error + kD*derivative + kS*(*sum);
+    speed = kP*error + kS*(*sum);
 
     return speed;
 }

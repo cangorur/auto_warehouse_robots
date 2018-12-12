@@ -112,6 +112,9 @@ private:
 	 * orientation while driving & the direction of the goal position to not steer.*/
 	float allowedRotationDifference = 0.001f;
 
+	PidController* pid;
+	bool atTarget = false;
+
 protected:
 	Agent* agent;
 	std::string agentID;

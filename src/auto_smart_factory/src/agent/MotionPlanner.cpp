@@ -25,12 +25,27 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 
 	ros::NodeHandle n;
 	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+
+	pid = new PidController(motionPub, 0.5, 0.4, 1.0, 2.0);
 }
 
 MotionPlanner::~MotionPlanner() = default;
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
-	driveCurrentPath(Point(position.x, position.y), orientation);
+	//driveCurrentPath(Point(position.x, position.y), orientation);
+	if(atTarget) {
+		if (!isCurrentPointLastPoint())	{
+			ROS_WARN("[MotionPlanner] currentTargetIndex: %d | PathObjectSize: %d", currentTargetIndex, pathObject.getPoints().size() - 1);
+			advanceToNextPathPoint();
+			pid->reset();
+			pid->setTargetPoint(currentTarget, Position(position.x, position.y, orientation, ros::Time::now()));
+			atTarget = false;
+		}
+	} else {
+		Position* pos = new Position(position.x, position.y, orientation, ros::Time::now());
+		atTarget = pid->update(pos);
+		delete pos;
+	}
 }
 
 void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path, geometry_msgs::Point end_direction_point, bool drive_backwards) {
@@ -47,6 +62,8 @@ void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geo
 
 	pathPub.publish(pathObject.getVisualizationMsgPoints());
 	pathPub.publish(pathObject.getVisualizationMsgLines());
+
+	atTarget = true;
 }
 
 void MotionPlanner::enable(bool enable) {
@@ -182,9 +199,8 @@ bool MotionPlanner::isDrivingBackwards() {
 }
 
 float MotionPlanner::getRotationToTarget(Point currentPosition, Point targetPosition, double orientation) {
-	double direction = (std::atan2(targetPosition.y - currentPosition.y, targetPosition.x - currentPosition.x));
+	double direction = std::atan2(targetPosition.y - currentPosition.y, targetPosition.x - currentPosition.x);
 
-	//return static_cast<float>(direction - orientation);
 	return static_cast<float>(Math::getAngleDifferenceInRad(orientation, direction));
 }
 

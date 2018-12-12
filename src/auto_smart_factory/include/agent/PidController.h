@@ -4,6 +4,7 @@
 #include <math.h>
 #include "ros/ros.h"
 #include "agent/Position.h"
+#include "agent/path_planning/Point.h"
 #include "geometry_msgs/Twist.h"
 
 #define F_KP 2.58  	// P constant for PSD translation controller
@@ -17,7 +18,12 @@ class PidController {
 public:
 	PidController(ros::Publisher* pub, double posTolerance, double angleTolerance, double maxSpeed, double maxAngleSpeed);
 
-	void setTarget(double distance, double angle);
+	void reset(void);
+
+	void setTargetValue(double distance, double angle);
+	void setTargetPoint(Point target, Position position);
+
+	float getRotationToTarget(Point currentPosition, Point targetPosition, double orientation);
 
 	void publishVelocity(double speed, double angle);
 
