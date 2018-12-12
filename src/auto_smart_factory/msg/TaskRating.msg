@@ -2,5 +2,6 @@
 
 string request_id
 string robot_id
+bool isInputRequest
 bool reject
 float32 score
