@@ -72,8 +72,9 @@ TaskData Request::allocateResources() {
 	         targetTrayCandidates.size());
 
 	// find candidate robot(s)
-	std::vector<RobotCandidate> robotCandidates;
-	if(!getRobotCandidates(robotCandidates, sourceTrayCandidates,
+	// std::vector<RobotCandidate> robotCandidates;
+	// if(!getRobotCandidates(robotCandidates, sourceTrayCandidates,
+	if(!getRobotCandidates(sourceTrayCandidates,
 	                       targetTrayCandidates)) {
 		status.status = "No robot candidates available.";
 		throw std::runtime_error(status.status);
@@ -191,93 +192,6 @@ bool Request::findTargetCandidates(std::vector<auto_smart_factory::Tray>& target
 	return !targetTrayCandidates.empty();
 }
 
-bool Request::getRobotCandidates(std::vector<RobotCandidate>& robotCandidates,
-                                 const std::vector<Tray>& sourceTrayCandidates,
-                                 const std::vector<Tray>& targetTrayCandidates) const {
-
-	// get suitable robots
-	std::vector<std::string> suitableRobots;
-	for(auto const& robot : taskPlanner->getRegisteredRobots()) {
-		// robot is idle and suitable
-		if(robot.second.second && requirements->isLegalRobot(robot.second.first)) {
-			suitableRobots.push_back(robot.first);
-		}
-	}
-
-	// TODO: get tray candidates
-	robotCandidates.clear();
-	for(std::string robot : suitableRobots) {
-		RobotCandidate cand;
-
-		//Call ETA For each robot
-		if(getRobotETA(robot, cand, sourceTrayCandidates, targetTrayCandidates)) {
-			robotCandidates.push_back(cand);
-		}
-	}
-
-	if(useBestETA) {
-		// sort according to estimated time
-		std::sort(robotCandidates.begin(), robotCandidates.end(),
-		          [](RobotCandidate first, RobotCandidate second) {
-			          return first.estimatedDuration < second.estimatedDuration;
-		          });
-	} else {
-		// shuffle randomly
-		std::random_shuffle(robotCandidates.begin(), robotCandidates.end());
-	}
-
-	return !robotCandidates.empty();
-}
-
-bool Request::getRobotETA(std::string robotId, RobotCandidate& cand,
-                          const std::vector<Tray>& sourceTrayCandidates,
-                          const std::vector<Tray>& targetTrayCandidates) const {
-
-	// at least one of the candidate lists has to contain only one element
-	ROS_ASSERT(
-			sourceTrayCandidates.size() == 1
-			|| targetTrayCandidates.size() == 1);
-
-
-	ros::NodeHandle n;
-	ros::ServiceClient etaRequestClient;
-	// TODO: Below ROS service call will be updated according to the advertised service under ETA server to be developed.
-	// etaRequestClient = n.serviceClient<CalculateETA>(
-	//         "eta/calculate_ETA");
-
-	// Determine fixed source and target trays:
-	// select the first tray of each TrayCandidates list
-	Tray sourceTrayCandidate = sourceTrayCandidates.front();
-	Tray targetTrayCandidate = targetTrayCandidates.front();
-
-	//TODO: Differentiate between input and output task and call getBestTargetTray or getBestSourceTray from pathPlanner
-
-	
-	// TODO: Below is the call for an example service implemented for an ETA server (in earlier versions).
-	// You may use the same service see CalculateETA.srv file.
-	/*CalculateETA srv;
-	srv.request.robotId = robotId;
-	srv.request.posStart.x = sourceTrayCandidate.x;
-	srv.request.posStart.y = sourceTrayCandidate.y;
-	srv.request.posEnd.x = targetTrayCandidate.x;
-	srv.request.posEnd.y = targetTrayCandidate.y;
-
-	cand.robotId = robotId;
-
-	if (etaRequestClient.call(srv)) {
-		cand.source = sourceTrayCandidate;
-		cand.target = targetTrayCandidate;
-		cand.estimatedDuration = ros::Duration(srv.response.resultETA);
-		return true;
-	}
-	*/
-	cand.robotId = robotId;
-	cand.source = sourceTrayCandidate;
-	cand.target = targetTrayCandidate;
-	cand.estimatedDuration = ros::Duration(1);
-	return true;
-}
-
 bool Request::allocateRobot(RobotCandidate candidate) const {
 	ROS_INFO("In Request::allocateRobot");
 	ros::NodeHandle n;
@@ -319,9 +233,109 @@ void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 		ROS_INFO("[Request %d] received answer to request %d from robot %s", status.id, tr.request_id, tr.robot_id.c_str());
 		return;
 	}
-	if(tr.reject){
-		// TODO: mark as rejected
-	} else {
-		// TODO: mark save score into robot candidates
+	if(!tr.reject){
+		// add robot as candidate
+		RobotCandidate cand;
+		cand.score = tr.score;
+		cand.robotId = tr.robot_id;
+		cand.source = taskPlanner->getTrayConfig(tr.start_id);
+		cand.target = taskPlanner->getTrayConfig(tr.end_id);
+		robotCandidates.push_back(cand);
+	}
+	answeredRobots[tr.robot_id] = tr.reject;
+}
+
+bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates,
+                                 const std::vector<Tray>& targetTrayCandidates){
+
+	// Tray sourceTrayCandidate = sourceTrayCandidates.front();
+	// Tray targetTrayCandidate = targetTrayCandidates.front();
+	robotCandidates.clear();
+	
+	TaskAnnouncement tsa;
+	tsa.request_id = status.id;
+	std::vector<geometry_msgs::Point> sourcePoints;
+	std::vector<uint32_t> sourceIds;
+	extractData(sourceTrayCandidates, sourcePoints, sourceIds);
+	tsa.start_points = sourcePoints;
+	tsa.start_ids = sourceIds;
+	std::vector<geometry_msgs::Point> targetPoints;
+	std::vector<uint32_t> targetIds;
+	extractData(targetTrayCandidates, targetPoints, targetIds);
+	tsa.end_points = targetPoints;
+	tsa.end_ids = targetIds;
+
+	taskAnnouncerPub.publish(tsa);
+	
+	waitForRobotScores(ros::Duration(1000), ros::Rate(10));
+
+	std::sort(robotCandidates.begin(), robotCandidates.end(),
+		          [](RobotCandidate first, RobotCandidate second) {
+			          return first.score < second.score;
+		          });
+
+	return !robotCandidates.empty();
+}
+
+bool Request::getRobotETA(std::string robotId, RobotCandidate& cand,
+                          const std::vector<Tray>& sourceTrayCandidates,
+                          const std::vector<Tray>& targetTrayCandidates) const {
+
+	// at least one of the candidate lists has to contain only one element
+	ROS_ASSERT(
+			sourceTrayCandidates.size() == 1
+			|| targetTrayCandidates.size() == 1);
+	
+	// Determine fixed source and target trays:
+	// select the first tray of each TrayCandidates list
+	Tray sourceTrayCandidate = sourceTrayCandidates.front();
+	Tray targetTrayCandidate = targetTrayCandidates.front();
+
+	//TODO: Differentiate between input and output task and call getBestTargetTray or getBestSourceTray from pathPlanner
+
+	
+	// TODO: Below is the call for an example service implemented for an ETA server (in earlier versions).
+	// You may use the same service see CalculateETA.srv file.
+	/*CalculateETA srv;
+	srv.request.robotId = robotId;
+	srv.request.posStart.x = sourceTrayCandidate.x;
+	srv.request.posStart.y = sourceTrayCandidate.y;
+	srv.request.posEnd.x = targetTrayCandidate.x;
+	srv.request.posEnd.y = targetTrayCandidate.y;
+
+	cand.robotId = robotId;
+
+	if (etaRequestClient.call(srv)) {
+		cand.source = sourceTrayCandidate;
+		cand.target = targetTrayCandidate;
+		cand.estimatedDuration = ros::Duration(srv.response.resultETA);
+		return true;
+	}
+	*/
+	cand.robotId = robotId;
+	cand.source = sourceTrayCandidate;
+	cand.target = targetTrayCandidate;
+	cand.estimatedDuration = ros::Duration(1);
+	return true;
+}
+
+void Request::extractData(const std::vector<auto_smart_factory::Tray>& trays, std::vector<geometry_msgs::Point>& points, std::vector<uint32_t> ids){
+	for(Tray t : trays){
+		geometry_msgs::Point p;
+		p.x = t.x;
+		p.y = t.y;
+		p.z = 0.0;
+		points.push_back(p);
+		ids.push_back(t.id);
+	}
+}
+
+void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){
+	ros::Time start = ros::Time::now();
+	while(start + timeout < ros::Time::now()){
+		if(taskPlanner->getRegisteredRobots().size() == answeredRobots.size()){
+			return;
+		}
+		frequency.sleep();
 	}
 }
