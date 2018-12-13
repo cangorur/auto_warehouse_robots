@@ -11,9 +11,11 @@ Path::Path(std::vector<Point> points_) :
 		points(std::move(points_)) {
 
 	length = 0;
-	for(int i = 0; i < points_.size() - 1; i++) {
-		length += Math::getDistance(points[i], points[i + 1]);
-	}
+	if(points.size() >= 2) {
+		for(int i = 0; i < points.size() - 1; i++) {
+			length += Math::getDistance(points[i], points[i + 1]);
+		}	
+	}	
 }
 
 const std::vector<Point>& Path::getPoints() const {

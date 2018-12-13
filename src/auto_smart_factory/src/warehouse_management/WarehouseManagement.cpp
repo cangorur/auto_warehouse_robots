@@ -142,8 +142,7 @@ bool WarehouseManagement::initAgent(std::string agent_id,
 	srv.request.robot_configuration = robot_configuration;
 	ros::service::waitForService(srv_name.c_str());
 	if(client.call(srv)) {
-		ROS_INFO("[warehouse management]: %s | success: %s",
-		         srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
+		ROS_INFO("[warehouse management]: %s | success: %s", srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
 		return true;
 	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());

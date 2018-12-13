@@ -69,6 +69,8 @@ public:
 	// tmp
 	bool isPathSet = false;
 
+	ros::Publisher* getVisualisationPublisher();
+
 protected:
 
 	bool init(auto_smart_factory::InitAgent::Request& req, auto_smart_factory::InitAgent::Response& res);
@@ -153,7 +155,6 @@ protected:
 	/* Battery sensor callback handler. Saves battery level.
 	 * @param msg: battery level [0.0 - 100.0] */
 	void batteryCallback(const std_msgs::Float32& msg);
-
 	/* Collision msg Callback handler. Disables the obstacle_detection and stops the motion_planner instances for the
 	* time_to_halt specified in the msg. If there is not time_to_halt specified in the msg. That means that the agent has
 	* to wait until a new path chunk is assigned to it to continue performing its task
@@ -161,29 +162,19 @@ protected:
 	* @todo this callback can be updated to take another strategies to avoid the a collision.
 	**/
 	void collisionAlertCallback(const auto_smart_factory::CollisionAction& msg);
-
-	/* Calculates the time to run a distance given distance and velocity
-	* @param double: distance value
-	* @param double: velocity value
-	* @return double value representing the calculated time
-    **/
-	double calculateTimeFromDistanceAndVelocity(double distance, double velocity);
-
-	/* Generate random float number between min and max (used for local collision handling)
-	* @param min: minimum float value
-	* @param max: maximum float value
-	* @return random generated float number
-	**/
-	float randomFloat(float min, float max);
-
+	
+	void publishVisualization(const ros::TimerEvent& e);
+	
+	
 	// ROS Nodehandle
 	ros::NodeHandle n;
 
 	// ID of this agent
 	std::string agentID;
+	int agentIdInt;
 	
 	///////////////////////////////////////////////////////////
-	Map map;
+	Map* map;
 	
 	// information about the current warehouse map
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;
@@ -238,6 +229,10 @@ protected:
 
 	// Subscriber for CollisionAlert message which makes robot stop
 	ros::Subscriber collision_alert_sub;
+
+	// Ros visualisation
+	ros::Publisher visualisationPublisher;
+	ros::Timer vizPublicationTimer;
 
 	// Publisher for motion actuator topic
 	ros::Publisher motion_pub;

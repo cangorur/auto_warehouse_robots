@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <include/agent/path_planning/Rectangle.h>
+
 
 #include "agent/path_planning/Rectangle.h"
 #include "Math.h"
@@ -13,23 +15,10 @@ Rectangle::Rectangle(Point pos_, Point size_, float rotation_) :
 		isAxisAligned = true;
 	}
 	
-	Point sizeInflated = Point(static_cast<float>(size.x + ROBOT_DIAMETER * 2), static_cast<float>(size.y + ROBOT_DIAMETER * 2));
-
-	/*
-	rectangleShape = sf::RectangleShape(Point(size.x, size.y));
-	rectangleShape.setOrigin(size * 0.5f);
-	rectangleShape.setPosition(pos);
-	rectangleShape.setRotation(rotation);
-	rectangleShape.setFillColor(color);
-
-	rectangleShapeInflated = sf::RectangleShape(sizeInflated);
-	rectangleShapeInflated.setOrigin(sizeInflated * 0.5f);
-	rectangleShapeInflated.setPosition(pos);
-	rectangleShapeInflated.setRotation(rotation);
-	rectangleShapeInflated.setFillColor(sf::Color(color.r, color.g, color.b, 80));*/
+	Point sizeInflated = Point(size.x + ROBOT_DIAMETER * 2, size.y + ROBOT_DIAMETER * 2);
 	
 	// Generate inflated points
-	Point diagonalInflated = Point(static_cast<float>(size.x + ROBOT_DIAMETER * 2), static_cast<float>(size.y + ROBOT_DIAMETER * 2)) * 0.5f;
+	Point diagonalInflated = Point(size.x + ROBOT_DIAMETER * 2, size.y + ROBOT_DIAMETER * 2) * 0.5f;
 	Point diagonalInflatedMirrored = Point(diagonalInflated.x, -diagonalInflated.y);
 	
 	pointsInflated[0] = pos + Math::rotateVector(diagonalInflated, rotation);
@@ -42,11 +31,6 @@ Rectangle::Rectangle(Point pos_, Point size_, float rotation_) :
 	minYInflated = std::min({pointsInflated[0].y, pointsInflated[1].y, pointsInflated[2].y, pointsInflated[3].y});
 	maxYInflated = std::max({pointsInflated[0].y, pointsInflated[1].y, pointsInflated[2].y, pointsInflated[3].y});
 }
-
-/*void Rectangle::draw(sf::RenderWindow& renderWindow) {
-	renderWindow.draw(rectangleShapeInflated);
-	renderWindow.draw(rectangleShape);
-}*/
 
 bool Rectangle::isInsideInflated(const Point& point) const {
 	bool isInAxisAligned = isInsideAxisAlignedInflated(point);
@@ -103,5 +87,9 @@ float Rectangle::getMaxYInflated() const {
 
 bool Rectangle::getIsAxisAligned() const {
 	return isAxisAligned;
+}
+
+float Rectangle::getRotation() const {
+	return rotation;
 }
 

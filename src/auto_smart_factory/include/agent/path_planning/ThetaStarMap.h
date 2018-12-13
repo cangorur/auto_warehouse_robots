@@ -17,11 +17,11 @@ private:
 
 public:
 	ThetaStarMap() = default;
-	ThetaStarMap(Point mapSize, Map* map, float resolution);
+	ThetaStarMap(Map* map, float resolution);
 	//void draw(sf::RenderWindow& renderWindow) override;
 
 	bool isLineOfSightFree(const Point& pos1, const Point& pos2) const;
-	const GridNode* getNodeClosestTo(const Point pos) const;
+	const GridNode* getNodeClosestTo(const Point& pos) const;
 
 private:
 	void linkToNode(GridNode& node, Point targetPos);

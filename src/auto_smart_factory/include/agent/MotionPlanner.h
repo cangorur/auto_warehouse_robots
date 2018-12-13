@@ -47,6 +47,8 @@ public:
 	void newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path,
 	             geometry_msgs::Point end_direction_point, bool drive_backwards = false);
 
+	void newPath(Path path);
+
 	void enable(bool enable);
 	bool isEnabled();
 	void start();
@@ -55,6 +57,9 @@ public:
 	bool hasPath();
 	
 	bool isDrivingBackwards();
+
+	visualization_msgs::Marker getVisualizationMsgPoints();
+	visualization_msgs::Marker getVisualizationMsgLines();
 
 private:
 	/* Hands over the currently sensed position and orientation of the robot to execute the driving
@@ -78,7 +83,6 @@ private:
 
 	/// Publisher for the motion actuator topic
 	ros::Publisher* motionPub;
-	ros::Publisher pathPub;
 
 	/// the current path to drive
 	std::vector<geometry_msgs::Point> path;

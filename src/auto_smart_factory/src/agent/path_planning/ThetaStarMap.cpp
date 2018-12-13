@@ -1,15 +1,16 @@
 #include "Math.h"
 
+#include "ros/ros.h"
 #include "agent/path_planning/ThetaStarMap.h"
 #include "agent/path_planning/Point.h"
 #include "agent/path_planning/GridNode.h"
 #include "agent/path_planning/Map.h"
 
-ThetaStarMap::ThetaStarMap(Point mapSize, Map* map, float resolution) :
+ThetaStarMap::ThetaStarMap(Map* map, float resolution) :
 	map(map) {
 	
-	Point start(-mapSize.x/2.f + resolution, -mapSize.y/2.f + resolution);
-	Point end(mapSize.x/2.f - resolution, mapSize.y/2.f - resolution);
+	Point start(map->getMargin(), map->getMargin());
+	Point end(map->getWidth() - map->getMargin(), map->getHeight() - map->getMargin());
 
 	// Generate
 	Point current = start;
@@ -69,12 +70,12 @@ void ThetaStarMap::linkToNode(GridNode& node, Point targetPos) {
 	}
 }
 
-const GridNode* ThetaStarMap::getNodeClosestTo(Point pos) const {
+const GridNode* ThetaStarMap::getNodeClosestTo(const Point& pos) const {
 	float shortestDistance = std::numeric_limits<float>::max();
 	const GridNode* nearestNode = nullptr;
 	
 	for(const auto& element : nodes) {
-		float distance = Math::getDistance(element.first, pos);
+		float distance = Math::getDistanceSquared(element.first, pos);
 
 		if(distance < shortestDistance) {
 			shortestDistance = distance;
@@ -82,6 +83,10 @@ const GridNode* ThetaStarMap::getNodeClosestTo(Point pos) const {
 		}
 	}
 
+	if(nearestNode == nullptr) {
+		ROS_ERROR("No nearest node found!");
+	}
+	
 	return nearestNode;
 }
 

@@ -5,13 +5,15 @@
 
 Point::Point(float x, float y) :
 		x(x),
-		y(y) {
-}
+		y(y) { }
+
+Point::Point(geometry_msgs::Point point) :
+		x(point.x),
+		y(point.y) { }
 
 Point::Point() :
 		x(0),
-		y(0) {
-}
+		y(0) { }
 
 // Overloaded operators
 Point operator -(const Point& right) {

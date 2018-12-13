@@ -1,10 +1,13 @@
 #ifndef AGENT_POINT_H_
 #define AGENT_POINT_H_
 
+#include "geometry_msgs/Point.h"
+
 class Point {
 public:
 	explicit Point();
 	explicit Point(float x, float y);
+	explicit Point(geometry_msgs::Point point);
 	virtual ~Point() = default;
 
 	float x;

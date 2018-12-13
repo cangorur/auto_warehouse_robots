@@ -20,14 +20,15 @@ private:
 	float margin;
 	
 	std::vector<Rectangle> obstacles;
-	ThetaStarMap thetaStarMap;	
+	ThetaStarMap thetaStarMap;
 
 public:
-	Map(float width, float height, float margin, float resolutionThetaStar, std::vector<Rectangle> obstacles);
+	Map() = default;
+	Map(float width, float height, float margin, float resolutionThetaStar, std::vector<Rectangle>& obstacles);
 
-	//void draw(sf::RenderWindow& renderWindow) override;
+	visualization_msgs::Marker getVisualization();
 	
-	bool isInsideAnyInflatedObstacle(const Point point) const;	
+	bool isInsideAnyInflatedObstacle(const Point& point) const;	
 	bool isLineOfSightFree(const Point& pos1, const Point& pos2) const;
 	//bool isTrajectoryFree(DubinsTrajectory& trajectory) const;
 	

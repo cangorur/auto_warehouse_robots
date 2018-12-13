@@ -1,6 +1,6 @@
-#include <iostream>
 #include <queue>
 
+#include "ros/ros.h"
 #include "Math.h"
 #include "agent/path_planning/ThetaStarPathPlanner.h"
 
@@ -14,7 +14,7 @@ Path ThetaStarPathPlanner::findPath(Point start, Point target) {
 	const GridNode* targetNode = map->getNodeClosestTo(target);
 
 	if(startNode == nullptr || targetNode == nullptr) {
-		std::cout << "Error: Start or Target not in ThetaStar map!" << std::endl;
+		ROS_INFO("Error: Start or Target not in ThetaStar map!");
 		return Path({});
 	}
 
@@ -28,6 +28,7 @@ Path ThetaStarPathPlanner::findPath(Point start, Point target) {
 	bool targetFound = false;
 	ThetaStarGridNodeInformation* targetInformation = nullptr;
 
+	ROS_INFO("Starting theta Star loop");
 	while(!queue.empty()) {
 		ThetaStarGridNodeInformation* current = queue.top().second;
 		ThetaStarGridNodeInformation* prev = current->prev;
@@ -36,11 +37,18 @@ Path ThetaStarPathPlanner::findPath(Point start, Point target) {
 		// Delayed Line-of-Sight check
 		if(prev != nullptr && USE_THETA_STAR && !map->isLineOfSightFree(current->node->pos, prev->node->pos)) {
 			// Line of sight not free
-			current->prev = current->expandedBy;
-			current->g = current->expandedBy->g + Math::getDistance(current->expandedBy->node->pos, current->node->pos);
+			
+			// If node after start node
+			if(current->expandedBy == nullptr) {
+				current->g = std::numeric_limits<float>::max();
+				current->prev = nullptr;
+			} else {
+				current->prev = current->expandedBy;
+				current->g = current->expandedBy->g + Math::getDistance(current->expandedBy->node->pos, current->node->pos);
 
-			float heuristic = getHeuristic(current->node->pos, targetNode->pos);
-			queue.push(std::make_pair(current->g + heuristic, current));
+				float heuristic = getHeuristic(current->node->pos, targetNode->pos);
+				queue.push(std::make_pair(current->g + heuristic, current));	
+			}
 			continue;
 		}
 
@@ -80,6 +88,7 @@ Path ThetaStarPathPlanner::findPath(Point start, Point target) {
 			}
 		}
 	}
+	ROS_INFO("Leaving theta Star loop");
 	
 	if(targetFound) {
 		std::vector<Point> pathNodes;
@@ -91,9 +100,10 @@ Path ThetaStarPathPlanner::findPath(Point start, Point target) {
 		}
 		std::reverse(pathNodes.begin(), pathNodes.end());
 
+		ROS_INFO("Returning path");
 		return Path(pathNodes);
 	} else {
-		std::cout << "No path found!" << std::endl;
+		ROS_INFO("No path found!");
 		return Path({});	
 	}	
 }

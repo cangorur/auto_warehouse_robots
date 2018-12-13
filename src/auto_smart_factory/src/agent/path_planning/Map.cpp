@@ -1,5 +1,7 @@
 #include <utility>
 #include <iostream>
+#include <include/agent/path_planning/Map.h>
+
 
 #include "Math.h"
 #include "agent/path_planning/Rectangle.h"
@@ -7,25 +9,75 @@
 #include "agent/path_planning/Point.h"
 #include "agent/path_planning/ThetaStarPathPlanner.h"
 
-Map::Map(float width, float height, float margin, float resolutionThetaStar, std::vector<Rectangle> obstacles) :
+Map::Map(float width, float height, float margin, float resolutionThetaStar, std::vector<Rectangle>& obstacles) :
 		width(width),
 		height(height),
-		margin(margin),
-		obstacles(std::move(obstacles)) {
+		margin(margin) {
 	
-	thetaStarMap = ThetaStarMap(Point(width, height), this, resolutionThetaStar);
+	this->obstacles.clear();
+	for(const Rectangle& o : obstacles) {
+		this->obstacles.emplace_back(o.getPosition(), o.getSize(), o.getRotation());
+	}
+	
+	thetaStarMap = ThetaStarMap(this, resolutionThetaStar);
 }
 
-/*void Map::draw(sf::RenderWindow& renderWindow) {
+visualization_msgs::Marker Map::getVisualization() {
+	visualization_msgs::Marker msg;
+	msg.header.frame_id = "map";
+	msg.header.stamp = ros::Time::now();
+	msg.ns = "Obstacles";
+	msg.action = visualization_msgs::Marker::ADD;
+	msg.pose.orientation.w = 1.0;
+
+	msg.id = 0;
+	msg.type = visualization_msgs::Marker::TRIANGLE_LIST;
+
+	msg.scale.x = 1.f;
+	msg.scale.y = 1.f;
+	msg.scale.z = 1.f;
+
+	msg.color.b = 1.0f;
+	msg.color.a = 0.7;
+
+	geometry_msgs::Point p;
+	p.z = 1.f;
 	// Obstacles
 	for(Rectangle obstacle : obstacles) {
-		obstacle.draw(renderWindow);
+		Point* points = obstacle.getPointsInflated();
+		// First triangle
+		p.x = points[0].x;
+		p.y = points[0].y;
+		msg.points.push_back(p);
+
+		p.x = points[1].x;
+		p.y = points[1].y;
+		msg.points.push_back(p);
+
+		p.x = points[2].x;
+		p.y = points[2].y;
+		msg.points.push_back(p);
+
+		// Second triangle
+		p.x = points[2].x;
+		p.y = points[2].y;
+		msg.points.push_back(p);
+
+		p.x = points[3].x;
+		p.y = points[3].y;
+		msg.points.push_back(p);
+
+		p.x = points[0].x;
+		p.y = points[0].y;
+		msg.points.push_back(p);
 	}
 	
 	//thetaStarMap.draw(renderWindow);
-}*/
 
-bool Map::isInsideAnyInflatedObstacle(const Point point) const {
+	return msg;
+}
+
+bool Map::isInsideAnyInflatedObstacle(const Point& point) const {
 	for(const Rectangle& obstacle : obstacles) {
 		if(obstacle.isInsideInflated(point)) {
 			return true;

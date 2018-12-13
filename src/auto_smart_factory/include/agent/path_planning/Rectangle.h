@@ -4,16 +4,13 @@
 #include "agent/path_planning/Point.h"
 
 // Defined as 0.25 + error margin
-#define ROBOT_DIAMETER 0.3
+#define ROBOT_DIAMETER 0.3f
 
 class Rectangle {
 private:	
 	Point pos;
 	Point size;
 	float rotation;
-	
-	//sf::RectangleShape rectangleShape;
-	//sf::RectangleShape rectangleShapeInflated;
 	
 	// Faster physic processing
 	Point pointsInflated[4];
@@ -23,12 +20,11 @@ private:
 public:
 	Rectangle(Point pos, Point size, float rotation);
 	
-	//void draw(sf::RenderWindow& renderWindow) override;
-	
 	bool isInsideInflated(const Point& point) const;
 	Point* getPointsInflated();
 	Point getPosition() const;
 	Point getSize() const;
+	float getRotation() const;
 	
 	bool getIsAxisAligned() const;
 	float getMinXInflated() const;
