@@ -2,5 +2,7 @@
 
 int32 request_id
 string robot_id
+int32 start_id
+int32 end_id
 bool reject
 float32 score
