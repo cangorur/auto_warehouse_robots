@@ -41,6 +41,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		*pidStart = pos;
 		*pidLast = pos;
 		pidFirstIteration = false;
+		pidSetTarget(currentTarget, pos);
 	}
 
 	if(waypointReached(&pos)) {
