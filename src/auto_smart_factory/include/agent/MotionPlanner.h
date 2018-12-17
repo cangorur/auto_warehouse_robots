@@ -11,8 +11,14 @@
 #include <auto_smart_factory/RobotConfiguration.h>
 #include "agent/path_planning/Path.h"
 #include "agent/path_planning/Point.h"
+#include "agent/Position.h"
 
-#include "agent/PidController.h"
+#define F_KP 2.58  // P constant for PSD translation controller
+#define F_KD 0.047 // D constant for PSD translation controller
+#define F_KI 0.0   // S constant for PSD translation controller
+#define R_KP 2.0   // P constant for PSD rotation controller
+#define R_KD 0.1   // D constant for PSD rotation controller
+#define R_KI 0.0   // S constant for PSD rotation controller
 
 class Agent;
 
@@ -74,8 +80,23 @@ private:
 	void advanceToNextPathPoint();
 	
 	float getRotationToTarget(Point currentPosition, Point targetPosition, double orientation);
-	
-	/// information about the current role of the agent
+
+	/* PID Controller methods */
+	void pidInit(double posTolerance, double angleTolerance, double maxSpeed, double maxAngleSpeed);
+	void pidReset(void);
+
+	void pidSetTarget(double distance, double angle);
+	void pidSetTarget(Point target, Position position);
+
+	void publishVelocity(double speed, double angle);
+
+	void pidUpdate(Position* pos);
+
+	bool waypointReached(Position* current);
+
+	double pidCalculate(Position* current, double currentValue, double lastValue, double referenceValue, double kP, double kD, double kS, double* sum);
+
+		/// information about the current role of the agent
 	auto_smart_factory::RobotConfiguration robotConfig;
 
 	/// Publisher for the motion actuator topic
@@ -112,8 +133,17 @@ private:
 	 * orientation while driving & the direction of the goal position to not steer.*/
 	float allowedRotationDifference = 0.001f;
 
-	PidController* pid;
-	bool atTarget = false;
+	/* PID Controller Attributes */
+	Position *pidStart;
+	Position *pidLast;
+	double maxSpeed;
+	double maxAngleSpeed;
+	double posTolerance;
+	double angleTolerance;
+	double targetDistance;
+	double targetAngle;
+	double sumAngle;
+
 
 protected:
 	Agent* agent;
