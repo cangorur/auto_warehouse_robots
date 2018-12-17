@@ -267,7 +267,7 @@ bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates,
 
 	taskAnnouncerPub.publish(tsa);
 	
-	waitForRobotScores(ros::Duration(1000), ros::Rate(10));
+	waitForRobotScores(ros::Duration(1), ros::Rate(10));
 
 	std::sort(robotCandidates.begin(), robotCandidates.end(),
 		          [](RobotCandidate first, RobotCandidate second) {
@@ -332,10 +332,18 @@ void Request::extractData(const std::vector<auto_smart_factory::Tray>& trays, st
 
 void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){
 	ros::Time start = ros::Time::now();
-	while(start + timeout < ros::Time::now()){
+	ros::Time end = start + timeout;
+	ROS_INFO("[Request %d] is waiting for robot scores; time is %f", status.id, start.toSec());
+	ros::Time now = start;
+	while(ros::Time::now() < end){
 		if(taskPlanner->getRegisteredRobots().size() == answeredRobots.size()){
+			ROS_INFO("[Request %d] received all answers", status.id);
 			return;
 		}
+		ros::Time now = ros::Time::now();
+		ROS_INFO("[Request %d] is waiting for robot scores; time difference between start and end is %f", status.id, end.toSec()-now.toSec());
 		frequency.sleep();
 	}
+	ROS_INFO("[Request %d] Timeout while waiting for robot scores", status.id);
+	return;
 }
