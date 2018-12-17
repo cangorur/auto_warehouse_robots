@@ -25,7 +25,7 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	ros::NodeHandle n;
 	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-	pidInit(0.5, 0.4, 1.0, 2.0);
+	pidInit(0.4, 0.4, 1.2, 2.0);
 }
 
 MotionPlanner::~MotionPlanner() {
@@ -45,12 +45,10 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 
 	if(waypointReached(&pos)) {
 		if (!isCurrentPointLastPoint())	{
-			ROS_WARN("[MotionPlanner] currentTargetIndex: %d | PathObjectSize: %lu", currentTargetIndex, pathObject.getPoints().size() - 1);
 			advanceToNextPathPoint();
 			pidReset();
 			pidSetTarget(currentTarget, pos);
 		} else {
-			ROS_WARN("[MotionPlanner] GOAL REACHED!");
 			publishVelocity(0.0, 0.0);
 		}
 	} else {
@@ -190,8 +188,8 @@ double MotionPlanner::pidCalculate(Position *current, double currentValue, doubl
 	double dt = current->t.toSec() - pidLast->t.toSec();
 	double derivative = (error - previousError) / dt;
 	*sum = *sum + error * dt;
-	//speed = kP*error + kD*derivative + kS*(*sum);
-	speed = kP * error + kS * (*sum);
+	speed = kP*error + kD*derivative + kS*(*sum);
+	//speed = kP * error + kS * (*sum);
 
 	return speed;
 }

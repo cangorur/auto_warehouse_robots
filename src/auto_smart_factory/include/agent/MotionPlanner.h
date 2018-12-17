@@ -13,10 +13,10 @@
 #include "agent/path_planning/Point.h"
 #include "agent/Position.h"
 
-#define F_KP 2.58  // P constant for PSD translation controller
+#define F_KP 3.58  // P constant for PSD translation controller
 #define F_KD 0.047 // D constant for PSD translation controller
-#define F_KI 0.0   // S constant for PSD translation controller
-#define R_KP 2.0   // P constant for PSD rotation controller
+#define F_KI 0.05   // S constant for PSD translation controller
+#define R_KP 3.0   // P constant for PSD rotation controller
 #define R_KD 0.1   // D constant for PSD rotation controller
 #define R_KI 0.0   // S constant for PSD rotation controller
 
