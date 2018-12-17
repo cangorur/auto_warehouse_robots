@@ -44,12 +44,14 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	}
 
 	if(waypointReached(&pos)) {
-		ROS_WARN("[MotionPlanner] Waypoint reached!");
 		if (!isCurrentPointLastPoint())	{
 			ROS_WARN("[MotionPlanner] currentTargetIndex: %d | PathObjectSize: %lu", currentTargetIndex, pathObject.getPoints().size() - 1);
 			advanceToNextPathPoint();
 			pidReset();
 			pidSetTarget(currentTarget, pos);
+		} else {
+			ROS_WARN("[MotionPlanner] GOAL REACHED!");
+			publishVelocity(0.0, 0.0);
 		}
 	} else {
 		pidUpdate(&pos);
@@ -146,25 +148,14 @@ void MotionPlanner::pidUpdate(Position *current)
 	double newAngle = 0.0;
 	double newSpeed = 0.0;
 
-	if (waypointReached(current))
-	{
-		ROS_INFO("GOAL ACHIEVED");
-		publishVelocity(0.0, 0.0);
-		return;
-	}
-
 	//Calculation of action intervention.
-	if (fabs(pidTargetDistance) > posTolerance)
-	{
+	if (fabs(pidTargetDistance) > posTolerance) {
 		newSpeed = pidCalculate(current, pidStart->getDistance(current) * copysign(1.0, pidTargetDistance), pidStart->getDistance(pidLast) * copysign(1.0, pidTargetDistance), pidTargetDistance, F_KP, F_KD, F_KI, &pidSumDistance);
 	}
 
-	if (current->o - pidLast->o < -M_PI)
-	{
+	if (current->o - pidLast->o < -M_PI) {
 		current->o += 2 * M_PI;
-	}
-	else if (current->o - pidLast->o > M_PI)
-	{
+	} else if (current->o - pidLast->o > M_PI) {
 		current->o -= 2 * M_PI;
 	}
 
@@ -178,8 +169,6 @@ void MotionPlanner::pidUpdate(Position *current)
 
 bool MotionPlanner::waypointReached(Position *current) {
 	double distance = pidStart->getDistance(current) * copysign(1.0, pidTargetDistance);
-
-	ROS_WARN("[MotionPlanner] Distance: %.4f | Target Distance: %.4f", distance, (fabs(distance - pidTargetDistance)));
 
 	if (fabs(distance - pidTargetDistance) > posTolerance) {
 		return false;
