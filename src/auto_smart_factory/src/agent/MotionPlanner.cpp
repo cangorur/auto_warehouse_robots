@@ -25,7 +25,7 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	ros::NodeHandle n;
 	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-	pidInit(0.4, 0.4, 1.2, 2.0);
+	pidInit(0.1, 0.5, 1.2, 2.0);
 }
 
 MotionPlanner::~MotionPlanner() {
@@ -162,7 +162,7 @@ void MotionPlanner::pidUpdate(Position *current)
 	*pidLast = *current;
 
 	// publish velocity message
-	publishVelocity(fmin(maxSpeed, newSpeed), fmin(maxAngleSpeed, newAngle));
+	publishVelocity(fmin(maxSpeed, newSpeed), Math::clamp(newAngle, -maxAngleSpeed, maxAngleSpeed));
 }
 
 bool MotionPlanner::waypointReached(Position *current) {
