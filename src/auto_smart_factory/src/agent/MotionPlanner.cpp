@@ -25,7 +25,7 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	ros::NodeHandle n;
 	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-	pidInit(0.2, 0.4, 1.0, 2.0);
+	pidInit(0.5, 0.4, 1.0, 2.0);
 }
 
 MotionPlanner::~MotionPlanner() {
@@ -35,24 +35,25 @@ MotionPlanner::~MotionPlanner() {
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	//driveCurrentPath(Point(position.x, position.y), orientation);
-	Position *pos = new Position(position.x, position.y, orientation, ros::Time::now());
+	Position pos(position.x, position.y, orientation, ros::Time::now());
 
-	if(pidStart == nullptr || pidLast == nullptr) {
-		*pidStart = *pos;
-		*pidLast = *pos;
+	if(pidFirstIteration) {
+		*pidStart = pos;
+		*pidLast = pos;
+		pidFirstIteration = false;
 	}
 
-	if(waypointReached(pos)) {
+	if(waypointReached(&pos)) {
+		ROS_WARN("[MotionPlanner] Waypoint reached!");
 		if (!isCurrentPointLastPoint())	{
 			ROS_WARN("[MotionPlanner] currentTargetIndex: %d | PathObjectSize: %lu", currentTargetIndex, pathObject.getPoints().size() - 1);
 			advanceToNextPathPoint();
 			pidReset();
-			pidSetTarget(currentTarget, Position(position.x, position.y, orientation, ros::Time::now()));
+			pidSetTarget(currentTarget, pos);
 		}
 	} else {
-		pidUpdate(pos);
+		pidUpdate(&pos);
 	}
-	delete pos;
 }
 
 void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path, geometry_msgs::Point end_direction_point, bool drive_backwards) {
@@ -106,11 +107,14 @@ void MotionPlanner::pidInit(double posTolerance, double angleTolerance, double m
 	this->pidTargetAngle = 0.0;
 	this->pidSumDistance = 0.0;
 	this->pidSumAngle = 0.0;
-	this->pidStart = nullptr;
-	this->pidLast = nullptr;
+	this->pidStart = new Position();
+	this->pidLast = new Position();
+	this->pidFirstIteration = true;
 }
 
 void MotionPlanner::pidReset() {
+	delete pidStart;
+	delete pidLast;
 	this->pidInit(this->posTolerance, this->angleTolerance, this->maxSpeed, this->maxAngleSpeed);
 }
 
@@ -122,8 +126,8 @@ void MotionPlanner::pidSetTarget(double distance, double angle)
 
 void MotionPlanner::pidSetTarget(Point target, Position position)
 {
-	float distToTarget = Math::getDistance(Point(position.x, position.y), target);
-	float rotationToTarget = getRotationToTarget(Point(position.x, position.y), target, position.o);
+	double distToTarget = static_cast<double>(Math::getDistance(Point(position.x, position.y), target));
+	double rotationToTarget = static_cast<double>(getRotationToTarget(Point(position.x, position.y), target, position.o));
 
 	this->pidSetTarget(distToTarget, rotationToTarget);
 }
@@ -147,12 +151,6 @@ void MotionPlanner::pidUpdate(Position *current)
 		ROS_INFO("GOAL ACHIEVED");
 		publishVelocity(0.0, 0.0);
 		return;
-	}
-
-	if (pidStart == nullptr && pidLast == nullptr)
-	{
-		*pidStart = *current;
-		*pidLast = *current;
 	}
 
 	//Calculation of action intervention.
@@ -179,18 +177,17 @@ void MotionPlanner::pidUpdate(Position *current)
 }
 
 bool MotionPlanner::waypointReached(Position *current) {
-	double distance;
-	distance = pidStart->getDistance(current) * copysign(1.0, pidTargetDistance);
+	double distance = pidStart->getDistance(current) * copysign(1.0, pidTargetDistance);
 
-	if (fabs(distance - pidTargetDistance) > posTolerance)
-	{
+	ROS_WARN("[MotionPlanner] Distance: %.4f | Target Distance: %.4f", distance, (fabs(distance - pidTargetDistance)));
+
+	if (fabs(distance - pidTargetDistance) > posTolerance) {
 		return false;
 	}
 
 	if (fabs(pidTargetAngle - (current->o - pidStart->o)) > angleTolerance &
 		fabs(pidTargetAngle - (current->o - pidStart->o) + 2 * M_PI) > angleTolerance &
-		fabs(pidTargetAngle - (current->o - pidStart->o) - 2 * M_PI) > angleTolerance)
-	{
+		fabs(pidTargetAngle - (current->o - pidStart->o) - 2 * M_PI) > angleTolerance) {
 		return false;
 	}
 

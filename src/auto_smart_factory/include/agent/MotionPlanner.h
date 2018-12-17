@@ -144,6 +144,7 @@ private:
 	double pidTargetAngle;
 	double pidSumDistance;
 	double pidSumAngle;
+	bool pidFirstIteration;
 
 
 protected:
