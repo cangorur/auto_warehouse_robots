@@ -140,15 +140,15 @@ private:
 	double maxAngleSpeed;
 	double posTolerance;
 	double angleTolerance;
-	double targetDistance;
-	double targetAngle;
-	double sumAngle;
+	double pidTargetDistance;
+	double pidTargetAngle;
+	double pidSumDistance;
+	double pidSumAngle;
 
 
 protected:
 	Agent* agent;
 	std::string agentID;
-
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_ */

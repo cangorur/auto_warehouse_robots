@@ -7,7 +7,6 @@
 
 #include "agent/MotionPlanner.h"
 #include "Math.h"
-#include "agent/path_planning/Point.h"
 
 #include <ros/console.h>
 
@@ -30,16 +29,22 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 }
 
 MotionPlanner::~MotionPlanner() {
-	delete start;
-	delete last;
+	delete pidStart;
+	delete pidLast;
 };
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	//driveCurrentPath(Point(position.x, position.y), orientation);
 	Position *pos = new Position(position.x, position.y, orientation, ros::Time::now());
-	if(waypointReached()) {
+
+	if(pidStart == nullptr || pidLast == nullptr) {
+		*pidStart = *pos;
+		*pidLast = *pos;
+	}
+
+	if(waypointReached(pos)) {
 		if (!isCurrentPointLastPoint())	{
-			ROS_WARN("[MotionPlanner] currentTargetIndex: %d | PathObjectSize: %d", currentTargetIndex, pathObject.getPoints().size() - 1);
+			ROS_WARN("[MotionPlanner] currentTargetIndex: %d | PathObjectSize: %lu", currentTargetIndex, pathObject.getPoints().size() - 1);
 			advanceToNextPathPoint();
 			pidReset();
 			pidSetTarget(currentTarget, Position(position.x, position.y, orientation, ros::Time::now()));
@@ -64,8 +69,6 @@ void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geo
 
 	pathPub.publish(pathObject.getVisualizationMsgPoints());
 	pathPub.publish(pathObject.getVisualizationMsgLines());
-
-	atTarget = true;
 }
 
 void MotionPlanner::enable(bool enable) {
@@ -99,12 +102,12 @@ void MotionPlanner::pidInit(double posTolerance, double angleTolerance, double m
 	this->angleTolerance = angleTolerance;
 	this->maxSpeed = maxSpeed;
 	this->maxAngleSpeed = maxAngleSpeed;
-	this->targetDistance = 0.0;
-	this->targetAngle = 0.0;
-	this->sumDistance = 0.0;
-	this->sumAngle = 0.0;
-	this->start = nullptr;
-	this->end = nullptr;
+	this->pidTargetDistance = 0.0;
+	this->pidTargetAngle = 0.0;
+	this->pidSumDistance = 0.0;
+	this->pidSumAngle = 0.0;
+	this->pidStart = nullptr;
+	this->pidLast = nullptr;
 }
 
 void MotionPlanner::pidReset() {
@@ -113,8 +116,8 @@ void MotionPlanner::pidReset() {
 
 void MotionPlanner::pidSetTarget(double distance, double angle)
 {
-	targetDistance = distance;
-	targetAngle = angle;
+	pidTargetDistance = distance;
+	pidTargetAngle = angle;
 }
 
 void MotionPlanner::pidSetTarget(Point target, Position position)
@@ -134,7 +137,7 @@ void MotionPlanner::publishVelocity(double speed, double angle) {
 	motionPub->publish(msg);
 }
 
-void PidController::pidUpdate(Position *current)
+void MotionPlanner::pidUpdate(Position *current)
 {
 	double newAngle = 0.0;
 	double newSpeed = 0.0;
@@ -146,47 +149,47 @@ void PidController::pidUpdate(Position *current)
 		return;
 	}
 
-	if (start == nullptr && last == nullptr)
+	if (pidStart == nullptr && pidLast == nullptr)
 	{
-		*start = *current;
-		*last = *current;
+		*pidStart = *current;
+		*pidLast = *current;
 	}
 
 	//Calculation of action intervention.
-	if (fabs(targetDistance) > posTolerance)
+	if (fabs(pidTargetDistance) > posTolerance)
 	{
-		newSpeed = pidCalculate(current, start->getDistance(current) * copysign(1.0, targetDistance), start->getDistance(last) * copysign(1.0, targetDistance), targetDistance, F_KP, F_KD, F_KI, &sumDistance);
+		newSpeed = pidCalculate(current, pidStart->getDistance(current) * copysign(1.0, pidTargetDistance), pidStart->getDistance(pidLast) * copysign(1.0, pidTargetDistance), pidTargetDistance, F_KP, F_KD, F_KI, &pidSumDistance);
 	}
 
-	if (current->o - last->o < -M_PI)
+	if (current->o - pidLast->o < -M_PI)
 	{
 		current->o += 2 * M_PI;
 	}
-	else if (current->o - last->o > M_PI)
+	else if (current->o - pidLast->o > M_PI)
 	{
 		current->o -= 2 * M_PI;
 	}
 
-	newAngle = pidCalculate(current, current->o - start->o, last->o - start->o, targetAngle, R_KP, R_KD, R_KI, &sumAngle);
+	newAngle = pidCalculate(current, current->o - pidStart->o, pidLast->o - pidStart->o, pidTargetAngle, R_KP, R_KD, R_KI, &pidSumAngle);
 
-	*last = *current;
+	*pidLast = *current;
 
 	// publish velocity message
 	publishVelocity(fmin(maxSpeed, newSpeed), fmin(maxAngleSpeed, newAngle));
 }
 
-bool PidController::waypointReached(Position *current) {
+bool MotionPlanner::waypointReached(Position *current) {
 	double distance;
-	distance = start->getDistance(current) * copysign(1.0, targetDistance);
+	distance = pidStart->getDistance(current) * copysign(1.0, pidTargetDistance);
 
-	if (fabs(distance - targetDistance) > posTolerance)
+	if (fabs(distance - pidTargetDistance) > posTolerance)
 	{
 		return false;
 	}
 
-	if (fabs(targetAngle - (current->o - start->o)) > angleTolerance &
-		fabs(targetAngle - (current->o - start->o) + 2 * M_PI) > angleTolerance &
-		fabs(targetAngle - (current->o - start->o) - 2 * M_PI) > angleTolerance)
+	if (fabs(pidTargetAngle - (current->o - pidStart->o)) > angleTolerance &
+		fabs(pidTargetAngle - (current->o - pidStart->o) + 2 * M_PI) > angleTolerance &
+		fabs(pidTargetAngle - (current->o - pidStart->o) - 2 * M_PI) > angleTolerance)
 	{
 		return false;
 	}
@@ -198,7 +201,7 @@ double MotionPlanner::pidCalculate(Position *current, double currentValue, doubl
 	double speed = 0;
 	double error = referenceValue - currentValue;
 	double previousError = referenceValue - lastValue;
-	double dt = current->t.toSec() - last->t.toSec();
+	double dt = current->t.toSec() - pidLast->t.toSec();
 	double derivative = (error - previousError) / dt;
 	*sum = *sum + error * dt;
 	//speed = kP*error + kD*derivative + kS*(*sum);
