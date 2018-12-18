@@ -165,6 +165,9 @@ protected:
 	void collisionAlertCallback(const auto_smart_factory::CollisionAction& msg);
 	
 	void publishVisualization(const ros::TimerEvent& e);
+
+	// Task Handler
+	void announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement);
 	
 	
 	// ROS Nodehandle
@@ -232,7 +235,7 @@ protected:
 	ros::Subscriber collision_alert_sub;
 
 	// Subscriber for TaskHandler
-	ros::Subscriber task_announcement_sub;
+	ros::Subscriber task_announce_sub;
 
 	// Publisher for TaskHandler
 	ros::Publisher taskrating_pub;

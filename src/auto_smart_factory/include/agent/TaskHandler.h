@@ -12,12 +12,10 @@
 class TaskHandler
 {
   public:
-    explicit TaskHandler(std::string agentId, ros::Publisher scorePublish);
+    explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish);
 
-    void announcementCallback(auto_smart_factory::TaskAnnouncement &taskAnnouncement);
-    void publishScore(double score);
-
-    void 
+    void announcementCallback(const auto_smart_factory::TaskAnnouncement &taskAnnouncement);
+    void publishScore(unsigned int requestId, double score);
 
     virtual ~TaskHandler();
 
@@ -26,7 +24,7 @@ class TaskHandler
 
     std::string agentId;
 
-    ros::Publisher scorePublisher;
+    ros::Publisher* scorePublisher;
 };
 
 #endif /* AGENT_TASKHANDLER_H_ */
