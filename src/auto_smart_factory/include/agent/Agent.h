@@ -4,6 +4,7 @@
 #include "agent/MotionPlanner.h"
 #include "agent/Gripper.h"
 #include "agent/ObstacleDetection.h"
+#include "agent/TaskHandler.h"
 
 #include <random>
 #include "ros/ros.h"
@@ -245,6 +246,9 @@ protected:
 
 	// Publisher for heartbeat topic
 	ros::Publisher heartbeat_pub;
+
+	// pointer to instance of the task planner
+	TaskHandler* taskHandler;
 
 	// pointer to instance of the motion planner
 	MotionPlanner* motionPlanner;

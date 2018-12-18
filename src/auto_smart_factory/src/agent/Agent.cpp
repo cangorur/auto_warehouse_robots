@@ -91,6 +91,9 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		// Disable to prevent crash because obstacleDetections was not initialized properly because no occupancy map is available
 		this->obstacleDetection = new ObstacleDetection(agentID, *motionPlanner, robotConfig, warehouseConfig);
 		this->obstacleDetection->enable(false);
+
+		// Task Handler
+		this->taskHandler = new TaskHandler(agentID);
 		
 		// Generate map
 		std::vector<Rectangle> obstacles;
