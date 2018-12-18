@@ -74,6 +74,11 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 	statusUpdateTimer = n.createTimer(ros::Duration(2.0),
 	                                  &TaskPlanner::taskStateUpdateEvent, this);
 
+	taskResponseSub = n.subscribe("/task_response", 1000, 
+									&TaskPlanner::receiveTaskResponse, this);
+
+	taskAnnouncerPub = pn.advertise<TaskAnnouncement>("task_broadcast", 1);
+
 	ROS_INFO("Task planner initialized.");
 
 	res.success = true;
@@ -381,3 +386,47 @@ bool TaskPlanner::idleRobotAvailable() const {
 	return false;
 }
 
+void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
+	// go through requests and get the one for which the response is intended:
+	for(Request& r : inputRequests){
+		if(r.getId() == tr.request_id){
+			r.receiveTaskResponse(tr);
+			return;
+		}
+	}
+	for(Request& r : outputRequests){
+		if(r.getId() == tr.request_id){
+			r.receiveTaskResponse(tr);
+			return;
+		}
+	}
+}
+
+void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
+                	 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, 
+					 uint32_t requestId){
+	TaskAnnouncement tsa;
+	tsa.request_id = requestId;
+	std::vector<geometry_msgs::Point> sourcePoints;
+	std::vector<uint32_t> sourceIds;
+	extractData(sourceTrayCandidates, sourcePoints, sourceIds);
+	tsa.start_points = sourcePoints;
+	tsa.start_ids = sourceIds;
+	std::vector<geometry_msgs::Point> targetPoints;
+	std::vector<uint32_t> targetIds;
+	extractData(targetTrayCandidates, targetPoints, targetIds);
+	tsa.end_points = targetPoints;
+	tsa.end_ids = targetIds;
+	taskAnnouncerPub.publish(tsa);
+}
+
+void TaskPlanner::extractData(const std::vector<auto_smart_factory::Tray>& trays, std::vector<geometry_msgs::Point>& points, std::vector<uint32_t> ids){
+	for(Tray t : trays){
+		geometry_msgs::Point p;
+		p.x = t.x;
+		p.y = t.y;
+		p.z = 0.0;
+		points.push_back(p);
+		ids.push_back(t.id);
+	}
+}
