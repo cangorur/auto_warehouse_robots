@@ -81,6 +81,8 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	this->heartbeat_pub = n.advertise<auto_smart_factory::RobotHeartbeat>("robot_heartbeats", 1);
 	this->gripper_state_pub = pn.advertise<auto_smart_factory::GripperState>("gripper_state", 1);
 	this->additional_time_pub = pn.advertise<auto_smart_factory::AdditionalTime>("additional_time", 1);
+	this->task_announcement_sub = n.subscribe("/task_broadcast", 1, &TaskHandler::announcementCallback, this);
+	this->taskrating_pub = pn.advertise<auto_smart_factory::TaskRating>("task_response", 1);
 	// TODO: Below topic can give some hints (example information an agent may need). They are not published in any of the nodes
 	// this->collision_alert_sub = n.subscribe("/collisionAlert", 1, &Agent::collisionAlertCallback, this);
 
@@ -93,7 +95,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		this->obstacleDetection->enable(false);
 
 		// Task Handler
-		this->taskHandler = new TaskHandler(agentID);
+		this->taskHandler = new TaskHandler(agentID, taskrating_pub);
 		
 		// Generate map
 		std::vector<Rectangle> obstacles;

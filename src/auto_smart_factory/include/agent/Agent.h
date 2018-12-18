@@ -231,6 +231,12 @@ protected:
 	// Subscriber for CollisionAlert message which makes robot stop
 	ros::Subscriber collision_alert_sub;
 
+	// Subscriber for TaskHandler
+	ros::Subscriber task_announcement_sub;
+
+	// Publisher for TaskHandler
+	ros::Publisher taskrating_pub;
+
 	// Ros visualisation
 	ros::Publisher visualisationPublisher;
 	ros::Timer vizPublicationTimer;
