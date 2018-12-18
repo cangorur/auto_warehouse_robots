@@ -7,10 +7,11 @@ TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub)
 {
 }
 
-void TaskHandler::announcementCallback(const auto_smart_factory::TaskAnnouncement &taskAnnouncement) {
+void TaskHandler::announcementCallback(const auto_smart_factory::TaskAnnouncement &tA) {
     // handle task announcement
     // get score
-    publishScore(0, 15.5);
+    // ROS_WARN("[TaskHandler - %s] sending score!", agentId.c_str());
+    publishScore(tA.request_id, 15.5);
 }
 
 void TaskHandler::publishScore(unsigned int requestId, double score) {

@@ -82,7 +82,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	this->gripper_state_pub = pn.advertise<auto_smart_factory::GripperState>("gripper_state", 1);
 	this->additional_time_pub = pn.advertise<auto_smart_factory::AdditionalTime>("additional_time", 1);
 	this->task_announce_sub = n.subscribe("/task_planner/task_broadcast", 1, &Agent::announcementCallback, this);
-	this->taskrating_pub = pn.advertise<auto_smart_factory::TaskRating>("task_response", 1);
+	this->taskrating_pub = pn.advertise<auto_smart_factory::TaskRating>("/task_response", 1);
 	// TODO: Below topic can give some hints (example information an agent may need). They are not published in any of the nodes
 	// this->collision_alert_sub = n.subscribe("/collisionAlert", 1, &Agent::collisionAlertCallback, this);
 
@@ -336,7 +336,7 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 }
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
-	ROS_WARN("[TaskHandler - %s] Received Task Announcement!", agentID.c_str());
+	ROS_WARN("[TaskHandler - %s] Received Task Announcement for Request %d!", agentID.c_str(), taskAnnouncement.request_id);
 	this->taskHandler->announcementCallback(taskAnnouncement);
 }
 
