@@ -32,6 +32,9 @@ public:
 
 	/// Estimated task duration
 	ros::Duration estimatedDuration;
+
+	/// score for a specific request
+	float score;
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_TASK_PLANNER_ROBOTCANDIDATE_H_ */

@@ -78,6 +78,8 @@ add_message_files(
 		RequestStatus.msg
 		TaskState.msg
 		TaskPlannerState.msg
+		TaskAnnouncement.msg
+		TaskRating.msg
 		TraySensor.msg
 		PackagePool.msg
 		Robot.msg
