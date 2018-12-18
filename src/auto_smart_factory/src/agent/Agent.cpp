@@ -1,8 +1,5 @@
-
-#include <include/agent/Agent.h>
-
-#include "Math.h"
 #include "agent/Agent.h"
+#include "Math.h"
 
 Agent::Agent(std::string agent_id) {
 	agentID = agent_id;
@@ -309,12 +306,12 @@ auto_smart_factory::Tray Agent::getTray(unsigned int tray_id) {
 void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 	position = msg.pose.position;
 	orientation = msg.pose.orientation;
-	
+
 	if(this->motionPlanner->isEnabled()) {
-		//this->obstacleDetection->enable(true);
-		this->motionPlanner->update(position, asin(orientation.z));
+		// this->obstacleDetection->enable(true);
+		this->motionPlanner->update(position, 2*asin(orientation.z));
 	} else {
-		//this->obstacleDetection->enable(false);
+		// this->obstacleDetection->enable(false);
 	}
 }
 

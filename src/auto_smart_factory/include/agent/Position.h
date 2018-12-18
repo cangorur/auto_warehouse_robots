@@ -1,7 +1,7 @@
 #ifndef AGENT_POSITION_H_
 #define AGENT_POSITION_H_
 
-#include <math.h>
+#include <cmath>
 #include "ros/ros.h"
 
 class Position {

@@ -4,11 +4,9 @@
 
 #include "agent/Agent.h"
 #include <visualization_msgs/Marker.h>
-#include <include/agent/MotionPlanner.h>
 
 #include "agent/MotionPlanner.h"
 #include "Math.h"
-#include "agent/path_planning/Point.h"
 
 #include <ros/console.h>
 
@@ -25,14 +23,39 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	motionPub = motion_pub;
 	agent = a;
 	agentID = agent->getAgentID();
+
+	pidInit(0.1, 0.5, 1.2, 2.0);
 }
 
-MotionPlanner::~MotionPlanner() = default;
+MotionPlanner::~MotionPlanner() {
+	delete pidStart;
+	delete pidLast;
+};
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
-	if(!hasFinishedCurrentPath) {
-		driveCurrentPath(Point(position.x, position.y), orientation);	
-	}	
+	//if(!hasFinishedCurrentPath) {
+	//	driveCurrentPath(Point(position.x, position.y), orientation);	
+	//}	
+	Position pos(position.x, position.y, orientation, ros::Time::now());
+
+	if(pidFirstIteration) {
+		*pidStart = pos;
+		*pidLast = pos;
+		pidFirstIteration = false;
+		pidSetTarget(currentTarget, pos);
+	}
+
+	if(waypointReached(&pos)) {
+		if (!isCurrentPointLastPoint())	{
+			advanceToNextPathPoint();
+			pidReset();
+			pidSetTarget(currentTarget, pos);
+		} else {
+			publishVelocity(0.0, 0.0);
+		}
+	} else {
+		pidUpdate(&pos);
+	}
 }
 
 void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path, geometry_msgs::Point end_direction_point, bool drive_backwards) {
@@ -86,18 +109,106 @@ bool MotionPlanner::hasPath() {
 	return pathObject.getLength() > 0;
 }
 
+void MotionPlanner::pidInit(double posTolerance, double angleTolerance, double maxSpeed, double maxAngleSpeed) {
+	this->posTolerance = posTolerance;
+	this->angleTolerance = angleTolerance;
+	this->maxSpeed = maxSpeed;
+	this->maxAngleSpeed = maxAngleSpeed;
+	this->pidTargetDistance = 0.0;
+	this->pidTargetAngle = 0.0;
+	this->pidSumDistance = 0.0;
+	this->pidSumAngle = 0.0;
+	this->pidStart = new Position();
+	this->pidLast = new Position();
+	this->pidFirstIteration = true;
+}
+
+void MotionPlanner::pidReset() {
+	delete pidStart;
+	delete pidLast;
+	this->pidInit(this->posTolerance, this->angleTolerance, this->maxSpeed, this->maxAngleSpeed);
+}
+
+void MotionPlanner::pidSetTarget(double distance, double angle)
+{
+	pidTargetDistance = distance;
+	pidTargetAngle = angle;
+}
+
+void MotionPlanner::pidSetTarget(Point target, Position position)
+{
+	double distToTarget = static_cast<double>(Math::getDistance(Point(position.x, position.y), target));
+	double rotationToTarget = static_cast<double>(getRotationToTarget(Point(position.x, position.y), target, position.o));
+
+	this->pidSetTarget(distToTarget, rotationToTarget);
+}
+
+void MotionPlanner::publishVelocity(double speed, double angle) {
+	geometry_msgs::Twist msg;
+
+	msg.linear.x = speed;
+	msg.angular.z = angle;
+
+	motionPub->publish(msg);
+}
+
+void MotionPlanner::pidUpdate(Position *current)
+{
+	double newAngle = 0.0;
+	double newSpeed = 0.0;
+
+	//Calculation of action intervention.
+	if (fabs(pidTargetDistance) > posTolerance) {
+		newSpeed = pidCalculate(current, pidStart->getDistance(current) * copysign(1.0, pidTargetDistance), pidStart->getDistance(pidLast) * copysign(1.0, pidTargetDistance), pidTargetDistance, F_KP, F_KD, F_KI, &pidSumDistance);
+	}
+
+	if (current->o - pidLast->o < -M_PI) {
+		current->o += 2 * M_PI;
+	} else if (current->o - pidLast->o > M_PI) {
+		current->o -= 2 * M_PI;
+	}
+
+	newAngle = pidCalculate(current, current->o - pidStart->o, pidLast->o - pidStart->o, pidTargetAngle, R_KP, R_KD, R_KI, &pidSumAngle);
+
+	*pidLast = *current;
+
+	// publish velocity message
+	publishVelocity(fmin(maxSpeed, newSpeed), Math::clamp(newAngle, -maxAngleSpeed, maxAngleSpeed));
+}
+
+bool MotionPlanner::waypointReached(Position *current) {
+	double distance = pidStart->getDistance(current) * copysign(1.0, pidTargetDistance);
+
+	if (fabs(distance - pidTargetDistance) > posTolerance) {
+		return false;
+	}
+
+	if (fabs(pidTargetAngle - (current->o - pidStart->o)) > angleTolerance &
+		fabs(pidTargetAngle - (current->o - pidStart->o) + 2 * M_PI) > angleTolerance &
+		fabs(pidTargetAngle - (current->o - pidStart->o) - 2 * M_PI) > angleTolerance) {
+		return false;
+	}
+
+	return true;
+}
+
+double MotionPlanner::pidCalculate(Position *current, double currentValue, double lastValue, double referenceValue, double kP, double kD, double kS, double *sum) {
+	double speed = 0;
+	double error = referenceValue - currentValue;
+	double previousError = referenceValue - lastValue;
+	double dt = current->t.toSec() - pidLast->t.toSec();
+	double derivative = (error - previousError) / dt;
+	*sum = *sum + error * dt;
+	speed = kP*error + kD*derivative + kS*(*sum);
+	//speed = kP * error + kS * (*sum);
+
+	return speed;
+}
+
 bool MotionPlanner::driveCurrentPath(Point currentPosition, double orientation) {
 	geometry_msgs::Twist motion;
 
 	float distToTarget = Math::getDistance(currentPosition, currentTarget);
-
-	// WTF
-	orientation = orientation / (PI / 2.0);
-	
-	//float desiredRotation = Math::getRotation(currentTarget - currentPosition);
-	//float currentRotation = getRotationFromOrientation(orientation);
-	//float rotationToTarget = Math::getAngleDifference(currentRotation, desiredRotation);
-
 	float rotationToTarget = getRotationToTarget(currentPosition, currentTarget, orientation);
 	
 	float rotationSign = rotationToTarget < 0.f ? -1.f : 1.f;
@@ -193,28 +304,9 @@ bool MotionPlanner::isDrivingBackwards() {
 }
 
 float MotionPlanner::getRotationToTarget(Point currentPosition, Point targetPosition, double orientation) {
-	double direction = (std::atan2(targetPosition.y - currentPosition.y, targetPosition.x - currentPosition.x)) / PI;
+	double direction = std::atan2(targetPosition.y - currentPosition.y, targetPosition.x - currentPosition.x);
 
-	double diff = 0;
-	if(orientation >= 0 && direction >= 0) {
-		diff = direction - orientation;
-	} else if(orientation < 0 && direction < 0) {
-		diff = direction - orientation;
-	} else if(orientation >= 0 && direction < 0) {
-		if(orientation - direction <= 1) {
-			diff = direction - orientation;
-		} else {
-			diff = (1 - orientation) + (1 + direction);
-		}
-	} else if(orientation < 0 && direction >= 0) {
-		if(direction - orientation <= 1) {
-			diff = direction - orientation;
-		} else {
-			diff = direction - orientation - 2;
-		}
-	}
-
-	return static_cast<float>(diff);
+	return static_cast<float>(Math::getAngleDifferenceInRad(orientation, direction));
 }
 
 visualization_msgs::Marker MotionPlanner::getVisualizationMsgPoints() {

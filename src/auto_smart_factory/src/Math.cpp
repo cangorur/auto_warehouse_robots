@@ -230,13 +230,25 @@ float Math::clamp(float value, float min, float max) {
 	return std::max(min, std::min(max, value));
 }
 
-float Math::getAngleDifference(float source, float target) {
+float Math::getAngleDifferenceInDegree(float source, float target) {
 	float angle = target - source;
 
 	if(angle > 180) {
 		angle = angle - 360;
 	} else if(angle < -180){
 		angle = angle + 360;
+	}
+
+	return angle;
+}
+
+float Math::getAngleDifferenceInRad(float source, float target) {
+	float angle = target - source;
+
+	if(angle > M_PI) {
+		angle = angle - 2*M_PI;
+	} else if(angle < -M_PI){
+		angle = angle + 2*M_PI;
 	}
 
 	return angle;

@@ -58,7 +58,8 @@ public:
 	static float getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 	
 	static float getAngleMedian(float a1, float a2);
-	static float getAngleDifference(float source, float target);
+	static float getAngleDifferenceInDegree(float source, float target);
+	static float getAngleDifferenceInRad(float source, float target);
 };
 
 #endif //PROJECT_MATH_H
