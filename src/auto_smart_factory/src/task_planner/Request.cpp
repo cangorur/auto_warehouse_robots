@@ -333,7 +333,7 @@ void Request::extractData(const std::vector<auto_smart_factory::Tray>& trays, st
 void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){
 	ros::Time start = ros::Time::now();
 	ros::Time end = start + timeout;
-	ROS_INFO("[Request %d] is waiting for robot scores", start.toSec());
+	ROS_INFO("[Request %d] is waiting for robot scores", status.id);
 	ros::Time now = start;
 	while(ros::Time::now() < end){
 		if(taskPlanner->getRegisteredRobots().size() == answeredRobots.size()){
