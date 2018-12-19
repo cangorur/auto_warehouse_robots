@@ -15,11 +15,12 @@ class TaskHandler
     explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish);
 
     void announcementCallback(const auto_smart_factory::TaskAnnouncement &taskAnnouncement);
-    void publishScore(unsigned int requestId, double score);
+    void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId);
 
     virtual ~TaskHandler();
 
   private:
+    Task currentTask;
     std::vector<Task> queue;
 
     std::string agentId;

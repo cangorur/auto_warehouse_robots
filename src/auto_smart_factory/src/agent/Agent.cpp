@@ -336,7 +336,7 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 }
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
-	ROS_WARN("[TaskHandler - %s] Received Task Announcement for Request %d!", agentID.c_str(), taskAnnouncement.request_id);
+	// ROS_WARN("[TaskHandler - %s] Received Task Announcement for Request %d!", agentID.c_str(), taskAnnouncement.request_id);
 	this->taskHandler->announcementCallback(taskAnnouncement);
 }
 
