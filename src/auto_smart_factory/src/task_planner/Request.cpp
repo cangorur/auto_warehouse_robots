@@ -80,6 +80,7 @@ TaskData Request::allocateResources() {
 	// try one robot after the other until success
 	for(const RobotCandidate& cand : robotCandidates) {
 		// allocate trays
+		ROS_INFO("[request %d] for %s Source tray id is: %d and target tray id is %d", status.id, cand.robotId.c_str(), cand.source.id, cand.target.id);
 		TrayAllocatorPtr sourceTray = TrayAllocator::allocateTray(
 				cand.source.id);
 		TrayAllocatorPtr targetTray = TrayAllocator::allocateTray(
@@ -201,7 +202,7 @@ bool Request::allocateRobot(RobotCandidate candidate) const {
 		ROS_INFO("[request %d] The task= %d was assigned at time= %f .",
 		         status.id, status.id, ros::Time::now().toSec());
 
-		ROS_FATAL("taskETA %s %.2f %i", candidate.robotId.c_str(), candidate.estimatedDuration.toSec(), status.id);
+		ROS_FATAL("[request %d] was assigned to %s with Task score %.2f", status.id, candidate.robotId.c_str(), candidate.score);
 
 		return srv.response.success;
 	}
@@ -231,6 +232,7 @@ void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 		RobotCandidate cand;
 		cand.score = tr.score;
 		cand.robotId = tr.robot_id;
+		// ROS_INFO("[Request %d] looking for source tray %d and target tray %d", this->status.id, tr.start_id, tr.end_id);
 		cand.source = taskPlanner->getTrayConfig(tr.start_id);
 		cand.target = taskPlanner->getTrayConfig(tr.end_id);
 		robotCandidates.push_back(cand);
@@ -270,6 +272,6 @@ void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){
 		ros::spinOnce();
 		frequency.sleep();
 	}
-	ROS_INFO("[Request %d] Timeout while waiting for robot scores, got %d answers", status.id, (unsigned int)answeredRobots.size());
+	// ROS_INFO("[Request %d] Timeout while waiting for robot scores, got %d answers", status.id, (unsigned int)answeredRobots.size());
 	return;
 }

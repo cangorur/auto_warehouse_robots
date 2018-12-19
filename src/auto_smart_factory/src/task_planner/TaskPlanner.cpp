@@ -35,6 +35,7 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 	}
 
 	// build tray config map
+	// TODO: look here if the trays all have id 0
 	for(auto config : req.warehouse_configuration.trays) {
 		if(!trayConfigs.insert(
 				std::pair<unsigned int, Tray>(config.id, config)).second) {
@@ -405,28 +406,29 @@ void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
                 	 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, 
 					 uint32_t requestId){
+	ROS_WARN("[Task Planner]: Starting publishing request, got %d start Trays and %d end Trays", (unsigned int)sourceTrayCandidates.size(), (unsigned int)targetTrayCandidates.size());
 	TaskAnnouncement tsa;
 	tsa.request_id = requestId;
-	std::vector<geometry_msgs::Point> sourcePoints;
-	std::vector<uint32_t> sourceIds;
-	extractData(sourceTrayCandidates, sourcePoints, sourceIds);
-	tsa.start_points = sourcePoints;
-	tsa.start_ids = sourceIds;
-	std::vector<geometry_msgs::Point> targetPoints;
-	std::vector<uint32_t> targetIds;
-	extractData(targetTrayCandidates, targetPoints, targetIds);
-	tsa.end_points = targetPoints;
-	tsa.end_ids = targetIds;
+	extractData(sourceTrayCandidates, targetTrayCandidates, &tsa);
+	ROS_WARN("[Task Planner]: Publishing Request %d with %d start Trays and %d end Trays", tsa.request_id, (unsigned int)tsa.start_ids.size(), (unsigned int)tsa.end_ids.size());
 	taskAnnouncerPub.publish(tsa);
 }
 
-void TaskPlanner::extractData(const std::vector<auto_smart_factory::Tray>& trays, std::vector<geometry_msgs::Point>& points, std::vector<uint32_t> ids){
-	for(Tray t : trays){
+void TaskPlanner::extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa){
+	for(Tray t : sourceTrays){
 		geometry_msgs::Point p;
 		p.x = t.x;
 		p.y = t.y;
 		p.z = 0.0;
-		points.push_back(p);
-		ids.push_back(t.id);
+		tsa->start_points.push_back(p);
+		tsa->start_ids.push_back(t.id);
+	}
+	for(Tray t : targetTrays){
+		geometry_msgs::Point p;
+		p.x = t.x;
+		p.y = t.y;
+		p.z = 0.0;
+		tsa->end_points.push_back(p);
+		tsa->end_ids.push_back(t.id);
 	}
 }

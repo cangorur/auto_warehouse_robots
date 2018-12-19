@@ -167,7 +167,7 @@ private:
 	void receiveTaskResponse(const auto_smart_factory::TaskRating& tr);
 
 	/// extract tray data into points and ids
-	void extractData(const std::vector<auto_smart_factory::Tray>& trays, std::vector<geometry_msgs::Point>& points, std::vector<uint32_t> ids);
+	void extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa);
 
 
 private:
