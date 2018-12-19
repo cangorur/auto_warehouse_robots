@@ -14,7 +14,7 @@ void TaskHandler::announcementCallback(const auto_smart_factory::TaskAnnouncemen
     if(tA.start_ids.size() > 0 && tA.end_ids.size() > 0){
         publishScore(tA.request_id, 15.5, tA.start_ids.front(), tA.end_ids.front());
     } else {
-        ROS_WARN("[TaskHandler - %s] received TaskAnnouncement with %d start Trays and %d end trays", agentId.c_str(), tA.start_ids.size(), tA.end_ids.size());
+        ROS_WARN("[TaskHandler - %s] received TaskAnnouncement with %d start Trays and %d end trays", agentId.c_str(), (unsigned int)tA.start_ids.size(), (unsigned int)tA.end_ids.size());
     }
 }
 
