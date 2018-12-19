@@ -20,8 +20,8 @@ class TaskHandler
     virtual ~TaskHandler();
 
   private:
-    Task currentTask;
-    std::vector<Task> queue;
+    Task* currentTask;
+    std::vector<Task*> queue;
 
     std::string agentId;
 

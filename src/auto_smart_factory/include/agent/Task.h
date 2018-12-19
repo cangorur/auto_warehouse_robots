@@ -8,8 +8,6 @@
 class Task
 {
   public:
-	explicit Task();
-
 	explicit Task(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
 				uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath);
 

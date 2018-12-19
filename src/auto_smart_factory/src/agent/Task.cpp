@@ -1,15 +1,5 @@
 #include "agent/Task.h"
 
-Task::Task():
-	id(-1), 
-	sourceId(0),
-	targetId(0),
-	sourcePosition(OrientedPoint(-1, -1, -1)),
-	targetPosition(OrientedPoint(-1, -1, -1)),
-	pathToSource(Path({})), 
-	pathToTarget(Path({})){
-}
-
 Task::Task(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
 			uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath) : 
 	id(id), 
