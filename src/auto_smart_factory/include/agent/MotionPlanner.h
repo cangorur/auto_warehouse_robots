@@ -12,13 +12,7 @@
 #include "agent/path_planning/Path.h"
 #include "agent/path_planning/Point.h"
 #include "agent/Position.h"
-
-#define F_KP 3.58	// 3.58	P constant for PSD translation controller
-#define F_KD 0.04	// 0.04 D constant for PSD translation controller
-#define F_KI 0.05   // 0.05 S constant for PSD translation controller
-#define R_KP 3.0	// 3.0 	P constant for PSD rotation controller
-#define R_KD 0.2	// 0.2 	D constant for PSD rotation controller
-#define R_KI 0.4	// 0.4 	S constant for PSD rotation controller
+#include "agent/PidController.h"
 
 class Agent;
 
@@ -133,23 +127,12 @@ private:
 	 * orientation while driving & the direction of the goal position to not steer.*/
 	float allowedRotationDifference = 0.001f;
 
-	/* PID Controller Attributes */
-	Position *pidStart;
-	Position *pidLast;
-	double maxSpeed;
-	double maxAngleSpeed;
-	double posTolerance;
-	double angleTolerance;
-	double pidTargetDistance;
-	double pidTargetAngle;
-	double pidSumDistance;
-	double pidSumAngle;
-	bool pidFirstIteration;
-
 
 protected:
 	Agent* agent;
 	std::string agentID;
+
+	PidController ctePid;
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_ */

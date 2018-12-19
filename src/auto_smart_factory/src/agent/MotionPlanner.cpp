@@ -25,12 +25,10 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	ros::NodeHandle n;
 	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-	pidInit(0.1, 0.5, 1.2, 2.0);
+	ctePid = PidController(0.0, 1.0, 0.0, 0.0);
 }
 
 MotionPlanner::~MotionPlanner() {
-	delete pidStart;
-	delete pidLast;
 };
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
