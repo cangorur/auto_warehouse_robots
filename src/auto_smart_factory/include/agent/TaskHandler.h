@@ -20,7 +20,7 @@ class TaskHandler
     virtual ~TaskHandler();
 
   private:
-    Task* currentTask;
+    Task* currentTask = nullptr;
     std::vector<Task*> queue;
 
     std::string agentId;
