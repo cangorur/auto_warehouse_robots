@@ -72,23 +72,13 @@ private:
 	
 	bool isCurrentPointLastPoint();
 	void advanceToNextPathPoint();
+	Point getPathPointAtIndex(int index);
 	
 	float getRotationToTarget(Point currentPosition, Point targetPosition, double orientation);
 
-	/* PID Controller methods */
-	void pidInit(double posTolerance, double angleTolerance, double maxSpeed, double maxAngleSpeed);
-	void pidReset(void);
-
-	void pidSetTarget(double distance, double angle);
-	void pidSetTarget(Point target, Position position);
-
 	void publishVelocity(double speed, double angle);
 
-	void pidUpdate(Position* pos);
-
 	bool waypointReached(Position* current);
-
-	double pidCalculate(Position* current, double currentValue, double lastValue, double referenceValue, double kP, double kD, double kS, double* sum);
 
 		/// information about the current role of the agent
 	auto_smart_factory::RobotConfiguration robotConfig;
@@ -105,6 +95,8 @@ private:
 	
 	Point currentTarget;
 	int currentTargetIndex = -1;
+
+	Point previousTarget;
 
 	bool enabled = false;
 	bool hasFinishedCurrentPath = true;
@@ -132,7 +124,9 @@ protected:
 	Agent* agent;
 	std::string agentID;
 
-	PidController ctePid;
+	PidController* ctePid;
+	double currentSpeed;
+	double currentRotation;
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_ */
