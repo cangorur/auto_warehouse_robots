@@ -22,6 +22,10 @@ float Math::dotProduct(const Point& v1, const Point& v2) {
 	return v1.x*v2.x + v1.y*v2.y;
 }
 
+float Math::crossProduct(const Point& v1, const Point& v2) {
+	return v1.x*v2.y - v1.y*v2.x;
+}
+
 Point Math::rotateVector(const Point& v, float angle) {
 	angle *= TO_RAD;
 
@@ -208,6 +212,20 @@ float Math::getDistanceToLineSegment(const Point& lStart, const Point& lEnd, con
 	} else {
 		return getDistance(point, lStart + t * line);
 	}
+}
+
+int Math::getDirectionToLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
+	Point nEnd = lEnd - lStart;
+	Point nPoint = point - lStart;
+	float cP = crossProduct(nEnd, nPoint);
+
+	if(cP > 0)
+		return 1;
+	
+	if(cP < 0)
+		return -1;
+	
+	return 0;
 }
 
 float Math::getAngleMedian(float a1, float a2) {

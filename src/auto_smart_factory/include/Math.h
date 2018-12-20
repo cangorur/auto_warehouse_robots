@@ -42,6 +42,7 @@ public:
 	static float lerp(float start, float end, float alpha);	
 	
 	static float dotProduct(const Point& v1, const Point& v2);
+	static float crossProduct(const Point& v1, const Point& v2);
 	static Point rotateVector(const Point& v, float angle);
 	static float getRotation(const Point& v);
 	static float getDistance(const Point& v1, const Point& v2);
@@ -55,6 +56,7 @@ public:
 
 	//static float projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 	static float getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
+	static int getDirectionToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 	
 	static float getAngleMedian(float a1, float a2);
 	static float getAngleDifferenceInDegree(float source, float target);
