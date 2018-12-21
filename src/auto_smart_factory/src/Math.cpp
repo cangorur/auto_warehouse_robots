@@ -228,6 +228,14 @@ int Math::getDirectionToLineSegment(const Point& lStart, const Point& lEnd, cons
 	return 0;
 }
 
+float Math::getAngleBetweenVectors(const Point& v1, const Point& v2) {
+	return acos(dotProduct(v1, v2) / (getLength(v1)*getLength(v2)));
+}
+
+Point Math::getVectorFromOrientation(float o) {
+	return Point(cos(o), sin(o));
+}
+
 float Math::getAngleMedian(float a1, float a2) {
 	float diff = a2 - a1;
 
