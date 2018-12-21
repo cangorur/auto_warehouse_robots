@@ -21,6 +21,8 @@ Agent::~Agent() {
 	this->gripper->~Gripper();
 	this->obstacleDetection->~ObstacleDetection();
 	this->map->~Map();
+	this->chargingManagement->~ChargingManagement();
+
 }
 
 void Agent::update() {
@@ -96,7 +98,10 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 
 		// Task Handler
 		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub));
-		
+
+		// Task Handler
+		this->chargingManagement = new ChargingManagement();
+
 		// Generate map
 		std::vector<Rectangle> obstacles;
 		for(auto o : warehouseConfig.map_configuration.obstacles) {

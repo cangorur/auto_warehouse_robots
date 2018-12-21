@@ -21,6 +21,18 @@ public:
 
 	virtual ~ChargingManagement();
 
+private:
+
+	/// Subscriber to robot heartbeat topic
+	ros::Subscriber robotHeartbeatSub;
+
+
+	/**
+	 * Receive robot heartbeats.
+	 * @param hb Heartbeast message
+	 */
+	void receiveRobotHeartbeat(const auto_smart_factory::RobotHeartbeat& hb);
+
 };
 
 #endif /* AGENT_CHARGINGMANAGEMENT_H_ */
