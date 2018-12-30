@@ -57,6 +57,13 @@ public:
 	/* Returns ID of this agent */
 	std::string getAgentID();
 
+	/* Returns ID of this agent */
+	int getAgentIdInt();
+
+	/* Returns Battery of this agent */
+	float getAgentBattery();
+
+
 	/* Returns current position of this agent */
 	geometry_msgs::Point getCurrentPosition();
 

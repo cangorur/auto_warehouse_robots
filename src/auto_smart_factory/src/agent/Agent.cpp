@@ -99,8 +99,8 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		// Task Handler
 		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub));
 
-		// Task Handler
-		this->chargingManagement = new ChargingManagement();
+		// Charging MAnagement
+		this->chargingManagement = new ChargingManagement(this);
 
 		// Generate map
 		std::vector<Rectangle> obstacles;
@@ -348,6 +348,17 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 std::string Agent::getAgentID() {
 	return agentID;
 }
+
+
+int Agent::getAgentIdInt() {
+	return agentIdInt;
+}
+
+float Agent::getAgentBattery() {
+	return batteryLevel;
+}
+
+
 
 geometry_msgs::Point Agent::getCurrentPosition() {
 	return position;
