@@ -27,7 +27,7 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	ros::NodeHandle n;
 	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-	ctePid = new PidController(0.0, 0.8, 0.0, 0.0);
+	ctePid = new PidController(0.0, 1.2, 0.0, 0.0);
 }
 
 MotionPlanner::~MotionPlanner() {
@@ -48,17 +48,29 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	} else {
 		this->currentSpeed = 0.2;
 		Point currentPath = Point(currentTarget.x - previousTarget.x, currentTarget.y - previousTarget.y);
-		double cte = Math::getDistanceToLineSegment(previousTarget, currentTarget, Point(position.x, position.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
+		double cte = Math::getDistanceToLineSegment(previousTarget, currentTarget, Point(position.x, position.y)); // * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
 		double targetAngle = cteToAngle(cte);
 		Point targetPath = Point(std::cos(targetAngle)*currentPath.x - std::sin(targetAngle)*currentPath.y, std::sin(targetAngle)*currentPath.x + std::cos(targetAngle)*currentPath.y);
-		float targetOrientation = Math::getOrientationFromVector(targetPath);
+		float targetOrientation = Math::normalizeRad(Math::getOrientationFromVector(targetPath));
+		if(Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y)) > 0) {
+			targetOrientation = Math::normalizeRad(targetOrientation-M_PI_2);
+		}
+
+		if(targetOrientation-orientation > M_PI) {
+			targetOrientation = targetOrientation-2*M_PI;
+		}
+
+		if(targetOrientation-orientation < -M_PI) {
+			targetOrientation = targetOrientation+2*M_PI;
+		}
+
 		ctePid->updateTargetValue(targetOrientation);
 		
 		double angularVelocity = ctePid->calculate(orientation, ros::Time::now().toSec());
 		publishVelocity(this->currentSpeed, angularVelocity);
 		
-		if (agentID.compare("robot_1") == 0) {
-			printf("[MP %s] targetOrientation: %.4f | orientation: %.4f\n", agentID.c_str(), targetOrientation, orientation);
+		if (agentID.compare("robot_2") == 0) {
+			printf("[MP %s] cte: %.4f | targetAngle: %.4f | targetOrientation: %.4f | currentOrientation: %.4f\n", agentID.c_str(), cte, targetAngle, targetOrientation, orientation);
 		}
 	}
 }
@@ -238,13 +250,13 @@ float MotionPlanner::getRotationToTarget(Point currentPosition, Point targetPosi
 }
 
 double MotionPlanner::cteToAngle(double cte) {
-	if (cte < -5.0)
-		return -3.14159265/2;
+	if (cte < -1.0)
+		return -3.14159265/4;
 
-	if (cte > 5.0)
-		return 3.14159265/2;
+	if (cte > 1.0)
+		return 3.14159265/4;
 	
-	return Math::mapRange(cte, -5.0, 5.0, -3.14159265/2, 3.14159265/2);
+	return Math::mapRange(cte, -1.0, 1.0, -3.14159265/4, 3.14159265/4);
 }
 visualization_msgs::Marker MotionPlanner::getVisualizationMsgPoints() {
 	return pathObject.getVisualizationMsgPoints();

@@ -1,6 +1,8 @@
 #include "agent/Agent.h"
 #include "Math.h"
 
+#include <tf/transform_datatypes.h>
+
 Agent::Agent(std::string agent_id) {
 	agentID = agent_id;
 	agentIdInt = std::stoi(agentID.substr(6, 1));
@@ -402,7 +404,13 @@ void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 
 	if(this->motionPlanner->isEnabled()) {
 		// this->obstacleDetection->enable(true);
-		this->motionPlanner->update(position, 2*asin(orientation.z));
+		//this->motionPlanner->update(position, 2*asin(orientation.z));
+		tf::Quaternion q(orientation.x, orientation.y, orientation.z, orientation.w);
+		tf::Matrix3x3 m(q);
+		double roll, pitch, yaw;
+		m.getRPY(roll, pitch, yaw);
+		this->motionPlanner->update(position, yaw);
+		//printf("[Transform] Z: %.4f | Yaw: %.4f\n", 2*asin(orientation.z), yaw);
 	} else {
 		// this->obstacleDetection->enable(false);
 	}

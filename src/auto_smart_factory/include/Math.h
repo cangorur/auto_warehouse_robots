@@ -67,6 +67,9 @@ public:
 	static float getAngleDifferenceInDegree(float source, float target);
 	static float getAngleDifferenceInRad(float source, float target);
 
+	static double normalizeRad(double angle);
+	static double normalizeDegree(double angle);
+
 	static double mapRange(double x, double in_min, double in_max, double out_min, double out_max);
 };
 

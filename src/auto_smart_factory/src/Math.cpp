@@ -284,6 +284,26 @@ float Math::getAngleDifferenceInRad(float source, float target) {
 	return angle;
 }
 
+double Math::normalizeRad(double angle) {
+	if(angle > M_PI) {
+		angle = angle - 2*M_PI;
+	} else if(angle < -M_PI){
+		angle = angle + 2*M_PI;
+	}
+
+	return angle;
+}
+
+double Math::normalizeDegree(double angle) {
+	if(angle > 180) {
+		angle = angle - 360;
+	} else if(angle < -180){
+		angle = angle + 360;
+	}
+
+	return angle;
+}
+
 double Math::mapRange(double x, double in_min, double in_max, double out_min, double out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
