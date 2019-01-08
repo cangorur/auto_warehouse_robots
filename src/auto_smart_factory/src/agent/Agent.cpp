@@ -99,7 +99,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 			obstacles.emplace_back(Point(o.posX, o.posY), Point(o.sizeX, o.sizeY), o.rotation);
 		}
 		
-		this->map = new Map(warehouseConfig.map_configuration.width, warehouseConfig.map_configuration.height, warehouseConfig.map_configuration.margin, warehouseConfig.map_configuration.resolutionThetaStar, obstacles);
+		this->map = new Map(warehouseConfig, obstacles);
 		
 		return true;
 	} catch(...) {

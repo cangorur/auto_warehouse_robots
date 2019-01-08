@@ -18,13 +18,14 @@ private:
 	float width;
 	float height;
 	float margin;
+	auto_smart_factory::WarehouseConfiguration warehouseConfig;
 	
 	std::vector<Rectangle> obstacles;
 	ThetaStarMap thetaStarMap;
 
 public:
 	Map() = default;
-	Map(float width, float height, float margin, float resolutionThetaStar, std::vector<Rectangle>& obstacles);
+	Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle> &obstacles);
 
 	visualization_msgs::Marker getVisualization();
 	

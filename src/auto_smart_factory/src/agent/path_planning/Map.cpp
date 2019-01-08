@@ -9,10 +9,11 @@
 #include "agent/path_planning/Point.h"
 #include "agent/path_planning/ThetaStarPathPlanner.h"
 
-Map::Map(float width, float height, float margin, float resolutionThetaStar, std::vector<Rectangle>& obstacles) :
-		width(width),
-		height(height),
-		margin(margin) {
+Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle>& obstacles) :
+		warehouseConfig(warehouseConfig),
+		width(warehouseConfig.width),
+		height(warehouseConfig.height),
+		margin(warehouseConfig.margin) {
 	
 	this->obstacles.clear();
 	for(const Rectangle& o : obstacles) {
