@@ -34,7 +34,7 @@ TaskHandler::~TaskHandler() = default;
 void TaskHandler::addTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
 				uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath){
     // create new task
-    Task t = Task(id, sourceID, sourcePos, targetID, targetPos, sourcePath, targetPath);
+    Task t = TransportationTask(id, sourceID, sourcePos, targetID, targetPos, sourcePath, targetPath);
 
     // add task to list
     queue.push_back(&t);

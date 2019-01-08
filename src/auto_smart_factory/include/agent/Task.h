@@ -8,44 +8,30 @@
 class Task
 {
   public:
-	explicit Task(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
-				uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath);
 
-	virtual ~Task();
+		enum class taskType {CHARGING, TRANSPORTATION};
 
-	unsigned int getId();
+		Task(uint32_t targetID, OrientedPoint targetPos, Path targetPath, taskType type);
 
-	uint32_t getSourceTrayId();
+		uint32_t getTargetTrayId(void);
 
-	OrientedPoint getSourcePosition();
+		OrientedPoint getTargetPosition(void);
 
-	uint32_t getTargetTrayId();
+		Path* getPathToTarget(void);
 
-	OrientedPoint getTargetPosition();
+		Task::taskType getType(void);
 
-	Path* getPathToTarget();
+	protected:
 
-	Path* getPathToSource();
+		Task::taskType type;
 
-  private:
-	// the task id of the task
-	unsigned int id;
+		// target Tray id
+		uint32_t targetId;
+		// target Tray position
+		OrientedPoint targetPosition;
 
-	// source Tray id
-	uint32_t sourceId;
-	// source Tray position
-	OrientedPoint sourcePosition;
-
-	// target Tray id
-	uint32_t targetId;
-	// target Tray position
-	OrientedPoint targetPosition;
-
-	// calculated path from source to target (may be Theta* or RRT*)
-	Path pathToTarget;
-
-	// Path to source
-	Path pathToSource;
+		// calculated path from source to target (may be Theta* or RRT*)
+		Path pathToTarget;
 
 };
 
