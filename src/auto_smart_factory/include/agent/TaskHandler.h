@@ -1,8 +1,8 @@
 #ifndef AGENT_TASKHANDLER_H_
 #define AGENT_TASKHANDLER_H_
 
-#include<vector>
-#include<string>
+#include <list>
+#include <string>
 
 #include "ros/ros.h"
 #include "agent/Task.h"
@@ -19,9 +19,16 @@ class TaskHandler
 
     virtual ~TaskHandler();
 
+    void addTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
+				uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath);
+
+    void nextTask(void);
+
+	unsigned int numberQueuedTasks(void);
+
   private:
     Task* currentTask = nullptr;
-    std::vector<Task*> queue;
+    std::list<Task*> queue;
 
     std::string agentId;
 

@@ -225,7 +225,7 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
                        auto_smart_factory::AssignTask::Response& res) {
 	try {
 		if(isIdle) {
-			ROS_INFO("[%s]: IN Agent::assignTask", agentID.c_str());
+			ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
 
 			int task_id = req.task_id;
 			auto_smart_factory::Tray input_tray = getTray(req.input_tray);
@@ -241,6 +241,13 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 
 			ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
 			ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
+
+			// create Task and add it to task handler
+			OrientedPoint sourcePos = OrientedPoint(input_tray.x, input_tray.y, 0.0);
+			OrientedPoint targetPos = OrientedPoint(storage_tray.x, storage_tray.y, 0.0);
+			Path sourcePath = Path({});
+			Path targetPath = Path({});
+			taskHandler->addTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, targetPath);
 
 			geometry_msgs::Point input_drive_point;
 			geometry_msgs::Point storage_drive_point;
@@ -281,7 +288,7 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			// 3- Add the remaining paths to the pathsStack
 			//pathsStack.push(path_to_storage_tray);
 
-			ROS_INFO("[%s]: Task %i successfully assigned!", agentID.c_str(), req.task_id);
+			ROS_INFO("[%s]: Task %i successfully assigned! Queue size is %i", agentID.c_str(), req.task_id, taskHandler->numberQueuedTasks());
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
 			ROS_INFO("assignTask %s %.2f %i", agentID.c_str(), initialTimeOfCurrentTask, task_id);
 			setState(false);     //Set to non idle if a task is assigned

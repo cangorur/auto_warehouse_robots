@@ -30,3 +30,23 @@ void TaskHandler::publishScore(unsigned int requestId, double score, uint32_t st
 }
 
 TaskHandler::~TaskHandler() = default;
+
+void TaskHandler::addTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
+				uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath){
+    // create new task
+    Task t = Task(id, sourceID, sourcePos, targetID, targetPos, sourcePath, targetPath);
+
+    // add task to list
+    queue.push_back(&t);
+}
+
+void TaskHandler::nextTask(void){
+	if(!queue.empty()){
+		currentTask = queue.front();
+		queue.pop_front();
+	}
+}
+
+unsigned int TaskHandler::numberQueuedTasks(void){
+	return (unsigned int) queue.size();
+}
