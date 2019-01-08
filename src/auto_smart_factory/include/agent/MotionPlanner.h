@@ -90,6 +90,7 @@ private:
 
 	/// Publisher for the motion actuator topic
 	ros::Publisher* motionPub;
+	ros::Publisher pathPub;
 
 	/// the current path to drive
 	std::vector<geometry_msgs::Point> path;
@@ -133,6 +134,7 @@ protected:
 	PidController* ctePid;
 	double currentSpeed;
 	double currentRotation;
+
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_ */

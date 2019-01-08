@@ -239,12 +239,12 @@ float MotionPlanner::getRotationToTarget(Point currentPosition, Point targetPosi
 
 double MotionPlanner::cteToAngle(double cte) {
 	if (cte < -5.0)
-		return -45.0;
+		return -3.14159265/4;
 
 	if (cte > 5.0)
-		return 45.0;
+		return 3.14159265/4;
 	
-	return Math::mapRange(cte, -5.0, 5.0, -45.0, 45.0);
+	return Math::mapRange(cte, -5.0, 5.0, -3.14159265/4, 3.14159265/4);
 }
 visualization_msgs::Marker MotionPlanner::getVisualizationMsgPoints() {
 	return pathObject.getVisualizationMsgPoints();
