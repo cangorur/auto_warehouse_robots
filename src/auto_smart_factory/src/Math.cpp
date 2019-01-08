@@ -237,7 +237,7 @@ Point Math::getVectorFromOrientation(float o) {
 }
 
 float Math::getOrientationFromVector(const Point& v) {
-	return 2*std::atan2(v.y, v.x);
+	return std::atan2(v.y, v.x);
 }
 
 float Math::getAngleMedian(float a1, float a2) {
