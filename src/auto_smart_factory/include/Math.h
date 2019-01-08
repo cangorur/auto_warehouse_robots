@@ -60,10 +60,13 @@ public:
 	static float getAngleBetweenVectors(const Point& v1, const Point &v2);
 
 	static Point getVectorFromOrientation(float o);
+	static float getOrientationFromVector(const Point& v);
 	
 	static float getAngleMedian(float a1, float a2);
 	static float getAngleDifferenceInDegree(float source, float target);
 	static float getAngleDifferenceInRad(float source, float target);
+
+	static double mapRange(double x, double in_min, double in_max, double out_min, double out_max);
 };
 
 #endif //PROJECT_MATH_H

@@ -236,6 +236,10 @@ Point Math::getVectorFromOrientation(float o) {
 	return Point(cos(o), sin(o));
 }
 
+float Math::getOrientationFromVector(const Point& v) {
+	return 2*std::atan2(v.y, v.x);
+}
+
 float Math::getAngleMedian(float a1, float a2) {
 	float diff = a2 - a1;
 
@@ -278,4 +282,8 @@ float Math::getAngleDifferenceInRad(float source, float target) {
 	}
 
 	return angle;
+}
+
+double Math::mapRange(double x, double in_min, double in_max, double out_min, double out_max) {
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }

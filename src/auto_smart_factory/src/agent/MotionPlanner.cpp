@@ -25,7 +25,7 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	ros::NodeHandle n;
 	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-	ctePid = new PidController(0.0, 1.0, 0.0, 0.0);
+	ctePid = new PidController(0.0, 0.1, 0.0, 0.0);
 }
 
 MotionPlanner::~MotionPlanner() {
@@ -43,9 +43,19 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		}
 	} else {
 		this->currentSpeed = 0.2;
+		Point currentPath = Point(currentTarget.x - previousTarget.x, currentTarget.y - previousTarget.y);
 		double cte = Math::getDistanceToLineSegment(previousTarget, currentTarget, Point(position.x, position.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
-		double angularVelocity = ctePid->calculate(cte, ros::Time::now().toSec());
+		double targetAngle = cteToAngle(cte);
+		Point targetPath = Point(std::cos(targetAngle)*currentPath.x - std::sin(targetAngle)*currentPath.y, std::sin(targetAngle)*currentPath.x + std::cos(targetAngle)*currentPath.y);
+		float targetOrientation = Math::getOrientationFromVector(targetPath);
+		ctePid->updateTargetValue(targetOrientation);
+		
+		double angularVelocity = ctePid->calculate(orientation, ros::Time::now().toSec());
 		publishVelocity(this->currentSpeed, angularVelocity);
+		
+		if (agentID.compare("robot_1") == 0) {
+			printf("[MP %s] targetOrientation: %.4f | orientation: %.4f\n", agentID.c_str(), targetOrientation, orientation);
+		}
 	}
 }
 
@@ -210,3 +220,12 @@ float MotionPlanner::getRotationToTarget(Point currentPosition, Point targetPosi
 	return static_cast<float>(Math::getAngleDifferenceInRad(orientation, direction));
 }
 
+double MotionPlanner::cteToAngle(double cte) {
+	if (cte < -5.0)
+		return -45.0;
+
+	if (cte > 5.0)
+		return 45.0;
+	
+	return Math::mapRange(cte, -5.0, 5.0, -45.0, 45.0);
+}
