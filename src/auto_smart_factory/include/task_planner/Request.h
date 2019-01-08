@@ -18,6 +18,9 @@
 #include <task_planner/OutputTaskRequirements.h>
 #include <task_planner/TaskData.h>
 
+#include <auto_smart_factory/TaskAnnouncement.h>
+#include <auto_smart_factory/TaskRating.h>
+
 class TaskPlanner;
 
 /**
@@ -69,6 +72,12 @@ public:
 	 */
 	TaskRequirementsConstPtr getRequirements() const;
 
+	/*
+	 * Receive response to an task announcement
+	 * @param TODO!!
+	*/
+	void receiveTaskResponse(const auto_smart_factory::TaskRating& tr);
+
 protected:
 	/**
 	 * Creates a list of possible source tray candidates for this request.
@@ -94,9 +103,8 @@ protected:
 	 * @param targetTrayCandidates List of output tray candidates
 	 * @return True if robot candidate list is non-empty
 	 */
-	bool getRobotCandidates(std::vector<RobotCandidate>& robotCandidates,
-	                        const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
-	                        const std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
+	bool getRobotCandidates(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
+	                        const std::vector<auto_smart_factory::Tray>& targetTrayCandidates);
 
 	/**
 	 * Sends requests to ETAServer to get an estimated duration for a task.
@@ -148,12 +156,30 @@ protected:
 	/// estimated duration (true) or just random choice (false)
 	bool useBestETA;
 
+	/// Task planner task announcement publisher
+	ros::Publisher taskAnnouncerPub;
+
+	/// Subscriber to robot task response topic
+	ros::Subscriber taskResponseSub;
+
+	/// vector of robot candidates
+	std::vector<RobotCandidate> robotCandidates;
+
+	/// a map of robots who answered with robot_id as key and their reject flag as value
+	std::map<std::string, bool> answeredRobots;
+
 protected:
 	/// used to generate unique ids
 	static unsigned int nextId;
 
 	/// generate new unique id
 	static unsigned int getNewId();
+
+	/// extract tray data into points and ids
+	void extractData(const std::vector<auto_smart_factory::Tray>& trays, std::vector<geometry_msgs::Point>& points, std::vector<uint32_t> ids);
+
+	/// wait with a frequency until each robot has answered or a timeout occurs
+	void waitForRobotScores(ros::Duration timeout, ros::Rate frequency);
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_TASK_PLANNER_REQUEST_H_ */

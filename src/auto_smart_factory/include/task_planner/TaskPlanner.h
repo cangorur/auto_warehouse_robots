@@ -158,6 +158,7 @@ private:
 	 */
 	bool idleRobotAvailable() const;
 
+
 private:
 	/// all registered robots: mapping their id to their configuration and their state (idle/busy with idle = true)
 	std::map<std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> > registeredRobots;
@@ -184,7 +185,7 @@ private:
 	ros::Timer rescheduleTimer;
 
 	/// Task planner status publisher
-	ros::Publisher statusUpdatePub;
+	ros::Publisher statusUpdatePub; 
 
 	/// Task planner status update timer
 	ros::Timer statusUpdateTimer;
