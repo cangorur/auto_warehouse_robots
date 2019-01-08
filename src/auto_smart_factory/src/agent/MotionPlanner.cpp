@@ -27,7 +27,7 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	ros::NodeHandle n;
 	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-	ctePid = new PidController(0.0, 0.1, 0.0, 0.0);
+	ctePid = new PidController(0.0, 0.8, 0.0, 0.0);
 }
 
 MotionPlanner::~MotionPlanner() {
@@ -239,12 +239,12 @@ float MotionPlanner::getRotationToTarget(Point currentPosition, Point targetPosi
 
 double MotionPlanner::cteToAngle(double cte) {
 	if (cte < -5.0)
-		return -3.14159265/4;
+		return -3.14159265/2;
 
 	if (cte > 5.0)
-		return 3.14159265/4;
+		return 3.14159265/2;
 	
-	return Math::mapRange(cte, -5.0, 5.0, -3.14159265/4, 3.14159265/4);
+	return Math::mapRange(cte, -5.0, 5.0, -3.14159265/2, 3.14159265/2);
 }
 visualization_msgs::Marker MotionPlanner::getVisualizationMsgPoints() {
 	return pathObject.getVisualizationMsgPoints();
