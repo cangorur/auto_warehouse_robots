@@ -1,20 +1,21 @@
 #include <utility>
-
-#include <agent/path_planning/Path.h>
-#include <include/agent/path_planning/Path.h>
+#include <cmath>
 
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 
-#include <cmath>
+#include "Math.h"
+#include "agent/path_planning/Path.h"
 
-Path::Path(std::vector<Point> points_)
-		:
+Path::Path(std::vector<Point> points_) :
 		points(std::move(points_)) {
 
-	for(Point& point : points) {
-		// TODO getDistance...
-	}
+	length = 0;
+	if(points.size() >= 2) {
+		for(int i = 0; i < points.size() - 1; i++) {
+			length += Math::getDistance(points[i], points[i + 1]);
+		}	
+	}	
 }
 
 const std::vector<Point>& Path::getPoints() const {

@@ -32,7 +32,7 @@
         <param name="package_config_file" value="$(find auto_smart_factory)/../../configs/package_config.json" />
         
         <!-- resolution (meters per cell) of the occupancy map -->
-        <param name="occupancy_map_resolution" value="0.5" />
+        <param name="theta_star_resolution" value="0.5" />
 	</node>
 
 	<!-- Agents -->

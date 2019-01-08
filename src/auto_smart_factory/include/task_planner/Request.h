@@ -12,7 +12,6 @@
 
 #include <auto_smart_factory/Tray.h>
 #include <auto_smart_factory/RequestStatus.h>
-#include <auto_smart_factory/CalculateETA.h>
 
 #include <task_planner/InputTaskRequirements.h>
 #include <task_planner/OutputTaskRequirements.h>

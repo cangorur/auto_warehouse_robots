@@ -1,20 +1,26 @@
-#include <agent/Agent.h>
+#include "agent/Agent.h"
 #include "Math.h"
 
 Agent::Agent(std::string agent_id) {
 	agentID = agent_id;
+	agentIdInt = std::stoi(agentID.substr(6, 1));
 	position.z = -1;
+	map = nullptr;
 
 	ros::NodeHandle pn("~");
 	//setup init_agent service
 	pn.setParam(agentID, "~init");
-	this->init_srv = pn.advertiseService("init", &Agent::init, this);
+	init_srv = pn.advertiseService("init", &Agent::init, this);
+
+	visualisationPublisher = pn.advertise<visualization_msgs::Marker>("visualization_" + agent_id, 100);
+	vizPublicationTimer = pn.createTimer(ros::Duration(1), &Agent::publishVisualization, this);
 }
 
 Agent::~Agent() {
 	this->motionPlanner->~MotionPlanner();
 	this->gripper->~Gripper();
 	this->obstacleDetection->~ObstacleDetection();
+	this->map->~Map();
 }
 
 void Agent::update() {
@@ -32,93 +38,21 @@ void Agent::update() {
 		setState(true);
 
 		if(!isPathSet) {
-			if(getCurrentPosition().x != 0) {
-				// code for dummy path following
-				//ROS_ERROR("Position: %.2f, %.2f", getCurrentPosition().x, getCurrentPosition().y);
-				std::vector<geometry_msgs::Point> path;
-				geometry_msgs::Point p1;
-				p1.x = 14.0;
-				p1.y = 5.0;
-				path.push_back(p1);
-				p1.x = 12.5;
-				p1.y = 2.0;
-				path.push_back(p1);
-				
-				
-				p1.x = 1.9;
-				p1.y = 1.0;
-				path.push_back(p1);
-				p1.x = 1.5;
-				p1.y = 1.11;
-				path.push_back(p1);
+			if(getCurrentPosition().x != 0 && map != nullptr) {
+				Path p = map->getThetaStarPath(Point(this->getCurrentPosition()), Point(1, agentIdInt + 1));
 
-				p1.x = 1.25;
-				p1.y = 1.25;
-				path.push_back(p1);
-				
-				p1.x = 1.11;
-				p1.y = 1.5;
-				path.push_back(p1);
-				p1.x = 1.0;
-				p1.y = 1.9;
-				path.push_back(p1);
-
-				
-				p1.x = 1.0;
-				p1.y = 13.0;
-				path.push_back(p1);
-				
-				// End point
-				geometry_msgs::Point p5;
-				p5.x = 12.5;
-				p5.y = 14.0;
-
-				if(agentID == "robot_2") {
-					ros::Duration(5).sleep();
-					p5.y = 13.5;
+				this->motionPlanner->newPath(p);
+				if(p.getLength() > 0) {
+					this->motionPlanner->enable(true);
+					this->motionPlanner->start();
+					isPathSet = true;
 				}
-				if(agentID == "robot_3") {
-					ros::Duration(10).sleep();
-					p5.y = 13.0;
-				}
-				if(agentID == "robot_4") {
-					ros::Duration(15).sleep();
-					p5.y = 12.5;
-				}
-				if(agentID == "robot_5") {
-					ros::Duration(20).sleep();
-					p5.y = 12.0;
-				}
-				if(agentID == "robot_6") {
-					ros::Duration(25).sleep();
-					p5.y = 11.5;
-				}
-				if(agentID == "robot_7") {
-					ros::Duration(30).sleep();
-					p5.y = 11.0;
-				}
-				if(agentID == "robot_8") {
-					ros::Duration(35).sleep();
-					p5.y = 10.5;
-				}
-
-
-				
-				
-				path.push_back(p5);				
-
-				this->motionPlanner->newPath(this->getCurrentPosition(), path, p5, false);
-				this->motionPlanner->enable(true);
-				this->motionPlanner->start();
-
-				isPathSet = true;
 			}
 		}
 	}
 }
 
-bool Agent::init(auto_smart_factory::InitAgent::Request& req,
-                 auto_smart_factory::InitAgent::Response& res) {
+bool Agent::init(auto_smart_factory::InitAgent::Request& req, auto_smart_factory::InitAgent::Response& res) {
 	if(!initialized) {
 		initialized = initialize(req.warehouse_configuration, req.robot_configuration);
 		if(initialized) {
@@ -132,8 +66,7 @@ bool Agent::init(auto_smart_factory::InitAgent::Request& req,
 	return true;
 }
 
-bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_configuration,
-                       auto_smart_factory::RobotConfiguration robot_configuration) {
+bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_configuration, auto_smart_factory::RobotConfiguration robot_configuration) {
 	ros::NodeHandle pn("~");
 	warehouseConfig = warehouse_configuration;
 	robotConfig = robot_configuration;
@@ -154,8 +87,19 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	try {
 		this->motionPlanner = new MotionPlanner(this, this->robotConfig, &(this->motion_pub));
 		this->gripper = new Gripper(this, &(this->gripper_state_pub));
-		this->obstacleDetection = new ObstacleDetection(agentID, *motionPlanner,
-		                                                robotConfig, warehouseConfig);
+
+		// Disable to prevent crash because obstacleDetections was not initialized properly because no occupancy map is available
+		this->obstacleDetection = new ObstacleDetection(agentID, *motionPlanner, robotConfig, warehouseConfig);
+		this->obstacleDetection->enable(false);
+		
+		// Generate map
+		std::vector<Rectangle> obstacles;
+		for(auto o : warehouseConfig.map_configuration.obstacles) {
+			obstacles.emplace_back(Point(o.posX, o.posY), Point(o.sizeX, o.sizeY), o.rotation);
+		}
+		
+		this->map = new Map(warehouseConfig.map_configuration.width, warehouseConfig.map_configuration.height, warehouseConfig.map_configuration.margin, warehouseConfig.map_configuration.resolutionThetaStar, obstacles);
+		
 		return true;
 	} catch(...) {
 		ROS_ERROR("[%s]: Exception occured!", agentID.c_str());
@@ -364,13 +308,12 @@ auto_smart_factory::Tray Agent::getTray(unsigned int tray_id) {
 void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 	position = msg.pose.position;
 	orientation = msg.pose.orientation;
-	//ROS_INFO("[%s] Orientation rad: %.4f | Orientation degree: %.2f", agentID.c_str(), 2*asin(orientation.z), Math::toDeg(2*asin(orientation.z)));
 
 	if(this->motionPlanner->isEnabled()) {
-		this->obstacleDetection->enable(true);
+		// this->obstacleDetection->enable(true);
 		this->motionPlanner->update(position, 2*asin(orientation.z));
 	} else {
-		this->obstacleDetection->enable(false);
+		// this->obstacleDetection->enable(false);
 	}
 }
 
@@ -387,17 +330,6 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 	ROS_DEBUG("[%s]: Battery Level: %f!", agentID.c_str(), batteryLevel);
 }
 
-double Agent::calculateTimeFromDistanceAndVelocity(double distance, double velocity) {
-	return distance / velocity;
-}
-
-float Agent::randomFloat(float min, float max) {
-	srand((unsigned int) time(NULL));
-	float randNum = ((float) rand() / (float) (RAND_MAX)) * (max - min) + min;
-	ROS_INFO("Random: %f", randNum);
-	return randNum;
-}
-
 std::string Agent::getAgentID() {
 	return agentID;
 }
@@ -409,3 +341,14 @@ geometry_msgs::Point Agent::getCurrentPosition() {
 geometry_msgs::Quaternion Agent::getCurrentOrientation() {
 	return orientation;
 }
+
+void Agent::publishVisualization(const ros::TimerEvent& e) {
+	if(map != nullptr) {
+		visualisationPublisher.publish(map->getVisualization());
+	}
+}
+
+ros::Publisher* Agent::getVisualisationPublisher() {
+	return &visualisationPublisher;
+}
+

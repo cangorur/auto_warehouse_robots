@@ -5,21 +5,13 @@
 WarehouseManagement::WarehouseManagement() {
 	ros::NodeHandle n;
 	ros::NodeHandle pn("~");
-	occupancyMapPub = pn.advertise<nav_msgs::OccupancyGrid>("occupancy_map", 1, true);
 	markerPub = pn.advertise<visualization_msgs::MarkerArray>("abstract_visualization", 1000);
-	robotHeartbeatSub = n.subscribe("robot_heartbeats", 1000,
-	                                &WarehouseManagement::receiveHeartbeat, this);
-	taskplannerStateSub = n.subscribe("task_planner/status", 10,
-	                                  &WarehouseManagement::receiveTaskPlannerState, this);
-	vizPublicationTimer = pn.createTimer(ros::Duration(5.0),
-	                                     &WarehouseManagement::publishVisualization, this);
-}
-
-WarehouseManagement::~WarehouseManagement() {
+	robotHeartbeatSub = n.subscribe("robot_heartbeats", 1000, &WarehouseManagement::receiveHeartbeat, this);
+	taskplannerStateSub = n.subscribe("task_planner/status", 10, &WarehouseManagement::receiveTaskPlannerState, this);
+	vizPublicationTimer = pn.createTimer(ros::Duration(5.0), &WarehouseManagement::publishVisualization, this);
 }
 
 void WarehouseManagement::start() {
-
 	getConfigs();
 
 	initPackageGenerator(warehouseConfig, packageConfigs);
@@ -150,8 +142,7 @@ bool WarehouseManagement::initAgent(std::string agent_id,
 	srv.request.robot_configuration = robot_configuration;
 	ros::service::waitForService(srv_name.c_str());
 	if(client.call(srv)) {
-		ROS_INFO("[warehouse management]: %s | success: %s",
-		         srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
+		ROS_INFO("[warehouse management]: %s | success: %s", srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
 		return true;
 	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
@@ -201,7 +192,7 @@ bool WarehouseManagement::initStorageManagement(
 
 void WarehouseManagement::publishVisualization(const ros::TimerEvent& e) {
 	// publish occupancy map
-	occupancyMapPub.publish(warehouseConfig.occupancy_map);
+	//occupancyMapPub.publish(warehouseConfig.occupancy_map);
 
 	// publish markers
 	markerPub.publish(trayMarkers);

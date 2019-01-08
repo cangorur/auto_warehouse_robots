@@ -3,8 +3,9 @@
 
 #include <cmath>
 #include <random>
+
 #include "agent/path_planning/Point.h"
-//#include "Rectangle.hpp"
+#include "agent/path_planning/Rectangle.h"
 
 #define TO_RAD 0.01745329252f
 #define TO_DEG 57.2957795131f
@@ -49,12 +50,12 @@ public:
 	static float getLength(const Point& v);
 	static float getDistanceSquared(const Point& v1, const Point& v2);
 	
-	//static bool areLineSegmentsParallel(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End);
-	//static bool doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End);
-	//static bool doesLineSegmentIntersectRectangle(const Point& lStart, const Point& lEnd, Rectangle& rectangle);
-	//static bool doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, Rectangle& rectangle);
+	static bool areLineSegmentsParallel(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End);
+	static bool doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End);
+	static bool doesLineSegmentIntersectRectangle(const Point& lStart, const Point& lEnd, Rectangle& rectangle);
+	static bool doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, Rectangle& rectangle);
 
-	//static float projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
+	static float projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 	static float getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 	static int getDirectionToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 	static float getAngleBetweenVectors(const Point& v1, const Point &v2);

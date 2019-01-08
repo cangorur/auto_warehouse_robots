@@ -19,27 +19,18 @@ MapConfigServer::MapConfigServer() {
 	std::string mapConfigFileName;
 
 	if(!nh.getParam("map_config_file", mapConfigFileName)) {
-		ROS_FATAL(
-				"No map configuration file name given! Map server could not create map.");
+		ROS_FATAL("No map configuration file name given! Map server could not create map.");
 		ros::shutdown();
 		return;
 	}
 
-	//nh.setParam("occupancy_map_resolution", 0.5);  // setting the resolution for occupancy_map by Ansgar
-	// the line above does not exist in current master, but works for adjusting the resolution
-
 	// setup map configuration
 	readMapConfig(mapConfigFileName);
-	setupOccupancyMap();
+	addStaticObstacles();
 
-	configService = nh.advertiseService("get_map_configuration",
-	                                    &MapConfigServer::configCallback, this);
-	mapPublisher = nh.advertise<nav_msgs::OccupancyGrid>("occupancy_map", 1,
-	                                                     true);
-	mapPublisher.publish(warehouseConfig.occupancy_map);
-}
-
-MapConfigServer::~MapConfigServer() {
+	configService = nh.advertiseService("get_map_configuration", &MapConfigServer::configCallback, this);
+	//mapPublisher = nh.advertise<nav_msgs::OccupancyGrid>("occupancy_map", 1, true);
+	//mapPublisher.publish(warehouseConfig.occupancy_map);
 }
 
 void MapConfigServer::readMapConfig(std::string file) {
@@ -55,12 +46,19 @@ void MapConfigServer::readMapConfig(std::string file) {
 	// read general info
 	warehouseConfig.width = configTree.get<float>("map.width");
 	warehouseConfig.height = configTree.get<float>("map.height");
-
+	
+	warehouseConfig.map_configuration.width = configTree.get<float>("map.width");
+	warehouseConfig.map_configuration.height = configTree.get<float>("map.height");
+	
+	// Hardcoded in robots_config radius as 0.25
+	warehouseConfig.map_configuration.margin = 0.5f;
+	
+	// Hardcoded here
+	warehouseConfig.map_configuration.resolutionThetaStar = 0.5f;	
+	
 	// read tray config
-	warehouseConfig.tray_geometry.width = configTree.get<float>(
-			"tray_geometry.width");
-	warehouseConfig.tray_geometry.height = configTree.get<float>(
-			"tray_geometry.height");
+	warehouseConfig.tray_geometry.width = configTree.get<float>("tray_geometry.width");
+	warehouseConfig.tray_geometry.height = configTree.get<float>("tray_geometry.height");
 
 	// read trays
 	warehouseConfig.trays.clear();
@@ -115,88 +113,27 @@ void MapConfigServer::readMapConfig(std::string file) {
 }
 
 void MapConfigServer::addStaticObstacles() {
-	float trayOffsetX = warehouseConfig.tray_geometry.width / 2.0;
-	float trayOffsetY = warehouseConfig.tray_geometry.height / 2.0;
-
+	warehouseConfig.map_configuration.obstacles.clear();
+	
 	for(const auto_smart_factory::Tray& tray : warehouseConfig.trays) {
-		float x = tray.x - trayOffsetX;
-		float y = tray.y - trayOffsetY;
-		setRectangularObstacle(x, y, warehouseConfig.tray_geometry.width,
-		                       warehouseConfig.tray_geometry.height,
-		                       warehouseConfig.occupancy_map);
+		setRectangularObstacle(tray.x, tray.y, warehouseConfig.tray_geometry.width, warehouseConfig.tray_geometry.height, 0);
 	}
 }
 
-void MapConfigServer::setupOccupancyMap() {
-	// create map size with default resolution 0.1 m per cell
-	ros::NodeHandle nh("~");
-	float mapResolution = nh.param("occupancy_map_resolution", 0.1);      // this does not work as intended I guess
-
-	float mapWidth = warehouseConfig.width;
-	float mapHeight = warehouseConfig.height;
-
-	// fill in map meta data
-	warehouseConfig.occupancy_map.header.frame_id = "map";
-	warehouseConfig.occupancy_map.header.stamp = ros::Time::now();
-	warehouseConfig.occupancy_map.info.map_load_time = ros::Time::now();
-	warehouseConfig.occupancy_map.info.resolution = mapResolution;
-	warehouseConfig.occupancy_map.info.width = std::ceil(
-			mapWidth / mapResolution);
-	warehouseConfig.occupancy_map.info.height = std::ceil(
-			mapHeight / mapResolution);
-	warehouseConfig.occupancy_map.info.origin.position.x = 0;
-	warehouseConfig.occupancy_map.info.origin.position.y = 0;
-	warehouseConfig.occupancy_map.info.origin.position.z = 0;
-	warehouseConfig.occupancy_map.info.origin.orientation.w = 1;
-	warehouseConfig.occupancy_map.info.origin.orientation.x = 0;
-	warehouseConfig.occupancy_map.info.origin.orientation.y = 0;
-	warehouseConfig.occupancy_map.info.origin.orientation.z = 0;
-
-	// initialize grid cells
-	warehouseConfig.occupancy_map.data.clear();
-	warehouseConfig.occupancy_map.data.resize(
-			warehouseConfig.occupancy_map.info.width
-			* warehouseConfig.occupancy_map.info.height, 0);
-
-	// add occupied areas
-	addStaticObstacles();
+void MapConfigServer::setRectangularObstacle(float x, float y, float width, float height, float rotation) {
+	auto_smart_factory::Rectangle rectangle;
+	rectangle.posX = x;
+	rectangle.posY = y;
+	rectangle.sizeX = width;
+	rectangle.sizeY = height;
+	rectangle.rotation = rotation;	
+	
+	warehouseConfig.map_configuration.obstacles.push_back(rectangle);
 }
 
-bool MapConfigServer::configCallback(
-		auto_smart_factory::GetWarehouseConfig::Request& req,
-		auto_smart_factory::GetWarehouseConfig::Response& res) {
+bool MapConfigServer::configCallback(auto_smart_factory::GetWarehouseConfig::Request& req, auto_smart_factory::GetWarehouseConfig::Response& res) {
 	res.warehouse_configuration = warehouseConfig;
 	return true;
-}
-
-void MapConfigServer::setRectangularObstacle(float x, float y, float width,
-                                             float height, nav_msgs::OccupancyGrid& grid) {
-	ROS_ASSERT(x >= 0);
-	ROS_ASSERT(y >= 0);
-	ROS_ASSERT(width >= 0);
-	ROS_ASSERT(height >= 0);
-
-	// discretize rectangle
-	unsigned int discreteWidth = std::ceil(width / grid.info.resolution);
-	unsigned int discreteHeight = std::ceil(height / grid.info.resolution);
-	unsigned int discreteX = x / grid.info.resolution;
-	unsigned int discreteY = y / grid.info.resolution;
-
-	// set cell probabilities
-	for(unsigned int w = discreteX; w < discreteX + discreteWidth; w++) {
-		for(unsigned int h = discreteY; h < discreteY + discreteHeight; h++) {
-			setMapCell(w, h, 100, grid);
-		}
-	}
-}
-
-void MapConfigServer::setMapCell(unsigned int x, unsigned int y,
-                                 int8_t cellProbability, nav_msgs::OccupancyGrid& grid) {
-	unsigned int index = y * grid.info.width + x;
-
-	ROS_ASSERT(index < grid.data.size());
-
-	grid.data.at(index) = cellProbability;
 }
 
 unsigned int MapConfigServer::getUniqueTrayId() {

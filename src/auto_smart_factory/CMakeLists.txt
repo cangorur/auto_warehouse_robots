@@ -93,8 +93,9 @@ add_message_files(
 		StorageState.msg
 		StorageUpdate.msg
 		GripperState.msg
-		#RoadmapGraph.msg
 		CollisionAction.msg
+		MapConfiguration.msg
+		Rectangle.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -105,6 +106,7 @@ add_service_files(
 		InitPathPlanner.srv
 		InitStorageManagement.srv
 		InitPackageGenerator.srv
+		#InitChargingManagement.srv
 		RegisterAgent.srv
 		StorePackage.srv
 		RetrievePackage.srv
@@ -122,11 +124,8 @@ add_service_files(
 		NewPackageOutput.srv
 		MovePackage.srv
 		MoveGripper.srv
-#		initRoadmapPlanner.srv
 		outputRequest.srv
 		inputRequest.srv
-#		triggerRoadmapGenerator.srv
-		#testService.srv
 		PerformTaskTest.srv
 		SetConveyorSpeed.srv
 		RotateTable.srv
@@ -245,14 +244,19 @@ target_link_libraries(warehouse_management_node ${catkin_LIBRARIES})
 
 # Agent
 add_executable(agent_node
+		src/agent/path_planning/GridNode.cpp
+		src/agent/path_planning/Map.cpp
 		src/agent/path_planning/OrientedPoint.cpp
 		src/agent/path_planning/Path.cpp
 		src/agent/path_planning/PathPlanner.cpp
 		src/agent/path_planning/Point.cpp
+		src/agent/path_planning/Rectangle.cpp
+		src/agent/path_planning/ThetaStarGridNodeInformation.cpp
+		src/agent/path_planning/ThetaStarMap.cpp
+		src/agent/path_planning/ThetaStarPathPlanner.cpp
 
 		src/agent/Agent.cpp
 		src/agent/AgentNode.cpp
-		src/agent/ChargingManagement.cpp
 		src/agent/Gripper.cpp
 		src/agent/MotionPlanner.cpp
 		src/agent/ObstacleDetection.cpp		
@@ -296,6 +300,16 @@ add_executable(storage_management_node
 set_target_properties(storage_management_node PROPERTIES OUTPUT_NAME storage_management PREFIX "")
 add_dependencies(storage_management_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(storage_management_node ${catkin_LIBRARIES})
+
+# Charging Management
+#add_executable(charging_management_node
+#		src/charging_management/ChargingManagementNode.cpp
+#		src/charging_management/ChargingManagement.cpp
+#		)
+#set_target_properties(charging_management_node PROPERTIES OUTPUT_NAME charging_management PREFIX "")
+#add_dependencies(charging_management_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(charging_management_node ${catkin_LIBRARIES})
+
 
 # cpptest
 #add_executable(test_service_node

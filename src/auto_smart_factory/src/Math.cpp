@@ -1,5 +1,5 @@
+#include <cmath>
 #include <time.h>
-#include <include/Math.h>
 
 #include "Math.h"
 #include "agent/path_planning/Point.h"
@@ -48,13 +48,13 @@ float Math::getDistanceSquared(const Point& v1, const Point& v2) {
 	return (v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y);
 }
 
-/*bool Math::areLineSegmentsParallel(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End) {
+bool Math::areLineSegmentsParallel(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End) {
 	Point v1 = l1End - l1Start;
 	Point v2 = l2End - l2Start;
 	return std::fabs(v1.x*v2.y - v1.y*v2.x) < EPS;
-}*/
+}
 
-/*bool Math::doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End) {
+bool Math::doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End) {
 	// See https://stackoverflow.com/a/100165
 	float s1_x = l1End.x - l1Start.x;
 	float s1_y = l1End.y - l1Start.y;
@@ -94,9 +94,9 @@ float Math::getDistanceSquared(const Point& v1, const Point& v2) {
 	t = ( s2_x * (l1Start.y - l2Start.y) - s2_y * (l1Start.x - l2Start.x)) / det;
 
 	return s > 0.f && s < 1.f && t > 0.f && t < 1.f;
-}*/
+}
 
-/*bool Math::doesLineSegmentIntersectRectangle(const Point& lStart, const Point& lEnd, Rectangle& rectangle) {
+bool Math::doesLineSegmentIntersectRectangle(const Point& lStart, const Point& lEnd, Rectangle& rectangle) {
 	bool intersectsAxisAligned = doesLineSegmentIntersectAxisAlignedRectangle(lStart, lEnd, rectangle);
 
 	if(rectangle.getIsAxisAligned()) {
@@ -111,11 +111,11 @@ float Math::getDistanceSquared(const Point& v1, const Point& v2) {
 		        doLineSegmentsIntersect(lStart, lEnd, rectangle.getPointsInflated()[2], rectangle.getPointsInflated()[3]) ||
 		        doLineSegmentsIntersect(lStart, lEnd, rectangle.getPointsInflated()[3], rectangle.getPointsInflated()[0]));
 	}
-}*/
+}
 
 float Math::getRotation(const Point& v) {
 	if(v.x != 0 || v.y != 0) {
-		double d = (atan2(v.y, v.x) * TO_DEG);
+		double d = (std::atan2(v.y, v.x) * TO_DEG);
 
 		if(d < 0) {
 			d+= 360;
@@ -133,7 +133,7 @@ float Math::toDeg(float angle) {
 	return angle * TO_DEG;
 }
 
-/*bool Math::doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, Rectangle& rectangle) {
+bool Math::doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, Rectangle& rectangle) {
 	// Find min and max X for the segment
 	float minX = lStart.x;
 	float maxX = lEnd.x;
@@ -190,14 +190,14 @@ float Math::toDeg(float angle) {
 	}
 
 	return true;
-}*/
+}
 
-/*float Math::projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
+float Math::projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
 	Point line = lEnd - lStart;
 	Point startToPoint = point - lStart;
 	float lengthSquared = getDistanceSquared(lStart, lEnd);
 	return dotProduct(line, startToPoint) / lengthSquared;
-}*/
+}
 
 float Math::getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
 	Point line = lEnd - lStart;

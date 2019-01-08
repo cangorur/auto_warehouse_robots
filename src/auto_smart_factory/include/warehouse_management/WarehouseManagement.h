@@ -7,12 +7,12 @@
 #include "auto_smart_factory/GetWarehouseConfig.h"
 #include "auto_smart_factory/GetRobotConfigurations.h"
 #include "auto_smart_factory/GetPackageConfigurations.h"
-#include "auto_smart_factory/initRoadmapPlanner.h"
+//#include "auto_smart_factory/initRoadmapPlanner.h"
 #include "auto_smart_factory/InitTaskPlanner.h"
 #include "auto_smart_factory/InitAgent.h"
 #include "auto_smart_factory/InitPackageGenerator.h"
 #include "auto_smart_factory/InitStorageManagement.h"
-#include "auto_smart_factory/InitChargingManagement.h"
+//#include "auto_smart_factory/InitChargingManagement.h"
 
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotConfiguration.h>
@@ -29,8 +29,7 @@
 class WarehouseManagement {
 public:
 	WarehouseManagement();
-
-	virtual ~WarehouseManagement();
+	virtual ~WarehouseManagement() = default;
 
 	/**
 	 * Start the warehouse and initialize all components.
@@ -131,9 +130,6 @@ protected:
 
 	/// Publisher of the visualization markers
 	ros::Publisher markerPub;
-
-	/// Publisher of the occupancy map
-	ros::Publisher occupancyMapPub;
 
 	/// Robot heartbeat subscriber
 	ros::Subscriber robotHeartbeatSub;

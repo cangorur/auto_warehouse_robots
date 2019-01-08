@@ -11,7 +11,9 @@
 #include <ros/console.h>
 
 
-MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) {
+MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
+	pathObject(Path({}))
+{
 	robotConfig = std::move(robot_config);
 	
 	minDrivingSpeed = robotConfig.min_linear_vel;
@@ -32,7 +34,9 @@ MotionPlanner::~MotionPlanner() {
 };
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
-	//driveCurrentPath(Point(position.x, position.y), orientation);
+	//if(!hasFinishedCurrentPath) {
+	//	driveCurrentPath(Point(position.x, position.y), orientation);	
+	//}	
 	Position pos(position.x, position.y, orientation, ros::Time::now());
 
 	if(waypointReached(&pos)) {
@@ -71,9 +75,22 @@ void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geo
 	currentTarget = pathObject.getPoints().front();
 	currentTargetIndex = 0;
 	previousTarget = Point(start_position.x, start_position.y);
+	this->newPath(Path(points));
+}
 
-	pathPub.publish(pathObject.getVisualizationMsgPoints());
-	pathPub.publish(pathObject.getVisualizationMsgLines());
+void MotionPlanner::newPath(Path path) {
+	pathObject = path;
+	
+	if(path.getLength() > 0) {
+		currentTarget = pathObject.getPoints().front();
+		currentTargetIndex = 0;
+		hasFinishedCurrentPath = false;
+		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgPoints());
+		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
+	} else {
+		ROS_INFO("[MotionPlanner - %s]: Got path with length 0", agentID.c_str());
+		hasFinishedCurrentPath = true;
+	}	
 }
 
 void MotionPlanner::enable(bool enable) {
@@ -229,3 +246,11 @@ double MotionPlanner::cteToAngle(double cte) {
 	
 	return Math::mapRange(cte, -5.0, 5.0, -45.0, 45.0);
 }
+visualization_msgs::Marker MotionPlanner::getVisualizationMsgPoints() {
+	return pathObject.getVisualizationMsgPoints();
+}
+
+visualization_msgs::Marker MotionPlanner::getVisualizationMsgLines() {
+	return pathObject.getVisualizationMsgLines();
+}
+

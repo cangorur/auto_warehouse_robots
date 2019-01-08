@@ -20,35 +20,26 @@
 class MapConfigServer {
 public:
 	MapConfigServer();
-
-	virtual ~MapConfigServer();
+	virtual ~MapConfigServer() = default;
 
 protected:
 
-	/**
-	 * Map configuration retrieve service callback function
+	/** Map configuration retrieve service callback function
 	 * @param req Request object
 	 * @param res Response object
-	 * @return Success of service call (always true)
-	 */
-	bool configCallback(auto_smart_factory::GetWarehouseConfig::Request& req,
-	                    auto_smart_factory::GetWarehouseConfig::Response& res);
+	 * @return Success of service call (always true) */
+	bool configCallback(auto_smart_factory::GetWarehouseConfig::Request& req, auto_smart_factory::GetWarehouseConfig::Response& res);
 
-	/**
-	 * Reads the JSON formatted map/warehouse configuration from file.
+	/** Reads the JSON formatted map/warehouse configuration from file.
 	 * The configuration is stored internally and can by retrieved via service call.
-	 * @param file The path to the JSON configuration file
-	 */
+	 * @param file The path to the JSON configuration file */
 	void readMapConfig(std::string file);
 
-	/**
-	 * Adds a rectangular occupied obstacle to the occupancy map.
+	/* Adds a rectangular occupied obstacle to the occupancy map.
 	 * This is used to add the trays and charging stations as static obstacles to the occupancy map.
 	 *
 	 * \note At the moment arbitrary rotation of the trays is not supported and tray edges must align with world coordinate axes.
 	 * Rotating by multiples of 90 degrees is supported as long as the trays have square footprint.
-	 *
-	 * \todo Add support for rotated trays.
 	 *
 	 * @param x X coordinate o the lower left point of the rectangle [meters]
 	 * @param y Y coordinate o the lower left point of the rectangle [meters]
@@ -56,56 +47,18 @@ protected:
 	 * @param height Height of the obstacle (in y direction) [meters]
 	 * @param grid The occupancy grid used to set the occupied cells
 	 */
-	static void setRectangularObstacle(float x, float y, float width, float height, nav_msgs::OccupancyGrid& grid);
+	void setRectangularObstacle(float x, float y, float width, float height, float rotation);
 
-	/**
-	 * Sets the value of a single cell in the grid.
-	 *
-	 * \note We use only binary occupancy maps so we only use probabilities 0 and 100.
-	 *
-	 * @param x X coordinate of the cell (grid index)
-	 * @param y Y coordinate of the cell (grid index)
-	 * @param cellProbability Occupancy probability to be used for the cell (0 or 100).
-	 * @param grid The occupancy grid used to set the occupied cell
-	 */
-	static void setMapCell(unsigned int x, unsigned int y, int8_t cellProbability, nav_msgs::OccupancyGrid& grid);
-
-	/**
-	 * Adds the static obstacles defined in the map configuration to the occupancy map.
-	 * This comprises trays and charging stations.
-	 */
+	/**  Adds the static obstacles defined in the map configuration to the occupancy map.
+	 * This comprises trays and charging stations. */
 	void addStaticObstacles();
 
-	/**
-	 * Creates the occupancy map. It can be retrieved as part of the warehouse configuration via service request.
-	 */
-	void setupOccupancyMap();
-
-	/**
-	 * The configuration of the warehouse. It contains information about trays,
-	 * about map size and an occupancy map.
-	 */
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;
-
-	/**
-	 * Server used to provide the warehouse configuration.
-	 */
 	ros::ServiceServer configService;
-
-	/**
-	 * Publisher of the occupancy map for visualization tool.
-	 */
-	ros::Publisher mapPublisher;
-
-	/**
-	 * Create a new unique tray id.
-	 * @return The new id
-	 */
+	//ros::Publisher mapPublisher;
+	
+	// Create a new unique tray id.
 	static unsigned int getUniqueTrayId();
-
-	/**
-	 * Internal counter to generate unique ids.
-	 */
 	static unsigned int trayIdCounter;
 };
 
