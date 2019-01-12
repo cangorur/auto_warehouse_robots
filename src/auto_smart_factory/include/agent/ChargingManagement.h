@@ -28,23 +28,32 @@ private:
 
 	std::string agentID;
 
-	float agentBatt;
+	// Max energy level of the agent to participate in charging
+	float upperThreshohold = 70.00;
 
-	/// Subscriber to robot heartbeat topic
-	ros::Subscriber robotHeartbeatSub;
+	// Minimum energy level of the agent to participate in charging
+	float criticalMinimum = 15.00;
 
+	// Operating battery
+	float operatingBatt = upperThreshohold - criticalMinimum;
 
-	/**
-	 * Receive robot heartbeats.
-	 * @param hb Heartbeast message
+	//Current battery of the agent
+	double agentBatt;
+
+	//Estimated energy of the agent after task and charging
+	float energyAfterTask;
+
+	/* Returns true if the agent can perform the task of given energy
+	 * @param energy: expected energy of the task
 	 */
-	void receiveRobotHeartbeat(const auto_smart_factory::RobotHeartbeat& hb);
+	bool isEnergyAvailable(double energy);
 
 	/*
-	 * Check battery and issue charging task accordingly
+	 * Score multiplier for current set of tasks +  charging
+	 * @param Energy consumption of all the tasks to be done
+	 * @returns Score multiplier LOWER IS BETTER
 	 */
-	void checkBattery(float);
-
+	float getScoreMultiplier(float cumulatedEnergyConsumption);
 };
 
 #endif /* AGENT_CHARGINGMANAGEMENT_H_ */
