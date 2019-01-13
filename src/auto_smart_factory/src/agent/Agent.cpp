@@ -238,51 +238,12 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			// TODO: get Paths
 			Path sourcePath = Path({});
 			Path targetPath = Path({});
-			taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, targetPath);
+			taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, 
+					sourcePath, targetPath);
 
-			geometry_msgs::Point input_drive_point;
-			geometry_msgs::Point storage_drive_point;
-			geometry_msgs::Point input_drive_back_point;
-			geometry_msgs::Point storage_drive_back_point;
-			geometry_msgs::Point input_approach_point;
-			geometry_msgs::Point storage_approach_point;
-
-			// don't drive to the tray exactly, stop a bit in front for (un)loading
-			double input_dx = cos(input_tray.orientation * PI / 180);
-			double input_dy = sin(input_tray.orientation * PI / 180);
-			double storage_dx = cos(storage_tray.orientation * PI / 180);
-			double storage_dy = sin(storage_tray.orientation * PI / 180);
-			input_drive_point.x = input_tray_position.x + 0.5 * input_dx;
-			input_drive_point.y = input_tray_position.y + 0.5 * input_dy;
-			input_drive_back_point.x = input_tray_position.x + 1.3 * input_dx;
-			input_drive_back_point.y = input_tray_position.y + 1.3 * input_dy;
-			input_approach_point.x = input_tray_position.x + input_dx;
-			input_approach_point.y = input_tray_position.y + input_dy;
-			storage_drive_point.x = storage_tray_position.x + 0.5 * storage_dx;
-			storage_drive_point.y = storage_tray_position.y + 0.5 * storage_dy;
-			storage_drive_back_point.x = storage_tray_position.x + 1.3 * storage_dx;
-			storage_drive_back_point.y = storage_tray_position.y + 1.3 * storage_dy;
-			storage_approach_point.x = storage_tray_position.x + 1.5 * storage_dx;
-			storage_approach_point.y = storage_tray_position.y + 1.5 * storage_dy;
-
-
-			// Path path_to_input_tray(agentID, task_id, GOAL::LOAD, position, input_drive_point, input_approach_point, input_tray_position, input_drive_back_point, true);
-
-			//    When Robot arrived at input_tray it will start traveling from input tray to output tray
-			//Path path_to_storage_tray(agentID, task_id, GOAL::UNLOAD, input_drive_back_point,
-			//            storage_drive_point, storage_approach_point, storage_tray_position, storage_drive_back_point, false);
-
-			// 2- Set currentPath
-			//setCurrentPath(path_to_input_tray);
-			//hasDriven = true;
-
-			// 3- Add the remaining paths to the pathsStack
-			//pathsStack.push(path_to_storage_tray);
-
-			ROS_INFO("[%s]: Task %i successfully assigned! Queue size is %i", agentID.c_str(), req.task_id, taskHandler->numberQueuedTasks());
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
-			ROS_INFO("assignTask %s %.2f %i", agentID.c_str(), initialTimeOfCurrentTask, task_id);
-			setState(false);     //Set to non idle if a task is assigned
+			ROS_INFO("[%s]: Task %i successfully assigned at %.2f! Queue size is %i", agentID.c_str(), req.task_id, 
+					ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
 			res.success = true;
 		} else {
 			ROS_WARN("[%s]: Is busy! - Task %i has not been assigned!",
