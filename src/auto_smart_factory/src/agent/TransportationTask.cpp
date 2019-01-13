@@ -26,3 +26,12 @@ OrientedPoint TransportationTask::getSourcePosition(){
 Path* TransportationTask::getPathToSource(){
 	return &pathToSource;
 }
+
+float TransportationTask::getBatteryConsumption(void){
+	// TODO: add battery consumption function for pathes
+	return 0.0;
+}
+
+float TransportationTask::getDistance(void){
+	return pathToSource.getLength() + pathToTarget.getLength();
+}

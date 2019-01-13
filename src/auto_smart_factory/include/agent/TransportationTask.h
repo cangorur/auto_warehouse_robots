@@ -23,6 +23,10 @@ class TransportationTask : public Task
 
 		Path* getPathToSource();
 
+		float getBatteryConsumption(void);
+
+		float getDistance(void);
+
 	protected:
 
 		// the task id of the task

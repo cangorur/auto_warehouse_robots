@@ -14,6 +14,10 @@ class ChargingTask : public Task
 
 		virtual ~ChargingTask();
 
+		float getBatteryConsumption(void);
+
+		float getDistance(void);
+
 	protected:
 
 };

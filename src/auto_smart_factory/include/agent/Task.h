@@ -21,6 +21,11 @@ class Task
 
 		Task::taskType getType(void);
 
+		// TODO: add estimated battery consumption function
+		virtual float getBatteryConsumption(void) = 0;
+
+		virtual float getDistance(void) = 0;
+
 	protected:
 
 		Task::taskType type;
