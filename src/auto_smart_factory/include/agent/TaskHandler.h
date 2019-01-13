@@ -13,28 +13,34 @@
 
 class TaskHandler
 {
-  public:
-    explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish);
+	public:
+    	explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish);
 
-    void announcementCallback(const auto_smart_factory::TaskAnnouncement &taskAnnouncement);
-    void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId);
+    	void announcementCallback(const auto_smart_factory::TaskAnnouncement &taskAnnouncement);
+    	void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId);
 
-    virtual ~TaskHandler();
+    	virtual ~TaskHandler();
 
-    void addTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
-				uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath);
+    	void addTransportationTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
+					uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath);
 
-    void nextTask(void);
+    	void addChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath);
 
-	unsigned int numberQueuedTasks(void);
+    	void nextTask(void);
 
-  private:
-    Task* currentTask = nullptr;
-    std::list<Task*> queue;
+		unsigned int numberQueuedTasks(void);
 
-    std::string agentId;
+		float getBatteryConsumption(void);
 
-    ros::Publisher* scorePublisher;
+		float getDistance(void);
+
+	private:
+    	Task* currentTask = nullptr;
+    	std::list<Task*> queue;
+
+	    std::string agentId;
+
+    	ros::Publisher* scorePublisher;
 };
 
 #endif /* AGENT_TASKHANDLER_H_ */

@@ -31,10 +31,18 @@ void TaskHandler::publishScore(unsigned int requestId, double score, uint32_t st
 
 TaskHandler::~TaskHandler() = default;
 
-void TaskHandler::addTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
+void TaskHandler::addTransportationTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
 				uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath){
     // create new task
-    Task t = TransportationTask(id, sourceID, sourcePos, targetID, targetPos, sourcePath, targetPath);
+    TransportationTask t = TransportationTask(id, sourceID, sourcePos, targetID, targetPos, sourcePath, targetPath);
+
+    // add task to list
+    queue.push_back(&t);
+}
+
+void TaskHandler::addChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath){
+    // create new charging task
+    ChargingTask t = ChargingTask(targetID, targetPos, targetPath);
 
     // add task to list
     queue.push_back(&t);
@@ -49,4 +57,20 @@ void TaskHandler::nextTask(void){
 
 unsigned int TaskHandler::numberQueuedTasks(void){
 	return (unsigned int) queue.size();
+}
+
+float TaskHandler::getBatteryConsumption(void){
+    float batteryCons = 0.0;
+    for(std::list<Task*>::iterator t = queue.begin(); t != queue.end(); t++){
+        batteryCons += (*t)->getBatteryConsumption();
+    }
+    return batteryCons;
+}
+
+float TaskHandler::getDistance(void){
+    float distance = 0.0;
+    for(std::list<Task*>::iterator t = queue.begin(); t != queue.end(); t++){
+        distance += (*t)->getDistance();
+    }
+    return distance;
 }

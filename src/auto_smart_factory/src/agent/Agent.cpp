@@ -37,18 +37,7 @@ void Agent::update() {
 
 		setState(true);
 
-		if(!isPathSet) {
-			if(getCurrentPosition().x != 0 && map != nullptr) {
-				Path p = map->getThetaStarPath(Point(this->getCurrentPosition()), Point(1, agentIdInt + 1));
-
-				this->motionPlanner->newPath(p);
-				if(p.getLength() > 0) {
-					this->motionPlanner->enable(true);
-					this->motionPlanner->start();
-					isPathSet = true;
-				}
-			}
-		}
+		// TODO: Work on Task? or assign new one
 	}
 }
 
@@ -243,11 +232,13 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
 
 			// create Task and add it to task handler
+			// TODO: Add correct orientation
 			OrientedPoint sourcePos = OrientedPoint(input_tray.x, input_tray.y, 0.0);
 			OrientedPoint targetPos = OrientedPoint(storage_tray.x, storage_tray.y, 0.0);
+			// TODO: get Paths
 			Path sourcePath = Path({});
 			Path targetPath = Path({});
-			taskHandler->addTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, targetPath);
+			taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, targetPath);
 
 			geometry_msgs::Point input_drive_point;
 			geometry_msgs::Point storage_drive_point;
@@ -275,7 +266,7 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			storage_approach_point.y = storage_tray_position.y + 1.5 * storage_dy;
 
 
-			//Path path_to_input_tray(agentID, task_id, GOAL::LOAD, position, input_drive_point, input_approach_point, input_tray_position, input_drive_back_point, true);
+			// Path path_to_input_tray(agentID, task_id, GOAL::LOAD, position, input_drive_point, input_approach_point, input_tray_position, input_drive_back_point, true);
 
 			//    When Robot arrived at input_tray it will start traveling from input tray to output tray
 			//Path path_to_storage_tray(agentID, task_id, GOAL::UNLOAD, input_drive_back_point,
