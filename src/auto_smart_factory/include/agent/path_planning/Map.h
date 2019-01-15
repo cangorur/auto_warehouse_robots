@@ -7,6 +7,8 @@
 #include "agent/path_planning/GridNode.h"
 #include "agent/path_planning/ThetaStarMap.h"
 #include "agent/path_planning/Path.h"
+#include "agent/path_planning/OrientedPoint.h"
+#include <auto_smart_factory/Tray.h>
 
 /*
 #include "Dubins/OrientationPoint.hpp"
@@ -44,7 +46,8 @@ public:
 	float getMargin() const;
 	
 	bool isPointInMap(const Point& pos) const;
-
+	
+	OrientedPoint getPointInFrontOfTray(const auto_smart_factory::Tray& tray);
 };
 
 

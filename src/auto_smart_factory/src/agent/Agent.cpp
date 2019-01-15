@@ -39,18 +39,7 @@ void Agent::update() {
 
 		setState(true);
 
-		if(!isPathSet) {
-			if(getCurrentPosition().x != 0 && map != nullptr) {
-				Path p = map->getThetaStarPath(Point(this->getCurrentPosition()), Point(1, agentIdInt + 1));
-
-				this->motionPlanner->newPath(p);
-				if(p.getLength() > 0) {
-					this->motionPlanner->enable(true);
-					this->motionPlanner->start();
-					isPathSet = true;
-				}
-			}
-		}
+		// TODO: Work on Task? or assign new one
 	}
 }
 
@@ -230,7 +219,7 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
                        auto_smart_factory::AssignTask::Response& res) {
 	try {
 		if(isIdle) {
-			ROS_INFO("[%s]: IN Agent::assignTask", agentID.c_str());
+			ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
 
 			int task_id = req.task_id;
 			auto_smart_factory::Tray input_tray = getTray(req.input_tray);
@@ -247,49 +236,19 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
 			ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
 
-			geometry_msgs::Point input_drive_point;
-			geometry_msgs::Point storage_drive_point;
-			geometry_msgs::Point input_drive_back_point;
-			geometry_msgs::Point storage_drive_back_point;
-			geometry_msgs::Point input_approach_point;
-			geometry_msgs::Point storage_approach_point;
+			// create Task and add it to task handler
+			// TODO: Add correct orientation
+			OrientedPoint sourcePos = OrientedPoint(input_tray.x, input_tray.y, 0.0);
+			OrientedPoint targetPos = OrientedPoint(storage_tray.x, storage_tray.y, 0.0);
+			// TODO: get Paths
+			Path sourcePath = Path({});
+			Path targetPath = Path({});
+			taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, 
+					sourcePath, targetPath);
 
-			// don't drive to the tray exactly, stop a bit in front for (un)loading
-			double input_dx = cos(input_tray.orientation * PI / 180);
-			double input_dy = sin(input_tray.orientation * PI / 180);
-			double storage_dx = cos(storage_tray.orientation * PI / 180);
-			double storage_dy = sin(storage_tray.orientation * PI / 180);
-			input_drive_point.x = input_tray_position.x + 0.5 * input_dx;
-			input_drive_point.y = input_tray_position.y + 0.5 * input_dy;
-			input_drive_back_point.x = input_tray_position.x + 1.3 * input_dx;
-			input_drive_back_point.y = input_tray_position.y + 1.3 * input_dy;
-			input_approach_point.x = input_tray_position.x + input_dx;
-			input_approach_point.y = input_tray_position.y + input_dy;
-			storage_drive_point.x = storage_tray_position.x + 0.5 * storage_dx;
-			storage_drive_point.y = storage_tray_position.y + 0.5 * storage_dy;
-			storage_drive_back_point.x = storage_tray_position.x + 1.3 * storage_dx;
-			storage_drive_back_point.y = storage_tray_position.y + 1.3 * storage_dy;
-			storage_approach_point.x = storage_tray_position.x + 1.5 * storage_dx;
-			storage_approach_point.y = storage_tray_position.y + 1.5 * storage_dy;
-
-
-			//Path path_to_input_tray(agentID, task_id, GOAL::LOAD, position, input_drive_point, input_approach_point, input_tray_position, input_drive_back_point, true);
-
-			//    When Robot arrived at input_tray it will start traveling from input tray to output tray
-			//Path path_to_storage_tray(agentID, task_id, GOAL::UNLOAD, input_drive_back_point,
-			//            storage_drive_point, storage_approach_point, storage_tray_position, storage_drive_back_point, false);
-
-			// 2- Set currentPath
-			//setCurrentPath(path_to_input_tray);
-			//hasDriven = true;
-
-			// 3- Add the remaining paths to the pathsStack
-			//pathsStack.push(path_to_storage_tray);
-
-			ROS_INFO("[%s]: Task %i successfully assigned!", agentID.c_str(), req.task_id);
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
-			ROS_INFO("assignTask %s %.2f %i", agentID.c_str(), initialTimeOfCurrentTask, task_id);
-			setState(false);     //Set to non idle if a task is assigned
+			ROS_INFO("[%s]: Task %i successfully assigned at %.2f! Queue size is %i", agentID.c_str(), req.task_id, 
+					ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
 			res.success = true;
 		} else {
 			ROS_WARN("[%s]: Is busy! - Task %i has not been assigned!",

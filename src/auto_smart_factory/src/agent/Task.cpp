@@ -1,42 +1,21 @@
 #include "agent/Task.h"
 
-Task::Task(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
-			uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath) : 
-	id(id), 
-	sourceId(sourceID),
-	sourcePosition(sourcePos),
-	targetId(targetID),
-	targetPosition(targetPos),
-	pathToSource(sourcePath),
-	pathToTarget(targetPath) {
+Task::Task(uint32_t targetId, OrientedPoint targetPosition, Path pathToTarget, taskType type) : 
+	targetId(targetId), targetPosition(targetPosition), pathToTarget(pathToTarget), type(type){
 }
 
-Task::~Task() = default;
-
-unsigned int Task::getId(){
-	return id;
-}
-
-uint32_t Task::getSourceTrayId(){
-	return sourceId;
-}
-
-OrientedPoint Task::getSourcePosition(){
-	return sourcePosition;
-}
-
-uint32_t Task::getTargetTrayId(){
+uint32_t Task::getTargetTrayId(void){
 	return targetId;
 }
 
-OrientedPoint Task::getTargetPosition(){
+OrientedPoint Task::getTargetPosition(void){
 	return targetPosition;
 }
 
-Path* Task::getPathToTarget(){
+Path* Task::getPathToTarget(void){
 	return &pathToTarget;
 }
 
-Path* Task::getPathToSource(){
-	return &pathToSource;
+Task::taskType Task::getType(void){
+	return this->type;
 }
