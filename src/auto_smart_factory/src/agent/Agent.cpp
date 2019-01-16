@@ -21,6 +21,8 @@ Agent::~Agent() {
 	this->gripper->~Gripper();
 	this->obstacleDetection->~ObstacleDetection();
 	this->map->~Map();
+	this->chargingManagement->~ChargingManagement();
+
 }
 
 void Agent::update() {
@@ -85,7 +87,10 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 
 		// Task Handler
 		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub));
-		
+
+		// Charging MAnagement
+		this->chargingManagement = new ChargingManagement(this);
+
 		// Generate map
 		std::vector<Rectangle> obstacles;
 		for(auto o : warehouseConfig.map_configuration.obstacles) {
@@ -302,6 +307,17 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 std::string Agent::getAgentID() {
 	return agentID;
 }
+
+
+int Agent::getAgentIdInt() {
+	return agentIdInt;
+}
+
+float Agent::getAgentBattery() {
+	return batteryLevel;
+}
+
+
 
 geometry_msgs::Point Agent::getCurrentPosition() {
 	return position;

@@ -5,6 +5,7 @@
 #include "agent/Gripper.h"
 #include "agent/ObstacleDetection.h"
 #include "agent/TaskHandler.h"
+#include "agent/ChargingManagement.h"
 
 #include <random>
 #include "ros/ros.h"
@@ -55,6 +56,13 @@ public:
 
 	/* Returns ID of this agent */
 	std::string getAgentID();
+
+	/* Returns ID of this agent */
+	int getAgentIdInt();
+
+	/* Returns Battery of this agent */
+	float getAgentBattery();
+
 
 	/* Returns current position of this agent */
 	geometry_msgs::Point getCurrentPosition();
@@ -252,6 +260,9 @@ protected:
 
 	// Publisher for heartbeat topic
 	ros::Publisher heartbeat_pub;
+
+	// pointer to instance of the Charging Management
+	ChargingManagement* chargingManagement;
 
 	// pointer to instance of the task planner
 	TaskHandler* taskHandler;
