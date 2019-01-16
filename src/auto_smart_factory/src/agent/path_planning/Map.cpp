@@ -11,16 +11,16 @@
 
 Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle>& obstacles) :
 		warehouseConfig(warehouseConfig),
-		width(warehouseConfig.width),
-		height(warehouseConfig.height),
-		margin(warehouseConfig.margin) {
+		width(warehouseConfig.map_configuration.width),
+		height(warehouseConfig.map_configuration.height),
+		margin(warehouseConfig.map_configuration.margin) {
 	
 	this->obstacles.clear();
 	for(const Rectangle& o : obstacles) {
 		this->obstacles.emplace_back(o.getPosition(), o.getSize(), o.getRotation());
 	}
 	
-	thetaStarMap = ThetaStarMap(this, resolutionThetaStar);
+	thetaStarMap = ThetaStarMap(this, warehouseConfig.map_configuration.resolutionThetaStar);
 }
 
 visualization_msgs::Marker Map::getVisualization() {

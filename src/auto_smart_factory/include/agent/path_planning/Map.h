@@ -7,6 +7,9 @@
 #include "agent/path_planning/GridNode.h"
 #include "agent/path_planning/ThetaStarMap.h"
 #include "agent/path_planning/Path.h"
+#include "agent/path_planning/OrientedPoint.h"
+#include "auto_smart_factory/Tray.h"
+#include <auto_smart_factory/WarehouseConfiguration.h>
 
 /*
 #include "Dubins/OrientationPoint.hpp"
