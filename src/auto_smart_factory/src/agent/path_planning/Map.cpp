@@ -180,4 +180,19 @@ Path Map::getThetaStarPath(const Point& start, const Point& end) {
 
 bool Map::isPointInMap(const Point& pos) const {
 	return pos.x >= margin && pos.x <= width - margin && pos.y >= margin && pos.y <= height - margin;
+
+
+}
+
+OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
+	OrientedPoint input_drive_point;
+
+	double input_dx = cos(tray.orientation * PI / 180);
+	double input_dy = sin(tray.orientation * PI / 180);
+	input_drive_point.x = tray.x + 0.5 * input_dx;
+	input_drive_point.y = tray.y + 0.5 * input_dy;
+	input_drive_point.o = tray.orientation + 180;
+
+	return input_drive_point;
+
 }

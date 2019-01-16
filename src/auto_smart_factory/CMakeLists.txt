@@ -262,6 +262,11 @@ add_executable(agent_node
 		src/agent/ObstacleDetection.cpp		
 		src/agent/Position.cpp
 
+		src/agent/TaskHandler.cpp
+		src/agent/Task.cpp
+		src/agent/TransportationTask.cpp
+		src/agent/ChargingTask.cpp
+
 		src/Math.cpp
 		)
 set_target_properties(agent_node PROPERTIES OUTPUT_NAME agent PREFIX "")

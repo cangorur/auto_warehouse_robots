@@ -35,6 +35,7 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 	}
 
 	// build tray config map
+	// TODO: look here if the trays all have id 0
 	for(auto config : req.warehouse_configuration.trays) {
 		if(!trayConfigs.insert(
 				std::pair<unsigned int, Tray>(config.id, config)).second) {
@@ -73,6 +74,11 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 	                                &TaskPlanner::rescheduleEvent, this);
 	statusUpdateTimer = n.createTimer(ros::Duration(2.0),
 	                                  &TaskPlanner::taskStateUpdateEvent, this);
+
+	taskResponseSub = n.subscribe("/task_response", 1000, 
+									&TaskPlanner::receiveTaskResponse, this);
+
+	taskAnnouncerPub = pn.advertise<TaskAnnouncement>("task_broadcast", 1);
 
 	ROS_INFO("Task planner initialized.");
 
@@ -381,3 +387,48 @@ bool TaskPlanner::idleRobotAvailable() const {
 	return false;
 }
 
+void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
+	// go through requests and get the one for which the response is intended:
+	for(Request& r : inputRequests){
+		if(r.getId() == tr.request_id){
+			r.receiveTaskResponse(tr);
+			return;
+		}
+	}
+	for(Request& r : outputRequests){
+		if(r.getId() == tr.request_id){
+			r.receiveTaskResponse(tr);
+			return;
+		}
+	}
+}
+
+void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
+                	 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, 
+					 uint32_t requestId){
+	ROS_WARN("[Task Planner]: Starting publishing request, got %d start Trays and %d end Trays", (unsigned int)sourceTrayCandidates.size(), (unsigned int)targetTrayCandidates.size());
+	TaskAnnouncement tsa;
+	tsa.request_id = requestId;
+	extractData(sourceTrayCandidates, targetTrayCandidates, &tsa);
+	ROS_WARN("[Task Planner]: Publishing Request %d with %d start Trays and %d end Trays", tsa.request_id, (unsigned int)tsa.start_ids.size(), (unsigned int)tsa.end_ids.size());
+	taskAnnouncerPub.publish(tsa);
+}
+
+void TaskPlanner::extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa){
+	for(Tray t : sourceTrays){
+		geometry_msgs::Point p;
+		p.x = t.x;
+		p.y = t.y;
+		p.z = 0.0;
+		tsa->start_points.push_back(p);
+		tsa->start_ids.push_back(t.id);
+	}
+	for(Tray t : targetTrays){
+		geometry_msgs::Point p;
+		p.x = t.x;
+		p.y = t.y;
+		p.z = 0.0;
+		tsa->end_points.push_back(p);
+		tsa->end_ids.push_back(t.id);
+	}
+}

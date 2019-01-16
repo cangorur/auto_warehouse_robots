@@ -105,20 +105,6 @@ protected:
 	bool getRobotCandidates(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
 	                        const std::vector<auto_smart_factory::Tray>& targetTrayCandidates);
 
-	/**
-	 * Sends requests to ETAServer to get an estimated duration for a task.
-	 * @param robotId Id of the robot
-	 * @param cand Output of the robot response
-	 * @param sourceTrayCandidates Source tray candidates
-	 * @param targetTrayCandidates target tray candidates
-	 * @return
-	 * @todo eta server is to be implemented by the students. Please adjust the necessary
-	 * parts mentioned in function in the source (Request.cpp line 229) to successfully call a ROS
-	 * service to be implemented under ETA server. 
-	 */
-	bool getRobotETA(std::string robotId, RobotCandidate& cand,
-	                 const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
-	                 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
 
 	/**
 	 * Sends a request to one robot using source and target tray candidates
@@ -155,12 +141,6 @@ protected:
 	/// estimated duration (true) or just random choice (false)
 	bool useBestETA;
 
-	/// Task planner task announcement publisher
-	ros::Publisher taskAnnouncerPub;
-
-	/// Subscriber to robot task response topic
-	ros::Subscriber taskResponseSub;
-
 	/// vector of robot candidates
 	std::vector<RobotCandidate> robotCandidates;
 
@@ -173,9 +153,6 @@ protected:
 
 	/// generate new unique id
 	static unsigned int getNewId();
-
-	/// extract tray data into points and ids
-	void extractData(const std::vector<auto_smart_factory::Tray>& trays, std::vector<geometry_msgs::Point>& points, std::vector<uint32_t> ids);
 
 	/// wait with a frequency until each robot has answered or a timeout occurs
 	void waitForRobotScores(ros::Duration timeout, ros::Rate frequency);

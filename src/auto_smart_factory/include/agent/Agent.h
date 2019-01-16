@@ -4,6 +4,7 @@
 #include "agent/MotionPlanner.h"
 #include "agent/Gripper.h"
 #include "agent/ObstacleDetection.h"
+#include "agent/TaskHandler.h"
 
 #include <random>
 #include "ros/ros.h"
@@ -65,9 +66,6 @@ public:
 	 * keep this agent doing what it is supposed to. E.g. publish the heartbeat at every step.
 	 * That is why it is called every tick (see AgentNode.cpp). */
 	void update();
-
-	// tmp
-	bool isPathSet = false;
 
 	ros::Publisher* getVisualisationPublisher();
 
@@ -164,6 +162,9 @@ protected:
 	void collisionAlertCallback(const auto_smart_factory::CollisionAction& msg);
 	
 	void publishVisualization(const ros::TimerEvent& e);
+
+	// Task Handler
+	void announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement);
 	
 	
 	// ROS Nodehandle
@@ -230,6 +231,12 @@ protected:
 	// Subscriber for CollisionAlert message which makes robot stop
 	ros::Subscriber collision_alert_sub;
 
+	// Subscriber for TaskHandler
+	ros::Subscriber task_announce_sub;
+
+	// Publisher for TaskHandler
+	ros::Publisher taskrating_pub;
+
 	// Ros visualisation
 	ros::Publisher visualisationPublisher;
 	ros::Timer vizPublicationTimer;
@@ -245,6 +252,9 @@ protected:
 
 	// Publisher for heartbeat topic
 	ros::Publisher heartbeat_pub;
+
+	// pointer to instance of the task planner
+	TaskHandler* taskHandler;
 
 	// pointer to instance of the motion planner
 	MotionPlanner* motionPlanner;

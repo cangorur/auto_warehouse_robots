@@ -31,12 +31,6 @@ Request::Request(TaskPlanner* tp, TaskRequirementsConstPtr taskRequirements, std
 
 	ros::NodeHandle pn("~");
 	pn.param("use_best_eta", useBestETA, true);
-	
-	ros::NodeHandle n;
-	taskResponseSub = n.subscribe("/task_response", 1000, 
-									&Request::receiveTaskResponse, this);
-
-	taskAnnouncerPub = pn.advertise<TaskAnnouncement>("task_broadcast", 1);
 
 	ROS_INFO("[request %d] Use best ETA: %s", getId(), std::to_string(useBestETA).c_str());
 }
@@ -72,20 +66,21 @@ TaskData Request::allocateResources() {
 	         targetTrayCandidates.size());
 
 	// find candidate robot(s)
-	// std::vector<RobotCandidate> robotCandidates;
-	// if(!getRobotCandidates(robotCandidates, sourceTrayCandidates,
+	status.status = "getting candidates";
 	if(!getRobotCandidates(sourceTrayCandidates,
 	                       targetTrayCandidates)) {
 		status.status = "No robot candidates available.";
 		throw std::runtime_error(status.status);
 	}
 
+	status.status = "trying to allocate a candidate";
 	ROS_WARN("[request %d] Found %ld robot candidates.", status.id,
 	         robotCandidates.size());
 
 	// try one robot after the other until success
 	for(const RobotCandidate& cand : robotCandidates) {
 		// allocate trays
+		ROS_INFO("[request %d] for %s Source tray id is: %d and target tray id is %d", status.id, cand.robotId.c_str(), cand.source.id, cand.target.id);
 		TrayAllocatorPtr sourceTray = TrayAllocator::allocateTray(
 				cand.source.id);
 		TrayAllocatorPtr targetTray = TrayAllocator::allocateTray(
@@ -207,7 +202,7 @@ bool Request::allocateRobot(RobotCandidate candidate) const {
 		ROS_INFO("[request %d] The task= %d was assigned at time= %f .",
 		         status.id, status.id, ros::Time::now().toSec());
 
-		ROS_FATAL("taskETA %s %.2f %i", candidate.robotId.c_str(), candidate.estimatedDuration.toSec(), status.id);
+		ROS_FATAL("[request %d] was assigned to %s with Task score %.2f", status.id, candidate.robotId.c_str(), candidate.score);
 
 		return srv.response.success;
 	}
@@ -228,9 +223,8 @@ TaskRequirementsConstPtr Request::getRequirements() const {
 }
 
 void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
-	// TODO: put robot in list if it is not rejecting the task
-	if(status.id != tr.request_id){
-		ROS_INFO("[Request %d] received answer to request %d from robot %s", status.id, tr.request_id, tr.robot_id.c_str());
+	if(this->status.id != tr.request_id){
+		ROS_INFO("[Request %d] received answer to another [Request %d] from %s", this->status.id, tr.request_id, tr.robot_id.c_str());
 		return;
 	}
 	if(!tr.reject){
@@ -238,34 +232,22 @@ void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 		RobotCandidate cand;
 		cand.score = tr.score;
 		cand.robotId = tr.robot_id;
+		// ROS_INFO("[Request %d] looking for source tray %d and target tray %d", this->status.id, tr.start_id, tr.end_id);
 		cand.source = taskPlanner->getTrayConfig(tr.start_id);
 		cand.target = taskPlanner->getTrayConfig(tr.end_id);
 		robotCandidates.push_back(cand);
 	}
 	answeredRobots[tr.robot_id] = tr.reject;
+	ROS_INFO("[Request %d] still missing %d answers", this->status.id, (int)(taskPlanner->getRegisteredRobots().size() - answeredRobots.size()));
 }
 
 bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates,
                                  const std::vector<Tray>& targetTrayCandidates){
 
-	// Tray sourceTrayCandidate = sourceTrayCandidates.front();
-	// Tray targetTrayCandidate = targetTrayCandidates.front();
 	robotCandidates.clear();
-	
-	TaskAnnouncement tsa;
-	tsa.request_id = status.id;
-	std::vector<geometry_msgs::Point> sourcePoints;
-	std::vector<uint32_t> sourceIds;
-	extractData(sourceTrayCandidates, sourcePoints, sourceIds);
-	tsa.start_points = sourcePoints;
-	tsa.start_ids = sourceIds;
-	std::vector<geometry_msgs::Point> targetPoints;
-	std::vector<uint32_t> targetIds;
-	extractData(targetTrayCandidates, targetPoints, targetIds);
-	tsa.end_points = targetPoints;
-	tsa.end_ids = targetIds;
+	answeredRobots.clear();
 
-	taskAnnouncerPub.publish(tsa);
+	taskPlanner->publishTask(sourceTrayCandidates, targetTrayCandidates, status.id);
 	
 	waitForRobotScores(ros::Duration(1), ros::Rate(10));
 
@@ -277,71 +259,19 @@ bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates,
 	return !robotCandidates.empty();
 }
 
-bool Request::getRobotETA(std::string robotId, RobotCandidate& cand,
-                          const std::vector<Tray>& sourceTrayCandidates,
-                          const std::vector<Tray>& targetTrayCandidates) const {
-
-	// at least one of the candidate lists has to contain only one element
-	ROS_ASSERT(
-			sourceTrayCandidates.size() == 1
-			|| targetTrayCandidates.size() == 1);
-	
-	// Determine fixed source and target trays:
-	// select the first tray of each TrayCandidates list
-	Tray sourceTrayCandidate = sourceTrayCandidates.front();
-	Tray targetTrayCandidate = targetTrayCandidates.front();
-
-	//TODO: Differentiate between input and output task and call getBestTargetTray or getBestSourceTray from pathPlanner
-
-	
-	// TODO: Below is the call for an example service implemented for an ETA server (in earlier versions).
-	// You may use the same service see CalculateETA.srv file.
-	/*CalculateETA srv;
-	srv.request.robotId = robotId;
-	srv.request.posStart.x = sourceTrayCandidate.x;
-	srv.request.posStart.y = sourceTrayCandidate.y;
-	srv.request.posEnd.x = targetTrayCandidate.x;
-	srv.request.posEnd.y = targetTrayCandidate.y;
-
-	cand.robotId = robotId;
-
-	if (etaRequestClient.call(srv)) {
-		cand.source = sourceTrayCandidate;
-		cand.target = targetTrayCandidate;
-		cand.estimatedDuration = ros::Duration(srv.response.resultETA);
-		return true;
-	}
-	*/
-	cand.robotId = robotId;
-	cand.source = sourceTrayCandidate;
-	cand.target = targetTrayCandidate;
-	cand.estimatedDuration = ros::Duration(1);
-	return true;
-}
-
-void Request::extractData(const std::vector<auto_smart_factory::Tray>& trays, std::vector<geometry_msgs::Point>& points, std::vector<uint32_t> ids){
-	for(Tray t : trays){
-		geometry_msgs::Point p;
-		p.x = t.x;
-		p.y = t.y;
-		p.z = 0.0;
-		points.push_back(p);
-		ids.push_back(t.id);
-	}
-}
-
 void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){
 	ros::Time start = ros::Time::now();
 	ros::Time end = start + timeout;
-	ROS_INFO("[Request %d] is waiting for robot scores", start.toSec());
+	ROS_INFO("[Request %d] is waiting for robot scores", status.id);
 	ros::Time now = start;
 	while(ros::Time::now() < end){
 		if(taskPlanner->getRegisteredRobots().size() == answeredRobots.size()){
 			ROS_INFO("[Request %d] received all answers", status.id);
 			return;
 		}
+		ros::spinOnce();
 		frequency.sleep();
 	}
-	ROS_INFO("[Request %d] Timeout while waiting for robot scores", status.id);
+	// ROS_INFO("[Request %d] Timeout while waiting for robot scores, got %d answers", status.id, (unsigned int)answeredRobots.size());
 	return;
 }
