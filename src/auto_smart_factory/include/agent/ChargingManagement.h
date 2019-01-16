@@ -29,13 +29,13 @@ private:
 	std::string agentID;
 
 	// Max energy level of the agent to participate in charging
-	float upperThreshohold = 70.00;
+	float upperThreshold = 70.00;
 
 	// Minimum energy level of the agent to participate in charging
 	float criticalMinimum = 15.00;
 
 	// Operating battery
-	float operatingBatt = upperThreshohold - criticalMinimum;
+	float operatingBatt = upperThreshold - criticalMinimum;
 
 	//Current battery of the agent
 	double agentBatt;

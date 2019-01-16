@@ -30,7 +30,7 @@ float ChargingManagement::getScoreMultiplier(float cumulatedEnergyConsumption){
 
 	agentBatt = agent->getAgentBattery();
 	energyAfterTask =  agentBatt - cumulatedEnergyConsumption;
-	if(energyAfterTask > upperThreshhold){
+	if(energyAfterTask > upperThreshold){
 	    return 1;
 	}
 	return energyAfterTask/100;
