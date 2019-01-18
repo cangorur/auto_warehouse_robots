@@ -29,12 +29,19 @@ bool ChargingManagement::isEnergyAvailable(double energy){
 float ChargingManagement::getScoreMultiplier(float cumulatedEnergyConsumption){
 
 	agentBatt = agent->getAgentBattery();
-	energyAfterTask =  agentBatt - cumulatedEnergyConsumption;
+	energyAfterTask =  agentBatt - cumulatedEnergyConsumption; 	//Expected energy after all the tasks
+
 	if(energyAfterTask > upperThreshold){
 	    return 1;
 	}
-	return energyAfterTask/100;
 
+	else if (energyAfterTask > lowerThreshold){
+		//Calculate factor using the quadratic function : y = (-0.01)x^2+2 * (lowerThreshold/100)* x- lowerThreshold
+
+		float quadraticFraction =  (2 + 0.01*lowerThreshold) * energyAfterTask - pow(energyAfterTask,2) * 0.01 - lowerThreshold;
+		return quadraticFraction/100;
+	}
+	return energyAfterTask/100;
 }
 
 
