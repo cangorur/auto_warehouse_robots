@@ -29,10 +29,13 @@ private:
 	std::string agentID;
 
 	// Max energy level of the agent to participate in charging
-	float upperThreshold = 70.00;
+	float upperThreshold = 90.00;
+
+	// Energy level between upper and critical for non-linear score
+	float lowerThreshold = 35.00;
 
 	// Minimum energy level of the agent to participate in charging
-	float criticalMinimum = 15.00;
+	float criticalMinimum = 10.00;
 
 	// Operating battery
 	float operatingBatt = upperThreshold - criticalMinimum;
