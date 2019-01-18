@@ -22,6 +22,17 @@ public:
 
 	virtual ~ChargingManagement();
 
+	/* Returns true if the agent can perform the task of given energy
+	 * @param energy: expected energy of the task
+	 */
+	bool isEnergyAvailable(double energy);
+
+	/*
+	 * Score multiplier for current set of tasks +  charging
+	 * @param Energy consumption of all the tasks to be done
+	 * @returns Score multiplier LOWER IS BETTER
+	 */
+	float getScoreMultiplier(float cumulatedEnergyConsumption);
 private:
 
 	Agent* agent;
@@ -42,18 +53,6 @@ private:
 
 	//Estimated energy of the agent after task and charging
 	float energyAfterTask;
-
-	/* Returns true if the agent can perform the task of given energy
-	 * @param energy: expected energy of the task
-	 */
-	bool isEnergyAvailable(double energy);
-
-	/*
-	 * Score multiplier for current set of tasks +  charging
-	 * @param Energy consumption of all the tasks to be done
-	 * @returns Score multiplier LOWER IS BETTER
-	 */
-	float getScoreMultiplier(float cumulatedEnergyConsumption);
 };
 
 #endif /* AGENT_CHARGINGMANAGEMENT_H_ */
