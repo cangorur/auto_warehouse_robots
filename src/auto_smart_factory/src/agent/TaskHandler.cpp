@@ -3,7 +3,7 @@
 TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub) 
         : 
     agentId(agentId),
-    scorePublisher(scorePub),
+    scorePublisher(scorePub)
 {
 }
 
