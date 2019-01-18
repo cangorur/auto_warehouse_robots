@@ -3,29 +3,37 @@
 TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub) 
         : 
     agentId(agentId),
-    scorePublisher(scorePub)
+    scorePublisher(scorePub),
 {
 }
 
+/*
 void TaskHandler::announcementCallback(const auto_smart_factory::TaskAnnouncement &tA) {
     // handle task announcement
-    // get score
-    // ROS_WARN("[TaskHandler - %s] sending score!", agentId.c_str());
     if(tA.start_ids.size() > 0 && tA.end_ids.size() > 0){
         publishScore(tA.request_id, 15.5, tA.start_ids.front(), tA.end_ids.front());
     } else {
         ROS_WARN("[TaskHandler - %s] received TaskAnnouncement with %d start Trays and %d end trays", agentId.c_str(), (unsigned int)tA.start_ids.size(), (unsigned int)tA.end_ids.size());
     }
 }
+*/
 
 void TaskHandler::publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId) {
     auto_smart_factory::TaskRating scoreMessage;
-    // add trays, robot id, ...
     scoreMessage.robot_id = agentId;
     scoreMessage.request_id = requestId;
     scoreMessage.score = score;
     scoreMessage.end_id = endTrayId;
     scoreMessage.start_id = startTrayId;
+    scoreMessage.reject = false;
+    scorePublisher->publish(scoreMessage);
+}
+
+void TaskHandler::rejectTask(unsigned int requestId){
+    auto_smart_factory::TaskRating scoreMessage;
+    scoreMessage.robot_id = agentId;
+    scoreMessage.request_id = requestId;
+    scoreMessage.reject = true;
     scorePublisher->publish(scoreMessage);
 }
 
@@ -73,4 +81,8 @@ float TaskHandler::getDistance(void){
         distance += (*t)->getDistance();
     }
     return distance;
+}
+
+Task* TaskHandler::getLastTask(void){
+    return queue.back();
 }

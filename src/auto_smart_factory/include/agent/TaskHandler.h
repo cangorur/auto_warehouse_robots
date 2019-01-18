@@ -10,14 +10,16 @@
 #include "agent/ChargingTask.h"
 #include "auto_smart_factory/TaskAnnouncement.h"
 #include "auto_smart_factory/TaskRating.h"
+#include "agent/path_planning/Map.h"
 
 class TaskHandler
 {
 	public:
     	explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish);
 
-    	void announcementCallback(const auto_smart_factory::TaskAnnouncement &taskAnnouncement);
+    	// void announcementCallback(const auto_smart_factory::TaskAnnouncement &taskAnnouncement);
     	void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId);
+		void rejectTask(unsigned int requestId);
 
     	virtual ~TaskHandler();
 
@@ -34,12 +36,22 @@ class TaskHandler
 
 		float getDistance(void);
 
+		Task* getLastTask(void);
+
 	private:
+		// the current task
     	Task* currentTask = nullptr;
+
+		// the list of planned Tasks
     	std::list<Task*> queue;
 
+		// the map to calculate the path(s) for the score
+		Map* map;
+
+		// the id of the agent to which this taskHandler belongs
 	    std::string agentId;
 
+		// a pointer to the publisher for the score
     	ros::Publisher* scorePublisher;
 };
 
