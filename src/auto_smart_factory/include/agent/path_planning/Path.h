@@ -19,6 +19,7 @@ public:
 	
 	const std::vector<Point>& getPoints() const;
 	float getLength() const;
+	float getEstimatedBatteryConsumption() const; 
 };
 
 #endif /* AGENT_PATH_H_ */

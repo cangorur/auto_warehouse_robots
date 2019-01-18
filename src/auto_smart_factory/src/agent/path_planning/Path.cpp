@@ -26,6 +26,10 @@ float Path::getLength() const {
 	return length;
 }
 
+float Path::getEstimatedBatteryConsumption() const {
+	return 0.0;
+}
+
 visualization_msgs::Marker Path::getVisualizationMsgPoints() {
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";

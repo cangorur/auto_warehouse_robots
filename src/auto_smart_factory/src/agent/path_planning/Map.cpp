@@ -179,6 +179,25 @@ Path Map::getThetaStarPath(const Point& start, const Point& end) {
 	return thetaStarPathPlanner.findPath(start, end);
 }
 
+Path Map::getThetaStarPath(const Point& start, const auto_smart_factory::Tray& end){
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap);
+	const Point endPoint = Point(getPointInFrontOfTray(end));
+	return thetaStarPathPlanner.findPath(start, endPoint);
+}
+
+Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const Point& end){
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap);
+	const Point startPoint = Point(getPointInFrontOfTray(start));
+	return thetaStarPathPlanner.findPath(startPoint, end);
+}
+
+Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end) {
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap);
+	const Point startPoint = Point(getPointInFrontOfTray(start));
+	const Point endPoint = Point(getPointInFrontOfTray(end));
+	return thetaStarPathPlanner.findPath(startPoint, endPoint);
+}
+
 bool Map::isPointInMap(const Point& pos) const {
 	return pos.x >= margin && pos.x <= width - margin && pos.y >= margin && pos.y <= height - margin;
 

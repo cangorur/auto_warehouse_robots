@@ -6,6 +6,7 @@
 #include "agent/ObstacleDetection.h"
 #include "agent/TaskHandler.h"
 #include "agent/ChargingManagement.h"
+#include "agent/path_planning/Map.h"
 
 #include <random>
 #include "ros/ros.h"
@@ -35,8 +36,6 @@
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotConfiguration.h>
 #include <auto_smart_factory/CollisionAction.h>
-
-#include "agent/path_planning/Map.h"
 
 // defines the task id type
 typedef uint32_t TaskId;

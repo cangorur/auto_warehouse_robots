@@ -29,7 +29,7 @@ Path* TransportationTask::getPathToSource(){
 
 float TransportationTask::getBatteryConsumption(void){
 	// TODO: add battery consumption function for pathes
-	return 0.0;
+	return pathToSource.getEstimatedBatteryConsumption() + pathToTarget.getEstimatedBatteryConsumption();
 }
 
 float TransportationTask::getDistance(void){

@@ -41,6 +41,9 @@ public:
 	//OrientationPoint getRandomFreeOrientationPointAlongPath(PathFlowField& pathFlowField) const;
 	
 	Path getThetaStarPath(const Point& start, const Point& end);
+	Path getThetaStarPath(const Point& start, const auto_smart_factory::Tray& end);
+	Path getThetaStarPath(const auto_smart_factory::Tray& start, const Point& end);
+	Path getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end);
 	
 	// Getter
 	float getWidth() const;

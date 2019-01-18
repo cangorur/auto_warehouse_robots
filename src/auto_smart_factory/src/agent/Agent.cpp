@@ -85,12 +85,6 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		this->obstacleDetection = new ObstacleDetection(agentID, *motionPlanner, robotConfig, warehouseConfig);
 		this->obstacleDetection->enable(false);
 
-		// Task Handler
-		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub));
-
-		// Charging MAnagement
-		this->chargingManagement = new ChargingManagement(this);
-
 		// Generate map
 		std::vector<Rectangle> obstacles;
 		for(auto o : warehouseConfig.map_configuration.obstacles) {
@@ -98,6 +92,12 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		}
 		
 		this->map = new Map(warehouseConfig, obstacles);
+
+		// Task Handler
+		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub));
+
+		// Charging MAnagement
+		this->chargingManagement = new ChargingManagement(this);
 		
 		return true;
 	} catch(...) {
@@ -225,24 +225,22 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			auto_smart_factory::Tray input_tray = getTray(req.input_tray);
 			auto_smart_factory::Tray storage_tray = getTray(req.storage_tray);
 
-			geometry_msgs::Point input_tray_position;
-			geometry_msgs::Point storage_tray_position;
-
-			input_tray_position.x = input_tray.x;
-			input_tray_position.y = input_tray.y;
-			storage_tray_position.x = storage_tray.x;
-			storage_tray_position.y = storage_tray.y;
-
 			ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
 			ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
 
 			// create Task and add it to task handler
-			// TODO: Add correct orientation
-			OrientedPoint sourcePos = OrientedPoint(input_tray.x, input_tray.y, 0.0);
-			OrientedPoint targetPos = OrientedPoint(storage_tray.x, storage_tray.y, 0.0);
-			// TODO: get Paths
+			// TODO: Maybe change task to accept only tray ids???
+			OrientedPoint sourcePos = map->getPointInFrontOfTray(input_tray);
+			OrientedPoint targetPos = map->getPointInFrontOfTray(storage_tray);
 			Path sourcePath = Path({});
-			Path targetPath = Path({});
+			if(taskHandler->numberQueuedTasks() > 0){
+				// take the last position of the last task
+				sourcePath = map->getThetaStarPath(Point(taskHandler->getLastTask()->getTargetPosition()), input_tray);
+			} else {
+				// take the current position - TODO: is this the idle position?
+				sourcePath = map->getThetaStarPath(Point(idlePosition), input_tray);
+			}
+			Path targetPath = map->getThetaStarPath(input_tray, storage_tray);
 			taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, 
 					sourcePath, targetPath);
 
@@ -300,8 +298,34 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 }
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
-	// ROS_WARN("[TaskHandler - %s] Received Task Announcement for Request %d!", agentID.c_str(), taskAnnouncement.request_id);
-	this->taskHandler->announcementCallback(taskAnnouncement);
+	// get Path
+	auto_smart_factory::Tray input_tray = getTray(taskAnnouncement.start_ids.front());
+	auto_smart_factory::Tray storage_tray = getTray(taskAnnouncement.end_ids.front());
+	Path sourcePath = Path({});
+	if(taskHandler->numberQueuedTasks() > 0){
+		// take the last position of the last task
+		sourcePath = map->getThetaStarPath(Point(taskHandler->getLastTask()->getTargetPosition()), input_tray);
+	} else {
+		// take the current position - TODO: is this the idle position?
+		sourcePath = map->getThetaStarPath(Point(idlePosition), input_tray);
+	}
+	Path targetPath = map->getThetaStarPath(input_tray, storage_tray);
+	// get Path length
+	float length = taskHandler->getDistance() + sourcePath.getLength() + targetPath.getLength();
+	// get Battery consumption
+	float batCons = taskHandler->getBatteryConsumption() + sourcePath.getEstimatedBatteryConsumption() + targetPath.getEstimatedBatteryConsumption();
+	// check battery consumption
+	if(chargingManagement->isEnergyAvailable(batCons)){
+		// get score multiplier
+		float scoreFactor = chargingManagement->getScoreMultiplier(batCons);
+		// compute score
+		float score = (1/scoreFactor) * length;
+		// publish score
+		this->taskHandler->publishScore(taskAnnouncement.request_id, score, input_tray.id, storage_tray.id);
+	} else {
+		// reject task
+		this->taskHandler->rejectTask(taskAnnouncement.request_id);
+	}
 }
 
 std::string Agent::getAgentID() {
