@@ -35,7 +35,7 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 	}
 
 	// build tray config map
-	// TODO: look here if the trays all have id 0
+
 	for(auto config : req.warehouse_configuration.trays) {
 		if(!trayConfigs.insert(
 				std::pair<unsigned int, Tray>(config.id, config)).second) {
@@ -142,6 +142,7 @@ void TaskPlanner::receiveRobotHeartbeat(const auto_smart_factory::RobotHeartbeat
 bool TaskPlanner::newInputRequest(auto_smart_factory::NewPackageInputRequest& req,
                                   auto_smart_factory::NewPackageInputResponse& res) {
 
+	ROS_WARN("[Task Planner]: new InputRequest for packet %d", req.package.id);
 	// create new input request
 	PackageConfiguration pkgConfig = getPkgConfig(req.package.type_id);
 	TaskRequirementsConstPtr taskRequirements = std::make_shared<const InputTaskRequirements>(pkgConfig,
@@ -389,6 +390,7 @@ bool TaskPlanner::idleRobotAvailable() const {
 
 void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 	// go through requests and get the one for which the response is intended:
+	ROS_INFO("Receiving score for Request %d; Reject is %d", tr.request_id, tr.reject);
 	for(Request& r : inputRequests){
 		if(r.getId() == tr.request_id){
 			r.receiveTaskResponse(tr);
@@ -406,7 +408,6 @@ void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
                 	 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, 
 					 uint32_t requestId){
-	ROS_WARN("[Task Planner]: Starting publishing request, got %d start Trays and %d end Trays", (unsigned int)sourceTrayCandidates.size(), (unsigned int)targetTrayCandidates.size());
 	TaskAnnouncement tsa;
 	tsa.request_id = requestId;
 	extractData(sourceTrayCandidates, targetTrayCandidates, &tsa);
