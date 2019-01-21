@@ -7,3 +7,5 @@ src/CMakeLists.txt
 *.swp
 *.orig
 *.pyc
+*/.idea/
+*/cmake-build-debug
