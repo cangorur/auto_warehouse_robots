@@ -156,6 +156,11 @@ protected:
 
 	/// wait with a frequency until each robot has answered or a timeout occurs
 	void waitForRobotScores(ros::Duration timeout, ros::Rate frequency);
+
+	/// delete all robot candidates in the internal listing
+	void clearRobotCandidates(void);
 };
+
+typedef std::shared_ptr<Request> RequestPtr;
 
 #endif /* AUTO_SMART_FACTORY_SRC_TASK_PLANNER_REQUEST_H_ */
