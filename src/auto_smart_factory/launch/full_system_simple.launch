@@ -15,10 +15,10 @@
 	<node pkg="auto_smart_factory" type="storage_management" name="storage_management" />
 	
 	<!-- Task Planner -->
-	<!-- <node pkg="auto_smart_factory" type="task_planner" name="task_planner" > -->
+	<node pkg="auto_smart_factory" type="task_planner" name="task_planner" >
 		<!-- this flag tells whether to use the robot offer with the shortest estimated duration (true) or just random choice (false) -->
-		<!-- <param name="use_best_eta" value="false" /> -->
-	<!-- </node> -->
+		<param name="use_best_eta" value="false" />
+	</node>
 
 	<!-- Warehouse Gateway -->
 	<!--<node pkg="auto_smart_factory" type="warehouse_gateway" name="warehouse_gateway" /> -->
