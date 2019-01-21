@@ -63,6 +63,10 @@ void Agent::update() {
 				//ROS_ERROR("Position: %.2f, %.2f", getCurrentPosition().x, getCurrentPosition().y);
 				std::vector<geometry_msgs::Point> path;
 				geometry_msgs::Point p1;
+				p1.x = getCurrentPosition().x;
+				p1.y = getCurrentPosition().y;
+				path.push_back(p1);
+
 				p1.x = 14.0;
 				p1.y = 5.0;
 				path.push_back(p1);
@@ -99,37 +103,37 @@ void Agent::update() {
 
 				if (agentID == "robot_2")
 				{
-					ros::Duration(5).sleep();
+					ros::Duration(10).sleep();
 					p5.y = 13.5;
 				}
 				if (agentID == "robot_3")
 				{
-					ros::Duration(10).sleep();
+					ros::Duration(20).sleep();
 					p5.y = 13.0;
 				}
 				if (agentID == "robot_4")
 				{
-					ros::Duration(15).sleep();
+					ros::Duration(30).sleep();
 					p5.y = 12.5;
 				}
 				if (agentID == "robot_5")
 				{
-					ros::Duration(20).sleep();
+					ros::Duration(40).sleep();
 					p5.y = 12.0;
 				}
 				if (agentID == "robot_6")
 				{
-					ros::Duration(25).sleep();
+					ros::Duration(50).sleep();
 					p5.y = 11.5;
 				}
 				if (agentID == "robot_7")
 				{
-					ros::Duration(30).sleep();
+					ros::Duration(60).sleep();
 					p5.y = 11.0;
 				}
 				if (agentID == "robot_8")
 				{
-					ros::Duration(35).sleep();
+					ros::Duration(70).sleep();
 					p5.y = 10.5;
 				}
 
