@@ -10,6 +10,7 @@
 
 #include <ros/console.h>
 
+#include <cmath>
 
 MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
 	pathObject(Path({}))
@@ -27,16 +28,13 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	ros::NodeHandle n;
 	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-	ctePid = new PidController(0.0, 1.2, 0.0, 0.0);
+	steerPid = new PidController(0.0, 1.8, 0.0, 4.0);
 }
 
 MotionPlanner::~MotionPlanner() {
 };
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
-	//if(!hasFinishedCurrentPath) {
-	//	driveCurrentPath(Point(position.x, position.y), orientation);	
-	//}	
 	Position pos(position.x, position.y, orientation, ros::Time::now());
 
 	if(waypointReached(&pos)) {
@@ -46,31 +44,16 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 			publishVelocity(0.0, 0.0);
 		}
 	} else {
-		this->currentSpeed = 0.2;
-		Point currentPath = Point(currentTarget.x - previousTarget.x, currentTarget.y - previousTarget.y);
-		double cte = Math::getDistanceToLineSegment(previousTarget, currentTarget, Point(position.x, position.y)); // * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
-		double targetAngle = cteToAngle(cte);
-		Point targetPath = Point(std::cos(targetAngle)*currentPath.x - std::sin(targetAngle)*currentPath.y, std::sin(targetAngle)*currentPath.x + std::cos(targetAngle)*currentPath.y);
-		float targetOrientation = Math::normalizeRad(Math::getOrientationFromVector(targetPath));
-		if(Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y)) > 0) {
-			targetOrientation = Math::normalizeRad(targetOrientation-M_PI_2);
-		}
+		double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(position.x, position.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
+		double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
+		angularVelocity = std::min(std::max(angularVelocity, (double) -maxTurningSpeed), (double) maxTurningSpeed);
 
-		if(targetOrientation-orientation > M_PI) {
-			targetOrientation = targetOrientation-2*M_PI;
-		}
+		double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed-minDrivingSpeed);
 
-		if(targetOrientation-orientation < -M_PI) {
-			targetOrientation = targetOrientation+2*M_PI;
-		}
+		publishVelocity(linearVelocity, angularVelocity);
 
-		ctePid->updateTargetValue(targetOrientation);
-		
-		double angularVelocity = ctePid->calculate(orientation, ros::Time::now().toSec());
-		publishVelocity(this->currentSpeed, angularVelocity);
-		
 		if (agentID.compare("robot_2") == 0) {
-			printf("[MP %s] cte: %.4f | targetAngle: %.4f | targetOrientation: %.4f | currentOrientation: %.4f\n", agentID.c_str(), cte, targetAngle, targetOrientation, orientation);
+			printf("[MP %s] cte: %.4f | speed: %.4f | steer: %.4f\n", agentID.c_str(), cte, linearVelocity, angularVelocity);
 		}
 	}
 }
@@ -249,15 +232,6 @@ float MotionPlanner::getRotationToTarget(Point currentPosition, Point targetPosi
 	return static_cast<float>(Math::getAngleDifferenceInRad(orientation, direction));
 }
 
-double MotionPlanner::cteToAngle(double cte) {
-	if (cte < -1.0)
-		return -3.14159265/4;
-
-	if (cte > 1.0)
-		return 3.14159265/4;
-	
-	return Math::mapRange(cte, -1.0, 1.0, -3.14159265/4, 3.14159265/4);
-}
 visualization_msgs::Marker MotionPlanner::getVisualizationMsgPoints() {
 	return pathObject.getVisualizationMsgPoints();
 }

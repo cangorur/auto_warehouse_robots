@@ -113,7 +113,7 @@ private:
 	float minDrivingSpeed; // = 0.2;
 	float maxDrivingSpeed; // = 1;
 
-	float distToReachPoint = 0.2f;
+	float distToReachPoint = 0.3f;
 	float distToReachFinalPoint = 0.2f;
 	float distToSlowDown = 0.9f;
 
@@ -124,14 +124,13 @@ private:
 	 * orientation while driving & the direction of the goal position to not steer.*/
 	float allowedRotationDifference = 0.001f;
 
-	double cteToAngle(double cte);
-
 
 protected:
 	Agent* agent;
 	std::string agentID;
 
-	PidController* ctePid;
+	PidController* steerPid;
+
 	double currentSpeed;
 	double currentRotation;
 
