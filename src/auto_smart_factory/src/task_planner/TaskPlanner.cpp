@@ -66,8 +66,9 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 	                                          &TaskPlanner::newOutputRequest, this);
 	registerAgentServer = pn.advertiseService("register_agent",
 	                                          &TaskPlanner::registerAgent, this);
-	statusUpdatePub = pn.advertise<TaskPlannerState>("status", 1);
 
+	statusUpdatePub = pn.advertise<TaskPlannerState>("status", 1);
+	
 	rescheduleTimer = n.createTimer(ros::Duration(10.0),
 	                                &TaskPlanner::rescheduleEvent, this);
 	statusUpdateTimer = n.createTimer(ros::Duration(2.0),
@@ -379,3 +380,4 @@ bool TaskPlanner::idleRobotAvailable() const {
 	}
 	return false;
 }
+

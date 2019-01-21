@@ -22,6 +22,10 @@ float Math::dotProduct(const Point& v1, const Point& v2) {
 	return v1.x*v2.x + v1.y*v2.y;
 }
 
+float Math::crossProduct(const Point& v1, const Point& v2) {
+	return v1.x*v2.y - v1.y*v2.x;
+}
+
 Point Math::rotateVector(const Point& v, float angle) {
 	angle *= TO_RAD;
 
@@ -210,6 +214,42 @@ float Math::getDistanceToLineSegment(const Point& lStart, const Point& lEnd, con
 	}
 }
 
+int Math::getDirectionToLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
+	Point nEnd = lEnd - lStart;
+	Point nPoint = point - lStart;
+	float cP = crossProduct(nEnd, nPoint);
+
+	if(cP > 0)
+		return 1;
+	
+	if(cP < 0)
+		return -1;
+	
+	return 0;
+}
+
+float Math::getDistanceToLine(const Point& lStart, const Point& lEnd, const Point& point) {
+	Point line = lEnd - lStart;
+	Point startToPoint = point - lStart;
+	float lengthSquared = getDistanceSquared(lStart, lEnd);
+	float t = dotProduct(line, startToPoint) / lengthSquared;
+
+
+	return getDistance(point, lStart + t * line);
+}
+
+float Math::getAngleBetweenVectors(const Point& v1, const Point& v2) {
+	return acos(dotProduct(v1, v2) / (getLength(v1)*getLength(v2)));
+}
+
+Point Math::getVectorFromOrientation(float o) {
+	return Point(cos(o), sin(o));
+}
+
+float Math::getOrientationFromVector(const Point& v) {
+	return std::atan2(v.y, v.x);
+}
+
 float Math::getAngleMedian(float a1, float a2) {
 	float diff = a2 - a1;
 
@@ -230,7 +270,7 @@ float Math::clamp(float value, float min, float max) {
 	return std::max(min, std::min(max, value));
 }
 
-float Math::getAngleDifference(float source, float target) {
+float Math::getAngleDifferenceInDegree(float source, float target) {
 	float angle = target - source;
 
 	if(angle > 180) {
@@ -240,4 +280,40 @@ float Math::getAngleDifference(float source, float target) {
 	}
 
 	return angle;
+}
+
+float Math::getAngleDifferenceInRad(float source, float target) {
+	float angle = target - source;
+
+	if(angle > M_PI) {
+		angle = angle - 2*M_PI;
+	} else if(angle < -M_PI){
+		angle = angle + 2*M_PI;
+	}
+
+	return angle;
+}
+
+double Math::normalizeRad(double angle) {
+	if(angle > M_PI) {
+		angle = angle - 2*M_PI;
+	} else if(angle < -M_PI){
+		angle = angle + 2*M_PI;
+	}
+
+	return angle;
+}
+
+double Math::normalizeDegree(double angle) {
+	if(angle > 180) {
+		angle = angle - 360;
+	} else if(angle < -180){
+		angle = angle + 360;
+	}
+
+	return angle;
+}
+
+double Math::mapRange(double x, double in_min, double in_max, double out_min, double out_max) {
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }

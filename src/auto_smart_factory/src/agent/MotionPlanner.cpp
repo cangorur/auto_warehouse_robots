@@ -4,14 +4,13 @@
 
 #include "agent/Agent.h"
 #include <visualization_msgs/Marker.h>
-#include <include/agent/MotionPlanner.h>
 
 #include "agent/MotionPlanner.h"
 #include "Math.h"
-#include "agent/path_planning/Point.h"
 
 #include <ros/console.h>
 
+#include <cmath>
 
 MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
 	pathObject(Path({}))
@@ -25,14 +24,38 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	motionPub = motion_pub;
 	agent = a;
 	agentID = agent->getAgentID();
+
+	ros::NodeHandle n;
+	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+
+	steerPid = new PidController(0.0, 1.8, 0.0, 4.0);
 }
 
-MotionPlanner::~MotionPlanner() = default;
+MotionPlanner::~MotionPlanner() {
+};
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
-	if(!hasFinishedCurrentPath) {
-		driveCurrentPath(Point(position.x, position.y), orientation);	
-	}	
+	Position pos(position.x, position.y, orientation, ros::Time::now());
+
+	if(waypointReached(&pos)) {
+		if (!isCurrentPointLastPoint())	{
+			advanceToNextPathPoint();
+		} else {
+			publishVelocity(0.0, 0.0);
+		}
+	} else {
+		double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(position.x, position.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
+		double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
+		angularVelocity = std::min(std::max(angularVelocity, (double) -maxTurningSpeed), (double) maxTurningSpeed);
+
+		double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed-minDrivingSpeed);
+
+		publishVelocity(linearVelocity, angularVelocity);
+
+		if (agentID.compare("robot_2") == 0) {
+			printf("[MP %s] cte: %.4f | speed: %.4f | steer: %.4f\n", agentID.c_str(), cte, linearVelocity, angularVelocity);
+		}
+	}
 }
 
 void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path, geometry_msgs::Point end_direction_point, bool drive_backwards) {
@@ -42,6 +65,11 @@ void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geo
 		points.emplace_back(p.x, p.y);
 	}
 	
+	pathObject = Path(points);
+	hasFinishedCurrentPath = false;
+	currentTarget = pathObject.getPoints().front();
+	currentTargetIndex = 0;
+	previousTarget = Point(start_position.x, start_position.y);
 	this->newPath(Path(points));
 }
 
@@ -86,18 +114,23 @@ bool MotionPlanner::hasPath() {
 	return pathObject.getLength() > 0;
 }
 
+void MotionPlanner::publishVelocity(double speed, double angle) {
+	geometry_msgs::Twist msg;
+
+	msg.linear.x = speed;
+	msg.angular.z = angle;
+
+	motionPub->publish(msg);
+}
+
+bool MotionPlanner::waypointReached(Position *current) {
+	return (Math::getDistance(Point(current->x, current->y), currentTarget) <= distToReachPoint);
+}
+
 bool MotionPlanner::driveCurrentPath(Point currentPosition, double orientation) {
 	geometry_msgs::Twist motion;
 
 	float distToTarget = Math::getDistance(currentPosition, currentTarget);
-
-	// WTF
-	orientation = orientation / (PI / 2.0);
-	
-	//float desiredRotation = Math::getRotation(currentTarget - currentPosition);
-	//float currentRotation = getRotationFromOrientation(orientation);
-	//float rotationToTarget = Math::getAngleDifference(currentRotation, desiredRotation);
-
 	float rotationToTarget = getRotationToTarget(currentPosition, currentTarget, orientation);
 	
 	float rotationSign = rotationToTarget < 0.f ? -1.f : 1.f;
@@ -180,6 +213,7 @@ float MotionPlanner::getRotationFromOrientationDifference(double orientation) {
 }
 
 void MotionPlanner::advanceToNextPathPoint() {
+	previousTarget = pathObject.getPoints().at(static_cast<unsigned long>(currentTargetIndex));
 	currentTargetIndex++;
 	currentTarget = pathObject.getPoints().at(static_cast<unsigned long>(currentTargetIndex));
 }
@@ -193,28 +227,9 @@ bool MotionPlanner::isDrivingBackwards() {
 }
 
 float MotionPlanner::getRotationToTarget(Point currentPosition, Point targetPosition, double orientation) {
-	double direction = (std::atan2(targetPosition.y - currentPosition.y, targetPosition.x - currentPosition.x)) / PI;
+	double direction = std::atan2(targetPosition.y - currentPosition.y, targetPosition.x - currentPosition.x);
 
-	double diff = 0;
-	if(orientation >= 0 && direction >= 0) {
-		diff = direction - orientation;
-	} else if(orientation < 0 && direction < 0) {
-		diff = direction - orientation;
-	} else if(orientation >= 0 && direction < 0) {
-		if(orientation - direction <= 1) {
-			diff = direction - orientation;
-		} else {
-			diff = (1 - orientation) + (1 + direction);
-		}
-	} else if(orientation < 0 && direction >= 0) {
-		if(direction - orientation <= 1) {
-			diff = direction - orientation;
-		} else {
-			diff = direction - orientation - 2;
-		}
-	}
-
-	return static_cast<float>(diff);
+	return static_cast<float>(Math::getAngleDifferenceInRad(orientation, direction));
 }
 
 visualization_msgs::Marker MotionPlanner::getVisualizationMsgPoints() {
