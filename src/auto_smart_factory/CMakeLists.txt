@@ -268,6 +268,7 @@ add_executable(agent_node
 		src/agent/Task.cpp
 		src/agent/TransportationTask.cpp
 		src/agent/ChargingTask.cpp
+		src/agent/PidController.cpp
 
 		src/Math.cpp
 		)

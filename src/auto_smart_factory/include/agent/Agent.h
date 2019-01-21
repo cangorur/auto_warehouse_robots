@@ -74,6 +74,9 @@ public:
 	 * That is why it is called every tick (see AgentNode.cpp). */
 	void update();
 
+	// TODO: tmp
+	bool isPathSet = false;
+
 	ros::Publisher* getVisualisationPublisher();
 
 protected:

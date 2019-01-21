@@ -1,6 +1,8 @@
 #include "agent/Agent.h"
 #include "Math.h"
 
+#include <tf/transform_datatypes.h>
+
 Agent::Agent(std::string agent_id) {
 	agentID = agent_id;
 	agentIdInt = std::stoi(agentID.substr(6, 1));
@@ -37,9 +39,116 @@ void Agent::update() {
 			sendHeartbeat();
 		}
 
+		/* PathPlanning
 		setState(true);
 
 		// TODO: Work on Task? or assign new one
+		if(!isPathSet) {
+			if(getCurrentPosition().x != 0 && map != nullptr) {
+				Path p = map->getThetaStarPath(Point(this->getCurrentPosition()), Point(1, agentIdInt + 1));
+
+				this->motionPlanner->newPath(p);
+				if(p.getLength() > 0) {
+					this->motionPlanner->enable(true);
+					this->motionPlanner->start();
+					isPathSet = true;
+				}
+			}
+		}
+		*/
+
+		// DEMO
+		if (!isPathSet)
+		{
+			if (getCurrentPosition().x != 0)
+			{
+				// code for dummy path following
+				//ROS_ERROR("Position: %.2f, %.2f", getCurrentPosition().x, getCurrentPosition().y);
+				std::vector<geometry_msgs::Point> path;
+				geometry_msgs::Point p1;
+				p1.x = getCurrentPosition().x;
+				p1.y = getCurrentPosition().y;
+				path.push_back(p1);
+
+				p1.x = 14.0;
+				p1.y = 5.0;
+				path.push_back(p1);
+				p1.x = 12.5;
+				p1.y = 2.0;
+				path.push_back(p1);
+
+				p1.x = 1.9;
+				p1.y = 1.0;
+				path.push_back(p1);
+				p1.x = 1.5;
+				p1.y = 1.11;
+				path.push_back(p1);
+
+				p1.x = 1.25;
+				p1.y = 1.25;
+				path.push_back(p1);
+
+				p1.x = 1.11;
+				p1.y = 1.5;
+				path.push_back(p1);
+				p1.x = 1.0;
+				p1.y = 1.9;
+				path.push_back(p1);
+
+				p1.x = 1.0;
+				p1.y = 13.0;
+				path.push_back(p1);
+
+				// End point
+				geometry_msgs::Point p5;
+				p5.x = 12.5;
+				p5.y = 14.0;
+
+				if (agentID == "robot_2")
+				{
+					ros::Duration(10).sleep();
+					p5.y = 13.5;
+				}
+				if (agentID == "robot_3")
+				{
+					ros::Duration(20).sleep();
+					p5.y = 13.0;
+				}
+				if (agentID == "robot_4")
+				{
+					ros::Duration(30).sleep();
+					p5.y = 12.5;
+				}
+				if (agentID == "robot_5")
+				{
+					ros::Duration(40).sleep();
+					p5.y = 12.0;
+				}
+				if (agentID == "robot_6")
+				{
+					ros::Duration(50).sleep();
+					p5.y = 11.5;
+				}
+				if (agentID == "robot_7")
+				{
+					ros::Duration(60).sleep();
+					p5.y = 11.0;
+				}
+				if (agentID == "robot_8")
+				{
+					ros::Duration(70).sleep();
+					p5.y = 10.5;
+				}
+
+				path.push_back(p5);
+
+				this->motionPlanner->newPath(this->getCurrentPosition(), path, p5, false);
+				this->motionPlanner->enable(true);
+				this->motionPlanner->start();
+
+				isPathSet = true;
+			}
+		}
 	}
 }
 
@@ -278,7 +387,13 @@ void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 
 	if(this->motionPlanner->isEnabled()) {
 		// this->obstacleDetection->enable(true);
-		this->motionPlanner->update(position, 2*asin(orientation.z));
+		//this->motionPlanner->update(position, 2*asin(orientation.z));
+		tf::Quaternion q(orientation.x, orientation.y, orientation.z, orientation.w);
+		tf::Matrix3x3 m(q);
+		double roll, pitch, yaw;
+		m.getRPY(roll, pitch, yaw);
+		this->motionPlanner->update(position, yaw);
+		//printf("[Transform] Z: %.4f | Yaw: %.4f\n", 2*asin(orientation.z), yaw);
 	} else {
 		// this->obstacleDetection->enable(false);
 	}
