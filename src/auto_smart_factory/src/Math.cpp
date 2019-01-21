@@ -228,6 +228,16 @@ int Math::getDirectionToLineSegment(const Point& lStart, const Point& lEnd, cons
 	return 0;
 }
 
+float Math::getDistanceToLine(const Point& lStart, const Point& lEnd, const Point& point) {
+	Point line = lEnd - lStart;
+	Point startToPoint = point - lStart;
+	float lengthSquared = getDistanceSquared(lStart, lEnd);
+	float t = dotProduct(line, startToPoint) / lengthSquared;
+
+
+	return getDistance(point, lStart + t * line);
+}
+
 float Math::getAngleBetweenVectors(const Point& v1, const Point& v2) {
 	return acos(dotProduct(v1, v2) / (getLength(v1)*getLength(v2)));
 }

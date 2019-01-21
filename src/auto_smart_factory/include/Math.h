@@ -58,6 +58,9 @@ public:
 	static float projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 	static float getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 	static int getDirectionToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
+
+	static float getDistanceToLine(const Point& lStart, const Point& lEnd, const Point& point);
+
 	static float getAngleBetweenVectors(const Point& v1, const Point &v2);
 
 	static Point getVectorFromOrientation(float o);
