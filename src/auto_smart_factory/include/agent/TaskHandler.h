@@ -11,15 +11,19 @@
 #include "auto_smart_factory/TaskAnnouncement.h"
 #include "auto_smart_factory/TaskRating.h"
 #include "agent/path_planning/Map.h"
+#include "agent/MotionPlanner.h"
+#include "agent/Gripper.h"
+#include "agent/ChargingManagement.h"
 
 class TaskHandler
 {
 	public:
-    	explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish);
+    	explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm);
 
-    	// void announcementCallback(const auto_smart_factory::TaskAnnouncement &taskAnnouncement);
     	void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId);
 		void rejectTask(unsigned int requestId);
+
+		void update(void);
 
     	virtual ~TaskHandler();
 
@@ -28,9 +32,17 @@ class TaskHandler
 
     	void addChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath);
 
+		void executeTask(void);
+
     	void nextTask(void);
 
+		bool isTaskInExecution(void);
+
+		bool isIdle(void);
+
 		unsigned int numberQueuedTasks(void);
+
+		Task* getCurrentTask(void);
 
 		float getBatteryConsumption(void);
 
@@ -47,6 +59,11 @@ class TaskHandler
 
 		// the map to calculate the path(s) for the score
 		Map* map;
+
+		// references to MotionPlanner, Gripper and Charging Management
+		MotionPlanner* motionPlanner;
+		Gripper* gripper;
+		ChargingManagement* chargingManagement;
 
 		// the id of the agent to which this taskHandler belongs
 	    std::string agentId;

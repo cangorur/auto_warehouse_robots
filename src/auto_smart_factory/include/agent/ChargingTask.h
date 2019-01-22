@@ -18,6 +18,8 @@ class ChargingTask : public Task
 
 		float getDistance(void);
 
+		void setState(Task::State state);
+
 	protected:
 
 };

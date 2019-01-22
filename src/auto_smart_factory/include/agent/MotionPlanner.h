@@ -1,7 +1,7 @@
 #ifndef AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_
 #define AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_
 
-#include "ros/ros.h"
+#include <ros/ros.h>
 #include <string>
 #include <vector>
 #include <sstream>
@@ -50,6 +50,7 @@ public:
 	             geometry_msgs::Point end_direction_point, bool drive_backwards = false);
 
 	void newPath(Path path);
+	void newPath(Path* path);
 
 	void enable(bool enable);
 	bool isEnabled();

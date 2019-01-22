@@ -8,10 +8,10 @@
 class Task
 {
   public:
+		enum class Type {CHARGING, TRANSPORTATION};
+		enum class State {WAITING, TO_SOURCE, PICKUP, TO_TARGET, DROPOFF, FINISHED, CHARGING};
 
-		enum class taskType {CHARGING, TRANSPORTATION};
-
-		Task(uint32_t targetID, OrientedPoint targetPos, Path targetPath, taskType type);
+		Task(uint32_t targetID, OrientedPoint targetPos, Path targetPath, Type type);
 
 		uint32_t getTargetTrayId(void);
 
@@ -19,16 +19,22 @@ class Task
 
 		Path* getPathToTarget(void);
 
-		Task::taskType getType(void);
+		Task::Type getType(void);
 
-		// TODO: add estimated battery consumption function
+		Task::State getState(void);
+
+		bool isTransportation(void);
+		bool isCharging(void);
+
+		virtual void setState(Task::State state) = 0;
+
 		virtual float getBatteryConsumption(void) = 0;
 
 		virtual float getDistance(void) = 0;
 
-	protected:
-
-		Task::taskType type;
+	protected:	
+		Task::Type type;
+		Task::State state;
 
 		// target Tray id
 		uint32_t targetId;

@@ -2,11 +2,11 @@
 
 TransportationTask::TransportationTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
 			uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath) : 
-	Task(targetID, targetPos, targetPath, taskType::TRANSPORTATION),
+	Task(targetID, targetPos, targetPath, Type::TRANSPORTATION),
 	id(id), 
 	sourceId(sourceID),
 	sourcePosition(sourcePos),
-	pathToSource(sourcePath){
+	pathToSource(sourcePath) {
 }
 
 TransportationTask::~TransportationTask() = default;
@@ -34,4 +34,11 @@ float TransportationTask::getBatteryConsumption(void){
 
 float TransportationTask::getDistance(void){
 	return pathToSource.getLength() + pathToTarget.getLength();
+}
+
+void TransportationTask::setState(Task::State state) {
+	if (state == Task::State::CHARGING) {
+		return;
+	}
+	this->state = state;
 }

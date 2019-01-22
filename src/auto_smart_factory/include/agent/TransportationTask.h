@@ -27,6 +27,8 @@ class TransportationTask : public Task
 
 		float getDistance(void);
 
+		void setState(Task::State state);
+
 	protected:
 
 		// the task id of the task

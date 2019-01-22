@@ -24,7 +24,7 @@ Agent::~Agent() {
 	this->obstacleDetection->~ObstacleDetection();
 	this->map->~Map();
 	this->chargingManagement->~ChargingManagement();
-
+	this->taskHandler->~TaskHandler();
 }
 
 void Agent::update() {
@@ -38,6 +38,10 @@ void Agent::update() {
 		if(isTimeForHeartbeat()) {
 			sendHeartbeat();
 		}
+
+		/* Task Execution */
+		this->taskHandler->update();
+		
 
 		/* PathPlanning
 		setState(true);
@@ -58,6 +62,7 @@ void Agent::update() {
 		*/
 
 		// DEMO
+		/*
 		if (!isPathSet)
 		{
 			if (getCurrentPosition().x != 0)
@@ -149,6 +154,7 @@ void Agent::update() {
 				isPathSet = true;
 			}
 		}
+		*/
 	}
 }
 
@@ -199,14 +205,13 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		for(auto o : warehouseConfig.map_configuration.obstacles) {
 			obstacles.emplace_back(Point(o.posX, o.posY), Point(o.sizeX, o.sizeY), o.rotation);
 		}
-		
 		this->map = new Map(warehouseConfig, obstacles);
-
-		// Task Handler
-		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub));
 
 		// Charging MAnagement
 		this->chargingManagement = new ChargingManagement(this);
+
+		// Task Handler
+		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub), this->map, this->motionPlanner, this->gripper, this->chargingManagement);
 		
 		return true;
 	} catch(...) {
@@ -345,6 +350,8 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			if(taskHandler->numberQueuedTasks() > 0){
 				// take the last position of the last task
 				sourcePath = map->getThetaStarPath(Point(taskHandler->getLastTask()->getTargetPosition()), input_tray);
+			} else if(taskHandler->isTaskInExecution()) {
+				sourcePath = map->getThetaStarPath(Point(taskHandler->getCurrentTask()->getTargetPosition()), input_tray);
 			} else {
 				// take the current position
 				sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray);
