@@ -12,13 +12,7 @@
 #include "agent/path_planning/Path.h"
 #include "agent/path_planning/Point.h"
 #include "agent/Position.h"
-
-#define F_KP 3.58	// 3.58	P constant for PSD translation controller
-#define F_KD 0.04	// 0.04 D constant for PSD translation controller
-#define F_KI 0.05   // 0.05 S constant for PSD translation controller
-#define R_KP 3.0	// 3.0 	P constant for PSD rotation controller
-#define R_KD 0.2	// 0.2 	D constant for PSD rotation controller
-#define R_KI 0.4	// 0.4 	S constant for PSD rotation controller
+#include "agent/PidController.h"
 
 class Agent;
 
@@ -83,29 +77,20 @@ private:
 	
 	bool isCurrentPointLastPoint();
 	void advanceToNextPathPoint();
+	Point getPathPointAtIndex(int index);
 	
 	float getRotationToTarget(Point currentPosition, Point targetPosition, double orientation);
 
-	/* PID Controller methods */
-	void pidInit(double posTolerance, double angleTolerance, double maxSpeed, double maxAngleSpeed);
-	void pidReset(void);
-
-	void pidSetTarget(double distance, double angle);
-	void pidSetTarget(Point target, Position position);
-
 	void publishVelocity(double speed, double angle);
 
-	void pidUpdate(Position* pos);
-
 	bool waypointReached(Position* current);
-
-	double pidCalculate(Position* current, double currentValue, double lastValue, double referenceValue, double kP, double kD, double kS, double* sum);
 
 		/// information about the current role of the agent
 	auto_smart_factory::RobotConfiguration robotConfig;
 
 	/// Publisher for the motion actuator topic
 	ros::Publisher* motionPub;
+	ros::Publisher pathPub;
 
 	/// the current path to drive
 	std::vector<geometry_msgs::Point> path;
@@ -115,6 +100,8 @@ private:
 	
 	Point currentTarget;
 	int currentTargetIndex = -1;
+
+	Point previousTarget;
 
 	bool enabled = false;
 	bool hasFinishedCurrentPath = true;
@@ -126,7 +113,7 @@ private:
 	float minDrivingSpeed; // = 0.2;
 	float maxDrivingSpeed; // = 1;
 
-	float distToReachPoint = 0.2f;
+	float distToReachPoint = 0.3f;
 	float distToReachFinalPoint = 0.2f;
 	float distToSlowDown = 0.9f;
 
@@ -137,23 +124,16 @@ private:
 	 * orientation while driving & the direction of the goal position to not steer.*/
 	float allowedRotationDifference = 0.001f;
 
-	/* PID Controller Attributes */
-	Position *pidStart;
-	Position *pidLast;
-	double maxSpeed;
-	double maxAngleSpeed;
-	double posTolerance;
-	double angleTolerance;
-	double pidTargetDistance;
-	double pidTargetAngle;
-	double pidSumDistance;
-	double pidSumAngle;
-	bool pidFirstIteration;
-
 
 protected:
 	Agent* agent;
 	std::string agentID;
+
+	PidController* steerPid;
+
+	double currentSpeed;
+	double currentRotation;
+
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_ */
