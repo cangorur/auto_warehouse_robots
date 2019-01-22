@@ -8,12 +8,13 @@
 #include "agent/path_planning/Point.h"
 #include "agent/path_planning/ThetaStarPathPlanner.h"
 
-Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle>& obstacles) :
+Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle>& obstacles, RobotHardwareProfile* hardwareProfile) :
 		warehouseConfig(warehouseConfig),
 		width(warehouseConfig.map_configuration.width),
 		height(warehouseConfig.map_configuration.height),
-		margin(warehouseConfig.map_configuration.margin) {
-	
+		margin(warehouseConfig.map_configuration.margin),
+		hardwareProfile(hardwareProfile)
+{
 	this->obstacles.clear();
 	for(const Rectangle& o : obstacles) {
 		this->obstacles.emplace_back(o.getPosition(), o.getSize(), o.getRotation());
@@ -187,6 +188,30 @@ float Map::getMargin() const {
 	return margin;
 }
 
+Path Map::getThetaStarPath(const Point& start, const Point& end, float startingTime) {
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
+	return thetaStarPathPlanner.findPath(start, end, startingTime);
+}
+
+Path Map::getThetaStarPath(const Point& start, const auto_smart_factory::Tray& end, float startingTime) {
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
+	const Point endPoint = Point(getPointInFrontOfTray(end));
+	return thetaStarPathPlanner.findPath(start, endPoint, startingTime);
+}
+
+Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const Point& end, float startingTime) {
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
+	const Point startPoint = Point(getPointInFrontOfTray(start));
+	return thetaStarPathPlanner.findPath(startPoint, end, startingTime);
+}
+
+Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, float startingTime) {
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
+	const Point startPoint = Point(getPointInFrontOfTray(start));
+	const Point endPoint = Point(getPointInFrontOfTray(end));
+	return thetaStarPathPlanner.findPath(startPoint, endPoint, startingTime);
+}
+
 bool Map::isPointInMap(const Point& pos) const {
 	return pos.x >= margin && pos.x <= width - margin && pos.y >= margin && pos.y <= height - margin;
 }
@@ -209,7 +234,14 @@ void Map::addReservations(std::vector<Rectangle> newReservations) {
 	}
 }
 
-Path Map::getThetaStarPath(const Point& start, const Point& end, float startingTime, RobotHardwareProfile* hardwareProfile) {
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
-	return thetaStarPathPlanner.findPath(start, end, startingTime);
+OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
+	OrientedPoint input_drive_point;
+
+	double input_dx = cos(tray.orientation * PI / 180);
+	double input_dy = sin(tray.orientation * PI / 180);
+	input_drive_point.x = tray.x + 0.5 * input_dx;
+	input_drive_point.y = tray.y + 0.5 * input_dy;
+	input_drive_point.o = tray.orientation + 180;
+
+	return input_drive_point;
 }

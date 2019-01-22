@@ -114,7 +114,6 @@ float Path::getBatteryConsumption() const {
 	return batteryConsumption;
 }
 
-
 visualization_msgs::Marker Path::getVisualizationMsgPoints() {
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";

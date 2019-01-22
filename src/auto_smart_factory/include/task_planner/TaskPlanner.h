@@ -25,6 +25,7 @@
 #include <auto_smart_factory/TaskPlannerState.h>
 
 #include <task_planner/Task.h>
+#include <auto_smart_factory/Tray.h>
 #include <task_planner/Request.h>
 
 /**
@@ -69,6 +70,11 @@ public:
 	 * @return Map of registered robots <robot id, (robot configuration, idle status)>
 	 */
 	const std::map<std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> >& getRegisteredRobots() const;
+
+
+	void publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
+                	 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, 
+					 uint32_t requestId);
 
 private:
 	/**
@@ -158,16 +164,21 @@ private:
 	 */
 	bool idleRobotAvailable() const;
 
+	void receiveTaskResponse(const auto_smart_factory::TaskRating& tr);
+
+	/// extract tray data into points and ids
+	void extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa);
+
 
 private:
 	/// all registered robots: mapping their id to their configuration and their state (idle/busy with idle = true)
 	std::map<std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> > registeredRobots;
 
 	/// List of pending input requests
-	std::vector<Request> inputRequests;
+	std::vector<RequestPtr> inputRequests;
 
 	/// List of pending ouput requests
-	std::vector<Request> outputRequests;
+	std::vector<RequestPtr> outputRequests;
 
 	/// Map of running tasks
 	std::map<unsigned int, TaskPtr> runningTasks;
@@ -207,6 +218,12 @@ private:
 
 	/// Service for initialization
 	ros::ServiceServer initServer;
+
+	/// Subscriber to robot task response topic
+	ros::Subscriber taskResponseSub;
+
+	/// Task planner task announcement publisher
+	ros::Publisher taskAnnouncerPub;
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_TASK_PLANNER_TASKPLANNER_H_ */

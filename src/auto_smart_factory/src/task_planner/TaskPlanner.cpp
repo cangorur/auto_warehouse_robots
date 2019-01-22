@@ -35,6 +35,7 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 	}
 
 	// build tray config map
+
 	for(auto config : req.warehouse_configuration.trays) {
 		if(!trayConfigs.insert(
 				std::pair<unsigned int, Tray>(config.id, config)).second) {
@@ -73,6 +74,11 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 	                                &TaskPlanner::rescheduleEvent, this);
 	statusUpdateTimer = n.createTimer(ros::Duration(2.0),
 	                                  &TaskPlanner::taskStateUpdateEvent, this);
+
+	taskResponseSub = n.subscribe("/task_response", 1000, 
+									&TaskPlanner::receiveTaskResponse, this);
+
+	taskAnnouncerPub = pn.advertise<TaskAnnouncement>("task_broadcast", 1);
 
 	ROS_INFO("Task planner initialized.");
 
@@ -136,34 +142,35 @@ void TaskPlanner::receiveRobotHeartbeat(const auto_smart_factory::RobotHeartbeat
 bool TaskPlanner::newInputRequest(auto_smart_factory::NewPackageInputRequest& req,
                                   auto_smart_factory::NewPackageInputResponse& res) {
 
+	ROS_WARN("[Task Planner]: new InputRequest for packet %d", req.package.id);
 	// create new input request
 	PackageConfiguration pkgConfig = getPkgConfig(req.package.type_id);
 	TaskRequirementsConstPtr taskRequirements = std::make_shared<const InputTaskRequirements>(pkgConfig,
 	                                                                                          req.input_tray_id);
-	Request inputRequest(this, taskRequirements, "input");
+	RequestPtr inputRequest = std::make_shared<Request>(this, taskRequirements, "input");
 
 	ROS_INFO(
 			"[request %d] New input request at input tray %d for package %d of type %d.",
-			inputRequest.getId(), req.input_tray_id, req.package.id,
+			inputRequest->getId(), req.input_tray_id, req.package.id,
 			req.package.type_id);
-
+	
+	inputRequests.push_back(inputRequest);
 	try {
 		// try to allocate resources for request
-		TaskData taskData = inputRequest.allocateResources();
+		TaskData taskData = inputRequest->allocateResources();
 
 		// allocation was successful, create task
-		TaskPtr inputTask = std::make_shared<Task>(inputRequest.getId(),
+		TaskPtr inputTask = std::make_shared<Task>(inputRequest->getId(),
 		                                           taskData);
 
+		// remove the just pushed request
+		inputRequests.pop_back();
 		// start execution of task
 		startTask(inputTask);
 	} catch(std::runtime_error& e) {
 		ROS_DEBUG(
 				"[request %d] Resource allocation of new input request failed: %s",
-				inputRequest.getId(), e.what());
-
-		// task could not be started immediately
-		inputRequests.push_back(inputRequest);
+				inputRequest->getId(), e.what());
 	}
 
 	res.success = true;
@@ -174,8 +181,8 @@ bool TaskPlanner::newOutputRequest(NewPackageOutputRequest& req,
                                    NewPackageOutputResponse& res) {
 
 	// check if there is already an output request at this tray
-	for(const Request& r : outputRequests) {
-		auto requirements = std::static_pointer_cast<const OutputTaskRequirements>(r.getRequirements());
+	for(const RequestPtr& r : outputRequests) {
+		auto requirements = std::static_pointer_cast<const OutputTaskRequirements>(r->getRequirements());
 		if(requirements->getKnownTrayId() == req.output_tray_id) {
 			// output tray is already part of an output request
 			res.success = false;
@@ -187,29 +194,29 @@ bool TaskPlanner::newOutputRequest(NewPackageOutputRequest& req,
 	PackageConfiguration pkgConfig = getPkgConfig(req.package.type_id);
 	TaskRequirementsConstPtr taskRequirements = std::make_shared<const OutputTaskRequirements>(pkgConfig,
 	                                                                                           req.output_tray_id);
-	Request outputRequest(this, taskRequirements, "output");
+	RequestPtr outputRequest = std::make_shared<Request>(this, taskRequirements, "output");
 
 	ROS_INFO(
 			"[request %d] New output request at output tray %d for package type %d.",
-			outputRequest.getId(), req.output_tray_id, req.package.type_id);
+			outputRequest->getId(), req.output_tray_id, req.package.type_id);
 
+	outputRequests.push_back(outputRequest);
 	try {
 		// try to allocate resources for request
-		TaskData taskData = outputRequest.allocateResources();
+		TaskData taskData = outputRequest->allocateResources();
 
 		// allocation was successful, create task
-		TaskPtr outputTask = std::make_shared<Task>(outputRequest.getId(),
+		TaskPtr outputTask = std::make_shared<Task>(outputRequest->getId(),
 		                                            taskData);
 
+		//remove the just added request
+		outputRequests.pop_back();
 		// start execution of task
 		startTask(outputTask);
 	} catch(std::runtime_error& e) {
 		ROS_DEBUG(
 				"[request %d] Resource allocation of new output request failed: %s",
-				outputRequest.getId(), e.what());
-
-		// task could not be started immediately
-		outputRequests.push_back(outputRequest);
+				outputRequest->getId(), e.what());
 	}
 
 	res.success = true;
@@ -250,17 +257,17 @@ void TaskPlanner::resourceChangeEvent() {
 		return;
 	}
 	// first, check if any output request can be started
-	for(std::vector<Request>::iterator outputRequest = outputRequests.begin();
+	for(std::vector<RequestPtr>::iterator outputRequest = outputRequests.begin();
 	    outputRequest != outputRequests.end();) {
 
-		ROS_INFO("[task planner] Checking output request %d.", outputRequest->getId());
+		ROS_INFO("[task planner] Checking output request %d.", (*outputRequest)->getId());
 
 		try {
 			// try to allocate resources for request
-			TaskData taskData = outputRequest->allocateResources();
+			TaskData taskData = (*outputRequest)->allocateResources();
 
 			// allocation was successful, create task
-			TaskPtr outputTask = std::make_shared<Task>(outputRequest->getId(),
+			TaskPtr outputTask = std::make_shared<Task>((*outputRequest)->getId(),
 			                                            taskData);
 
 			// remove request from queue
@@ -271,21 +278,21 @@ void TaskPlanner::resourceChangeEvent() {
 		} catch(std::runtime_error& e) {
 			ROS_DEBUG(
 					"[request %d] Resource allocation of output request failed: %s",
-					outputRequest->getId(), e.what());
+					(*outputRequest)->getId(), e.what());
 
 			++outputRequest;
 		}
 	}
 
 	// then, check if any input request can be started
-	for(std::vector<Request>::iterator inputRequest = inputRequests.begin();
+	for(std::vector<RequestPtr>::iterator inputRequest = inputRequests.begin();
 	    inputRequest != inputRequests.end();) {
 
-		ROS_INFO("[task planner] Checking input request %d.", inputRequest->getId());
+		ROS_INFO("[task planner] Checking input request %d.", (*inputRequest)->getId());
 
 		// remove input request if it is not pending anymore
-		if(!inputRequest->isPending()) {
-			ROS_INFO("[task planner] Input request %d is not pending anymore. It is deleted.", inputRequest->getId());
+		if(!((*inputRequest)->isPending())) {
+			ROS_INFO("[task planner] Input request %d is not pending anymore. It is deleted.", (*inputRequest)->getId());
 
 			// remove request from queue
 			inputRequest = inputRequests.erase(inputRequest);
@@ -297,10 +304,10 @@ void TaskPlanner::resourceChangeEvent() {
 			ROS_INFO("allocating input task data");
 
 			// try to allocate resources for request
-			TaskData taskData = inputRequest->allocateResources();
+			TaskData taskData = (*inputRequest)->allocateResources();
 
 			// allocation was successful, create task
-			TaskPtr inputTask = std::make_shared<Task>(inputRequest->getId(),
+			TaskPtr inputTask = std::make_shared<Task>((*inputRequest)->getId(),
 			                                           taskData);
 			// remove request from queue
 			inputRequest = inputRequests.erase(inputRequest);
@@ -310,7 +317,7 @@ void TaskPlanner::resourceChangeEvent() {
 		} catch(std::runtime_error& e) {
 			ROS_DEBUG(
 					"[request %d] Resource allocation of input request failed: %s",
-					inputRequest->getId(), e.what());
+					(*inputRequest)->getId(), e.what());
 
 			++inputRequest;
 		}
@@ -339,10 +346,10 @@ void TaskPlanner::taskStateUpdateEvent(const ros::TimerEvent& e) {
 
 	// add states of requests
 	for(auto& request : inputRequests) {
-		state.requests.push_back(request.getStatus());
+		state.requests.push_back(request->getStatus());
 	}
 	for(auto& request : outputRequests) {
-		state.requests.push_back(request.getStatus());
+		state.requests.push_back(request->getStatus());
 	}
 
 	for(auto taskIter = runningTasks.cbegin(); taskIter != runningTasks.cend();) {
@@ -381,3 +388,49 @@ bool TaskPlanner::idleRobotAvailable() const {
 	return false;
 }
 
+void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
+	// go through requests and get the one for which the response is intended:
+	ROS_INFO("Receiving score for Request %d; Reject is %d", tr.request_id, tr.reject);
+	for(RequestPtr& r : inputRequests){
+		if(r->getId() == tr.request_id){
+			r->receiveTaskResponse(tr);
+			return;
+		}
+	}
+	for(RequestPtr& r : outputRequests){
+		if(r->getId() == tr.request_id){
+			r->receiveTaskResponse(tr);
+			return;
+		}
+	}
+	ROS_INFO("No request with id %d found", tr.request_id);
+}
+
+void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
+                	 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, 
+					 uint32_t requestId){
+	TaskAnnouncement tsa;
+	tsa.request_id = requestId;
+	extractData(sourceTrayCandidates, targetTrayCandidates, &tsa);
+	ROS_WARN("[Task Planner]: Publishing Request %d with %d start Trays and %d end Trays", tsa.request_id, (unsigned int)tsa.start_ids.size(), (unsigned int)tsa.end_ids.size());
+	taskAnnouncerPub.publish(tsa);
+}
+
+void TaskPlanner::extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa){
+	for(Tray t : sourceTrays){
+		geometry_msgs::Point p;
+		p.x = t.x;
+		p.y = t.y;
+		p.z = 0.0;
+		tsa->start_points.push_back(p);
+		tsa->start_ids.push_back(t.id);
+	}
+	for(Tray t : targetTrays){
+		geometry_msgs::Point p;
+		p.x = t.x;
+		p.y = t.y;
+		p.z = 0.0;
+		tsa->end_points.push_back(p);
+		tsa->end_ids.push_back(t.id);
+	}
+}

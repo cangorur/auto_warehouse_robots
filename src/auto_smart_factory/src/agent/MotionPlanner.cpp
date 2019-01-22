@@ -8,8 +8,6 @@
 #include "agent/MotionPlanner.h"
 #include "Math.h"
 
-#include <ros/console.h>
-
 #include <cmath>
 
 MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
@@ -35,12 +33,17 @@ MotionPlanner::~MotionPlanner() {
 };
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
+	if (hasFinishedCurrentPath) {
+		publishVelocity(0.0, 0.0);
+		return;
+	}
 	Position pos(position.x, position.y, orientation, ros::Time::now());
 
 	if(waypointReached(&pos)) {
 		if (!isCurrentPointLastPoint())	{
 			advanceToNextPathPoint();
 		} else {
+			hasFinishedCurrentPath = true;
 			publishVelocity(0.0, 0.0);
 		}
 	} else {
@@ -52,7 +55,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 
 		publishVelocity(linearVelocity, angularVelocity);
 
-		if (agentID.compare("robot_2") == 0) {
+		if (agentID.compare("robot_3") == 0) {
 			printf("[MP %s] cte: %.4f | speed: %.4f | steer: %.4f\n", agentID.c_str(), cte, linearVelocity, angularVelocity);
 		}
 	}
@@ -68,9 +71,13 @@ void MotionPlanner::newPath(Path path) {
 		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgPoints());
 		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
 	} else {
-		ROS_INFO("[MotionPlanner - %s]: Got path with distance 0", agentID.c_str());
+		ROS_INFO("[MotionPlanner - Agent-%d]: Got path with distance 0", agent->getAgentIdInt());
 		hasFinishedCurrentPath = true;
 	}	
+}
+
+void MotionPlanner::newPath(Path* path) {
+	newPath(*path);
 }
 
 void MotionPlanner::enable(bool enable) {

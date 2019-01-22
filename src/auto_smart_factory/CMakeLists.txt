@@ -263,6 +263,12 @@ add_executable(agent_node
 		src/agent/ObstacleDetection.cpp		
 		src/agent/Position.cpp
 
+		src/agent/ChargingManagement.cpp
+
+		src/agent/TaskHandler.cpp
+		src/agent/Task.cpp
+		src/agent/TransportationTask.cpp
+		src/agent/ChargingTask.cpp
 		src/agent/PidController.cpp
 
 		src/Math.cpp
@@ -304,8 +310,8 @@ target_link_libraries(storage_management_node ${catkin_LIBRARIES})
 
 # Charging Management
 #add_executable(charging_management_node
-#		src/charging_management/ChargingManagementNode.cpp
-#		src/charging_management/ChargingManagement.cpp
+#		src/Agent/ChargingManagementNode.cpp
+#		src/Agent/ChargingManagement.cpp
 #		)
 #set_target_properties(charging_management_node PROPERTIES OUTPUT_NAME charging_management PREFIX "")
 #add_dependencies(charging_management_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

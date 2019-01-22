@@ -15,6 +15,10 @@ Point::Point() :
 		x(0),
 		y(0) { }
 
+Point::Point(OrientedPoint point) :
+		x(point.x),
+		y(point.y) { }
+
 // Overloaded operators
 Point operator -(const Point& right) {
 	return Point(-right.x, -right.y);

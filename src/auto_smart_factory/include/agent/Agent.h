@@ -4,6 +4,8 @@
 #include "agent/MotionPlanner.h"
 #include "agent/Gripper.h"
 #include "agent/ObstacleDetection.h"
+#include "agent/TaskHandler.h"
+#include "agent/ChargingManagement.h"
 
 #include <random>
 #include "ros/ros.h"
@@ -33,9 +35,9 @@
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotConfiguration.h>
 #include <auto_smart_factory/CollisionAction.h>
-
 #include "agent/path_planning/Map.h"
 #include "agent/path_planning/RobotHardwareProfile.h"
+
 
 // defines the task id type
 typedef uint32_t TaskId;
@@ -56,6 +58,13 @@ public:
 	/* Returns ID of this agent */
 	std::string getAgentID();
 
+	/* Returns ID of this agent */
+	int getAgentIdInt();
+
+	/* Returns Battery of this agent */
+	float getAgentBattery();
+
+
 	/* Returns current position of this agent */
 	geometry_msgs::Point getCurrentPosition();
 
@@ -69,7 +78,6 @@ public:
 
 	// tmp for testing
 	bool isPathSet = false;
-
 	
 	
 	ros::Publisher* getVisualisationPublisher();
@@ -167,6 +175,9 @@ protected:
 	void collisionAlertCallback(const auto_smart_factory::CollisionAction& msg);
 	
 	void publishVisualization(const ros::TimerEvent& e);
+
+	// Task Handler
+	void announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement);
 	
 	
 	// ROS Nodehandle
@@ -235,6 +246,12 @@ protected:
 	// Subscriber for CollisionAlert message which makes robot stop
 	ros::Subscriber collision_alert_sub;
 
+	// Subscriber for TaskHandler
+	ros::Subscriber task_announce_sub;
+
+	// Publisher for TaskHandler
+	ros::Publisher taskrating_pub;
+
 	// Ros visualisation
 	ros::Publisher visualisationPublisher;
 	ros::Timer vizPublicationTimer;
@@ -250,6 +267,12 @@ protected:
 
 	// Publisher for heartbeat topic
 	ros::Publisher heartbeat_pub;
+
+	// pointer to instance of the Charging Management
+	ChargingManagement* chargingManagement;
+
+	// pointer to instance of the task planner
+	TaskHandler* taskHandler;
 
 	// pointer to instance of the motion planner
 	MotionPlanner* motionPlanner;

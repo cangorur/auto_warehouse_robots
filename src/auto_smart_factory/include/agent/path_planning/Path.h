@@ -42,6 +42,7 @@ public:
 	// ROS visualisation
 	visualization_msgs::Marker getVisualizationMsgPoints();
 	visualization_msgs::Marker getVisualizationMsgLines();
+
 };
 
 #endif /* AGENT_PATH_H_ */

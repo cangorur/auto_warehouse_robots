@@ -23,11 +23,13 @@ Agent::~Agent() {
 	this->gripper->~Gripper();
 	this->obstacleDetection->~ObstacleDetection();
 	this->map->~Map();
+	this->chargingManagement->~ChargingManagement();
+	this->taskHandler->~TaskHandler();
 }
 
 void Agent::update() {
 	if(initialized) {
-		setIdle(true);
+		//setIdle(true);
 		
 		// Register at taskplanner if not already done
 		if(!registered && registerAgent()) {
@@ -37,23 +39,23 @@ void Agent::update() {
 		if(isTimeForHeartbeat()) {
 			sendHeartbeat();
 		}
+		
+		/* Task Execution */
+		this->taskHandler->update();		
 
 		//PathPlanning
-		if(!isPathSet) {
+		/*if(!isPathSet) {
 			if(getCurrentPosition().x != 0 && map != nullptr) {
-				Path p = map->getThetaStarPath(Point(this->getCurrentPosition()), Point(1, agentIdInt + 1), 0, hardwareProfile);
+				Path p = map->getThetaStarPath(Point(this->getCurrentPosition()), Point(1, agentIdInt + 1), 0);
 
 				this->motionPlanner->newPath(p);
 				if(p.getDistance() > 0) {
 					this->motionPlanner->enable(true);
 					this->motionPlanner->start();
 					isPathSet = true;
-
-					this->motionPlanner->enable(true);
-					this->motionPlanner->start();
 				}
 			}
-		}
+		}*/
 	}
 }
 
@@ -88,6 +90,8 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	this->heartbeat_pub = n.advertise<auto_smart_factory::RobotHeartbeat>("robot_heartbeats", 1);
 	this->gripper_state_pub = pn.advertise<auto_smart_factory::GripperState>("gripper_state", 1);
 	this->additional_time_pub = pn.advertise<auto_smart_factory::AdditionalTime>("additional_time", 1);
+	this->task_announce_sub = n.subscribe("/task_planner/task_broadcast", 1, &Agent::announcementCallback, this);
+	this->taskrating_pub = pn.advertise<auto_smart_factory::TaskRating>("/task_response", 1);
 	// TODO: Below topic can give some hints (example information an agent may need). They are not published in any of the nodes
 	// this->collision_alert_sub = n.subscribe("/collisionAlert", 1, &Agent::collisionAlertCallback, this);
 
@@ -98,14 +102,19 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		// Disable to prevent crash because obstacleDetections was not initialized properly because no occupancy map is available
 		this->obstacleDetection = new ObstacleDetection(agentID, *motionPlanner, robotConfig, warehouseConfig);
 		this->obstacleDetection->enable(false);
-		
+
 		// Generate map
 		std::vector<Rectangle> obstacles;
 		for(auto o : warehouseConfig.map_configuration.obstacles) {
 			obstacles.emplace_back(Point(o.posX, o.posY), Point(o.sizeX, o.sizeY), o.rotation);
 		}
-		
-		this->map = new Map(warehouseConfig, obstacles);
+		this->map = new Map(warehouseConfig, obstacles, hardwareProfile);
+
+		// Charging MAnagement
+		this->chargingManagement = new ChargingManagement(this);
+
+		// Task Handler
+		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub), this->map, this->motionPlanner, this->gripper, this->chargingManagement);
 		
 		return true;
 	} catch(...) {
@@ -227,66 +236,38 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
                        auto_smart_factory::AssignTask::Response& res) {
 	try {
 		if(isIdle) {
-			ROS_INFO("[%s]: IN Agent::assignTask", agentID.c_str());
+			ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
 
 			int task_id = req.task_id;
 			auto_smart_factory::Tray input_tray = getTray(req.input_tray);
 			auto_smart_factory::Tray storage_tray = getTray(req.storage_tray);
 
-			geometry_msgs::Point input_tray_position;
-			geometry_msgs::Point storage_tray_position;
-
-			input_tray_position.x = input_tray.x;
-			input_tray_position.y = input_tray.y;
-			storage_tray_position.x = storage_tray.x;
-			storage_tray_position.y = storage_tray.y;
-
 			ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
 			ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
 
-			geometry_msgs::Point input_drive_point;
-			geometry_msgs::Point storage_drive_point;
-			geometry_msgs::Point input_drive_back_point;
-			geometry_msgs::Point storage_drive_back_point;
-			geometry_msgs::Point input_approach_point;
-			geometry_msgs::Point storage_approach_point;
+			// create Task and add it to task handler
+			// TODO: Maybe change task to accept only tray ids???
+			OrientedPoint sourcePos = map->getPointInFrontOfTray(input_tray);
+			OrientedPoint targetPos = map->getPointInFrontOfTray(storage_tray);
+			Path sourcePath = Path();
+			
+			// TODO add correct path caluclation start times
+			
+			if(taskHandler->numberQueuedTasks() > 0){
+				// take the last position of the last task
+				sourcePath = map->getThetaStarPath(Point(taskHandler->getLastTask()->getTargetPosition()), input_tray, 0);
+			} else if(taskHandler->isTaskInExecution()) {
+				sourcePath = map->getThetaStarPath(Point(taskHandler->getCurrentTask()->getTargetPosition()), input_tray, 0);
+			} else {
+				// take the current position
+				sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, ros::Time::now().toSec());
+			}
+			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, 0);
+			taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, 
+					sourcePath, targetPath);
 
-			// don't drive to the tray exactly, stop a bit in front for (un)loading
-			double input_dx = cos(input_tray.orientation * PI / 180);
-			double input_dy = sin(input_tray.orientation * PI / 180);
-			double storage_dx = cos(storage_tray.orientation * PI / 180);
-			double storage_dy = sin(storage_tray.orientation * PI / 180);
-			input_drive_point.x = input_tray_position.x + 0.5 * input_dx;
-			input_drive_point.y = input_tray_position.y + 0.5 * input_dy;
-			input_drive_back_point.x = input_tray_position.x + 1.3 * input_dx;
-			input_drive_back_point.y = input_tray_position.y + 1.3 * input_dy;
-			input_approach_point.x = input_tray_position.x + input_dx;
-			input_approach_point.y = input_tray_position.y + input_dy;
-			storage_drive_point.x = storage_tray_position.x + 0.5 * storage_dx;
-			storage_drive_point.y = storage_tray_position.y + 0.5 * storage_dy;
-			storage_drive_back_point.x = storage_tray_position.x + 1.3 * storage_dx;
-			storage_drive_back_point.y = storage_tray_position.y + 1.3 * storage_dy;
-			storage_approach_point.x = storage_tray_position.x + 1.5 * storage_dx;
-			storage_approach_point.y = storage_tray_position.y + 1.5 * storage_dy;
-
-
-			//Path path_to_input_tray(agentID, task_id, GOAL::LOAD, position, input_drive_point, input_approach_point, input_tray_position, input_drive_back_point, true);
-
-			//    When Robot arrived at input_tray it will start traveling from input tray to output tray
-			//Path path_to_storage_tray(agentID, task_id, GOAL::UNLOAD, input_drive_back_point,
-			//            storage_drive_point, storage_approach_point, storage_tray_position, storage_drive_back_point, false);
-
-			// 2- Set currentPath
-			//setCurrentPath(path_to_input_tray);
-			//hasDriven = true;
-
-			// 3- Add the remaining paths to the pathsStack
-			//pathsStack.push(path_to_storage_tray);
-
-			ROS_INFO("[%s]: Task %i successfully assigned!", agentID.c_str(), req.task_id);
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
-			ROS_INFO("assignTask %s %.2f %i", agentID.c_str(), initialTimeOfCurrentTask, task_id);
-			setIdle(false);
+			ROS_INFO("[%s]: Task %i successfully assigned at %.2f! Queue size is %i", agentID.c_str(), req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
 			res.success = true;
 		} else {
 			ROS_WARN("[%s]: Is busy! - Task %i has not been assigned!",
@@ -318,13 +299,9 @@ void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 
 	if(this->motionPlanner->isEnabled()) {
 		// this->obstacleDetection->enable(true);
-		//this->motionPlanner->update(position, 2*asin(orientation.z));
-		tf::Quaternion q(orientation.x, orientation.y, orientation.z, orientation.w);
-		tf::Matrix3x3 m(q);
-		double roll, pitch, yaw;
-		m.getRPY(roll, pitch, yaw);
-		this->motionPlanner->update(position, yaw);
-		//printf("[Transform] Z: %.4f | Yaw: %.4f\n", 2*asin(orientation.z), yaw);
+		tf::Quaternion q;
+		tf::quaternionMsgToTF(orientation, q);
+		this->motionPlanner->update(position, tf::getYaw(q));
 	} else {
 		// this->obstacleDetection->enable(false);
 	}
@@ -343,8 +320,47 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 	ROS_DEBUG("[%s]: Battery Level: %f!", agentID.c_str(), batteryLevel);
 }
 
+void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
+	// get Path
+	auto_smart_factory::Tray input_tray = getTray(taskAnnouncement.start_ids.front());
+	auto_smart_factory::Tray storage_tray = getTray(taskAnnouncement.end_ids.front());
+	Path sourcePath = Path();
+	if(taskHandler->numberQueuedTasks() > 0){
+		// take the last position of the last task
+		sourcePath = map->getThetaStarPath(Point(taskHandler->getLastTask()->getTargetPosition()), input_tray, 0);
+	} else {
+		// take the current position
+		sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, 0);
+	}
+	Path targetPath = map->getThetaStarPath(input_tray, storage_tray, 0);
+	// get Path length
+	float length = taskHandler->getDistance() + sourcePath.getDistance() + targetPath.getDistance();
+	// get Battery consumption
+	float batCons = taskHandler->getBatteryConsumption() + sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
+	// check battery consumption
+	if(chargingManagement->isEnergyAvailable(batCons)){
+		// get score multiplier
+		float scoreFactor = chargingManagement->getScoreMultiplier(batCons);
+		// compute score
+		float score = (1/scoreFactor) * length;
+		// publish score
+		this->taskHandler->publishScore(taskAnnouncement.request_id, score, input_tray.id, storage_tray.id);
+	} else {
+		// reject task
+		this->taskHandler->rejectTask(taskAnnouncement.request_id);
+	}
+}
+
 std::string Agent::getAgentID() {
 	return agentID;
+}
+
+int Agent::getAgentIdInt() {
+	return agentIdInt;
+}
+
+float Agent::getAgentBattery() {
+	return batteryLevel;
 }
 
 geometry_msgs::Point Agent::getCurrentPosition() {
