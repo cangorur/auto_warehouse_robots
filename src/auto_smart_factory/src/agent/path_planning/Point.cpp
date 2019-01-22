@@ -46,8 +46,12 @@ Point operator *(float left, const Point& right) {
 	return Point(left * right.x, left * right.y);
 }
 
-Point operator *(const Point& left, float right) {
-	return Point(left.x * right, left.y * right);
+Point operator *(const Point& left, float factor) {
+	return Point(left.x * factor, left.y * factor);
+}
+
+Point operator /(const Point& left, float factor) {
+	return Point(left.x / factor, left.y / factor);
 }
 
 

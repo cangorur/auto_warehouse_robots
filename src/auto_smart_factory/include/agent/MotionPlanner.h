@@ -40,15 +40,6 @@ public:
 	 * @param orientation: current orientation of the agent*/
 	void update(geometry_msgs::Point position, double orientation);
 
-	/* Sets the current path to be driven by this motion planner and resets all necessary variables.
-	 * @param start_position: the start position of the agent to drive the given plan
-	 * @param new_path: the new path to drive
-	 * @param end_direction_point: the point the agent should look to when the path has been
-	 * 			       successfully driven
-	 * @param drive_backwares: whether the given plan shall be driven backwards or not*/
-	void newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path,
-	             geometry_msgs::Point end_direction_point, bool drive_backwards = false);
-
 	void newPath(Path path);
 
 	void enable(bool enable);

@@ -7,24 +7,113 @@
 #include "Math.h"
 #include "agent/path_planning/Path.h"
 
-Path::Path(std::vector<Point> points_) :
-		points(std::move(points_)) {
+Path::Path(float startTimeOffset, std::vector<Point> nodes_, std::vector<float> waitTimes_, RobotHardwareProfile* hardwareProfile) :
+		startTimeOffset(startTimeOffset),
+		nodes(std::move(nodes_)),
+		waitTimes(std::move(waitTimes_)),
+		hardwareProfile(hardwareProfile)
+{
 
-	length = 0;
-	if(points.size() >= 2) {
-		for(int i = 0; i < points.size() - 1; i++) {
-			length += Math::getDistance(points[i], points[i + 1]);
-		}	
-	}	
+	if(nodes.size() != waitTimes.size()) {
+		std::cout << "ERROR: nodes.size() != waitTimes.size()" << std::endl;
+	}
+
+	// Turning time is considered as part of the following line segment.
+	// Therefore, a line segment driving time = Time to turn to target Point + driving time to target point 
+
+	if(!nodes.empty()) {
+		duration += waitTimes.at(0);
+		batteryConsumption += hardwareProfile->getIdleBatteryConsumption(waitTimes.at(0));
+		departureTimes.push_back(startTimeOffset + waitTimes.at(0));
+
+		if(nodes.size() > 1) {
+			for(unsigned long i = 1; i < nodes.size(); i++) { // last waitTime is not used
+				float currentDistance = Math::getDistance(nodes.at(i - 1), nodes.at(i));
+
+				// Don't compute angle difference for last node
+				float angleDifference = 0;
+				if(i < nodes.size() - 1) {
+					angleDifference = Math::getAngleDifferenceInDegree(Math::getRotation(nodes[i] - nodes[i - 1]), Math::getRotation(nodes[i + 1] - nodes[i]));
+				}
+
+				distance += currentDistance;
+				duration += hardwareProfile->getDrivingDuration(currentDistance);
+				duration += waitTimes.at(i);
+
+				batteryConsumption += hardwareProfile->getIdleBatteryConsumption(waitTimes.at(i));
+				batteryConsumption += hardwareProfile->getDrivingBatteryConsumption(hardwareProfile->getDrivingDuration(currentDistance));
+				batteryConsumption += hardwareProfile->getDrivingBatteryConsumption(hardwareProfile->getTurningDuration(angleDifference));
+
+				// Departure times does not include turningTime as this is considered part of the next segment
+				departureTimes.push_back(startTimeOffset + duration);
+				duration += hardwareProfile->getTurningDuration(angleDifference);
+			}
+		}
+	}
 }
 
-const std::vector<Point>& Path::getPoints() const {
-	return points;
+const std::vector<Rectangle> Path::generateReservations() const {
+	std::vector<Rectangle> reservations;
+
+	float reservationSize = ROBOT_DIAMETER * 2.0f;
+
+	float currentTime = 0;
+	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
+		float currentLength = Math::getDistance(nodes[i], nodes[i + 1]);
+		Point currentDir = (nodes[i + 1] - nodes[i]) * 1.f * (1.f/currentLength);
+		float currentRotation = Math::getRotation(currentDir);
+
+		// Waiting time
+		if(waitTimes.at(i) > 0) {
+			reservations.emplace_back(nodes[i], Point(reservationSize, reservationSize), currentRotation, currentTime, currentTime + waitTimes[i]);
+			currentTime += waitTimes[i];
+		}
+
+		// Line segment
+		auto segmentCount = static_cast<unsigned int>(std::ceil(currentLength / maxReservationLength));
+		float segmentLength = currentLength / static_cast<float>(segmentCount);
+
+		for(unsigned int segment = 0; segment < segmentCount; segment++) {
+			Point startPos = nodes[i] + (segment * segmentLength * currentDir);
+			Point endPos = nodes[i] + ((segment + 1) * segmentLength * currentDir);
+
+			Point pos = (startPos + endPos) / 2.f;
+			float startTime = startTimeOffset + currentTime + (segment * segmentLength) - reservationSize / 2.f;
+			float endTime = startTimeOffset + currentTime + ((segment + 1) * segmentLength) + reservationSize / 2.f;
+
+			reservations.emplace_back(pos, Point(segmentLength + reservationSize, reservationSize), currentRotation, startTime, endTime);
+		}
+
+		currentTime += currentLength;
+	}
+
+	return reservations;
 }
 
-float Path::getLength() const {
-	return length;
+const std::vector<Point>& Path::getNodes() const {
+	return nodes;
 }
+
+const std::vector<float>& Path::getWaitTimes() const {
+	return waitTimes;
+}
+
+const std::vector<float>& Path::getDepartureTimes() const {
+	return departureTimes;
+}
+
+float Path::getDistance() const {
+	return distance;
+}
+
+float Path::getDuration() const {
+	return duration;
+}
+
+float Path::getBatteryConsumption() const {
+	return batteryConsumption;
+}
+
 
 visualization_msgs::Marker Path::getVisualizationMsgPoints() {
 	visualization_msgs::Marker msg;
@@ -43,7 +132,7 @@ visualization_msgs::Marker Path::getVisualizationMsgPoints() {
 	msg.color.r = 0.5f;
 	msg.color.a = 1.0;
 
-	for(const Point& point : points) {
+	for(const Point& point : nodes) {
 		geometry_msgs::Point p;
 		p.x = point.x;
 		p.y = point.y;
@@ -67,9 +156,9 @@ visualization_msgs::Marker Path::getVisualizationMsgLines() {
 	msg.scale.x = 0.1;
 
 	msg.color.g = 1.0f;
-	msg.color.a = 1.0;
+	msg.color.a = 0.6f;
 
-	for(const Point& point : points) {
+	for(const Point& point : nodes) {
 		geometry_msgs::Point p;
 		p.x = point.x;
 		p.y = point.y;

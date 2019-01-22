@@ -13,7 +13,7 @@
 #include <cmath>
 
 MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
-	pathObject(Path({}))
+	pathObject(Path())
 {
 	robotConfig = std::move(robot_config);
 	
@@ -58,32 +58,17 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	}
 }
 
-void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path, geometry_msgs::Point end_direction_point, bool drive_backwards) {
-	std::vector<Point> points;
-	
-	for(geometry_msgs::Point p : new_path) {
-		points.emplace_back(p.x, p.y);
-	}
-	
-	pathObject = Path(points);
-	hasFinishedCurrentPath = false;
-	currentTarget = pathObject.getPoints().front();
-	currentTargetIndex = 0;
-	previousTarget = Point(start_position.x, start_position.y);
-	this->newPath(Path(points));
-}
-
 void MotionPlanner::newPath(Path path) {
 	pathObject = path;
 	
-	if(path.getLength() > 0) {
-		currentTarget = pathObject.getPoints().front();
+	if(path.getDistance() > 0) {
+		currentTarget = pathObject.getNodes().front();
 		currentTargetIndex = 0;
 		hasFinishedCurrentPath = false;
 		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgPoints());
 		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
 	} else {
-		ROS_INFO("[MotionPlanner - %s]: Got path with length 0", agentID.c_str());
+		ROS_INFO("[MotionPlanner - %s]: Got path with distance 0", agentID.c_str());
 		hasFinishedCurrentPath = true;
 	}	
 }
@@ -111,7 +96,7 @@ bool MotionPlanner::isDone() {
 }
 
 bool MotionPlanner::hasPath() {
-	return pathObject.getLength() > 0;
+	return pathObject.getDistance() > 0;
 }
 
 void MotionPlanner::publishVelocity(double speed, double angle) {
@@ -213,13 +198,13 @@ float MotionPlanner::getRotationFromOrientationDifference(double orientation) {
 }
 
 void MotionPlanner::advanceToNextPathPoint() {
-	previousTarget = pathObject.getPoints().at(static_cast<unsigned long>(currentTargetIndex));
+	previousTarget = pathObject.getNodes().at(static_cast<unsigned long>(currentTargetIndex));
 	currentTargetIndex++;
-	currentTarget = pathObject.getPoints().at(static_cast<unsigned long>(currentTargetIndex));
+	currentTarget = pathObject.getNodes().at(static_cast<unsigned long>(currentTargetIndex));
 }
 
 bool MotionPlanner::isCurrentPointLastPoint() {
-	return currentTargetIndex == pathObject.getPoints().size() - 1;
+	return currentTargetIndex == pathObject.getNodes().size() - 1;
 }
 
 bool MotionPlanner::isDrivingBackwards() {

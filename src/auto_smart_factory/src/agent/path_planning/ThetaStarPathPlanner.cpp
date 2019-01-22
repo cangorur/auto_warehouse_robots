@@ -1,56 +1,39 @@
 #include <queue>
+#include <include/agent/path_planning/TimedLineOfSightResult.h>
 
 #include "ros/ros.h"
 #include "Math.h"
 #include "agent/path_planning/ThetaStarPathPlanner.h"
 
-ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap) :
-	map(thetaStarMap) {	
-
+ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile) :
+	map(thetaStarMap),
+	hardwareProfile(hardwareProfile) 
+{	
 }
 
-Path ThetaStarPathPlanner::findPath(Point start, Point target) {
+Path ThetaStarPathPlanner::findPath(Point start, Point target, float startingTime) {
 	const GridNode* startNode = map->getNodeClosestTo(start);
 	const GridNode* targetNode = map->getNodeClosestTo(target);
 
 	if(startNode == nullptr || targetNode == nullptr) {
-		ROS_INFO("Error: Start or Target not in ThetaStar map!");
-		return Path({});
+		std::cout << "Error: Start or Target not in ThetaStar map!" << std::endl;
+		return Path();
 	}
 
 	GridInformationMap exploredSet;
 	GridInformationPairQueue queue;
 
 	// Push start node
-	exploredSet.insert(std::make_pair(startNode->pos, ThetaStarGridNodeInformation(startNode, nullptr, 0)));
-	queue.push(std::make_pair(getHeuristic(startNode->pos, targetNode->pos) + 0, &exploredSet.at(startNode->pos)));
-	
+	exploredSet.insert(std::make_pair(startNode->pos, ThetaStarGridNodeInformation(startNode, nullptr, startingTime)));
+	queue.push(std::make_pair(startingTime, &exploredSet.at(startNode->pos)));
+
 	bool targetFound = false;
 	ThetaStarGridNodeInformation* targetInformation = nullptr;
 
-	ROS_INFO("Starting theta Star loop");
 	while(!queue.empty()) {
 		ThetaStarGridNodeInformation* current = queue.top().second;
 		ThetaStarGridNodeInformation* prev = current->prev;
 		queue.pop();
-
-		// Delayed Line-of-Sight check
-		if(prev != nullptr && USE_THETA_STAR && !map->isLineOfSightFree(current->node->pos, prev->node->pos)) {
-			// Line of sight not free
-			
-			// If node after start node
-			if(current->expandedBy == nullptr) {
-				current->g = std::numeric_limits<float>::max();
-				current->prev = nullptr;
-			} else {
-				current->prev = current->expandedBy;
-				current->g = current->expandedBy->g + Math::getDistance(current->expandedBy->node->pos, current->node->pos);
-
-				float heuristic = getHeuristic(current->node->pos, targetNode->pos);
-				queue.push(std::make_pair(current->g + heuristic, current));	
-			}
-			continue;
-		}
 
 		// Target found
 		if(current->node == targetNode) {
@@ -58,56 +41,126 @@ Path ThetaStarPathPlanner::findPath(Point start, Point target) {
 			targetInformation = current;
 			break;
 		}
-		
+
 		// Explore all neighbours		
 		for(auto neighbourNode : current->node->neighbours) {
-			ThetaStarGridNodeInformation* neighbour = &exploredSet.insert(std::make_pair(neighbourNode->pos, ThetaStarGridNodeInformation(neighbourNode, nullptr, std::numeric_limits<float>::max()))).first->second;
+			ThetaStarGridNodeInformation* neighbour = &exploredSet.insert(std::make_pair(neighbourNode->pos, ThetaStarGridNodeInformation(neighbourNode, nullptr, initialTime))).first->second;
 
-			float newDistance;
-			ThetaStarGridNodeInformation* newPrev;
-			ThetaStarGridNodeInformation* newExpandedBy;
-			
-			if(prev != nullptr && USE_THETA_STAR) {
-				newDistance = prev->g + Math::getDistance(prev->node->pos, neighbour->node->pos);
-				newPrev = prev;
-				newExpandedBy = current;
-			} else {
-				// Start node, only take direct path
-				newDistance = current->g + Math::getDistance(current->node->pos, neighbour->node->pos);
-				newPrev = current;
-				newExpandedBy = nullptr;
+			// Driving time only includes the additional time to drive from newPrev to neighbour.
+			// Therefore: newPrev->time + drivingTime + waitingTime = neighbour->time must be true!
+			// Waiting time is the time which must be waited at newPrev before driving can start.
+
+			// Turning time is considered as part of the following line segment. => drivingTime includes previous turning time
+			// Therefore, a line segment driving time = Time to turn to target Point + driving time to target point
+
+			float drivingTime = 0;
+			float waitingTime = 0;
+			ThetaStarGridNodeInformation* newPrev = nullptr;
+			bool makeConnection = false;
+
+			// Only try direct connection with prev if not at start node
+			bool connectionWithPrevPossible = prev != nullptr;
+			if(connectionWithPrevPossible) {
+				float timeAtPrev = prev->time;
+				float timeAtNeighbour = prev->time + getDrivingTime(prev, neighbour);
+
+				// Todo optimize and maybe reuse
+				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(prev->node->pos, timeAtPrev, neighbour->node->pos, timeAtNeighbour);
+				connectionWithPrevPossible = !result.blockedByStatic && !result.blockedByTimed && (!result.hasUpcomingObstacle || (result.hasUpcomingObstacle && timeAtNeighbour < result.lastValidEntryTime));
 			}
-			
-			if(newDistance < neighbour->g) {
-				float heuristic = getHeuristic(neighbour->node->pos, targetNode->pos);
-				
-				neighbour->g = newDistance;
-				neighbour->prev = newPrev;
-				neighbour->expandedBy = newExpandedBy;
-				queue.push(std::make_pair(newDistance + heuristic, neighbour));
+
+			if(connectionWithPrevPossible) {
+				drivingTime = getDrivingTime(prev, neighbour);
+				newPrev = prev;
+				makeConnection = true;
+			} else {
+				float timeAtCurrent = current->time;
+				float timeAtNeighbour = current->time + getDrivingTime(current, neighbour);
+				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(current->node->pos, timeAtCurrent, neighbour->node->pos, timeAtNeighbour);
+
+				if(!result.blockedByStatic) {
+					bool waitBecauseUpcomingObstacle = result.hasUpcomingObstacle && timeAtNeighbour >= result.lastValidEntryTime;
+
+					if(!result.blockedByTimed && !waitBecauseUpcomingObstacle) {
+						drivingTime = getDrivingTime(current, neighbour);
+						newPrev = current;
+						makeConnection = true;
+					} else {
+						// Wait
+						if(waitBecauseUpcomingObstacle) {
+							waitingTime = result.freeAfterUpcomingObstacle - current->time;
+							//printf("Waiting because of upcoming obstacle: %f - Pos: %.1f/%.1f\n", waitingTime, current->node->pos.x, current->node->pos.y);
+						} else {
+							waitingTime = result.freeAfter - current->time;
+							//printf("Waiting because of current obstacle: %f - Pos: %.1f/%.1f - CurrentTime: %f\n", waitingTime, current->node->pos.x, current->node->pos.y, current->time);
+						}
+
+						drivingTime = getDrivingTime(current, neighbour);
+						newPrev = current;
+						makeConnection = true;
+					}
+				}
+			}
+
+			if(makeConnection && (newPrev->time + drivingTime + waitingTime) < neighbour->time) { // Todo check last condition
+				// Check for if connection is valid for upcoming obstacles
+
+				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime)) {
+					float heuristic = getHeuristic(neighbour, targetNode->pos);
+
+					neighbour->time = newPrev->time + drivingTime + waitingTime;
+					neighbour->prev = newPrev;
+					neighbour->waitTimeAtPrev = waitingTime;
+					queue.push(std::make_pair(neighbour->time + heuristic, neighbour));
+
+					//printf("Added %.1f/%.1f with time %f\n", neighbour->node->pos.x, neighbour->node->pos.y, neighbour->time);
+				}
 			}
 		}
 	}
-	ROS_INFO("Leaving theta Star loop");
-	
+
 	if(targetFound) {
-		std::vector<Point> pathNodes;
-		ThetaStarGridNodeInformation* currentGridInformation = targetInformation;
-
-		while(currentGridInformation != nullptr) {
-			pathNodes.emplace_back(currentGridInformation->node->pos);
-			currentGridInformation = currentGridInformation->prev;
-		}
-		std::reverse(pathNodes.begin(), pathNodes.end());
-
-		ROS_INFO("Returning path");
-		return Path(pathNodes);
+		return constructPath(startingTime, targetInformation);
 	} else {
-		ROS_INFO("No path found!");
-		return Path({});	
-	}	
+		std::cout << "No path found!" << std::endl;
+		return Path();
+	}
 }
 
-float ThetaStarPathPlanner::getHeuristic(Point point, Point target) const {
-	return Math::getDistance(point, target);
+float ThetaStarPathPlanner::getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const {
+	return hardwareProfile->getDrivingDuration(Math::getDistance(current->node->pos, targetPos));
 }
+
+float ThetaStarPathPlanner::getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const {
+	// Include turningTime to current line segment if prev is available
+	float turningTime = 0;
+
+	if(current->prev != nullptr) {
+		float prevLineSegmentRotation = Math::getRotation(current->node->pos - current->prev->node->pos);
+		float currLineSegmentRotation = Math::getRotation(target->node->pos - current->node->pos);
+
+		turningTime = hardwareProfile->getTurningDuration(std::abs(prevLineSegmentRotation - currLineSegmentRotation));
+	}
+
+	return hardwareProfile->getDrivingDuration(Math::getDistance(current->node->pos, target->node->pos)) + turningTime;
+}
+
+Path ThetaStarPathPlanner::constructPath(float startingTime, ThetaStarGridNodeInformation* targetInformation) const {
+	std::vector<Point> pathNodes;
+	std::vector<float> waitTimes;
+	ThetaStarGridNodeInformation* currentGridInformation = targetInformation;
+	float waitTimeAtPrev = 0;
+
+	while(currentGridInformation != nullptr) {
+		pathNodes.emplace_back(currentGridInformation->node->pos);
+		waitTimes.push_back(waitTimeAtPrev);
+
+		waitTimeAtPrev = currentGridInformation->waitTimeAtPrev;
+		currentGridInformation = currentGridInformation->prev;
+	}
+	std::reverse(pathNodes.begin(), pathNodes.end());
+	std::reverse(waitTimes.begin(), waitTimes.end());
+
+	return Path(startingTime, pathNodes, waitTimes, hardwareProfile);
+}
+

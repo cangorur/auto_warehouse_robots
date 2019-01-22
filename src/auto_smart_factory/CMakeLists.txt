@@ -248,12 +248,13 @@ add_executable(agent_node
 		src/agent/path_planning/Map.cpp
 		src/agent/path_planning/OrientedPoint.cpp
 		src/agent/path_planning/Path.cpp
-		src/agent/path_planning/PathPlanner.cpp
 		src/agent/path_planning/Point.cpp
 		src/agent/path_planning/Rectangle.cpp
 		src/agent/path_planning/ThetaStarGridNodeInformation.cpp
 		src/agent/path_planning/ThetaStarMap.cpp
 		src/agent/path_planning/ThetaStarPathPlanner.cpp
+		src/agent/path_planning/RobotHardwareProfile.cpp
+		src/agent/path_planning/TimedLineOfSightResult.cpp
 
 		src/agent/Agent.cpp
 		src/agent/AgentNode.cpp

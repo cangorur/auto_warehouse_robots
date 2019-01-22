@@ -35,6 +35,7 @@
 #include <auto_smart_factory/CollisionAction.h>
 
 #include "agent/path_planning/Map.h"
+#include "agent/path_planning/RobotHardwareProfile.h"
 
 // defines the task id type
 typedef uint32_t TaskId;
@@ -66,9 +67,11 @@ public:
 	 * That is why it is called every tick (see AgentNode.cpp). */
 	void update();
 
-	// tmp
+	// tmp for testing
 	bool isPathSet = false;
 
+	
+	
 	ros::Publisher* getVisualisationPublisher();
 
 protected:
@@ -175,6 +178,8 @@ protected:
 	
 	///////////////////////////////////////////////////////////
 	Map* map;
+	
+	RobotHardwareProfile* hardwareProfile;
 	
 	// information about the current warehouse map
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;

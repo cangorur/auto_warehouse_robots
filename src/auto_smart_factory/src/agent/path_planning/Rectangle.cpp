@@ -1,23 +1,30 @@
 #include <algorithm>
 #include <include/agent/path_planning/Rectangle.h>
-
-
 #include "agent/path_planning/Rectangle.h"
 #include "Math.h"
 
-Rectangle::Rectangle(Point pos_, Point size_, float rotation_) :
+Rectangle::Rectangle(Point pos_, Point size_, float rotation_, float startTime, float endTime) :
 		pos(pos_),
 		size(size_),
-		rotation(rotation_) {
-	
+		rotation(rotation_),
+		startTime(startTime),
+		endTime(endTime)
+{
+	isAxisAligned = false;
 	if(static_cast<int>(std::roundf(rotation)) % 90 == 0) {
 		rotation = std::roundf(rotation);
 		isAxisAligned = true;
 	}
 	
-	Point sizeInflated = Point(size.x + ROBOT_DIAMETER * 2, size.y + ROBOT_DIAMETER * 2);
-	
+	// Todo change color
+	if(startTime == endTime && endTime == -1) {
+		//color = sf::Color(0, 0, 200);
+	} else {
+		//color = sf::Color(200, 0, 200);
+	}
+
 	// Generate inflated points
+	Point sizeInflated = Point(size.x + ROBOT_DIAMETER * 2, size.y + ROBOT_DIAMETER * 2);
 	Point diagonalInflated = Point(size.x + ROBOT_DIAMETER * 2, size.y + ROBOT_DIAMETER * 2) * 0.5f;
 	Point diagonalInflatedMirrored = Point(diagonalInflated.x, -diagonalInflated.y);
 	
@@ -31,6 +38,9 @@ Rectangle::Rectangle(Point pos_, Point size_, float rotation_) :
 	minYInflated = std::min({pointsInflated[0].y, pointsInflated[1].y, pointsInflated[2].y, pointsInflated[3].y});
 	maxYInflated = std::max({pointsInflated[0].y, pointsInflated[1].y, pointsInflated[2].y, pointsInflated[3].y});
 }
+
+Rectangle::Rectangle(Point pos, Point size, float rotation) :
+		Rectangle(pos, size, rotation, -1, -1) {}
 
 bool Rectangle::isInsideInflated(const Point& point) const {
 	bool isInAxisAligned = isInsideAxisAlignedInflated(point);
@@ -57,7 +67,7 @@ bool Rectangle::isInsideAxisAlignedInflated(const Point& point) const {
 	         point.y < minYInflated || point.y > maxYInflated);
 }
 
-Point* Rectangle::getPointsInflated() {
+const Point* Rectangle::getPointsInflated() const {
 	return pointsInflated;
 }
 
@@ -92,4 +102,21 @@ bool Rectangle::getIsAxisAligned() const {
 float Rectangle::getRotation() const {
 	return rotation;
 }
+
+bool Rectangle::doesOverlapTimeRange(float start, float end) const {
+	return (start <= this->endTime) && (end >= this->startTime);
+}
+
+float Rectangle::getFreeAfter() const {
+	return endTime;
+}
+
+float Rectangle::getStartTime() const {
+	return startTime;
+}
+
+float Rectangle::getEndTime() const {
+	return endTime;
+}
+
 

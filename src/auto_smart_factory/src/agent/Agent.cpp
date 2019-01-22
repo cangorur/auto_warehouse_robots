@@ -42,10 +42,10 @@ void Agent::update() {
 
 		if(!isPathSet) {
 			if(getCurrentPosition().x != 0 && map != nullptr) {
-				Path p = map->getThetaStarPath(Point(this->getCurrentPosition()), Point(1, agentIdInt + 1));
+				Path p = map->getThetaStarPath(Point(this->getCurrentPosition()), Point(1, agentIdInt + 1), 0, hardwareProfile);
 
 				this->motionPlanner->newPath(p);
-				if(p.getLength() > 0) {
+				if(p.getDistance() > 0) {
 					this->motionPlanner->enable(true);
 					this->motionPlanner->start();
 					isPathSet = true;
@@ -76,6 +76,8 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	ros::NodeHandle pn("~");
 	warehouseConfig = warehouse_configuration;
 	robotConfig = robot_configuration;
+	
+	hardwareProfile = new RobotHardwareProfile(robot_configuration.max_linear_vel, robot_configuration.max_angular_vel, robot_configuration.discharging_rate, 0.f);
 
 	if(!setupIdlePosition()) {
 		return false;

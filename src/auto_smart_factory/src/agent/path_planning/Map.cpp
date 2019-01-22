@@ -2,7 +2,6 @@
 #include <iostream>
 #include <include/agent/path_planning/Map.h>
 
-
 #include "Math.h"
 #include "agent/path_planning/Rectangle.h"
 #include "agent/path_planning/Map.h"
@@ -45,7 +44,7 @@ visualization_msgs::Marker Map::getVisualization() {
 	p.z = 1.f;
 	// Obstacles
 	for(Rectangle obstacle : obstacles) {
-		Point* points = obstacle.getPointsInflated();
+		const Point* points = obstacle.getPointsInflated();
 		// First triangle
 		p.x = points[0].x;
 		p.y = points[0].y;
@@ -73,8 +72,6 @@ visualization_msgs::Marker Map::getVisualization() {
 		msg.points.push_back(p);
 	}
 	
-	//thetaStarMap.draw(renderWindow);
-
 	return msg;
 }
 
@@ -88,7 +85,7 @@ bool Map::isInsideAnyInflatedObstacle(const Point& point) const {
 	return false;
 }
 
-bool Map::isLineOfSightFree(const Point& pos1, const Point& pos2) const {
+bool Map::isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const {
 	for(Rectangle obstacle : obstacles) {
 		if(Math::doesLineSegmentIntersectRectangle(pos1, pos2, obstacle)) {
 			return false;
@@ -98,31 +95,73 @@ bool Map::isLineOfSightFree(const Point& pos1, const Point& pos2) const {
 	return true;
 }
 
-/*bool Map::isTrajectoryFree(DubinsTrajectory& trajectory) const {
-	std::vector<Point>& pathPoints = trajectory.getPathPoints();
-	
-	int straightIndex = trajectory.getFirstStraightIndex();
-	for(int i = 0; i < pathPoints.size() - 1; i++) {
-		if(!isPointInMap(pathPoints[i])) {
-			return false;
-		}
-		
-		if(i == straightIndex) {
-			for(Rectangle obstacle : obstacles) {
-				if(Math::doesLineSegmentIntersectRectangle(pathPoints[i], pathPoints[i + 1], obstacle)) {
-					return false;
-				}
-			}	
-		} else {
-			if(isInsideAnyInflatedObstacle(pathPoints[i])) {
-				return false;
-			}
-		}		
+bool Map::isTimedLineOfSightFree(const Point& pos1, float startTime, const Point& pos2, float endTime) const {
+	if(!isStaticLineOfSightFree(pos1, pos2)) {
+		return false;
 	}
 
-	// No need to check if last point is in map/obstacle because it was sampled valid
+	for(const Rectangle& reservation : reservations) {
+		if(reservation.doesOverlapTimeRange(startTime, endTime) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+			return false;
+		}
+	}
+
 	return true;
-}*/
+}
+
+TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, float startTime, const Point& pos2, float endTime) const {
+	TimedLineOfSightResult result;
+
+	if(!isStaticLineOfSightFree(pos1, pos2)) {
+		result.blockedByStatic = true;
+		return result;
+	}
+
+	for(const Rectangle& reservation : reservations) {
+		// Directly blocked
+		if(reservation.doesOverlapTimeRange(startTime + 0.01f, endTime) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+			result.blockedByTimed = true;
+			if(reservation.getFreeAfter() > result.freeAfter) {
+				result.freeAfter = reservation.getFreeAfter();
+			}
+		}
+
+		// Upcoming obstacles			
+		if(Math::isPointInRectangle(pos2, reservation) && reservation.getStartTime() > endTime) {
+			result.hasUpcomingObstacle = true;
+			// Todo make adaptive
+			float minTimeToLeave = 16;
+
+			float lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
+			if(lastValidEntryTime < result.lastValidEntryTime) {
+				result.lastValidEntryTime = lastValidEntryTime;
+				result.freeAfterUpcomingObstacle = reservation.getEndTime();
+			}
+		}
+	}
+
+	return result;
+}
+
+bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, float startTime, float waitingTime, float drivingTime) const {
+	float endTime = startTime + waitingTime + drivingTime;
+
+	for(const Rectangle& reservation : reservations) {
+		// Check if the waiting part is free
+		if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime) && Math::isPointInRectangle(pos1, reservation)) {
+			//printf("Connection dropped due to waiting: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
+			return false;
+		}
+
+		// Check if the driving part is free
+		if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.001f, endTime) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+			//printf("Connection dropped due to driving: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
+			return false;
+		}
+	}
+
+	return true;
+}
 
 Point Map::getRandomFreePoint() const {
 	Point point;
@@ -136,32 +175,6 @@ Point Map::getRandomFreePoint() const {
 	return point;	
 }
 
-/*OrientationPoint Map::getRandomFreeOrientationPoint() const {
-	Point point;
-	bool pointFound = false;
-
-	while(!pointFound) {
-		point = Point(Math::getRandom(-width/2.f, width/2.f), Math::getRandom(-height/2.f, height/2.f));
-		pointFound = !isInsideAnyInflatedObstacle(point);
-	}
-	
-	float angle = Math::getRandom(0, 360);
-
-	return OrientationPoint(point, angle);
-}*/
-
-/*OrientationPoint Map::getRandomFreeOrientationPointAlongPath(PathFlowField& pathFlowField) const {
-	OrientationPoint point;
-	bool pointFound = false;
-
-	while(!pointFound) {
-		point = pathFlowField.getRandomPoint();
-		pointFound = !isInsideAnyInflatedObstacle(point.pos) && isPointInMap(point.pos);
-	}
-	
-	return point;
-}*/
-
 float Map::getWidth() const {
 	return width;
 }
@@ -174,11 +187,21 @@ float Map::getMargin() const {
 	return margin;
 }
 
-Path Map::getThetaStarPath(const Point& start, const Point& end) {
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap);
-	return thetaStarPathPlanner.findPath(start, end);
-}
-
 bool Map::isPointInMap(const Point& pos) const {
 	return pos.x >= margin && pos.x <= width - margin && pos.y >= margin && pos.y <= height - margin;
+}
+
+void Map::deleteReservations() {
+	reservations.clear();
+}
+
+void Map::addReservations(std::vector<Rectangle> newReservations) {
+	for(const auto& r : newReservations) {
+		reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime());
+	}
+}
+
+Path Map::getThetaStarPath(const Point& start, const Point& end, float startingTime, RobotHardwareProfile* hardwareProfile) {
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
+	return thetaStarPathPlanner.findPath(start, end, startingTime);
 }
