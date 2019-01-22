@@ -21,6 +21,7 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 	}
 	
 	thetaStarMap = ThetaStarMap(this, warehouseConfig.map_configuration.resolutionThetaStar);
+	this->reservations.clear();
 }
 
 visualization_msgs::Marker Map::getVisualization() {
