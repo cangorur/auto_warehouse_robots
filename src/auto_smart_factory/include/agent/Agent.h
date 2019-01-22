@@ -98,7 +98,7 @@ protected:
 
 	/* Sets if this agent is idle or not and if the state has been changed it sends a heartbeat.
 	 * @param idle: whether to set to idle state */
-	void setState(bool idle);
+	void setIdle(bool idle);
 
 	/* Returns whether it's time for next heartbeat to send.
 	 * @return True if next heartbeat should be sended */

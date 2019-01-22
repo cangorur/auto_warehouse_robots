@@ -27,19 +27,18 @@ Agent::~Agent() {
 
 void Agent::update() {
 	if(initialized) {
-		//register at taskplanner if not already done
+		setIdle(true);
+		
+		// Register at taskplanner if not already done
 		if(!registered && registerAgent()) {
 			setupTaskHandling();
 		}
 
-		//send heartbeat if the time has come to do so
 		if(isTimeForHeartbeat()) {
 			sendHeartbeat();
 		}
 
 		//PathPlanning
-		setState(true);
-
 		if(!isPathSet) {
 			if(getCurrentPosition().x != 0 && map != nullptr) {
 				Path p = map->getThetaStarPath(Point(this->getCurrentPosition()), Point(1, agentIdInt + 1), 0, hardwareProfile);
@@ -165,7 +164,7 @@ void Agent::setupTaskHandling() {
 	this->assign_task_srv = pn.advertiseService("assign_task", &Agent::assignTask, this);
 }
 
-void Agent::setState(bool idle) {
+void Agent::setIdle(bool idle) {
 	if((isIdle && !idle) || (!isIdle && idle)) {
 		isIdle = idle;
 		sendHeartbeat();
@@ -287,7 +286,7 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			ROS_INFO("[%s]: Task %i successfully assigned!", agentID.c_str(), req.task_id);
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
 			ROS_INFO("assignTask %s %.2f %i", agentID.c_str(), initialTimeOfCurrentTask, task_id);
-			setState(false);     //Set to non idle if a task is assigned
+			setIdle(false);
 			res.success = true;
 		} else {
 			ROS_WARN("[%s]: Is busy! - Task %i has not been assigned!",

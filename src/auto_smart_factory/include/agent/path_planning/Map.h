@@ -42,7 +42,7 @@ public:
 	
 	Point getRandomFreePoint() const;
 
-	void deleteReservations();
+	void deleteExpiredReservations(float time);
 	void addReservations(std::vector<Rectangle> newReservations);
 	
 	// Getter

@@ -191,8 +191,16 @@ bool Map::isPointInMap(const Point& pos) const {
 	return pos.x >= margin && pos.x <= width - margin && pos.y >= margin && pos.y <= height - margin;
 }
 
-void Map::deleteReservations() {
-	reservations.clear();
+void Map::deleteExpiredReservations(float time) {
+	auto iter = reservations.begin();
+
+	while(iter != reservations.end()) {
+		if((*iter).getEndTime() > time + 0.5f) {
+			iter = reservations.erase(iter);
+		} else {
+			iter++;
+		}
+	}
 }
 
 void Map::addReservations(std::vector<Rectangle> newReservations) {
