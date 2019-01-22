@@ -7,17 +7,6 @@ TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub)
 {
 }
 
-/*
-void TaskHandler::announcementCallback(const auto_smart_factory::TaskAnnouncement &tA) {
-    // handle task announcement
-    if(tA.start_ids.size() > 0 && tA.end_ids.size() > 0){
-        publishScore(tA.request_id, 15.5, tA.start_ids.front(), tA.end_ids.front());
-    } else {
-        ROS_WARN("[TaskHandler - %s] received TaskAnnouncement with %d start Trays and %d end trays", agentId.c_str(), (unsigned int)tA.start_ids.size(), (unsigned int)tA.end_ids.size());
-    }
-}
-*/
-
 void TaskHandler::publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId) {
     auto_smart_factory::TaskRating scoreMessage;
     scoreMessage.robot_id = agentId;

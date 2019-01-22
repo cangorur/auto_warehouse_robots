@@ -346,8 +346,8 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 				// take the last position of the last task
 				sourcePath = map->getThetaStarPath(Point(taskHandler->getLastTask()->getTargetPosition()), input_tray);
 			} else {
-				// take the current position - TODO: is this the idle position?
-				sourcePath = map->getThetaStarPath(Point(idlePosition), input_tray);
+				// take the current position
+				sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray);
 			}
 			Path targetPath = map->getThetaStarPath(input_tray, storage_tray);
 			taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, 
@@ -421,8 +421,8 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 		// take the last position of the last task
 		sourcePath = map->getThetaStarPath(Point(taskHandler->getLastTask()->getTargetPosition()), input_tray);
 	} else {
-		// take the current position - TODO: is this the idle position?
-		sourcePath = map->getThetaStarPath(Point(idlePosition), input_tray);
+		// take the current position
+		sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray);
 	}
 	Path targetPath = map->getThetaStarPath(input_tray, storage_tray);
 	// get Path length
