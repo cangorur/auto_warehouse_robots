@@ -408,13 +408,9 @@ void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 
 	if(this->motionPlanner->isEnabled()) {
 		// this->obstacleDetection->enable(true);
-		//this->motionPlanner->update(position, 2*asin(orientation.z));
-		tf::Quaternion q(orientation.x, orientation.y, orientation.z, orientation.w);
-		tf::Matrix3x3 m(q);
-		double roll, pitch, yaw;
-		m.getRPY(roll, pitch, yaw);
-		this->motionPlanner->update(position, yaw);
-		//printf("[Transform] Z: %.4f | Yaw: %.4f\n", 2*asin(orientation.z), yaw);
+		tf::Quaternion q;
+		tf::quaternionMsgToTF(orientation, q);
+		this->motionPlanner->update(position, tf::getYaw(q));
 	} else {
 		// this->obstacleDetection->enable(false);
 	}
