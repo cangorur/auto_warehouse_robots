@@ -46,9 +46,11 @@ public:
 
 	/* Turn the robot on spot facing orientation when finished */
 	void turnTowards(Point target);
+	void turnTowards(double direction);
 
-	/* Align the robots towards a target */
+	/* Align the robots towards a target / direction */
 	void alignTowards(Point target);
+	void alignTowards(double direction);
 
 	/* Sets the current path to be driven by this motion planner and resets all necessary variables.
 	 * @param start_position: the start position of the agent to drive the given plan
@@ -119,6 +121,7 @@ private:
 	Point previousTarget;
 
 	Point alignTarget;
+	double alignDirection;
 
 	double turnThreshold = Math::toRad(65);
 

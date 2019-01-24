@@ -2,6 +2,8 @@
 
 #include <utility>
 
+#include "ros/ros.h"
+
 #include "agent/Agent.h"
 #include <visualization_msgs/Marker.h>
 
@@ -41,7 +43,11 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	}
 
 	if (mode == Mode::ALIGN) {
-		turnTowards(alignTarget);
+		if (alignDirection == -1.0)
+			turnTowards(alignTarget);
+		else
+			turnTowards(alignDirection);
+
 		return;
 	}
 
@@ -85,9 +91,25 @@ void MotionPlanner::turnTowards(Point target) {
 	publishVelocity(0, Math::clamp(std::abs(rotation), 0, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
 }
 
+void MotionPlanner::turnTowards(double direction) {
+	double rotation = static_cast<double>(Math::getAngleDifferenceInRad(pos.o, direction));
+	ROS_FATAL("MP: rotation: %.4f | robot: %.4f | target: %.4f", rotation, pos.o, direction);
+	if(std::abs(rotation) <= 0.1f) {
+		mode = Mode::FINISHED;
+		return;
+	}
+	publishVelocity(0, Math::clamp(std::abs(rotation), 0, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+}
+
 void MotionPlanner::alignTowards(Point target) {
 	mode = Mode::ALIGN;
 	alignTarget = target;
+	alignDirection = -1.0;
+}
+
+void MotionPlanner::alignTowards(double direction) {
+	mode = Mode::ALIGN;
+	alignDirection = direction;
 }
 
 void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path, geometry_msgs::Point end_direction_point, bool drive_backwards) {
