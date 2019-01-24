@@ -14,6 +14,8 @@
 #include "agent/Position.h"
 #include "agent/PidController.h"
 
+#include "Math.h"
+
 class Agent;
 
 /* The motion planner component manages all movement related stuff ongoing at the agents side.

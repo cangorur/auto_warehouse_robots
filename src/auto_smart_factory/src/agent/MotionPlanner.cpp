@@ -6,7 +6,6 @@
 #include <visualization_msgs/Marker.h>
 
 #include "agent/MotionPlanner.h"
-#include "Math.h"
 
 #include <cmath>
 
