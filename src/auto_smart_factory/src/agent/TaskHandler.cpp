@@ -69,7 +69,6 @@ void TaskHandler::executeTask(void) {
             if (currentTask->isTransportation()) {
                 currentTask->setState(Task::State::TO_SOURCE);
                 motionPlanner->newPath(((TransportationTask*) currentTask)->getPathToSource());
-                this->motionPlanner->enable(true);
                 this->motionPlanner->start();
             } else if (currentTask->isCharging()) {
                 currentTask->setState(Task::State::TO_TARGET);
@@ -87,7 +86,6 @@ void TaskHandler::executeTask(void) {
             //if (gripper->loadPackage(true)) {
                 currentTask->setState(Task::State::TO_TARGET);
                 this->motionPlanner->newPath(currentTask->getPathToTarget());
-                this->motionPlanner->enable(true);
                 this->motionPlanner->start();
             //}
             break;
@@ -110,7 +108,6 @@ void TaskHandler::executeTask(void) {
         case Task::State::DROPOFF:
             //if (gripper->loadPackage(false)) {
                 currentTask->setState(Task::State::FINISHED);
-                this->motionPlanner->enable(false);
                 this->motionPlanner->stop();
             //}
             break;
