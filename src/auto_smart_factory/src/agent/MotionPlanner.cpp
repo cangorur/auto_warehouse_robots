@@ -75,6 +75,10 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 
 	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed-minDrivingSpeed);
 
+	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.4f) {
+		linearVelocity = 0.1;
+	}
+
 	publishVelocity(linearVelocity, angularVelocity);
 
 	/* Debug print
@@ -175,7 +179,11 @@ void MotionPlanner::publishVelocity(double speed, double angle) {
 }
 
 bool MotionPlanner::waypointReached(Position *current) {
-	return (Math::getDistance(Point(current->x, current->y), currentTarget) <= distToReachPoint);
+	if (!isCurrentPointLastPoint())	{
+		return (Math::getDistance(Point(current->x, current->y), currentTarget) <= distToReachPoint);
+	} else {
+		return (Math::getDistance(Point(current->x, current->y), currentTarget) <= distToReachFinalPoint);
+	}
 }
 
 bool MotionPlanner::driveCurrentPath(Position currentPosition) {
