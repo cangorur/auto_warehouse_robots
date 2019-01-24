@@ -58,7 +58,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		}
 	}
 
-	if (mode == Mode::TURN || std::abs(getRotationToTarget(pos, currentTarget)) >= M_PI_2) {
+	if (mode == Mode::TURN || std::abs(getRotationToTarget(pos, currentTarget)) >= turnThreshold) {
 		mode = Mode::TURN;
 		turnTowards(currentTarget);
 		return;

@@ -117,6 +117,8 @@ private:
 
 	Point alignTarget;
 
+	double turnThreshold = Math::toRad(65);
+
 	float minTurningSpeed = 0.08;
 	
 	float maxTurningSpeed; // = 1;
