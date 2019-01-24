@@ -40,6 +40,9 @@ public:
 	 * @param orientation: current orientation of the agent*/
 	void update(geometry_msgs::Point position, double orientation);
 
+	/* Turn the robot on spot facing orientation when finished */
+	void MotionPlanner::turnOnSpot(double orientation);
+
 	/* Sets the current path to be driven by this motion planner and resets all necessary variables.
 	 * @param start_position: the start position of the agent to drive the given plan
 	 * @param new_path: the new path to drive
@@ -85,7 +88,7 @@ private:
 
 	bool waypointReached(Position* current);
 
-		/// information about the current role of the agent
+	/// information about the current role of the agent
 	auto_smart_factory::RobotConfiguration robotConfig;
 
 	/// Publisher for the motion actuator topic
@@ -130,6 +133,8 @@ protected:
 	std::string agentID;
 
 	PidController* steerPid;
+
+	Position pos;
 
 	double currentSpeed;
 	double currentRotation;

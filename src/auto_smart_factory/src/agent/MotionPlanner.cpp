@@ -32,19 +32,25 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 }
 
 MotionPlanner::~MotionPlanner() {
+	delete steerPid;
 };
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
-	Position pos(position.x, position.y, orientation, ros::Time::now());
+	pos.update(position.x, position.y, orientation, ros::Time::now());
 
-	if(waypointReached(&pos)) {
+	if (hasFinishedCurrentPath) {
+		publishVelocity(0.0, 0.0);
+		return;
+	}
+
+	if (waypointReached(&pos)) {
 		if (!isCurrentPointLastPoint())	{
 			advanceToNextPathPoint();
 		} else {
 			publishVelocity(0.0, 0.0);
 		}
 	} else {
-		double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(position.x, position.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
+		double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(pos.x, pos.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
 		double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
 		angularVelocity = std::min(std::max(angularVelocity, (double) -maxTurningSpeed), (double) maxTurningSpeed);
 
@@ -56,6 +62,10 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 			printf("[MP %s] cte: %.4f | speed: %.4f | steer: %.4f\n", agentID.c_str(), cte, linearVelocity, angularVelocity);
 		}
 	}
+}
+
+void MotionPlanner::turnOnSpot(double orientation) {
+	
 }
 
 void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path, geometry_msgs::Point end_direction_point, bool drive_backwards) {

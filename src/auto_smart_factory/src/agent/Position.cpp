@@ -24,5 +24,12 @@ double Position::getDistance(Position* target) {
     return sqrt((pow(target->y -y, 2.0) + (pow(target->x - x, 2.0))));
 }
 
+void Position::update(double nx, double ny, double no, ros::Time nt) {
+	x = nx;
+	y = ny;
+	o = no;
+	t = nt;
+}
+
 Position::~Position() {
 }
