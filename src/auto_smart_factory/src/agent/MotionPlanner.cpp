@@ -99,7 +99,6 @@ void MotionPlanner::turnTowards(Point target) {
 
 void MotionPlanner::turnTowards(double direction) {
 	double rotation = static_cast<double>(Math::getAngleDifferenceInRad(pos.o, direction));
-	ROS_FATAL("MP: rotation: %.4f | robot: %.4f | target: %.4f", rotation, pos.o, direction);
 	if(std::abs(rotation) <= 0.1f) {
 		mode = Mode::FINISHED;
 		return;
