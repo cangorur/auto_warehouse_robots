@@ -211,7 +211,7 @@ OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 	double input_dy = sin(tray.orientation * PI / 180);
 	input_drive_point.x = tray.x + 0.5 * input_dx;
 	input_drive_point.y = tray.y + 0.5 * input_dy;
-	input_drive_point.o = tray.orientation + 180;
+	input_drive_point.o = Math::toRad(tray.orientation + 180);
 
 	return input_drive_point;
 
