@@ -26,7 +26,7 @@ class Agent;
 class MotionPlanner {
 
 public:
-	enum class Mode {READY, PID, TURN, FINISHED, STOP};
+	enum class Mode {READY, PID, TURN, FINISHED, STOP, RECOVERY, ALIGN};
 
 	/* Constructor that hands over some the robot configuration as well as
 	 * the motion acutator publisher.
@@ -45,6 +45,9 @@ public:
 	/* Turn the robot on spot facing orientation when finished */
 	void turnTowards(Point target);
 
+	/* Align the robots towards a target */
+	void alignTowards(Point target);
+
 	/* Sets the current path to be driven by this motion planner and resets all necessary variables.
 	 * @param start_position: the start position of the agent to drive the given plan
 	 * @param new_path: the new path to drive
@@ -55,6 +58,8 @@ public:
 	             geometry_msgs::Point end_direction_point, bool drive_backwards = false);
 
 	void newPath(Path path);
+
+	Mode getMode(void);
 
 	void resume();
 	void start();
@@ -100,7 +105,7 @@ private:
 	std::vector<geometry_msgs::Point> path;
 
 	/// the current mode
-	Mode mode;
+	Mode mode = Mode::STOP;
 	
 	/////////////////////////////////////
 	Path pathObject;
@@ -109,6 +114,8 @@ private:
 	int currentTargetIndex = -1;
 
 	Point previousTarget;
+
+	Point alignTarget;
 
 	float minTurningSpeed = 0.08;
 	
