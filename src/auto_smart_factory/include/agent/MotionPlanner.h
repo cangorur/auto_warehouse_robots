@@ -26,6 +26,8 @@ class Agent;
 class MotionPlanner {
 
 public:
+	enum class Mode {READY, PID, TURN, FINISHED, STOP};
+
 	/* Constructor that hands over some the robot configuration as well as
 	 * the motion acutator publisher.
 	 * @param robot_config: information about the role of the agent this motion planner belongs to
@@ -41,7 +43,7 @@ public:
 	void update(geometry_msgs::Point position, double orientation);
 
 	/* Turn the robot on spot facing orientation when finished */
-	void MotionPlanner::turnOnSpot(double orientation);
+	void turnTowards(Point target);
 
 	/* Sets the current path to be driven by this motion planner and resets all necessary variables.
 	 * @param start_position: the start position of the agent to drive the given plan
@@ -54,8 +56,7 @@ public:
 
 	void newPath(Path path);
 
-	void enable(bool enable);
-	bool isEnabled();
+	void resume();
 	void start();
 	void stop();
 	bool isDone();
@@ -73,7 +74,7 @@ private:
 	 * @param position: current position of the robot
 	 * @param orientation: current oriientation of the robot
 	 * @return True if the current plan has been driven successfully*/
-	bool driveCurrentPath(Point currentPosition, double orientation);
+	bool driveCurrentPath(Position currentPosition);
 	
 	float getRotationFromOrientation(double orientation);
 	float getRotationFromOrientationDifference(double orientation);
@@ -82,7 +83,7 @@ private:
 	void advanceToNextPathPoint();
 	Point getPathPointAtIndex(int index);
 	
-	float getRotationToTarget(Point currentPosition, Point targetPosition, double orientation);
+	double getRotationToTarget(Position currentPosition, Point targetPosition);
 
 	void publishVelocity(double speed, double angle);
 
@@ -97,6 +98,9 @@ private:
 
 	/// the current path to drive
 	std::vector<geometry_msgs::Point> path;
+
+	/// the current mode
+	Mode mode;
 	
 	/////////////////////////////////////
 	Path pathObject;
@@ -105,10 +109,6 @@ private:
 	int currentTargetIndex = -1;
 
 	Point previousTarget;
-
-	bool enabled = false;
-	bool hasFinishedCurrentPath = true;
-	bool standStill = true;
 
 	float minTurningSpeed = 0.08;
 	
