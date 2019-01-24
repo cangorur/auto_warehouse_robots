@@ -79,37 +79,41 @@ void TaskHandler::executeTask(void) {
         case Task::State::TO_SOURCE:
             if (this->motionPlanner->isDone()) {
                 currentTask->setState(Task::State::PICKUP);
+                motionPlanner->alignTowards(((TransportationTask*) currentTask)->getSourcePosition().o);
             }
             break;
 
         case Task::State::PICKUP:
-            //if (gripper->loadPackage(true)) {
+            if (this->motionPlanner->isDone()) {
+                gripper->loadPackage(true);
+                ros::Duration(2).sleep();
                 currentTask->setState(Task::State::TO_TARGET);
                 this->motionPlanner->newPath(currentTask->getPathToTarget());
                 this->motionPlanner->start();
-            //}
+            }
             break;
 
         case Task::State::TO_TARGET:
-            // Check if target is reached
-            // if yes:
             if (currentTask->isTransportation()) {
                 if (motionPlanner->isDone()) {
                     currentTask->setState(Task::State::DROPOFF);
+                    motionPlanner->alignTowards(currentTask->getTargetPosition().o);
                 }
             } else if (currentTask->isCharging()) {
                 if (motionPlanner->isDone()) {
                     currentTask->setState(Task::State::CHARGING);
+                    motionPlanner->alignTowards(currentTask->getTargetPosition().o);
                     // activate charging
                 }
             }
             break;
 
         case Task::State::DROPOFF:
-            //if (gripper->loadPackage(false)) {
+            if (motionPlanner->isDone()) {
+                gripper->loadPackage(false);
                 currentTask->setState(Task::State::FINISHED);
                 this->motionPlanner->stop();
-            //}
+            }
             break;
 
         case Task::State::CHARGING:
