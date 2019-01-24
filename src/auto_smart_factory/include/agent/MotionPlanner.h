@@ -132,7 +132,7 @@ private:
 	float maxDrivingSpeed; // = 1;
 
 	float distToReachPoint = 0.3f;
-	float distToReachFinalPoint = 0.2f;
+	float distToReachFinalPoint = 0.1f;
 	float distToSlowDown = 0.9f;
 
 	//float maxRotationDifference = 45;
