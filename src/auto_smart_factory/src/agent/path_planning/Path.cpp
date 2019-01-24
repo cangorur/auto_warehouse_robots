@@ -51,7 +51,7 @@ visualization_msgs::Marker Path::getVisualizationMsgPoints() {
 		geometry_msgs::Point p;
 		p.x = point.x;
 		p.y = point.y;
-		p.z = 1.f;
+		p.z = 0.f;
 		msg.points.push_back(p);
 	}
 	
@@ -77,7 +77,7 @@ visualization_msgs::Marker Path::getVisualizationMsgLines() {
 		geometry_msgs::Point p;
 		p.x = point.x;
 		p.y = point.y;
-		p.z = 1.f;
+		p.z = 0.f;
 		msg.points.push_back(p);
 	}
 
