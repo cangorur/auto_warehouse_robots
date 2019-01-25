@@ -3,7 +3,7 @@
 #include "agent/path_planning/Rectangle.h"
 #include "Math.h"
 
-Rectangle::Rectangle(Point pos_, Point size_, float rotation_, float startTime, float endTime) :
+Rectangle::Rectangle(Point pos_, Point size_, float rotation_, double startTime, double endTime) :
 		pos(pos_),
 		size(size_),
 		rotation(rotation_),
@@ -103,19 +103,19 @@ float Rectangle::getRotation() const {
 	return rotation;
 }
 
-bool Rectangle::doesOverlapTimeRange(float start, float end) const {
+bool Rectangle::doesOverlapTimeRange(double start, double end) const {
 	return (start <= this->endTime) && (end >= this->startTime);
 }
 
-float Rectangle::getFreeAfter() const {
+double Rectangle::getFreeAfter() const {
 	return endTime;
 }
 
-float Rectangle::getStartTime() const {
+double Rectangle::getStartTime() const {
 	return startTime;
 }
 
-float Rectangle::getEndTime() const {
+double Rectangle::getEndTime() const {
 	return endTime;
 }
 

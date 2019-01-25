@@ -9,13 +9,11 @@
 #include "agent/path_planning/ThetaStarGridNodeInformation.h"
 #include "RobotHardwareProfile.h"
 
-#define USE_THETA_STAR true
-
 class ThetaStarPathPlanner {
 private:
-	float initialTime = std::numeric_limits<float>::max() - 10000;
+	double initialTime = std::numeric_limits<double>::max() - 10000;
 	
-	typedef std::pair<float, ThetaStarGridNodeInformation*> GridInformationPair;
+	typedef std::pair<double, ThetaStarGridNodeInformation*> GridInformationPair;
 	struct GridInformationPairComparator {
 		bool operator()(GridInformationPair const& lhs, GridInformationPair const& rhs){
 			return lhs.first > rhs.first;
@@ -30,13 +28,13 @@ private:
 public:
 	explicit ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile);
 
-	Path findPath(Point start, Point target, float startingTime);
+	Path findPath(Point start, Point target, double startingTime);
 
 private:
-	float getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const;
-	float getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
+	double getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const;
+	double getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
 
-	Path constructPath(float startingTime, ThetaStarGridNodeInformation* targetInformation) const;
+	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation) const;
 };
 
 

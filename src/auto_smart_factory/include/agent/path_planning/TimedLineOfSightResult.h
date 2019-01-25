@@ -6,11 +6,11 @@ class TimedLineOfSightResult {
 public:
 	bool blockedByStatic;
 	bool blockedByTimed;
-	float freeAfter;
+	double freeAfter;
 	
 	bool hasUpcomingObstacle;
-	float lastValidEntryTime;
-	float freeAfterUpcomingObstacle;
+	double lastValidEntryTime;
+	double freeAfterUpcomingObstacle;
 	
 	TimedLineOfSightResult();
 };

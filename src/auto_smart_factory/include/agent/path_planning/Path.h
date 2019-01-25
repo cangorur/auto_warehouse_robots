@@ -9,34 +9,34 @@
 
 class Path {
 public:
-	float maxReservationLength = 20;
+	double maxReservationLength = 20;
 	
 private:
-	float startTimeOffset = 0;
+	double startTimeOffset = 0;
 	std::vector<Point> nodes;
-	std::vector<float> waitTimes;
+	std::vector<double> waitTimes;
 	RobotHardwareProfile* hardwareProfile;
 
 	// Computed internally for motion planner
-	std::vector<float> departureTimes;
+	std::vector<double> departureTimes;
 	float distance = 0;
 	float duration = 0;
 	float batteryConsumption = 0;
 
 public:
 	explicit Path() = default;
-	explicit Path(float startTimeOffset, std::vector<Point> nodes, std::vector<float> waitTimes, RobotHardwareProfile* hardwareProfile);
+	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile);
 	
 	virtual ~Path() = default;
 
 	const std::vector<Point>& getNodes() const;
-	const std::vector<float>& getWaitTimes() const;
-	const std::vector<float>& getDepartureTimes() const;
+	const std::vector<double>& getWaitTimes() const;
+	const std::vector<double>& getDepartureTimes() const;
 
 	float getDistance() const;
-	float getDuration() const;
+	double getDuration() const;
 	float getBatteryConsumption() const;
-	float getStartTimeOffset() const;
+	double getStartTimeOffset() const;
 	RobotHardwareProfile* getRobotHardwareProfile() const;
 
 	const std::vector<Rectangle> generateReservations() const;

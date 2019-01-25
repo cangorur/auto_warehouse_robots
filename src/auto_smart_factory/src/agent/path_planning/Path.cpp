@@ -9,7 +9,7 @@
 #include "Math.h"
 #include "agent/path_planning/Path.h"
 
-Path::Path(float startTimeOffset, std::vector<Point> nodes_, std::vector<float> waitTimes_, RobotHardwareProfile* hardwareProfile) :
+Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile) :
 		startTimeOffset(startTimeOffset),
 		nodes(std::move(nodes_)),
 		waitTimes(std::move(waitTimes_)),
@@ -80,8 +80,8 @@ const std::vector<Rectangle> Path::generateReservations() const {
 			Point endPos = nodes[i] + ((segment + 1) * segmentLength * currentDir);
 
 			Point pos = (startPos + endPos) / 2.f;
-			float startTime = startTimeOffset + currentTime + (segment * segmentLength) - reservationSize / 2.f;
-			float endTime = startTimeOffset + currentTime + ((segment + 1) * segmentLength) + reservationSize / 2.f;
+			double startTime = startTimeOffset + currentTime + (segment * segmentLength) - reservationSize / 2.f;
+			double endTime = startTimeOffset + currentTime + ((segment + 1) * segmentLength) + reservationSize / 2.f;
 
 			reservations.emplace_back(pos, Point(segmentLength + reservationSize, reservationSize), currentRotation, startTime, endTime);
 		}
@@ -96,11 +96,11 @@ const std::vector<Point>& Path::getNodes() const {
 	return nodes;
 }
 
-const std::vector<float>& Path::getWaitTimes() const {
+const std::vector<double>& Path::getWaitTimes() const {
 	return waitTimes;
 }
 
-const std::vector<float>& Path::getDepartureTimes() const {
+const std::vector<double>& Path::getDepartureTimes() const {
 	return departureTimes;
 }
 
@@ -108,7 +108,7 @@ float Path::getDistance() const {
 	return distance;
 }
 
-float Path::getDuration() const {
+double Path::getDuration() const {
 	return duration;
 }
 
@@ -170,7 +170,7 @@ visualization_msgs::Marker Path::getVisualizationMsgLines() {
 	return msg;
 }
 
-float Path::getStartTimeOffset() const {
+double Path::getStartTimeOffset() const {
 	return startTimeOffset;
 }
 

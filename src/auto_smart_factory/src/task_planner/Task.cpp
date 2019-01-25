@@ -37,9 +37,6 @@ Task::Task(unsigned int id, TaskData taskData)
 			state.targetTray, state.estimatedDuration.toSec());
 }
 
-Task::~Task() {
-}
-
 unsigned int Task::getId() const {
 	return state.id;
 }

@@ -15,7 +15,7 @@ Agent::Agent(std::string agent_id) {
 	init_srv = pn.advertiseService("init", &Agent::init, this);
 
 	visualisationPublisher = pn.advertise<visualization_msgs::Marker>("visualization_" + agent_id, 100);
-	vizPublicationTimer = pn.createTimer(ros::Duration(1), &Agent::publishVisualization, this);
+	vizPublicationTimer = pn.createTimer(ros::Duration(0.5f), &Agent::publishVisualisation, this); // in seconds
 }
 
 Agent::~Agent() {
@@ -29,16 +29,16 @@ Agent::~Agent() {
 
 void Agent::update() {
 	if(initialized) {
-		//setIdle(true);
-		
 		// Register at taskplanner if not already done
 		if(!registered && registerAgent()) {
 			setupTaskHandling();
 		}
-
 		if(isTimeForHeartbeat()) {
 			sendHeartbeat();
 		}
+		
+		// Update Map
+		map->deleteExpiredReservations(ros::Time::now().toSec());
 		
 		/* Task Execution */
 		this->taskHandler->update();		
@@ -78,7 +78,9 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	warehouseConfig = warehouse_configuration;
 	robotConfig = robot_configuration;
 	
-	hardwareProfile = new RobotHardwareProfile(robot_configuration.max_linear_vel, robot_configuration.max_angular_vel, robot_configuration.discharging_rate, 0.f);
+	float maxTurningSpeedInDegree = Math::toDeg(robot_configuration.max_angular_vel);
+	hardwareProfile = new RobotHardwareProfile(robot_configuration.max_linear_vel, maxTurningSpeedInDegree, robot_configuration.discharging_rate, 0.f);
+	ROS_INFO("[%s]: MaxSpeed: %f m/s | MaxTurningSpeed: %f deg/s", agentID.c_str(), robot_configuration.max_linear_vel,maxTurningSpeedInDegree);
 
 	if(!setupIdlePosition()) {
 		return false;
@@ -115,22 +117,22 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 
 		// Task Handler
 		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub), this->map, this->motionPlanner, this->gripper, this->chargingManagement);
-		
+
+		ROS_WARN("Finished Initialize [%s]", agentID.c_str());
 		return true;
 	} catch(...) {
 		ROS_ERROR("[%s]: Exception occured!", agentID.c_str());
 		return false;
 	}
-	ROS_WARN("Finished Initialize [%s]", agentID.c_str());
 }
 
 bool Agent::setupIdlePosition() {
-	for(int i = 0; i < warehouseConfig.idle_positions.size(); i++)
-		if(warehouseConfig.idle_positions[i].id == agentID) {
+	for(auto& idle_position : warehouseConfig.idle_positions)
+		if(idle_position.id == agentID) {
 
-			idlePosition.x = warehouseConfig.idle_positions[i].pose.x;
-			idlePosition.y = warehouseConfig.idle_positions[i].pose.y;
-			double rad = warehouseConfig.idle_positions[i].pose.theta / 180.0 * PI;
+			idlePosition.x = idle_position.pose.x;
+			idlePosition.y = idle_position.pose.y;
+			double rad = idle_position.pose.theta / 180.0 * PI;
 			idleOrientationPoint.x = idlePosition.x + cos(rad) * 1.0;
 			idleOrientationPoint.y = idlePosition.y + sin(rad) * 1.0;
 			return true;
@@ -141,11 +143,11 @@ bool Agent::setupIdlePosition() {
 
 bool Agent::registerAgent() {
 	std::string srv_name = "task_planner/register_agent";
-	ros::ServiceClient client = n.serviceClient<auto_smart_factory::RegisterAgent>(srv_name.c_str());
+	ros::ServiceClient client = n.serviceClient<auto_smart_factory::RegisterAgent>(srv_name);
 	auto_smart_factory::RegisterAgent srv;
 	srv.request.agent_id = agentID;
 	srv.request.robot_configuration = robotConfig;
-	ros::service::waitForService(srv_name.c_str());
+	ros::service::waitForService(srv_name);
 
 	// for testing register just one agent
 	//if (agentID.compare("robot_1") == 0 && client.call(srv)){
@@ -183,10 +185,7 @@ void Agent::setIdle(bool idle) {
 bool Agent::isTimeForHeartbeat() {
 	timeval time;
 	gettimeofday(&time, 0);
-	if(lastTimestamp == 0 || time.tv_sec - lastTimestamp >= breakDuration) {
-		return true;
-	}
-	return false;
+	return lastTimestamp == 0 || time.tv_sec - lastTimestamp >= breakDuration;
 }
 
 void Agent::sendHeartbeat() {
@@ -228,7 +227,6 @@ void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& ms
 			this->motionPlanner->start();
 			this->obstacleDetection->enable(true);
 		}
-
 	}
 }
 
@@ -363,9 +361,14 @@ geometry_msgs::Quaternion Agent::getCurrentOrientation() {
 	return orientation;
 }
 
-void Agent::publishVisualization(const ros::TimerEvent& e) {
+void Agent::publishVisualisation(const ros::TimerEvent& e) {
 	if(map != nullptr) {
-		visualisationPublisher.publish(map->getVisualization());
+		visualisationPublisher.publish(map->getObstacleVisualization());
+		
+		auto reservationMsg = map->getReservationVisualization();
+		if(!reservationMsg.points.empty()) {
+			visualisationPublisher.publish(reservationMsg);
+		}
 	}
 }
 

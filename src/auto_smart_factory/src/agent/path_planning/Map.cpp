@@ -2,11 +2,15 @@
 #include <iostream>
 #include <include/agent/path_planning/Map.h>
 
+#include "ros/ros.h"
+
 #include "Math.h"
 #include "agent/path_planning/Rectangle.h"
 #include "agent/path_planning/Map.h"
 #include "agent/path_planning/Point.h"
 #include "agent/path_planning/ThetaStarPathPlanner.h"
+
+int Map::visualisationId = 0;
 
 Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle>& obstacles, RobotHardwareProfile* hardwareProfile) :
 		warehouseConfig(warehouseConfig),
@@ -21,60 +25,9 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 	}
 	
 	thetaStarMap = ThetaStarMap(this, warehouseConfig.map_configuration.resolutionThetaStar);
-	this->reservations.clear();
-}
-
-visualization_msgs::Marker Map::getVisualization() {
-	visualization_msgs::Marker msg;
-	msg.header.frame_id = "map";
-	msg.header.stamp = ros::Time::now();
-	msg.ns = "Obstacles";
-	msg.action = visualization_msgs::Marker::ADD;
-	msg.pose.orientation.w = 1.0;
-
-	msg.id = 0;
-	msg.type = visualization_msgs::Marker::TRIANGLE_LIST;
-
-	msg.scale.x = 1.f;
-	msg.scale.y = 1.f;
-	msg.scale.z = 1.f;
-
-	msg.color.b = 1.0f;
-	msg.color.a = 0.7;
-
-	geometry_msgs::Point p;
-	p.z = 1.f;
-	// Obstacles
-	for(Rectangle obstacle : obstacles) {
-		const Point* points = obstacle.getPointsInflated();
-		// First triangle
-		p.x = points[0].x;
-		p.y = points[0].y;
-		msg.points.push_back(p);
-
-		p.x = points[1].x;
-		p.y = points[1].y;
-		msg.points.push_back(p);
-
-		p.x = points[2].x;
-		p.y = points[2].y;
-		msg.points.push_back(p);
-
-		// Second triangle
-		p.x = points[2].x;
-		p.y = points[2].y;
-		msg.points.push_back(p);
-
-		p.x = points[3].x;
-		p.y = points[3].y;
-		msg.points.push_back(p);
-
-		p.x = points[0].x;
-		p.y = points[0].y;
-		msg.points.push_back(p);
-	}
+	reservations.clear();
 	
-	return msg;
+	reservations.emplace_back(Point(5,5), Point(3,3), 0, ros::Time::now().toSec(), ros::Time::now().toSec() + ros::Duration(20).toSec());
 }
 
 bool Map::isInsideAnyInflatedObstacle(const Point& point) const {
@@ -88,7 +41,7 @@ bool Map::isInsideAnyInflatedObstacle(const Point& point) const {
 }
 
 bool Map::isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const {
-	for(Rectangle obstacle : obstacles) {
+	for(const Rectangle& obstacle : obstacles) {
 		if(Math::doesLineSegmentIntersectRectangle(pos1, pos2, obstacle)) {
 			return false;
 		}
@@ -97,7 +50,7 @@ bool Map::isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const {
 	return true;
 }
 
-bool Map::isTimedLineOfSightFree(const Point& pos1, float startTime, const Point& pos2, float endTime) const {
+bool Map::isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
 	if(!isStaticLineOfSightFree(pos1, pos2)) {
 		return false;
 	}
@@ -111,7 +64,7 @@ bool Map::isTimedLineOfSightFree(const Point& pos1, float startTime, const Point
 	return true;
 }
 
-TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, float startTime, const Point& pos2, float endTime) const {
+TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
 	TimedLineOfSightResult result;
 
 	if(!isStaticLineOfSightFree(pos1, pos2)) {
@@ -132,9 +85,9 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, float 
 		if(Math::isPointInRectangle(pos2, reservation) && reservation.getStartTime() > endTime) {
 			result.hasUpcomingObstacle = true;
 			// Todo make adaptive
-			float minTimeToLeave = 16;
+			double minTimeToLeave = 15;
 
-			float lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
+			double lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
 			if(lastValidEntryTime < result.lastValidEntryTime) {
 				result.lastValidEntryTime = lastValidEntryTime;
 				result.freeAfterUpcomingObstacle = reservation.getEndTime();
@@ -145,8 +98,8 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, float 
 	return result;
 }
 
-bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, float startTime, float waitingTime, float drivingTime) const {
-	float endTime = startTime + waitingTime + drivingTime;
+bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, float waitingTime, float drivingTime) const {
+	double endTime = startTime + waitingTime + drivingTime;
 
 	for(const Rectangle& reservation : reservations) {
 		// Check if the waiting part is free
@@ -189,24 +142,24 @@ float Map::getMargin() const {
 	return margin;
 }
 
-Path Map::getThetaStarPath(const Point& start, const Point& end, float startingTime) {
+Path Map::getThetaStarPath(const Point& start, const Point& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	return thetaStarPathPlanner.findPath(start, end, startingTime);
 }
 
-Path Map::getThetaStarPath(const Point& start, const auto_smart_factory::Tray& end, float startingTime) {
+Path Map::getThetaStarPath(const Point& start, const auto_smart_factory::Tray& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	const Point endPoint = Point(getPointInFrontOfTray(end));
 	return thetaStarPathPlanner.findPath(start, endPoint, startingTime);
 }
 
-Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const Point& end, float startingTime) {
+Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const Point& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	const Point startPoint = Point(getPointInFrontOfTray(start));
 	return thetaStarPathPlanner.findPath(startPoint, end, startingTime);
 }
 
-Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, float startingTime) {
+Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	const Point startPoint = Point(getPointInFrontOfTray(start));
 	const Point endPoint = Point(getPointInFrontOfTray(end));
@@ -217,11 +170,11 @@ bool Map::isPointInMap(const Point& pos) const {
 	return pos.x >= margin && pos.x <= width - margin && pos.y >= margin && pos.y <= height - margin;
 }
 
-void Map::deleteExpiredReservations(float time) {
+void Map::deleteExpiredReservations(double time) {
 	auto iter = reservations.begin();
 
 	while(iter != reservations.end()) {
-		if((*iter).getEndTime() > time + 0.5f) {
+		if((*iter).getEndTime() < time) {
 			iter = reservations.erase(iter);
 		} else {
 			iter++;
@@ -238,11 +191,129 @@ void Map::addReservations(std::vector<Rectangle> newReservations) {
 OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 	OrientedPoint input_drive_point;
 
-	double input_dx = cos(tray.orientation * PI / 180);
-	double input_dy = sin(tray.orientation * PI / 180);
-	input_drive_point.x = tray.x + 0.5 * input_dx;
-	input_drive_point.y = tray.y + 0.5 * input_dy;
+	double input_dx = std::cos(tray.orientation * PI / 180);
+	double input_dy = std::sin(tray.orientation * PI / 180);
+	input_drive_point.x = static_cast<float>(tray.x + 0.5f * input_dx);
+	input_drive_point.y = static_cast<float>(tray.y + 0.5f * input_dy);
 	input_drive_point.o = tray.orientation + 180;
 
 	return input_drive_point;
+}
+
+visualization_msgs::Marker Map::getObstacleVisualization() {
+	visualization_msgs::Marker msg;
+	msg.header.frame_id = "map";
+	msg.header.stamp = ros::Time::now();
+	msg.ns = "Obstacles";
+	msg.action = visualization_msgs::Marker::MODIFY;
+	msg.pose.orientation.w = 1.0;
+
+	msg.id = 0;
+	msg.type = visualization_msgs::Marker::TRIANGLE_LIST;
+
+	msg.scale.x = 1.f;
+	msg.scale.y = 1.f;
+	msg.scale.z = 1.f;
+
+	msg.color.r = 0.1f;
+	msg.color.g = 0.1f;
+	msg.color.b = 0.1f;
+	msg.color.a = 0.3;
+
+	geometry_msgs::Point p;
+	p.z = 0.f;
+	// Obstacles
+	for(const Rectangle& obstacle : obstacles) {
+		const Point* points = obstacle.getPointsInflated();
+		// First triangle
+		p.x = points[0].x;
+		p.y = points[0].y;
+		msg.points.push_back(p);
+
+		p.x = points[1].x;
+		p.y = points[1].y;
+		msg.points.push_back(p);
+
+		p.x = points[2].x;
+		p.y = points[2].y;
+		msg.points.push_back(p);
+
+		// Second triangle
+		p.x = points[2].x;
+		p.y = points[2].y;
+		msg.points.push_back(p);
+
+		p.x = points[3].x;
+		p.y = points[3].y;
+		msg.points.push_back(p);
+
+		p.x = points[0].x;
+		p.y = points[0].y;
+		msg.points.push_back(p);
+	}
+
+	return msg;
+}
+
+visualization_msgs::Marker Map::getReservationVisualization() {
+	visualization_msgs::Marker msg;
+	msg.header.frame_id = "map";
+	msg.header.stamp = ros::Time::now();
+	msg.ns = "Reservations";
+	msg.action = visualization_msgs::Marker::ADD;
+	msg.pose.orientation.w = 1.0;
+	msg.lifetime = ros::Duration(0.5f);
+
+	msg.id = Map::visualisationId++;
+	msg.type = visualization_msgs::Marker::TRIANGLE_LIST;
+
+	msg.scale.x = 1.f;
+	msg.scale.y = 1.f;
+	msg.scale.z = 1.f;
+
+	// Todo add custom robot color here
+	msg.color.r = 1.0f;
+	msg.color.g = 0.1f;
+	msg.color.b = 0.1f;
+	msg.color.a = 0.4;
+
+	geometry_msgs::Point p;
+	p.z = 0.f;
+	// Obstacles
+	for(const Rectangle& reservation : reservations) {
+		const Point* points = reservation.getPointsInflated();
+		// First triangle
+		p.x = points[0].x;
+		p.y = points[0].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		p.x = points[1].x;
+		p.y = points[1].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		p.x = points[2].x;
+		p.y = points[2].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		// Second triangle
+		p.x = points[2].x;
+		p.y = points[2].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		p.x = points[3].x;
+		p.y = points[3].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		p.x = points[0].x;
+		p.y = points[0].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+	}
+
+	return msg;
 }

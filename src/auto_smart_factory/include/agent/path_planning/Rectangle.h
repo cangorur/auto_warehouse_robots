@@ -9,8 +9,8 @@ private:
 	Point size;
 	float rotation;
 
-	float startTime;
-	float endTime;
+	double startTime;
+	double endTime;
 	
 	// Todo add visualisation color
 	
@@ -21,7 +21,7 @@ private:
 
 public:
 	Rectangle(Point pos, Point size, float rotation);
-	Rectangle(Point pos, Point size, float rotation, float startTime, float endTime);
+	Rectangle(Point pos, Point size, float rotation, double startTime, double endTime);
 	
 	bool isInsideInflated(const Point& point) const;
 	const Point* getPointsInflated() const;
@@ -35,10 +35,10 @@ public:
 	float getMinYInflated() const;
 	float getMaxYInflated() const;
 
-	bool doesOverlapTimeRange(float start, float end) const;
-	float getStartTime() const;
-	float getEndTime() const;
-	float getFreeAfter() const;
+	bool doesOverlapTimeRange(double start, double end) const;
+	double getStartTime() const;
+	double getEndTime() const;
+	double getFreeAfter() const;
 
 private:
 	bool isInsideAxisAlignedInflated(const Point& point) const;	

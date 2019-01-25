@@ -69,14 +69,14 @@ bool ThetaStarMap::isStaticLineOfSightFree(const Point& pos1, const Point& pos2)
 	return map->isStaticLineOfSightFree(pos1, pos2);
 }
 
-bool ThetaStarMap::isTimedLineOfSightFree(const Point& pos1, float startTime, const Point& pos2, float endTime) const {
+bool ThetaStarMap::isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
 	return map->isTimedLineOfSightFree(pos1, startTime, pos2, endTime);
 }
 
-TimedLineOfSightResult ThetaStarMap::whenIsTimedLineOfSightFree(const Point& pos1, float startTime, const Point& pos2, float endTime) const {
+TimedLineOfSightResult ThetaStarMap::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
 	return map->whenIsTimedLineOfSightFree(pos1, startTime, pos2, endTime);
 }
 
-bool ThetaStarMap::isTimedConnectionFree(const Point& pos1, const Point& pos2, float startTime, float waitingTime, float drivingTime) const {
+bool ThetaStarMap::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const {
 	return map->isTimedConnectionFree(pos1, pos2, startTime, waitingTime, drivingTime);
 }

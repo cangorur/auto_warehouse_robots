@@ -19,9 +19,9 @@ public:
 	ThetaStarMap(Map* map, float resolution);
 
 	bool isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const;
-	bool isTimedLineOfSightFree(const Point& pos1, float startTime, const Point& pos2, float endTime) const;
-	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, float startTime, const Point& pos2, float endTime) const;
-	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, float startTime, float waitingTime, float drivingTime) const;
+	bool isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
+	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
+	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const;
 	const GridNode* getNodeClosestTo(const Point& pos) const;
 
 private:

@@ -76,10 +76,6 @@ public:
 	 * That is why it is called every tick (see AgentNode.cpp). */
 	void update();
 
-	// tmp for testing
-	bool isPathSet = false;
-	
-	
 	ros::Publisher* getVisualisationPublisher();
 
 protected:
@@ -174,11 +170,10 @@ protected:
 	**/
 	void collisionAlertCallback(const auto_smart_factory::CollisionAction& msg);
 	
-	void publishVisualization(const ros::TimerEvent& e);
+	void publishVisualisation(const ros::TimerEvent& e);
 
 	// Task Handler
 	void announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement);
-	
 	
 	// ROS Nodehandle
 	ros::NodeHandle n;

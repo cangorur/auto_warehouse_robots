@@ -31,7 +31,7 @@ void TaskHandler::rejectTask(unsigned int requestId) {
     scorePublisher->publish(scoreMessage);
 }
 
-void TaskHandler::update(void) {
+void TaskHandler::update() {
     if (!isTaskInExecution()) {
         nextTask();
     } else {
@@ -123,7 +123,7 @@ void TaskHandler::executeTask() {
     }
 }
 
-void TaskHandler::nextTask(void) {
+void TaskHandler::nextTask() {
     if (currentTask != nullptr) {
         delete currentTask;
     }
@@ -135,23 +135,23 @@ void TaskHandler::nextTask(void) {
     }
 }
 
-bool TaskHandler::isTaskInExecution(void) {
+bool TaskHandler::isTaskInExecution() {
     return (currentTask != nullptr && currentTask->getState() != Task::State::FINISHED);
 }
 
-bool TaskHandler::isIdle(void) {
+bool TaskHandler::isIdle() {
     return (currentTask == nullptr);
 }
 
-unsigned int TaskHandler::numberQueuedTasks(void) {
+unsigned int TaskHandler::numberQueuedTasks() {
 	return (unsigned int) queue.size();
 }
 
-Task* TaskHandler::getCurrentTask(void) {
+Task* TaskHandler::getCurrentTask() {
     return currentTask;
 }
 
-float TaskHandler::getBatteryConsumption(void) {
+float TaskHandler::getBatteryConsumption() {
     float batteryCons = 0.0;
     for(std::list<Task*>::iterator t = queue.begin(); t != queue.end(); t++) {
         batteryCons += (*t)->getBatteryConsumption();
@@ -159,7 +159,7 @@ float TaskHandler::getBatteryConsumption(void) {
     return batteryCons;
 }
 
-float TaskHandler::getDistance(void) {
+float TaskHandler::getDistance() {
     float distance = 0.0;
     for(std::list<Task*>::iterator t = queue.begin(); t != queue.end(); t++) {
         distance += (*t)->getDistance();
@@ -167,6 +167,6 @@ float TaskHandler::getDistance(void) {
     return distance;
 }
 
-Task* TaskHandler::getLastTask(void) {
+Task* TaskHandler::getLastTask() {
     return queue.back();
 }

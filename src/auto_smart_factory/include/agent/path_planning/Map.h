@@ -14,6 +14,8 @@
 #include "agent/path_planning/TimedLineOfSightResult.h"
 
 class Map {
+	static int visualisationId;
+	
 private:
 	float width;
 	float height;
@@ -29,25 +31,26 @@ public:
 	Map() = default;
 	Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle> &obstacles, RobotHardwareProfile* hardwareProfile);
 
-	visualization_msgs::Marker getVisualization();
+	visualization_msgs::Marker getObstacleVisualization();
+	visualization_msgs::Marker getReservationVisualization();
 	
 	bool isInsideAnyInflatedObstacle(const Point& point) const;	
 	bool isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const;
-	bool isTimedLineOfSightFree(const Point& pos1, float startTime, const Point& pos2, float endTime) const;
-	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, float startTime, const Point& pos2, float endTime) const;
+	bool isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
+	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
 
 	// Does not check against static obstacles, this is only used to verify a already planned connection
-	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, float startTime, float waitingTime, float drivingTime) const;
+	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, float waitingTime, float drivingTime) const;
 	
 	Point getRandomFreePoint() const;
 
-	void deleteExpiredReservations(float time);
+	void deleteExpiredReservations(double time);
 	void addReservations(std::vector<Rectangle> newReservations);
 		
-	Path getThetaStarPath(const Point& start, const Point& end, float startingTime);
-	Path getThetaStarPath(const Point& start, const auto_smart_factory::Tray& end, float startingTime);
-	Path getThetaStarPath(const auto_smart_factory::Tray& start, const Point& end, float startingTime);
-	Path getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, float startingTime);
+	Path getThetaStarPath(const Point& start, const Point& end, double startingTime);
+	Path getThetaStarPath(const Point& start, const auto_smart_factory::Tray& end, double startingTime);
+	Path getThetaStarPath(const auto_smart_factory::Tray& start, const Point& end, double startingTime);
+	Path getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime);
 	
 	// Getter
 	float getWidth() const;

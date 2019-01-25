@@ -10,15 +10,15 @@ private:
 
 	// Used to get average estimates from max speed values 
 	const float averageDrivingEfficiency = 0.9f;
-	const float averageTurningEfficiency = 0.9f;
+	const float averageTurningEfficiency = 0.7f;
 
 public:
 	RobotHardwareProfile(float maxDrivingSpeed, float maxTurningSpeed, float idleBatteryConsumption, float drivingBatteryConsumption);
 
-	float getIdleBatteryConsumption(float time) const;
-	float getDrivingBatteryConsumption(float time) const;
-	float getDrivingDuration(float distance) const;
-	float getTurningDuration(float angle) const;
+	float getIdleBatteryConsumption(double time) const;
+	float getDrivingBatteryConsumption(double time) const;
+	double getDrivingDuration(float distance) const;
+	double getTurningDuration(float angle) const;
 };
 
 

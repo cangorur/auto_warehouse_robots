@@ -9,20 +9,20 @@ RobotHardwareProfile::RobotHardwareProfile(float maxDrivingSpeed, float maxTurni
 {
 }
 
-float RobotHardwareProfile::getIdleBatteryConsumption(float time) const {
-	return idleBatteryConsumption * time;
+float RobotHardwareProfile::getIdleBatteryConsumption(double time) const {
+	return static_cast<float>(idleBatteryConsumption * time);
 }
 
 // Todo include idle consumption?
-float RobotHardwareProfile::getDrivingBatteryConsumption(float time) const {
-	return drivingBatteryConsumption * time + getIdleBatteryConsumption(time);
+float RobotHardwareProfile::getDrivingBatteryConsumption(double time) const {
+	return static_cast<float>(drivingBatteryConsumption * time + getIdleBatteryConsumption(time));
 }
 
-float RobotHardwareProfile::getDrivingDuration(float distance) const {
+double RobotHardwareProfile::getDrivingDuration(float distance) const {
 	return distance/(maxDrivingSpeed * averageDrivingEfficiency);
 }
 
-float RobotHardwareProfile::getTurningDuration(float angle) const {
+double RobotHardwareProfile::getTurningDuration(float angle) const {
 	return std::fabs(angle)/(maxTurningSpeed * averageTurningEfficiency);
 }
 
