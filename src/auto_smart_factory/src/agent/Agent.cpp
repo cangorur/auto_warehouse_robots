@@ -249,7 +249,7 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			// TODO: Maybe change task to accept only tray ids???
 			OrientedPoint sourcePos = map->getPointInFrontOfTray(input_tray);
 			OrientedPoint targetPos = map->getPointInFrontOfTray(storage_tray);
-			Path sourcePath = Path();
+			Path sourcePath;
 			
 			// TODO add correct path caluclation start times
 			
@@ -260,36 +260,32 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 				sourcePath = map->getThetaStarPath(Point(taskHandler->getCurrentTask()->getTargetPosition()), input_tray, 0);
 			} else {
 				// take the current position
-				sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, ros::Time::now().toSec());
+				sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, 0);
 			}
 			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, 0);
-			taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, 
-					sourcePath, targetPath);
+			taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, targetPath);
 
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
-			ROS_INFO("[%s]: Task %i successfully assigned at %.2f! Queue size is %i", agentID.c_str(), req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
+			ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
 			res.success = true;
 		} else {
-			ROS_WARN("[%s]: Is busy! - Task %i has not been assigned!",
-			         agentID.c_str(), req.task_id);
+			ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);
 			res.success = false;
 		}
 	} catch(std::out_of_range& e) {
 		// task does not exist
-		ROS_ERROR("[%s]: Attempted to assign inexistent task (specified id: %d)",
-		          agentID.c_str(), req.task_id);
+		ROS_ERROR("[%d]: Attempted to assign inexistent task (specified id: %d)", agentIdInt, req.task_id);
 		res.success = false;
 	}
 	return res.success;
 }
 
 auto_smart_factory::Tray Agent::getTray(unsigned int tray_id) {
-	for(int i = 0; i < warehouseConfig.trays.size(); i++)
-		if(tray_id == warehouseConfig.trays[i].id) {
-			return warehouseConfig.trays[i];
+	for(auto& tray : warehouseConfig.trays)
+		if(tray_id == tray.id) {
+			return tray;
 		}
-	ROS_ERROR("[%s]: Tray with id %u inexistent!",
-	          agentID.c_str(), tray_id);
+	ROS_ERROR("[%s]: Tray with id %u inexistent!", agentID.c_str(), tray_id);
 }
 
 
