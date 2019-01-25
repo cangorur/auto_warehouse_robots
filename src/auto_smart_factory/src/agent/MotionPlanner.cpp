@@ -2,13 +2,16 @@
 
 #include <utility>
 
+#include "ros/ros.h"
+
 #include "agent/Agent.h"
 #include <visualization_msgs/Marker.h>
 
 #include "agent/MotionPlanner.h"
-#include "Math.h"
-
+#include <ros/console.h>
 #include <cmath>
+#include <include/agent/MotionPlanner.h>
+
 
 MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
 	pathObject(Path())
@@ -30,35 +33,93 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 }
 
 MotionPlanner::~MotionPlanner() {
+	delete steerPid;
 };
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
-	if (hasFinishedCurrentPath) {
+	pos.update(position.x, position.y, orientation, ros::Time::now());
+
+	if (mode == Mode::FINISHED || mode == Mode::STOP) {
 		publishVelocity(0.0, 0.0);
 		return;
 	}
-	Position pos(position.x, position.y, orientation, ros::Time::now());
 
-	if(waypointReached(&pos)) {
+	if (mode == Mode::ALIGN) {
+		if (alignDirection == -1.0)
+			turnTowards(alignTarget);
+		else
+			turnTowards(alignDirection);
+
+		return;
+	}
+
+	if (waypointReached(&pos)) {
 		if (!isCurrentPointLastPoint())	{
 			advanceToNextPathPoint();
 		} else {
-			hasFinishedCurrentPath = true;
+			mode = Mode::FINISHED;
 			publishVelocity(0.0, 0.0);
-		}
-	} else {
-		double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(position.x, position.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
-		double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
-		angularVelocity = std::min(std::max(angularVelocity, (double) -maxTurningSpeed), (double) maxTurningSpeed);
-
-		double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed-minDrivingSpeed);
-
-		publishVelocity(linearVelocity, angularVelocity);
-
-		if (agentID.compare("robot_3") == 0) {
-			printf("[MP %s] cte: %.4f | speed: %.4f | steer: %.4f\n", agentID.c_str(), cte, linearVelocity, angularVelocity);
+			return;
 		}
 	}
+
+	if (mode == Mode::TURN || std::abs(getRotationToTarget(pos, currentTarget)) >= turnThreshold) {
+		mode = Mode::TURN;
+		turnTowards(currentTarget);
+		return;
+	}
+
+	double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(pos.x, pos.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
+	double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
+	angularVelocity = std::min(std::max(angularVelocity, (double) -maxTurningSpeed), (double) maxTurningSpeed);
+
+	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed-minDrivingSpeed);
+
+	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.4f) {
+		linearVelocity = 0.1;
+	}
+
+	publishVelocity(linearVelocity, angularVelocity);
+
+	/* Debug print
+	if (agentID.compare("robot_2") == 0) {
+		printf("[MP %s] cte: %.4f | speed: %.4f | steer: %.4f\n", agentID.c_str(), cte, linearVelocity, angularVelocity);
+	}
+	*/
+}
+
+void MotionPlanner::turnTowards(Point target) {
+	double rotation = getRotationToTarget(pos, target);
+	if(std::abs(rotation) <= 0.1f) {
+		mode = Mode::PID;
+		return;
+	}
+	publishVelocity(0, Math::clamp(std::abs(rotation), 0, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+}
+
+void MotionPlanner::turnTowards(double direction) {
+	double rotation = static_cast<double>(Math::getAngleDifferenceInRad(pos.o, direction));
+	if(std::abs(rotation) <= 0.1f) {
+		mode = Mode::FINISHED;
+		return;
+	}
+	publishVelocity(0, Math::clamp(std::abs(rotation), 0, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+}
+
+void MotionPlanner::alignTowards(Point target) {
+	mode = Mode::ALIGN;
+	alignTarget = target;
+	alignDirection = -1.0;
+}
+
+void MotionPlanner::alignTowards(double direction) {
+	mode = Mode::ALIGN;
+	alignDirection = direction;
+}
+
+void MotionPlanner::newPath(Path* path) {
+	// Create local copy
+	newPath(Path(path->getStartTimeOffset(), path->getNodes(), path->getWaitTimes(), path->getRobotHardwareProfile()));	
 }
 
 void MotionPlanner::newPath(Path path) {
@@ -67,39 +128,30 @@ void MotionPlanner::newPath(Path path) {
 	if(path.getDistance() > 0) {
 		currentTarget = pathObject.getNodes().front();
 		currentTargetIndex = 0;
-		hasFinishedCurrentPath = false;
+		mode = Mode::READY;
 		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgPoints());
 		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
-	} else {
-		ROS_INFO("[MotionPlanner - Agent-%d]: Got path with distance 0", agent->getAgentIdInt());
-		hasFinishedCurrentPath = true;
+	} else {		
+		mode = Mode::FINISHED;
+		ROS_INFO("[MotionPlanner - Agent-%d]: Got path with distance 0", agent->getAgentIdInt());		
 	}	
 }
 
-void MotionPlanner::newPath(Path* path) {
-	newPath(*path);
-}
-
-void MotionPlanner::enable(bool enable) {
-	this->enabled = enable;
-}
-
-bool MotionPlanner::isEnabled() {
-	return this->enabled;
+MotionPlanner::Mode MotionPlanner::getMode() {
+	return mode;
 }
 
 void MotionPlanner::start() {
-	standStill = false;
+	mode = Mode::READY;
 }
 
 void MotionPlanner::stop() {
-	standStill = true;
-	geometry_msgs::Twist motion;
-	motionPub->publish(motion);
+	mode = Mode::STOP;
+	publishVelocity(0.0, 0.0);
 }
 
 bool MotionPlanner::isDone() {
-	return hasFinishedCurrentPath;
+	return (mode == Mode::FINISHED);
 }
 
 bool MotionPlanner::hasPath() {
@@ -116,14 +168,18 @@ void MotionPlanner::publishVelocity(double speed, double angle) {
 }
 
 bool MotionPlanner::waypointReached(Position *current) {
-	return (Math::getDistance(Point(current->x, current->y), currentTarget) <= distToReachPoint);
+	if (!isCurrentPointLastPoint())	{
+		return (Math::getDistance(Point(current->x, current->y), currentTarget) <= distToReachPoint);
+	} else {
+		return (Math::getDistance(Point(current->x, current->y), currentTarget) <= distToReachFinalPoint);
+	}
 }
 
-bool MotionPlanner::driveCurrentPath(Point currentPosition, double orientation) {
+bool MotionPlanner::driveCurrentPath(Position currentPosition) {
 	geometry_msgs::Twist motion;
 
-	float distToTarget = Math::getDistance(currentPosition, currentTarget);
-	float rotationToTarget = getRotationToTarget(currentPosition, currentTarget, orientation);
+	float distToTarget = Math::getDistance(Point(currentPosition.x, currentPosition.y), currentTarget);
+	float rotationToTarget = getRotationToTarget(currentPosition, currentTarget);
 	
 	float rotationSign = rotationToTarget < 0.f ? -1.f : 1.f;
 	rotationToTarget = std::fabs(rotationToTarget);
@@ -136,12 +192,12 @@ bool MotionPlanner::driveCurrentPath(Point currentPosition, double orientation) 
 	if(distToTarget <= distToReachPoint && !isCurrentPointLastPoint()) {
 		// Rerun with new point
 		advanceToNextPathPoint();
-		return driveCurrentPath(currentPosition, orientation);
+		return driveCurrentPath(currentPosition);
 	} else if(distToTarget <= distToReachFinalPoint && isCurrentPointLastPoint()) {
 		// Todo rotate till final rotation is guaranteed
 		stop();
 		motionPub->publish(motion);
-		hasFinishedCurrentPath = true;
+		mode = Mode::FINISHED;
 		return true;
 	}
 	
@@ -218,10 +274,10 @@ bool MotionPlanner::isDrivingBackwards() {
 	return false;
 }
 
-float MotionPlanner::getRotationToTarget(Point currentPosition, Point targetPosition, double orientation) {
+double MotionPlanner::getRotationToTarget(Position currentPosition, Point targetPosition) {
 	double direction = std::atan2(targetPosition.y - currentPosition.y, targetPosition.x - currentPosition.x);
 
-	return static_cast<float>(Math::getAngleDifferenceInRad(orientation, direction));
+	return static_cast<double>(Math::getAngleDifferenceInRad(currentPosition.o, direction));
 }
 
 visualization_msgs::Marker MotionPlanner::getVisualizationMsgPoints() {

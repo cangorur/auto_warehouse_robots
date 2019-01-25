@@ -36,6 +36,8 @@ public:
 	float getDistance() const;
 	float getDuration() const;
 	float getBatteryConsumption() const;
+	float getStartTimeOffset() const;
+	RobotHardwareProfile* getRobotHardwareProfile() const;
 
 	const std::vector<Rectangle> generateReservations() const;
 	

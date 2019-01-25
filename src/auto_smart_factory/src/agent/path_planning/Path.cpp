@@ -3,6 +3,8 @@
 
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
+#include <include/agent/path_planning/Path.h>
+
 
 #include "Math.h"
 #include "agent/path_planning/Path.h"
@@ -166,4 +168,12 @@ visualization_msgs::Marker Path::getVisualizationMsgLines() {
 	}
 
 	return msg;
+}
+
+float Path::getStartTimeOffset() const {
+	return startTimeOffset;
+}
+
+RobotHardwareProfile* Path::getRobotHardwareProfile() const {
+	return hardwareProfile;
 }

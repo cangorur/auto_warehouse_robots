@@ -4,30 +4,30 @@ Task::Task(uint32_t targetId, OrientedPoint targetPosition, Path pathToTarget, T
 	targetId(targetId), targetPosition(targetPosition), pathToTarget(pathToTarget), type(type), state(State::WAITING) {
 }
 
-uint32_t Task::getTargetTrayId(void) {
+uint32_t Task::getTargetTrayId() {
 	return targetId;
 }
 
-OrientedPoint Task::getTargetPosition(void) {
+OrientedPoint Task::getTargetPosition() {
 	return targetPosition;
 }
 
-Path* Task::getPathToTarget(void) {
+Path* Task::getPathToTarget() {
 	return &pathToTarget;
 }
 
-Task::Type Task::getType(void) {
+Task::Type Task::getType() {
 	return this->type;
 }
 
-Task::State Task::getState(void) {
+Task::State Task::getState() {
 	return this->state;
 }
 
-bool Task::isTransportation(void) {
+bool Task::isTransportation() {
 	return (this->type == Task::Type::TRANSPORTATION);
 }
 
-bool Task::isCharging(void) {
+bool Task::isCharging() {
 	return (this->type == Task::Type::CHARGING);
 }

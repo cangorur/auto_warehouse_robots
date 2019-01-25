@@ -1,7 +1,7 @@
 #ifndef AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_
 #define AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_
 
-#include <ros/ros.h>
+#include "ros/ros.h"
 #include <string>
 #include <vector>
 #include <sstream>
@@ -13,6 +13,8 @@
 #include "agent/path_planning/Point.h"
 #include "agent/Position.h"
 #include "agent/PidController.h"
+
+#include "Math.h"
 
 class Agent;
 
@@ -26,6 +28,8 @@ class Agent;
 class MotionPlanner {
 
 public:
+	enum class Mode {READY, PID, TURN, FINISHED, STOP, RECOVERY, ALIGN};
+
 	/* Constructor that hands over some the robot configuration as well as
 	 * the motion acutator publisher.
 	 * @param robot_config: information about the role of the agent this motion planner belongs to
@@ -40,11 +44,19 @@ public:
 	 * @param orientation: current orientation of the agent*/
 	void update(geometry_msgs::Point position, double orientation);
 
-	void newPath(Path path);
-	void newPath(Path* path);
+	/* Turn the robot on spot facing orientation when finished */
+	void turnTowards(Point target);
+	void turnTowards(double direction);
 
-	void enable(bool enable);
-	bool isEnabled();
+	/* Align the robots towards a target / direction */
+	void alignTowards(Point target);
+	void alignTowards(double direction);
+
+	void newPath(Path* path);
+	void newPath(Path path);
+
+	Mode getMode();
+
 	void start();
 	void stop();
 	bool isDone();
@@ -62,7 +74,7 @@ private:
 	 * @param position: current position of the robot
 	 * @param orientation: current oriientation of the robot
 	 * @return True if the current plan has been driven successfully*/
-	bool driveCurrentPath(Point currentPosition, double orientation);
+	bool driveCurrentPath(Position currentPosition);
 	
 	float getRotationFromOrientation(double orientation);
 	float getRotationFromOrientationDifference(double orientation);
@@ -71,13 +83,13 @@ private:
 	void advanceToNextPathPoint();
 	Point getPathPointAtIndex(int index);
 	
-	float getRotationToTarget(Point currentPosition, Point targetPosition, double orientation);
+	double getRotationToTarget(Position currentPosition, Point targetPosition);
 
 	void publishVelocity(double speed, double angle);
 
 	bool waypointReached(Position* current);
 
-		/// information about the current role of the agent
+	/// information about the current role of the agent
 	auto_smart_factory::RobotConfiguration robotConfig;
 
 	/// Publisher for the motion actuator topic
@@ -86,6 +98,9 @@ private:
 
 	/// the current path to drive
 	std::vector<geometry_msgs::Point> path;
+
+	/// the current mode
+	Mode mode = Mode::STOP;
 	
 	/////////////////////////////////////
 	Path pathObject;
@@ -95,9 +110,10 @@ private:
 
 	Point previousTarget;
 
-	bool enabled = false;
-	bool hasFinishedCurrentPath = true;
-	bool standStill = true;
+	Point alignTarget;
+	double alignDirection;
+
+	double turnThreshold = Math::toRad(65);
 
 	float minTurningSpeed = 0.08;
 	
@@ -106,7 +122,7 @@ private:
 	float maxDrivingSpeed; // = 1;
 
 	float distToReachPoint = 0.3f;
-	float distToReachFinalPoint = 0.2f;
+	float distToReachFinalPoint = 0.1f;
 	float distToSlowDown = 0.9f;
 
 	//float maxRotationDifference = 45;
@@ -122,6 +138,8 @@ protected:
 	std::string agentID;
 
 	PidController* steerPid;
+
+	Position pos;
 
 	double currentSpeed;
 	double currentRotation;

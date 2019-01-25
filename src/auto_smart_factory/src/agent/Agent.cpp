@@ -293,14 +293,10 @@ void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 	position = msg.pose.position;
 	orientation = msg.pose.orientation;
 
-	if(this->motionPlanner->isEnabled()) {
-		// this->obstacleDetection->enable(true);
-		tf::Quaternion q;
-		tf::quaternionMsgToTF(orientation, q);
-		this->motionPlanner->update(position, tf::getYaw(q));
-	} else {
-		// this->obstacleDetection->enable(false);
-	}
+	// this->obstacleDetection->enable(true);
+	tf::Quaternion q;
+	tf::quaternionMsgToTF(orientation, q);
+	this->motionPlanner->update(position, tf::getYaw(q));
 }
 
 void Agent::laserCallback(const sensor_msgs::LaserScan& msg) {
