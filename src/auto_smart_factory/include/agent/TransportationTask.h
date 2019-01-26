@@ -11,7 +11,7 @@ class TransportationTask : public Task
 	public:
 
 		explicit TransportationTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
-					uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath);
+					uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath, double startTime);
 
 		virtual ~TransportationTask();
 
@@ -26,6 +26,8 @@ class TransportationTask : public Task
 		float getBatteryConsumption();
 
 		float getDistance();
+
+		double getDuration();
 
 		void setState(Task::State state);
 
@@ -42,6 +44,10 @@ class TransportationTask : public Task
 		// Path to source
 		Path pathToSource;
 
+		// time to pick up a packet
+		static const float pickUpTime = 0.0f;
+		// time to drop off a packet
+		static const float dropOffTime = 0.0f;
 };
 
 #endif /* AGENT_TRANSPORTATIONTASK_H_ */

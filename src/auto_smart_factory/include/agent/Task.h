@@ -11,7 +11,7 @@ class Task
 		enum class Type {CHARGING, TRANSPORTATION};
 		enum class State {WAITING, TO_SOURCE, PICKUP, TO_TARGET, DROPOFF, FINISHED, CHARGING};
 
-		Task(uint32_t targetID, OrientedPoint targetPos, Path targetPath, Type type);
+		Task(uint32_t targetID, OrientedPoint targetPos, Path targetPath, Type type, double startTime);
 
 		uint32_t getTargetTrayId(void);
 
@@ -32,9 +32,16 @@ class Task
 
 		virtual float getDistance(void) = 0;
 
+		virtual double getDuration(void) = 0;
+
+		double getEndTime(void);
+
 	protected:	
 		Task::Type type;
 		Task::State state;
+
+		// the estimated moment in time when the task will start execution
+		double startTime;
 
 		// target Tray id
 		uint32_t targetId;

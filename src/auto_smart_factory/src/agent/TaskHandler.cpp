@@ -38,21 +38,28 @@ void TaskHandler::update() {
     }
 }
 
-// TODO: Delete queued Tasks & currentTask
-TaskHandler::~TaskHandler() = default;
+TaskHandler::~TaskHandler(){
+    if (currentTask != nullptr) {
+        delete currentTask;
+    }
+    for(Task* t : queue){
+        delete t;
+    }
+    queue.clear();
+}
 
 void TaskHandler::addTransportationTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
-				uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath) {
+				uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath, double startTime) {
     // create new task
-    TransportationTask* t = new TransportationTask(id, sourceID, sourcePos, targetID, targetPos, sourcePath, targetPath);
+    TransportationTask* t = new TransportationTask(id, sourceID, sourcePos, targetID, targetPos, sourcePath, targetPath, startTime);
 
     // add task to list
     queue.push_back(t);
 }
 
-void TaskHandler::addChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath) {
+void TaskHandler::addChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath, double startTime) {
     // create new charging task
-    ChargingTask* t = new ChargingTask(targetID, targetPos, targetPath);
+    ChargingTask* t = new ChargingTask(targetID, targetPos, targetPath, startTime);
 
     // add task to list
     queue.push_back(t);
@@ -156,18 +163,35 @@ Task* TaskHandler::getCurrentTask() {
 
 float TaskHandler::getBatteryConsumption() {
     float batteryCons = 0.0;
-    for(std::list<Task*>::iterator t = queue.begin(); t != queue.end(); t++) {
-        batteryCons += (*t)->getBatteryConsumption();
+    for(Task* t : queue) {
+        batteryCons += t->getBatteryConsumption();
+    }
+    if(currentTask != nullptr) {
+        batteryCons += currentTask->getBatteryConsumption();
     }
     return batteryCons;
 }
 
 float TaskHandler::getDistance() {
     float distance = 0.0;
-    for(std::list<Task*>::iterator t = queue.begin(); t != queue.end(); t++) {
-        distance += (*t)->getDistance();
+    for(Task* t : queue) {
+        distance += t->getDistance();
+    }
+    if(currentTask != nullptr) {
+        distance += currentTask->getDistance();
     }
     return distance;
+}
+
+double TaskHandler::getDuration() {
+    double duration = 0.0;
+    for(Task* t : queue) {
+        duration += t->getDuration();
+    }
+    if(currentTask != nullptr) {
+        duration += currentTask->getDuration();
+    }
+    return duration;
 }
 
 Task* TaskHandler::getLastTask() {

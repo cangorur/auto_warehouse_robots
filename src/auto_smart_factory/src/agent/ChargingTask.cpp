@@ -1,7 +1,7 @@
 #include "agent/ChargingTask.h"
 
-ChargingTask::ChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath) : 
-	Task(targetID, targetPos, targetPath, Type::CHARGING){ 
+ChargingTask::ChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath, double startTime) : 
+	Task(targetID, targetPos, targetPath, Type::CHARGING, startTime){ 
 	}
 
 ChargingTask::~ChargingTask() = default;
@@ -12,6 +12,10 @@ float ChargingTask::getBatteryConsumption(void){
 
 float ChargingTask::getDistance(void){
 	return pathToTarget.getDistance();
+}
+
+double ChargingTask::getDuration(void){
+	return pathToTarget.getDuration() + chargingTime;
 }
 
 void ChargingTask::setState(Task::State state) {

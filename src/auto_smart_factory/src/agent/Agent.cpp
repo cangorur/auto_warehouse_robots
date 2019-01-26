@@ -249,16 +249,17 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			OrientedPoint targetPos = map->getPointInFrontOfTray(storage_tray);
 			Path sourcePath;
 			
-			// TODO add correct path caluclation start times
 			
+			Task* lastTask = taskHandler->getLastTask();
 			if(taskHandler->numberQueuedTasks() > 0){
 				// take the last position of the last task
-				sourcePath = map->getThetaStarPath(Point(taskHandler->getLastTask()->getTargetPosition()), input_tray, 0);
+				sourcePath = map->getThetaStarPath(Point(lastTask->getTargetPosition()), input_tray, lastTask->getEndTime());
 			} else if(taskHandler->isTaskInExecution()) {
-				sourcePath = map->getThetaStarPath(Point(taskHandler->getCurrentTask()->getTargetPosition()), input_tray, 0);
+				sourcePath = map->getThetaStarPath(Point(lastTask->getTargetPosition()), input_tray, lastTask->getEndTime());
 			} else {
 				// take the current position
-				sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, 0);
+				// TODO add correct time now
+				sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, ros::Time::now().toSec());
 			}
 			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, 0);
 			taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, targetPath);
@@ -311,6 +312,7 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 }
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
+	// TODO: compute this for all 
 	// get Path
 	auto_smart_factory::Tray input_tray = getTray(taskAnnouncement.start_ids.front());
 	auto_smart_factory::Tray storage_tray = getTray(taskAnnouncement.end_ids.front());
@@ -323,8 +325,8 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 		sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, 0);
 	}
 	Path targetPath = map->getThetaStarPath(input_tray, storage_tray, 0);
-	// get Path length
-	float length = taskHandler->getDistance() + sourcePath.getDistance() + targetPath.getDistance();
+	// get Path duration pickup and dropoff constants are ignored as every robot has to do them
+	float duration = taskHandler->getDuration() + sourcePath.getDuration() + targetPath.getDuration();
 	// get Battery consumption
 	float batCons = taskHandler->getBatteryConsumption() + sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
 	// check battery consumption
@@ -332,7 +334,7 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 		// get score multiplier
 		float scoreFactor = chargingManagement->getScoreMultiplier(batCons);
 		// compute score
-		float score = (1/scoreFactor) * length;
+		float score = (1/scoreFactor) * duration;
 		// publish score
 		this->taskHandler->publishScore(taskAnnouncement.request_id, score, input_tray.id, storage_tray.id);
 	} else {

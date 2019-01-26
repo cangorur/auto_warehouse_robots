@@ -10,7 +10,7 @@ class ChargingTask : public Task
 {
 	public:
 
-		explicit ChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath);
+		explicit ChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath, double startTime);
 
 		virtual ~ChargingTask();
 
@@ -18,10 +18,13 @@ class ChargingTask : public Task
 
 		float getDistance(void);
 
+		double getDuration(void);
+
 		void setState(Task::State state);
 
 	protected:
 
+		float chargingTime = 0;
 };
 
 #endif /* AGENT_CHARGINGTASK_H_ */
