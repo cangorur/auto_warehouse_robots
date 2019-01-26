@@ -245,7 +245,6 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
 
 			// create Task and add it to task handler
-			// TODO: Maybe change task to accept only tray ids???
 			OrientedPoint sourcePos = map->getPointInFrontOfTray(input_tray);
 			OrientedPoint targetPos = map->getPointInFrontOfTray(storage_tray);
 			Path sourcePath;
@@ -318,30 +317,48 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
 	// TODO: compute this for all 
-	// get Path
-	auto_smart_factory::Tray input_tray = getTray(taskAnnouncement.start_ids.front());
-	auto_smart_factory::Tray storage_tray = getTray(taskAnnouncement.end_ids.front());
-	Path sourcePath = Path();
-	if(taskHandler->numberQueuedTasks() > 0){
-		// take the last position of the last task
-		sourcePath = map->getThetaStarPath(Point(taskHandler->getLastTask()->getTargetPosition()), input_tray, 0);
-	} else {
-		// take the current position
-		sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, 0);
+	std::list< std::tuple<uint32_t, uint32_t, double> > scores;
+	double queuedDuration = taskHandler->getDuration();
+	double queuedBatteryConsumption = taskHandler->getBatteryConsumption();
+	for(uint32_t it_id : taskAnnouncement.start_ids){
+		for(uint32_t st_id : taskAnnouncement.end_ids){
+			// get Path
+			auto_smart_factory::Tray input_tray = getTray(it_id);
+			auto_smart_factory::Tray storage_tray = getTray(st_id);
+			Path sourcePath = Path();
+			if(taskHandler->getLastTask() != nullptr){
+				// take the last position of the last task
+				sourcePath = map->getThetaStarPath(Point(taskHandler->getLastTask()->getTargetPosition()), input_tray, 0);
+			} else {
+				// take the current position
+				sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, 0);
+			}
+			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, 0);
+			// get Battery consumption
+			double batCons = queuedBatteryConsumption + sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
+			// check battery consumption
+			if(chargingManagement->isEnergyAvailable(batCons)){
+				// get Path duration pickup and dropoff constants are ignored as every robot has to do them
+				double duration = queuedDuration + sourcePath.getDuration() + targetPath.getDuration();
+				// get score multiplier
+				double scoreFactor = chargingManagement->getScoreMultiplier(batCons);
+				// compute score
+				double score = (1/scoreFactor) * duration;
+				// add score to list
+				scores.push_back(std::make_tuple(it_id, st_id, score));
+			}
+		}
 	}
-	Path targetPath = map->getThetaStarPath(input_tray, storage_tray, 0);
-	// get Path duration pickup and dropoff constants are ignored as every robot has to do them
-	float duration = taskHandler->getDuration() + sourcePath.getDuration() + targetPath.getDuration();
-	// get Battery consumption
-	float batCons = taskHandler->getBatteryConsumption() + sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
-	// check battery consumption
-	if(chargingManagement->isEnergyAvailable(batCons)){
-		// get score multiplier
-		float scoreFactor = chargingManagement->getScoreMultiplier(batCons);
-		// compute score
-		float score = (1/scoreFactor) * duration;
-		// publish score
-		this->taskHandler->publishScore(taskAnnouncement.request_id, score, input_tray.id, storage_tray.id);
+	if(!scores.empty()){
+		/*
+		std::sort(scores.front(), scores.back(),
+			[](std::tuple<uint32_t, uint32_t, double> first, std::tuple<uint32_t, uint32_t, double> second) 
+				{return std::get<2>(first) < std::get<2>(second);}
+			);
+			std::tuple<uint32_t, uint32_t, double> best;
+			// publish score
+			this->taskHandler->publishScore(taskAnnouncement.request_id, std::get<2>(best), std::get<0>(best), std::get<1>(best));
+		*/
 	} else {
 		// reject task
 		this->taskHandler->rejectTask(taskAnnouncement.request_id);

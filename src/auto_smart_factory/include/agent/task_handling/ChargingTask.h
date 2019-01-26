@@ -2,7 +2,7 @@
 #define AGENT_CHARGINGTASK_H_
 
 #include "ros/ros.h"
-#include "agent/Task.h"
+#include "agent/task_handling/Task.h"
 #include "agent/path_planning/OrientedPoint.h"
 #include "agent/path_planning/Path.h"
 

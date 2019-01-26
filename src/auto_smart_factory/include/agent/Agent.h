@@ -4,7 +4,7 @@
 #include "agent/MotionPlanner.h"
 #include "agent/Gripper.h"
 #include "agent/ObstacleDetection.h"
-#include "agent/TaskHandler.h"
+#include "agent/task_handling/TaskHandler.h"
 #include "agent/ChargingManagement.h"
 
 #include <random>

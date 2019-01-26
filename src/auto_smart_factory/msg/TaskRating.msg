@@ -5,4 +5,4 @@ string robot_id
 int32 start_id
 int32 end_id
 bool reject
-float32 score
+float64 score

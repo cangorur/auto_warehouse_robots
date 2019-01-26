@@ -1,4 +1,4 @@
-#include "agent/ChargingTask.h"
+#include "agent/task_handling/ChargingTask.h"
 
 ChargingTask::ChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath, double startTime) : 
 	Task(targetID, targetPos, targetPath, Type::CHARGING, startTime){ 

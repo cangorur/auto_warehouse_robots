@@ -5,9 +5,9 @@
 #include <string>
 
 #include "ros/ros.h"
-#include "agent/Task.h"
-#include "agent/TransportationTask.h"
-#include "agent/ChargingTask.h"
+#include "agent/task_handling/Task.h"
+#include "agent/task_handling/TransportationTask.h"
+#include "agent/task_handling/ChargingTask.h"
 #include "auto_smart_factory/TaskAnnouncement.h"
 #include "auto_smart_factory/TaskRating.h"
 #include "agent/path_planning/Map.h"

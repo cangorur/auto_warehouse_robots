@@ -265,10 +265,11 @@ add_executable(agent_node
 
 		src/agent/ChargingManagement.cpp
 
-		src/agent/TaskHandler.cpp
-		src/agent/Task.cpp
-		src/agent/TransportationTask.cpp
-		src/agent/ChargingTask.cpp
+		src/agent/task_handling/TaskHandler.cpp
+		src/agent/task_handling/Task.cpp
+		src/agent/task_handling/TransportationTask.cpp
+		src/agent/task_handling/ChargingTask.cpp
+		
 		src/agent/PidController.cpp
 
 		src/Math.cpp

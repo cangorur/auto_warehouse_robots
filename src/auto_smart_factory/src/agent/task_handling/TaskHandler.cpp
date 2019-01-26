@@ -1,4 +1,4 @@
-#include "agent/TaskHandler.h"
+#include "agent/task_handling/TaskHandler.h"
 
 TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm) 
         : 
