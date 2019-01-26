@@ -5,6 +5,7 @@
 #include "agent/Gripper.h"
 #include "agent/ObstacleDetection.h"
 #include "agent/task_handling/TaskHandler.h"
+#include "agent/task_handling/TrayScore.h"
 #include "agent/ChargingManagement.h"
 
 #include <random>

@@ -317,7 +317,7 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
 	// TODO: compute this for all 
-	std::list< std::tuple<uint32_t, uint32_t, double> > scores;
+	std::vector< TrayScore* > scores;
 	double queuedDuration = taskHandler->getDuration();
 	double queuedBatteryConsumption = taskHandler->getBatteryConsumption();
 	for(uint32_t it_id : taskAnnouncement.start_ids){
@@ -345,20 +345,23 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 				// compute score
 				double score = (1/scoreFactor) * duration;
 				// add score to list
-				scores.push_back(std::make_tuple(it_id, st_id, score));
+				scores.push_back(new TrayScore(it_id, st_id, score));
 			}
 		}
 	}
 	if(!scores.empty()){
-		/*
-		std::sort(scores.front(), scores.back(),
-			[](std::tuple<uint32_t, uint32_t, double> first, std::tuple<uint32_t, uint32_t, double> second) 
-				{return std::get<2>(first) < std::get<2>(second);}
+		std::sort(scores.begin(), scores.end(),
+			[](TrayScore* first, TrayScore* second) 
+				{return first->score < second->score;}
 			);
-			std::tuple<uint32_t, uint32_t, double> best;
-			// publish score
-			this->taskHandler->publishScore(taskAnnouncement.request_id, std::get<2>(best), std::get<0>(best), std::get<1>(best));
-		*/
+		TrayScore* best = scores.front();
+		// publish score
+		this->taskHandler->publishScore(taskAnnouncement.request_id, best->score, best->sourceTray, best->targetTray);
+		// clean list
+		for(TrayScore* s : scores){
+			delete s;
+		}
+		scores.clear();
 	} else {
 		// reject task
 		this->taskHandler->rejectTask(taskAnnouncement.request_id);
