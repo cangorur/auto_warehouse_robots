@@ -195,5 +195,11 @@ double TaskHandler::getDuration() {
 }
 
 Task* TaskHandler::getLastTask() {
-    return queue.back();
+    if(!queue.empty()){
+        return queue.back();
+    } else if(currentTask != nullptr) {
+        return currentTask;
+    } else {
+        return nullptr;
+    }
 }

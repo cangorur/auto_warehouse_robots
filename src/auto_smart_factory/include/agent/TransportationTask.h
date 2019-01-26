@@ -45,9 +45,9 @@ class TransportationTask : public Task
 		Path pathToSource;
 
 		// time to pick up a packet
-		static const float pickUpTime = 0.0f;
+		const float pickUpTime = 0.0f;
 		// time to drop off a packet
-		static const float dropOffTime = 0.0f;
+		const float dropOffTime = 0.0f;
 };
 
 #endif /* AGENT_TRANSPORTATIONTASK_H_ */

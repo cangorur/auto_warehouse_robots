@@ -116,7 +116,8 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		this->chargingManagement = new ChargingManagement(this);
 
 		// Task Handler
-		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub), this->map, this->motionPlanner, this->gripper, this->chargingManagement);
+		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub), this->map, this->motionPlanner, this->gripper, 
+			this->chargingManagement);
 
 		ROS_WARN("Finished Initialize [%s]", agentID.c_str());
 		return true;
@@ -248,24 +249,28 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			OrientedPoint sourcePos = map->getPointInFrontOfTray(input_tray);
 			OrientedPoint targetPos = map->getPointInFrontOfTray(storage_tray);
 			Path sourcePath;
-			
-			
+			Path targetPath;
+
 			Task* lastTask = taskHandler->getLastTask();
-			if(taskHandler->numberQueuedTasks() > 0){
-				// take the last position of the last task
+			if(lastTask != nullptr){
 				sourcePath = map->getThetaStarPath(Point(lastTask->getTargetPosition()), input_tray, lastTask->getEndTime());
-			} else if(taskHandler->isTaskInExecution()) {
-				sourcePath = map->getThetaStarPath(Point(lastTask->getTargetPosition()), input_tray, lastTask->getEndTime());
+				targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration());
+				taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, 
+					targetPath, lastTask->getEndTime());
 			} else {
 				// take the current position
 				// TODO add correct time now
-				sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, ros::Time::now().toSec());
+				double now = ros::Time::now().toSec();
+				sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, now);
+				targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration());
+				taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, 
+					targetPath, now);
 			}
-			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, 0);
-			taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, targetPath);
+			
 
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
-			ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
+			ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, 
+				ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
 			res.success = true;
 		} else {
 			ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);

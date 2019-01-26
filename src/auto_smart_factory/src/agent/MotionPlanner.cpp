@@ -116,11 +116,6 @@ void MotionPlanner::alignTowards(double direction) {
 	alignDirection = direction;
 }
 
-void MotionPlanner::alignTowards(double direction) {
-	mode = Mode::ALIGN;
-	alignDirection = direction;
-}
-
 void MotionPlanner::newPath(Path* path) {
 	// Create local copy
 	newPath(Path(path->getStartTimeOffset(), path->getNodes(), path->getWaitTimes(), path->getRobotHardwareProfile()));	
@@ -139,10 +134,6 @@ void MotionPlanner::newPath(Path path) {
 		printf("[MotionPlanner - %s]: Got path with length 0", agentID.c_str());
 		mode = Mode::FINISHED;
 	}	
-}
-
-void MotionPlanner::newPath(Path* path) {
-	newPath(*path);
 }
 
 MotionPlanner::Mode MotionPlanner::getMode() {
