@@ -1,7 +1,7 @@
 #ifndef AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_
 #define AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_
 
-#include <ros/ros.h>
+#include "ros/ros.h"
 #include <string>
 #include <vector>
 #include <sstream>
@@ -52,21 +52,11 @@ public:
 	void alignTowards(Point target);
 	void alignTowards(double direction);
 
-	/* Sets the current path to be driven by this motion planner and resets all necessary variables.
-	 * @param start_position: the start position of the agent to drive the given plan
-	 * @param new_path: the new path to drive
-	 * @param end_direction_point: the point the agent should look to when the path has been
-	 * 			       successfully driven
-	 * @param drive_backwares: whether the given plan shall be driven backwards or not*/
-	void newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path,
-	             geometry_msgs::Point end_direction_point, bool drive_backwards = false);
-
-	void newPath(Path path);
 	void newPath(Path* path);
+	void newPath(Path path);
 
-	Mode getMode(void);
+	Mode getMode();
 
-	void resume();
 	void start();
 	void stop();
 	bool isDone();

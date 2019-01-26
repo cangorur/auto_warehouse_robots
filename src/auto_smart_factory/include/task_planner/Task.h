@@ -39,7 +39,7 @@ public:
 	 */
 	Task(unsigned int id, TaskData taskData);
 
-	virtual ~Task();
+	virtual ~Task() = default;
 
 	/**
 	 * Execute this task. This created a new thread which then starts

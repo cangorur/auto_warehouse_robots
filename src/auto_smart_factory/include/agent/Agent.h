@@ -6,7 +6,6 @@
 #include "agent/ObstacleDetection.h"
 #include "agent/TaskHandler.h"
 #include "agent/ChargingManagement.h"
-#include "agent/path_planning/Map.h"
 
 #include <random>
 #include "ros/ros.h"
@@ -36,6 +35,9 @@
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotConfiguration.h>
 #include <auto_smart_factory/CollisionAction.h>
+#include "agent/path_planning/Map.h"
+#include "agent/path_planning/RobotHardwareProfile.h"
+
 
 // defines the task id type
 typedef uint32_t TaskId;
@@ -74,9 +76,6 @@ public:
 	 * That is why it is called every tick (see AgentNode.cpp). */
 	void update();
 
-	// TODO: tmp
-	bool isPathSet = false;
-
 	ros::Publisher* getVisualisationPublisher();
 
 protected:
@@ -103,7 +102,7 @@ protected:
 
 	/* Sets if this agent is idle or not and if the state has been changed it sends a heartbeat.
 	 * @param idle: whether to set to idle state */
-	void setState(bool idle);
+	void setIdle(bool idle);
 
 	/* Returns whether it's time for next heartbeat to send.
 	 * @return True if next heartbeat should be sended */
@@ -171,11 +170,10 @@ protected:
 	**/
 	void collisionAlertCallback(const auto_smart_factory::CollisionAction& msg);
 	
-	void publishVisualization(const ros::TimerEvent& e);
+	void publishVisualisation(const ros::TimerEvent& e);
 
 	// Task Handler
 	void announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement);
-	
 	
 	// ROS Nodehandle
 	ros::NodeHandle n;
@@ -186,6 +184,8 @@ protected:
 	
 	///////////////////////////////////////////////////////////
 	Map* map;
+	
+	RobotHardwareProfile* hardwareProfile;
 	
 	// information about the current warehouse map
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;

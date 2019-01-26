@@ -27,13 +27,12 @@ Path* TransportationTask::getPathToSource(){
 	return &pathToSource;
 }
 
-float TransportationTask::getBatteryConsumption(void){
-	// TODO: add battery consumption function for pathes
-	return pathToSource.getEstimatedBatteryConsumption() + pathToTarget.getEstimatedBatteryConsumption();
+float TransportationTask::getBatteryConsumption(){
+	return pathToSource.getBatteryConsumption() + pathToTarget.getBatteryConsumption();
 }
 
-float TransportationTask::getDistance(void){
-	return pathToSource.getLength() + pathToTarget.getLength();
+float TransportationTask::getDistance(){
+	return pathToSource.getDistance() + pathToTarget.getDistance();
 }
 
 void TransportationTask::setState(Task::State state) {

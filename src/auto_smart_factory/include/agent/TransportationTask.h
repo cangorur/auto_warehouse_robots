@@ -23,9 +23,9 @@ class TransportationTask : public Task
 
 		Path* getPathToSource();
 
-		float getBatteryConsumption(void);
+		float getBatteryConsumption();
 
-		float getDistance(void);
+		float getDistance();
 
 		void setState(Task::State state);
 

@@ -12,6 +12,9 @@
 #define PI 3.14159265359f
 #define EPS 1e-6
 
+// Defined as 0.25 + error margin
+#define ROBOT_DIAMETER 0.275f
+
 // Rotation  0  = >
 // Rotation 90  = v
 // Rotation 180 = <
@@ -52,8 +55,8 @@ public:
 	
 	static bool areLineSegmentsParallel(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End);
 	static bool doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End);
-	static bool doesLineSegmentIntersectRectangle(const Point& lStart, const Point& lEnd, Rectangle& rectangle);
-	static bool doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, Rectangle& rectangle);
+	static bool doesLineSegmentIntersectRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
+	static bool isPointInRectangle(const Point& p, const Rectangle& rectangle);
 
 	static float projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 	static float getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
@@ -74,6 +77,10 @@ public:
 	static double normalizeDegree(double angle);
 
 	static double mapRange(double x, double in_min, double in_max, double out_min, double out_max);
+
+private:
+	static bool doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
+	static bool doesLineSegmentIntersectNonAxisAlignedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
 };
 
 #endif //PROJECT_MATH_H

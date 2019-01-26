@@ -7,11 +7,11 @@ ChargingTask::ChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targ
 ChargingTask::~ChargingTask() = default;
 
 float ChargingTask::getBatteryConsumption(void){
-	return pathToTarget.getEstimatedBatteryConsumption();
+	return pathToTarget.getBatteryConsumption();
 }
 
 float ChargingTask::getDistance(void){
-	return pathToTarget.getLength();
+	return pathToTarget.getDistance();
 }
 
 void ChargingTask::setState(Task::State state) {

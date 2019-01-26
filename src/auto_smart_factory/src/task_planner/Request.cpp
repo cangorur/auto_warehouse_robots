@@ -194,8 +194,7 @@ bool Request::findTargetCandidates(std::vector<auto_smart_factory::Tray>& target
 bool Request::allocateRobot(RobotCandidate candidate) const {
 	ROS_INFO("In Request::allocateRobot");
 	ros::NodeHandle n;
-	ros::ServiceClient assignTaskClient = n.serviceClient<AssignTask>(
-			"/" + candidate.robotId + "/assign_task");
+	ros::ServiceClient assignTaskClient = n.serviceClient<AssignTask>("/" + candidate.robotId + "/assign_task");
 
 	AssignTask srv;
 	srv.request.task_id = status.id;
@@ -203,11 +202,8 @@ bool Request::allocateRobot(RobotCandidate candidate) const {
 	srv.request.storage_tray = candidate.target.id;
 
 	if(assignTaskClient.call(srv)) {
-		ROS_INFO("[request %d] The task= %d was assigned at time= %f .",
-		         status.id, status.id, ros::Time::now().toSec());
-
+		ROS_INFO("[request %d] The task= %d was assigned at time= %f .", status.id, status.id, ros::Time::now().toSec());
 		ROS_FATAL("[request %d] was assigned to %s with Task score %.2f", status.id, candidate.robotId.c_str(), candidate.score);
-
 		return srv.response.success;
 	}
 
@@ -280,7 +276,6 @@ void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){
 		frequency.sleep();
 	}
 	ROS_INFO("[Request %d] Timeout while waiting for robot scores, got %d scores", status.id, (unsigned int)answeredRobots.size());
-	return;
 }
 
 void Request::clearRobotCandidates(void){

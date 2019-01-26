@@ -3,14 +3,16 @@
 
 #include "agent/path_planning/Point.h"
 
-// Defined as 0.25 + error margin
-#define ROBOT_DIAMETER 0.3f
-
 class Rectangle {
 private:	
 	Point pos;
 	Point size;
 	float rotation;
+
+	double startTime;
+	double endTime;
+	
+	// Todo add visualisation color
 	
 	// Faster physic processing
 	Point pointsInflated[4];
@@ -19,9 +21,10 @@ private:
 
 public:
 	Rectangle(Point pos, Point size, float rotation);
+	Rectangle(Point pos, Point size, float rotation, double startTime, double endTime);
 	
 	bool isInsideInflated(const Point& point) const;
-	Point* getPointsInflated();
+	const Point* getPointsInflated() const;
 	Point getPosition() const;
 	Point getSize() const;
 	float getRotation() const;
@@ -31,6 +34,11 @@ public:
 	float getMaxXInflated() const;
 	float getMinYInflated() const;
 	float getMaxYInflated() const;
+
+	bool doesOverlapTimeRange(double start, double end) const;
+	double getStartTime() const;
+	double getEndTime() const;
+	double getFreeAfter() const;
 
 private:
 	bool isInsideAxisAlignedInflated(const Point& point) const;	

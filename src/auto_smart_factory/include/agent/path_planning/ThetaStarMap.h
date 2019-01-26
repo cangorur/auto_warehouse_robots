@@ -5,8 +5,7 @@
 
 #include "Math.h"
 #include "agent/path_planning/GridNode.h"
-
-#define DRAW_EDGES false
+#include "agent/path_planning/TimedLineOfSightResult.h"
 
 class Map;
 
@@ -18,9 +17,11 @@ private:
 public:
 	ThetaStarMap() = default;
 	ThetaStarMap(Map* map, float resolution);
-	//void draw(sf::RenderWindow& renderWindow) override;
 
-	bool isLineOfSightFree(const Point& pos1, const Point& pos2) const;
+	bool isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const;
+	bool isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
+	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
+	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const;
 	const GridNode* getNodeClosestTo(const Point& pos) const;
 
 private:

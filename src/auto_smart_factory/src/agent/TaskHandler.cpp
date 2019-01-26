@@ -12,7 +12,6 @@ TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub, Map* map
 }
 
 void TaskHandler::publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId) {
-    // TODO: Score Calculation
     auto_smart_factory::TaskRating scoreMessage;
     scoreMessage.robot_id = agentId;
     scoreMessage.request_id = requestId;
@@ -31,7 +30,7 @@ void TaskHandler::rejectTask(unsigned int requestId) {
     scorePublisher->publish(scoreMessage);
 }
 
-void TaskHandler::update(void) {
+void TaskHandler::update() {
     if (!isTaskInExecution()) {
         nextTask();
     } else {
@@ -59,7 +58,7 @@ void TaskHandler::addChargingTask(uint32_t targetID, OrientedPoint targetPos, Pa
     queue.push_back(t);
 }
 
-void TaskHandler::executeTask(void) {
+void TaskHandler::executeTask() {
     if (isIdle()) {
         return;
     }
@@ -127,7 +126,7 @@ void TaskHandler::executeTask(void) {
     }
 }
 
-void TaskHandler::nextTask(void) {
+void TaskHandler::nextTask() {
     if (currentTask != nullptr) {
         delete currentTask;
     }
@@ -139,23 +138,23 @@ void TaskHandler::nextTask(void) {
     }
 }
 
-bool TaskHandler::isTaskInExecution(void) {
+bool TaskHandler::isTaskInExecution() {
     return (currentTask != nullptr && currentTask->getState() != Task::State::FINISHED);
 }
 
-bool TaskHandler::isIdle(void) {
+bool TaskHandler::isIdle() {
     return (currentTask == nullptr);
 }
 
-unsigned int TaskHandler::numberQueuedTasks(void) {
+unsigned int TaskHandler::numberQueuedTasks() {
 	return (unsigned int) queue.size();
 }
 
-Task* TaskHandler::getCurrentTask(void) {
+Task* TaskHandler::getCurrentTask() {
     return currentTask;
 }
 
-float TaskHandler::getBatteryConsumption(void) {
+float TaskHandler::getBatteryConsumption() {
     float batteryCons = 0.0;
     for(std::list<Task*>::iterator t = queue.begin(); t != queue.end(); t++) {
         batteryCons += (*t)->getBatteryConsumption();
@@ -163,7 +162,7 @@ float TaskHandler::getBatteryConsumption(void) {
     return batteryCons;
 }
 
-float TaskHandler::getDistance(void) {
+float TaskHandler::getDistance() {
     float distance = 0.0;
     for(std::list<Task*>::iterator t = queue.begin(); t != queue.end(); t++) {
         distance += (*t)->getDistance();
@@ -171,6 +170,6 @@ float TaskHandler::getDistance(void) {
     return distance;
 }
 
-Task* TaskHandler::getLastTask(void) {
+Task* TaskHandler::getLastTask() {
     return queue.back();
 }
