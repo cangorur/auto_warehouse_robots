@@ -28,7 +28,7 @@ class Agent;
 class MotionPlanner {
 
 public:
-	enum class Mode {READY, PID, TURN, FINISHED, STOP, RECOVERY, ALIGN};
+	enum class Mode {READY, PID, TURN, FINISHED, STOP, RECOVERY, ALIGN, WAIT};
 
 	/* Constructor that hands over some the robot configuration as well as
 	 * the motion acutator publisher.

@@ -1,5 +1,3 @@
-#include <cmath>
-
 #include <utility>
 
 #include "ros/ros.h"
@@ -9,7 +7,6 @@
 
 #include "agent/MotionPlanner.h"
 #include <cmath>
-#include <include/agent/MotionPlanner.h>
 
 
 MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
@@ -68,6 +65,15 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
+	if (pathObject.getDepartureTimes().at(currentTargetIndex) > ros::Time::now().toSec()) {
+		if (mode == Mode::PID || mode == Mode::READY) {
+			publishVelocity(0.0, 0.0);
+		}
+		mode = Mode::WAIT;
+		return;
+	}
+
+	mode = Mode::PID;
 	double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(pos.x, pos.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
 	double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
 	angularVelocity = std::min(std::max(angularVelocity, (double) -maxTurningSpeed), (double) maxTurningSpeed);
@@ -79,12 +85,6 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	}
 
 	publishVelocity(linearVelocity, angularVelocity);
-
-	/* Debug print
-	if (agentID.compare("robot_2") == 0) {
-		printf("[MP %s] cte: %.4f | speed: %.4f | steer: %.4f\n", agentID.c_str(), cte, linearVelocity, angularVelocity);
-	}
-	*/
 }
 
 void MotionPlanner::turnTowards(Point target) {
@@ -102,7 +102,7 @@ void MotionPlanner::turnTowards(double direction) {
 		mode = Mode::FINISHED;
 		return;
 	}
-	publishVelocity(0, Math::clamp(std::abs(rotation), 0, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+	publishVelocity(0, Math::clamp(std::abs(rotation), 0.3, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
 }
 
 void MotionPlanner::alignTowards(Point target) {
