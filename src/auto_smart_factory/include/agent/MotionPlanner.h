@@ -44,6 +44,9 @@ public:
 	 * @param orientation: current orientation of the agent*/
 	void update(geometry_msgs::Point position, double orientation);
 
+	/* Follow a path using the pid */
+	void followPath(void);
+
 	/* Turn the robot on spot facing orientation when finished */
 	void turnTowards(Point target);
 	void turnTowards(double direction);
@@ -96,7 +99,7 @@ private:
 
 	void publishVelocity(double speed, double angle);
 
-	bool waypointReached(Position* current);
+	bool isWaypointReached(void);
 
 	/// information about the current role of the agent
 	auto_smart_factory::RobotConfiguration robotConfig;

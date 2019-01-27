@@ -53,7 +53,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
-	if (waypointReached(&pos)) {
+	if (isWaypointReached()) {
 		if (!isCurrentPointLastPoint())	{
 			advanceToNextPathPoint();
 		} else {
@@ -69,14 +69,29 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
-	double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(pos.x, pos.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
+	if (pathObject.getDepartureTimes().at(currentTargetIndex) > ros::Time::now().toSec()) {
+		if (mode == Mode::PID || mode == Mode::READY) {
+			publishVelocity(0.0, 0.0);
+		}
+		mode = Mode::WAIT;
+		return;
+	}
+
+
+	followPath();
+}
+
+void MotionPlanner::followPath() {
+	mode = Mode::PID;
+	
+	double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(pos.x, pos.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(pos.x, pos.y));
 	double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
 	angularVelocity = std::min(std::max(angularVelocity, (double) -maxTurningSpeed), (double) maxTurningSpeed);
 
 	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed-minDrivingSpeed);
 
 	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.4f) {
-		linearVelocity = 0.1;
+		linearVelocity = std::max(0.1, (double) Math::getDistance(Point(pos.x, pos.y), currentTarget));
 	}
 
 	publishVelocity(linearVelocity, angularVelocity);
@@ -177,11 +192,11 @@ void MotionPlanner::publishVelocity(double speed, double angle) {
 	motionPub->publish(msg);
 }
 
-bool MotionPlanner::waypointReached(Position *current) {
+bool MotionPlanner::isWaypointReached() {
 	if (!isCurrentPointLastPoint())	{
-		return (Math::getDistance(Point(current->x, current->y), currentTarget) <= distToReachPoint);
+		return (Math::getDistance(Point(pos.x, pos.y), currentTarget) <= distToReachPoint);
 	} else {
-		return (Math::getDistance(Point(current->x, current->y), currentTarget) <= distToReachFinalPoint);
+		return (Math::getDistance(Point(pos.x, pos.y), currentTarget) <= distToReachFinalPoint);
 	}
 }
 
