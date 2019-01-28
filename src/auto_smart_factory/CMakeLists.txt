@@ -96,6 +96,7 @@ add_message_files(
 		CollisionAction.msg
 		MapConfiguration.msg
 		Rectangle.msg
+		ReservationCoordination.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -255,6 +256,8 @@ add_executable(agent_node
 		src/agent/path_planning/ThetaStarPathPlanner.cpp
 		src/agent/path_planning/RobotHardwareProfile.cpp
 		src/agent/path_planning/TimedLineOfSightResult.cpp
+		src/agent/path_planning/ReservationManager.cpp
+		src/agent/path_planning/ReservationBid.cpp
 
 		src/agent/Agent.cpp
 		src/agent/AgentNode.cpp

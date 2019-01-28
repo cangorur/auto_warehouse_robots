@@ -1,13 +1,14 @@
 #include "agent/task_handling/TaskHandler.h"
 
-TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm) 
+TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm) 
         : 
     agentId(agentId),
     scorePublisher(scorePub),
     map(map),
     motionPlanner(mp),
     gripper(gripper),
-    chargingManagement(cm)
+    chargingManagement(cm),
+    reservationManager(rm)
 {
 }
 
@@ -72,14 +73,34 @@ void TaskHandler::executeTask() {
 
     switch(currentTask->getState()) {
         case Task::State::WAITING:
-            if (currentTask->isTransportation()) {
-                currentTask->setState(Task::State::TO_SOURCE);
-                motionPlanner->newPath(((TransportationTask*) currentTask)->getPathToSource());
-                this->motionPlanner->start();
-            } else if (currentTask->isCharging()) {
-                currentTask->setState(Task::State::TO_TARGET);
-                motionPlanner->newPath(currentTask->getPathToTarget());
+            if(reservationManager->getIsBidingForReservation()) {
+                break;
             }
+            
+            if(reservationManager->getHasReservedPath()) {
+                if (currentTask->isTransportation()) {
+                    currentTask->setState(Task::State::TO_SOURCE);
+                    this->motionPlanner->start();
+                } else if (currentTask->isCharging()) {
+                    currentTask->setState(Task::State::TO_TARGET);
+                }
+                motionPlanner->newPath(reservationManager->getReservedPath());
+                
+            } else {
+                // Start to bid for path reservations
+                Path* pathBlueprint;
+                
+                if(currentTask->isTransportation()) {
+                    pathBlueprint = ((TransportationTask*) currentTask)->getPathToSource();
+                } else if(currentTask->isCharging()) {
+                    pathBlueprint = currentTask->getPathToTarget();
+                } else {
+                    ROS_ERROR("Task is neither Transportation task nor charging task!");
+                }
+                
+                reservationManager->bidForPathReservation(pathBlueprint->getNodes().front(), pathBlueprint->getNodes().back());
+            }           
+            
             break;
 
         case Task::State::TO_SOURCE:

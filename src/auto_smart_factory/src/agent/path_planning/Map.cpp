@@ -99,6 +99,8 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 }
 
 bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, float waitingTime, float drivingTime) const {
+	// Does not check against static obstacles, this is only used to verify a already planned connection
+	
 	double endTime = startTime + waitingTime + drivingTime;
 
 	for(const Rectangle& reservation : reservations) {

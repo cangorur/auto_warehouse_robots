@@ -31,22 +31,26 @@ public:
 	Map() = default;
 	Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle> &obstacles, RobotHardwareProfile* hardwareProfile);
 
+	// Visualisation
 	visualization_msgs::Marker getObstacleVisualization();
 	visualization_msgs::Marker getReservationVisualization();
-	
+
+	// Line of sight checks
 	bool isInsideAnyInflatedObstacle(const Point& point) const;	
 	bool isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const;
 	bool isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
 	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
-
-	// Does not check against static obstacles, this is only used to verify a already planned connection
 	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, float waitingTime, float drivingTime) const;
 	
+	bool isPointInMap(const Point& pos) const;
 	Point getRandomFreePoint() const;
+	OrientedPoint getPointInFrontOfTray(const auto_smart_factory::Tray& tray);
 
+	// Reservations
 	void deleteExpiredReservations(double time);
 	void addReservations(std::vector<Rectangle> newReservations);
 		
+	// Path queries
 	Path getThetaStarPath(const Point& start, const Point& end, double startingTime);
 	Path getThetaStarPath(const Point& start, const auto_smart_factory::Tray& end, double startingTime);
 	Path getThetaStarPath(const auto_smart_factory::Tray& start, const Point& end, double startingTime);
@@ -56,10 +60,9 @@ public:
 	float getWidth() const;
 	float getHeight() const;
 	float getMargin() const;
-	
-	bool isPointInMap(const Point& pos) const;
-	
-	OrientedPoint getPointInFrontOfTray(const auto_smart_factory::Tray& tray);
+
+private:
+
 };
 
 

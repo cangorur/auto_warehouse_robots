@@ -15,7 +15,6 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		waitTimes(std::move(waitTimes_)),
 		hardwareProfile(hardwareProfile)
 {
-
 	if(nodes.size() != waitTimes.size()) {
 		std::cout << "ERROR: nodes.size() != waitTimes.size()" << std::endl;
 	}

@@ -3,6 +3,7 @@
 
 #include <list>
 #include <string>
+#include <include/agent/path_planning/ReservationManager.h>
 
 #include "ros/ros.h"
 #include "agent/task_handling/Task.h"
@@ -18,7 +19,7 @@
 class TaskHandler
 {
 	public:
-    	explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm);
+    	explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm);
 
     	void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId);
 		void rejectTask(unsigned int requestId);
@@ -66,6 +67,7 @@ class TaskHandler
 		MotionPlanner* motionPlanner;
 		Gripper* gripper;
 		ChargingManagement* chargingManagement;
+		ReservationManager* reservationManager;
 
 		// the id of the agent to which this taskHandler belongs
 	    std::string agentId;

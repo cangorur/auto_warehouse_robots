@@ -12,6 +12,8 @@ private:
 	double startTime;
 	double endTime;
 	
+	int ownerId;
+	
 	// Todo add visualisation color
 	
 	// Faster physic processing
@@ -21,7 +23,7 @@ private:
 
 public:
 	Rectangle(Point pos, Point size, float rotation);
-	Rectangle(Point pos, Point size, float rotation, double startTime, double endTime);
+	Rectangle(Point pos, Point size, float rotation, double startTime, double endTime, int ownerId);
 	
 	bool isInsideInflated(const Point& point) const;
 	const Point* getPointsInflated() const;
@@ -39,6 +41,8 @@ public:
 	double getStartTime() const;
 	double getEndTime() const;
 	double getFreeAfter() const;
+	
+	int getOwnerId() const;
 
 private:
 	bool isInsideAxisAlignedInflated(const Point& point) const;	

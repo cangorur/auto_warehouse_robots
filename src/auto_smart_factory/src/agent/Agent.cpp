@@ -2,6 +2,8 @@
 #include "Math.h"
 
 #include <tf/transform_datatypes.h>
+#include <include/agent/Agent.h>
+
 
 Agent::Agent(std::string agent_id) {
 	agentID = agent_id;
@@ -13,9 +15,6 @@ Agent::Agent(std::string agent_id) {
 	//setup init_agent service
 	pn.setParam(agentID, "~init");
 	init_srv = pn.advertiseService("init", &Agent::init, this);
-
-	visualisationPublisher = pn.advertise<visualization_msgs::Marker>("visualization_" + agent_id, 100);
-	vizPublicationTimer = pn.createTimer(ros::Duration(0.5f), &Agent::publishVisualisation, this); // in seconds
 }
 
 Agent::~Agent() {
@@ -25,6 +24,7 @@ Agent::~Agent() {
 	this->map->~Map();
 	this->chargingManagement->~ChargingManagement();
 	this->taskHandler->~TaskHandler();
+	this->reservationManager->~ReservationManager();
 }
 
 void Agent::update() {
@@ -97,6 +97,12 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	// TODO: Below topic can give some hints (example information an agent may need). They are not published in any of the nodes
 	// this->collision_alert_sub = n.subscribe("/collisionAlert", 1, &Agent::collisionAlertCallback, this);
 
+	visualisationPublisher = pn.advertise<visualization_msgs::Marker>("visualization_" + agentID, 100, true);
+	vizPublicationTimer = pn.createTimer(ros::Duration(0.5f), &Agent::publishVisualisation, this); // in seconds
+	
+	reservationCoordination_pub = pn.advertise<auto_smart_factory::ReservationCoordination>("revervation_coordination", 100);
+	reservationCoordination_sub = pn.subscribe("reservation_coordination", 100, &Agent::reservationCoordinationCallback, this);
+
 	try {
 		this->motionPlanner = new MotionPlanner(this, this->robotConfig, &(this->motion_pub));
 		this->gripper = new Gripper(this, &(this->gripper_state_pub));
@@ -112,13 +118,15 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		}
 		this->map = new Map(warehouseConfig, obstacles, hardwareProfile);
 
-		// Charging MAnagement
+		// Charging Management
 		this->chargingManagement = new ChargingManagement(this);
 
+		// Reservation Manager
+		reservationManager = new ReservationManager(&reservationCoordination_pub, map, agentIdInt, static_cast<int>(warehouse_configuration.robots.size()));
+		
 		// Task Handler
-		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub), this->map, this->motionPlanner, this->gripper, 
-			this->chargingManagement);
-
+		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub), this->map, this->motionPlanner, this->gripper, this->chargingManagement, reservationManager);
+		
 		ROS_WARN("Finished Initialize [%s]", agentID.c_str());
 		return true;
 	} catch(...) {
@@ -231,8 +239,7 @@ void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& ms
 	}
 }
 
-bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
-                       auto_smart_factory::AssignTask::Response& res) {
+bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_factory::AssignTask::Response& res) {
 	try {
 		if(isIdle) {
 			ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
@@ -254,18 +261,14 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			if(lastTask != nullptr){
 				sourcePath = map->getThetaStarPath(Point(lastTask->getTargetPosition()), input_tray, lastTask->getEndTime());
 				targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration());
-				taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, 
-					targetPath, lastTask->getEndTime());
+				taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, targetPath, lastTask->getEndTime());
 			} else {
 				// take the current position
-				// TODO add correct time now
 				double now = ros::Time::now().toSec();
 				sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, now);
 				targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration());
-				taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, 
-					targetPath, now);
-			}
-			
+				taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, targetPath, now);
+			}			
 
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
 			ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, 
@@ -290,7 +293,6 @@ auto_smart_factory::Tray Agent::getTray(unsigned int tray_id) {
 		}
 	ROS_ERROR("[%s]: Tray with id %u inexistent!", agentID.c_str(), tray_id);
 }
-
 
 void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 	position = msg.pose.position;
@@ -402,4 +404,9 @@ void Agent::publishVisualisation(const ros::TimerEvent& e) {
 ros::Publisher* Agent::getVisualisationPublisher() {
 	return &visualisationPublisher;
 }
+
+void Agent::reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg) {
+	reservationManager->reservationCoordinationCallback(msg);
+}
+
 
