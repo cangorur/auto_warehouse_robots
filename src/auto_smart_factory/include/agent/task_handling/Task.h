@@ -9,15 +9,13 @@ class Task
 {
   public:
 		enum class Type {CHARGING, TRANSPORTATION};
-		enum class State {WAITING, TO_SOURCE, PICKUP, TO_TARGET, DROPOFF, FINISHED, CHARGING};
+		enum class State {WAITING, TO_SOURCE, PICKUP, RESERVING_TARGET, TO_TARGET, DROPOFF, FINISHED, CHARGING};
 
-		Task(uint32_t targetID, OrientedPoint targetPos, Path targetPath, Type type, double startTime);
+		Task(uint32_t targetID, Path targetPath, Type type, double startTime);
 
 		uint32_t getTargetTrayId(void);
 
 		OrientedPoint getTargetPosition(void);
-
-		Path* getPathToTarget(void);
 
 		Task::Type getType(void);
 
@@ -28,12 +26,11 @@ class Task
 
 		virtual void setState(Task::State state) = 0;
 
-		virtual float getBatteryConsumption(void) = 0;
-
-		virtual float getDistance(void) = 0;
+		virtual double getBatteryConsumption(void) = 0;
 
 		virtual double getDuration(void) = 0;
 
+		// returns the estimated end time of this task
 		double getEndTime(void);
 
 	protected:	
@@ -42,15 +39,15 @@ class Task
 
 		// the estimated moment in time when the task will start execution
 		double startTime;
+		// the estimated time the task will take
+		double targetDuration;
+		// the estimated battery consumption the task will consume
+		double targetBatCons;
 
 		// target Tray id
 		uint32_t targetId;
 		// target Tray position
 		OrientedPoint targetPosition;
-
-		// calculated path from source to target (may be Theta* or RRT*)
-		Path pathToTarget;
-
 };
 
 #endif /* AGENT_TASK_H_ */

@@ -28,10 +28,10 @@ class TaskHandler
 
     	virtual ~TaskHandler();
 
-    	void addTransportationTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
-					uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath, double startTime);
+    	void addTransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, 
+				Path sourcePath, Path targetPath, double startTime);
 
-    	void addChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath, double startTime);
+    	void addChargingTask(uint32_t targetID, Path targetPath, double startTime);
 
 		void executeTask(void);
 
@@ -47,9 +47,7 @@ class TaskHandler
 
 		float getBatteryConsumption(void);
 
-		float getDistance(void);
-
-		double getDuration();
+		double getDuration(void);
 
 		Task* getLastTask(void);
 

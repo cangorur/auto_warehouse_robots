@@ -287,3 +287,6 @@ visualization_msgs::Marker MotionPlanner::getVisualizationMsgLines() {
 	return pathObject.getVisualizationMsgLines();
 }
 
+Point MotionPlanner::getPosition() {
+	return Point(pos.x, pos.y);
+}

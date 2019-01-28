@@ -49,18 +49,18 @@ TaskHandler::~TaskHandler(){
     queue.clear();
 }
 
-void TaskHandler::addTransportationTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
-				uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath, double startTime) {
+void TaskHandler::addTransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, 
+        Path sourcePath, Path targetPath, double startTime) {
     // create new task
-    TransportationTask* t = new TransportationTask(id, sourceID, sourcePos, targetID, targetPos, sourcePath, targetPath, startTime);
+    TransportationTask* t = new TransportationTask(id, sourceID, targetID, sourcePath, targetPath, startTime);
 
     // add task to list
     queue.push_back(t);
 }
 
-void TaskHandler::addChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath, double startTime) {
+void TaskHandler::addChargingTask(uint32_t targetID, Path targetPath, double startTime) {
     // create new charging task
-    ChargingTask* t = new ChargingTask(targetID, targetPos, targetPath, startTime);
+    ChargingTask* t = new ChargingTask(targetID, targetPath, startTime);
 
     // add task to list
     queue.push_back(t);
@@ -88,17 +88,13 @@ void TaskHandler::executeTask() {
                 
             } else {
                 // Start to bid for path reservations
-                Path* pathBlueprint;
-                
                 if(currentTask->isTransportation()) {
-                    pathBlueprint = ((TransportationTask*) currentTask)->getPathToSource();
+                    reservationManager->bidForPathReservation(motionPlanner->getPosition(),Point(((TransportationTask*) currentTask)->getSourcePosition()));
                 } else if(currentTask->isCharging()) {
-                    pathBlueprint = currentTask->getPathToTarget();
+                    reservationManager->bidForPathReservation(motionPlanner->getPosition(), Point(currentTask->getTargetPosition()));
                 } else {
                     ROS_ERROR("Task is neither Transportation task nor charging task!");
                 }
-                
-                reservationManager->bidForPathReservation(pathBlueprint->getNodes().front(), pathBlueprint->getNodes().back());
             }           
             
             break;
@@ -114,9 +110,19 @@ void TaskHandler::executeTask() {
             if (this->motionPlanner->isDone()) {
                 gripper->loadPackage(true);
                 ros::Duration(2).sleep();
+                currentTask->setState(Task::State::RESERVING_TARGET);
+                reservationManager->bidForPathReservation(Point(((TransportationTask*) currentTask)->getSourcePosition()), Point(currentTask->getTargetPosition()));
+            }
+            break;
+
+        case Task::State::RESERVING_TARGET:
+            if(reservationManager->getIsBidingForReservation()) {
+                break;
+            }
+            if(reservationManager->getHasReservedPath()) {
                 currentTask->setState(Task::State::TO_TARGET);
-                this->motionPlanner->newPath(currentTask->getPathToTarget());
-                this->motionPlanner->start();
+                motionPlanner->newPath(reservationManager->getReservedPath());
+                this->motionPlanner->start();   
             }
             break;
 
@@ -191,17 +197,6 @@ float TaskHandler::getBatteryConsumption() {
         batteryCons += currentTask->getBatteryConsumption();
     }
     return batteryCons;
-}
-
-float TaskHandler::getDistance() {
-    float distance = 0.0;
-    for(Task* t : queue) {
-        distance += t->getDistance();
-    }
-    if(currentTask != nullptr) {
-        distance += currentTask->getDistance();
-    }
-    return distance;
 }
 
 double TaskHandler::getDuration() {
