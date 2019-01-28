@@ -67,6 +67,8 @@ public:
 	visualization_msgs::Marker getVisualizationMsgPoints();
 	visualization_msgs::Marker getVisualizationMsgLines();
 
+	Point getPosition();
+
 private:
 	/* Hands over the currently sensed position and orientation of the robot to execute the driving
 	 * of the current path. Manages the current path and decides wheter to turn or not and publishes

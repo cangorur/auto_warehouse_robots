@@ -10,8 +10,8 @@ class TransportationTask : public Task
 {
 	public:
 
-		explicit TransportationTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
-					uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath, double startTime);
+		explicit TransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, 
+				Path sourcePath, Path targetPath, double startTime);
 
 		virtual ~TransportationTask();
 
@@ -21,11 +21,7 @@ class TransportationTask : public Task
 
 		OrientedPoint getSourcePosition();
 
-		Path* getPathToSource();
-
-		float getBatteryConsumption();
-
-		float getDistance();
+		double getBatteryConsumption();
 
 		double getDuration();
 
@@ -40,9 +36,10 @@ class TransportationTask : public Task
 		uint32_t sourceId;
 		// source Tray position
 		OrientedPoint sourcePosition;
+		// 
+		double sourceDuration;
 
-		// Path to source
-		Path pathToSource;
+		double sourceBatCons;
 
 		// time to pick up a packet
 		const float pickUpTime = 0.0f;

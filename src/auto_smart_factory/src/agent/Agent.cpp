@@ -252,8 +252,6 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 			ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
 
 			// create Task and add it to task handler
-			OrientedPoint sourcePos = map->getPointInFrontOfTray(input_tray);
-			OrientedPoint targetPos = map->getPointInFrontOfTray(storage_tray);
 			Path sourcePath;
 			Path targetPath;
 
@@ -261,13 +259,13 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 			if(lastTask != nullptr){
 				sourcePath = map->getThetaStarPath(Point(lastTask->getTargetPosition()), input_tray, lastTask->getEndTime());
 				targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration());
-				taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, targetPath, lastTask->getEndTime());
+				taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
 			} else {
 				// take the current position
 				double now = ros::Time::now().toSec();
 				sourcePath = map->getThetaStarPath(Point(this->getCurrentPosition()), input_tray, now);
 				targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration());
-				taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, sourcePath, targetPath, now);
+				taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
 			}			
 
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
