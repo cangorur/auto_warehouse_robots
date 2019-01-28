@@ -52,9 +52,9 @@ private:
 	
 	void addReservations(const auto_smart_factory::ReservationCoordination& msg);
 	void publishReservations(std::vector<Rectangle> reservations);
-	void updateBid(ReservationBid newBid);
+	void updateHighestBid(ReservationBid newBid);
 	void startNewAuction(int newAuctionId, double newAuctionStartTime);
-	void initializeNewAuction(int newAuctionId, double newAuctionStartTime);
+	void initializeNewAuction(int currentAuctionId, double newAuctionStartTime);
 	void closeAuction();
 	
 };

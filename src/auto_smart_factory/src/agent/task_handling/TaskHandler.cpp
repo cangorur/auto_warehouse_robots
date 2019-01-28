@@ -89,7 +89,7 @@ void TaskHandler::executeTask() {
             } else {
                 // Start to bid for path reservations
                 if(currentTask->isTransportation()) {
-                    reservationManager->bidForPathReservation(motionPlanner->getPosition(),Point(((TransportationTask*) currentTask)->getSourcePosition()));
+                    reservationManager->bidForPathReservation(motionPlanner->getPosition(), Point(((TransportationTask*) currentTask)->getSourcePosition()));
                 } else if(currentTask->isCharging()) {
                     reservationManager->bidForPathReservation(motionPlanner->getPosition(), Point(currentTask->getTargetPosition()));
                 } else {

@@ -45,7 +45,7 @@ bool WarehouseManagement::getWarehouseConfiguration() {
 	auto_smart_factory::GetWarehouseConfig srv;
 	ros::service::waitForService(srv_name.c_str());
 	if(client.call(srv)) {
-		ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
+		//ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
 		warehouseConfig = srv.response.warehouse_configuration;
 		return true;
 	} else {
@@ -61,7 +61,7 @@ bool WarehouseManagement::getRobotConfigurations() {
 	auto_smart_factory::GetRobotConfigurations srv;
 	ros::service::waitForService(srv_name.c_str());
 	if(client.call(srv)) {
-		ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
+		//ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
 		robotConfigs = srv.response.configs;
 		return true;
 	} else {
@@ -77,7 +77,7 @@ bool WarehouseManagement::getPackageConfigurations() {
 	auto_smart_factory::GetPackageConfigurations srv;
 	ros::service::waitForService(srv_name.c_str());
 	if(client.call(srv)) {
-		ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
+		//ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
 		packageConfigs = srv.response.configs;
 		return true;
 	} else {
@@ -122,8 +122,7 @@ bool WarehouseManagement::initTaskPlanner(
 	srv.request.package_configurations = package_configurations;
 	ros::service::waitForService(srv_name.c_str());
 	if(client.call(srv)) {
-		ROS_INFO("[warehouse management]: %s | success: %s",
-		         srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
+		//ROS_INFO("[warehouse management]: %s | success: %s", srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
 		return true;
 	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
@@ -142,7 +141,7 @@ bool WarehouseManagement::initAgent(std::string agent_id,
 	srv.request.robot_configuration = robot_configuration;
 	ros::service::waitForService(srv_name.c_str());
 	if(client.call(srv)) {
-		ROS_INFO("[warehouse management]: %s | success: %s", srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
+		//ROS_INFO("[warehouse management]: %s | success: %s", srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
 		return true;
 	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
@@ -161,8 +160,7 @@ bool WarehouseManagement::initPackageGenerator(
 	srv.request.package_configurations = package_configurations;
 	ros::service::waitForService(srv_name.c_str());
 	if(client.call(srv)) {
-		ROS_INFO("[warehouse management]: %s | success: %s",
-		         srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
+		//ROS_INFO("[warehouse management]: %s | success: %s", srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
 		return true;
 	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
@@ -181,8 +179,7 @@ bool WarehouseManagement::initStorageManagement(
 	srv.request.package_configurations = package_configurations;
 	ros::service::waitForService(srv_name.c_str());
 	if(client.call(srv)) {
-		ROS_INFO("[warehouse management]: %s | success: %s",
-		         srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
+		//ROS_INFO("[warehouse management]: %s | success: %s", srv_name.c_str(), ((bool) srv.response.success ? "true" : "false"));
 		return true;
 	} else {
 		ROS_ERROR("[warehouse management]: Failed to call service %s!", srv_name.c_str());
@@ -379,19 +376,19 @@ std_msgs::ColorRGBA WarehouseManagement::batteryLevelToColor(double batteryLevel
 }
 
 void WarehouseManagement::receiveTaskPlannerState(auto_smart_factory::TaskPlannerState msg) {
-	ROS_INFO("---------- Current state of the task planner: ----------");
+	//ROS_INFO("---------- Current state of the task planner: ----------");
 
-	ROS_INFO("Pending requests:");
+	//ROS_INFO("Pending requests:");
 
 	for(const auto_smart_factory::RequestStatus& req : msg.requests) {
-		ROS_INFO("- [R %d] Type: %s    Status: %s", req.id, req.type.c_str(), req.status.c_str());
+		//ROS_INFO("- [R %d] Type: %s    Status: %s", req.id, req.type.c_str(), req.status.c_str());
 	}
 
-	ROS_INFO("Current Tasks:");
+	//ROS_INFO("Current Tasks:");
 
 	for(const auto_smart_factory::TaskState& task : msg.tasks) {
-		ROS_INFO("- [T %d] Status: %s", task.id, task.status.c_str());
+		//ROS_INFO("- [T %d] Status: %s", task.id, task.status.c_str());
 	}
 
-	ROS_INFO("--------------------------------------------------------");
+	//ROS_INFO("--------------------------------------------------------");
 }

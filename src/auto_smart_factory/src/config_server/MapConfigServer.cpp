@@ -29,8 +29,6 @@ MapConfigServer::MapConfigServer() {
 	addStaticObstacles();
 
 	configService = nh.advertiseService("get_map_configuration", &MapConfigServer::configCallback, this);
-	//mapPublisher = nh.advertise<nav_msgs::OccupancyGrid>("occupancy_map", 1, true);
-	//mapPublisher.publish(warehouseConfig.occupancy_map);
 }
 
 void MapConfigServer::readMapConfig(std::string file) {

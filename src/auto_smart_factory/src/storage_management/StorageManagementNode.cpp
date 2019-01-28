@@ -6,7 +6,7 @@ int main(int argc, char** argv) {
 	ros::NodeHandle nh;
 
 	StorageManagement storageManagement;
-	ROS_INFO("StorageManagement ready!");
+	//ROS_INFO("StorageManagement ready!");
 
 	ros::spin();
 }

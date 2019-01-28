@@ -7,14 +7,14 @@ ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int 
 	publisher(publisher),
 	map(map),
 	agentId(agentId),
-	agentCount(agentCount)
+	agentCount(agentCount),
+	currentAuctionId(0),
+	currentAuctionHighestBid(-1.f, -1)
 {
 	hasReservedPath = false;
 	isBidingForReservation = false;
-	
-	currentAuctionId = 0;
 
-	if(agentId == 1) {
+	if(agentId == agentCount) {
 		initializeNewDelayedAuction = true;
 		timestampToInitializeDelayedAuction = ros::Time::now().toSec() + ros::Duration(0.1f).toSec();
 	} else {
@@ -23,15 +23,16 @@ ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int 
 }
 
 void ReservationManager::update() {
-	map->deleteExpiredReservations(ros::Time::now().toSec());
+	double now = ros::Time::now().toSec();
+	map->deleteExpiredReservations(now);
 	
 	// Start new delayed auction
-	if(initializeNewDelayedAuction && ros::Time::now().toSec() >= timestampToInitializeDelayedAuction) {
+	if(initializeNewDelayedAuction && now >= timestampToInitializeDelayedAuction) {
 		initializeNewDelayedAuction = false;
-		double startTime = ros::Time::now().toSec();
-		
-		initializeNewAuction(currentAuctionId, startTime);		
-		startNewAuction(currentAuctionId + 1, startTime);
+
+		int auctionId = currentAuctionId;
+		startNewAuction(auctionId + 1, now);
+		initializeNewAuction(auctionId, now);		
 	}
 	
 	// Process queued reservationBids
@@ -41,9 +42,10 @@ void ReservationManager::update() {
 		if((*iter).first < currentAuctionId) {
 			iter = reservationBidQueue.erase(iter);
 		} else if((*iter).first == currentAuctionId) {
-			updateBid(ReservationBid((*iter).second.bid, (*iter).second.agentId));
+			updateHighestBid(ReservationBid((*iter).second.bid, (*iter).second.agentId));
 			
 			iter = reservationBidQueue.erase(iter);
+			//ROS_INFO("[ReservationManager %d] Applied bid for auction %d from queue", agentId, currentAuctionId);
 		} else {
 			iter++;
 		}
@@ -55,25 +57,23 @@ void ReservationManager::reservationCoordinationCallback(const auto_smart_factor
 	if(msg.robotId == agentId) {
 		return;
 	}
-	
-	if(msg.auctionId != currentAuctionId) {
-		// Queue out of order bidding messages, process reservation messages
-		if(!msg.isReservationMessage) {
-			ROS_ERROR("[Agent %d] Got bid with auction id %d but current auctionId is %d", agentId, msg.auctionId, currentAuctionId);
-			
-			if(msg.auctionId > currentAuctionId) {
-				reservationBidQueue.emplace_back(msg.auctionId, ReservationBid(msg.bid, msg.robotId));
-			}
-						
-			return;
+
+	// Queue out of order bidding messages, process reservation messages
+	if(msg.auctionId != currentAuctionId && !msg.isReservationMessage) {
+		//ROS_ERROR("[ReservationManager %d] Got bid with auction id %d but current auctionId is %d", agentId, msg.auctionId, currentAuctionId);
+		
+		if(msg.auctionId > currentAuctionId) {
+			reservationBidQueue.emplace_back(msg.auctionId, ReservationBid(msg.bid, msg.robotId));
 		}
+					
+		return;
 	}
 	
 	if(msg.isReservationMessage) {
 		addReservations(msg);
 		startNewAuction(msg.auctionId + 1, msg.timestamp);
 	} else {
-		updateBid(ReservationBid(msg.bid, msg.robotId));
+		updateHighestBid(ReservationBid(msg.bid, msg.robotId));
 	}
 }
 
@@ -87,7 +87,7 @@ void ReservationManager::addReservations(const auto_smart_factory::ReservationCo
 	map->addReservations(reservations);
 }
 
-void ReservationManager::updateBid(ReservationBid newBid) {
+void ReservationManager::updateHighestBid(ReservationBid newBid) {
 	if(newBid.bid > currentAuctionHighestBid.bid || (newBid.bid == currentAuctionHighestBid.bid && newBid.agentId > currentAuctionHighestBid.agentId)) {
 		currentAuctionHighestBid = newBid;
 	}
@@ -110,47 +110,45 @@ void ReservationManager::startNewAuction(int newAuctionId, double newAuctionStar
 	msg.timestamp = ros::Time::now().toSec();
 	msg.robotId = agentId;
 	msg.auctionId = currentAuctionId;
-	msg.isReservationMessage = 0;
+	msg.isReservationMessage = static_cast<unsigned char>(false);
 	
 	if(isBidingForReservation) {
+		//ROS_INFO("[ReservationManager %d] Starting new auction %d - bidding", agentId, newAuctionId);
+
 		msg.bid = static_cast<float>(pathToReserve.getDuration());
 	} else {
 		msg.bid = -1.f;
 	}
 
 	// Update own bid
-	updateBid(ReservationBid(msg.bid, agentId));
+	updateHighestBid(ReservationBid(msg.bid, agentId));
 	
 	publisher->publish(msg);	
 }
 
 void ReservationManager::closeAuction() {
 	if(currentAuctionHighestBid.agentId == agentId) {
-		ROS_INFO("[ReservationManager %d] Won auction for path with duration %f", agentId, pathToReserve.getDuration());
-		isBidingForReservation = false;
-		hasReservedPath = true;
+		if(isBidingForReservation) {
+			ROS_INFO("[ReservationManager %d] Won auction %d for path with duration %f", agentId, currentAuctionId, pathToReserve.getDuration());
+			isBidingForReservation = false;
+			hasReservedPath = true;
 
-		std::vector<Rectangle> reservations = pathToReserve.generateReservations(agentId);
-		map->addReservations(reservations);
+			std::vector<Rectangle> reservations = pathToReserve.generateReservations(agentId);
+			map->addReservations(reservations);
 
-		publishReservations(reservations);		
-		startNewAuction(currentAuctionId + 1, ros::Time::now().toSec());
+			publishReservations(reservations);
+			startNewAuction(currentAuctionId + 1, ros::Time::now().toSec());	
+		} else {
+			//ROS_INFO("[ReservationManager %d] Won empty auction %d initializing new auction", agentId, currentAuctionId);
+
+			// Agent with highest id starts new auction but delayed to avoid overhead
+			initializeNewDelayedAuction = true;
+			timestampToInitializeDelayedAuction = ros::Time::now().toSec() + ros::Duration(0.1f).toSec();
+		}	
 	} else {
 		if(isBidingForReservation) {
 			// Recalculate path to match timing
 			pathToReserve = map->getThetaStarPath(pathToReserve.getNodes().front(), pathToReserve.getNodes().back(), ros::Time::now().toSec());
-
-		} else if(std::abs(currentAuctionHighestBid.bid - -1.f) <= EPS) {
-			// If no one is bidding at all => no winner message => no new auction
-			if(currentAuctionHighestBid.agentId == -1) {
-				ROS_ERROR("Auction closes but no bid with agentId != 0 found!");
-			} else {
-				// Agent with highest id starts new auction but delayed to avoid overhead
-				if(currentAuctionHighestBid.agentId == agentId) {
-					initializeNewDelayedAuction = true;
-					timestampToInitializeDelayedAuction = ros::Time::now().toSec() + ros::Duration(0.1f).toSec();
-				}	
-			}
 		}		
 	}
 }
@@ -160,7 +158,7 @@ void ReservationManager::publishReservations(std::vector<Rectangle> reservations
 	msg.timestamp = ros::Time::now().toSec();
 	msg.robotId = agentId;
 	msg.auctionId = currentAuctionId;
-	msg.isReservationMessage = 1;
+	msg.isReservationMessage = static_cast<unsigned char>(true);
 	
 	for(const auto& r : reservations) {
 		auto_smart_factory::Rectangle rectangle;
@@ -180,12 +178,15 @@ void ReservationManager::publishReservations(std::vector<Rectangle> reservations
 }
 
 void ReservationManager::bidForPathReservation(Point startPoint, Point endPoint) {
-	isBidingForReservation = true;
-	hasReservedPath = false;
-
 	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec());
+	if(pathToReserve.getDistance() > 0) {
+		isBidingForReservation = true;
+		hasReservedPath = false;
 
-	ROS_INFO("[ReservationManager %d] Starting to bid for path with duration %f", agentId, pathToReserve.getDuration());
+		ROS_INFO("[ReservationManager %d] Starting to bid for path with duration %f on auction %d", agentId, pathToReserve.getDuration(), currentAuctionId + 1);	
+	} else {
+		ROS_ERROR("[ReservationManager %d] Tried to generate path but no path was found. Distance start-end: %f", agentId, Math::getDistance(startPoint, endPoint));
+	}	
 }
 
 bool ReservationManager::getIsBidingForReservation() const {
@@ -197,15 +198,19 @@ bool ReservationManager::getHasReservedPath() const {
 }
 
 Path ReservationManager::getReservedPath() {
+	if(!hasReservedPath) {
+		ROS_ERROR("[ReservationManager %d] Tried to get path but hasNoReservedPath!", agentId);
+	}
 	return pathToReserve;
 }
 
-void ReservationManager::initializeNewAuction(int newAuctionId, double newAuctionStartTime) {
+void ReservationManager::initializeNewAuction(int auctionId, double newAuctionStartTime) {
+	//ROS_INFO("[ReservationManager %d] Sending initializing new auction message for auctionId %d", agentId, auctionId + 1);
 	auto_smart_factory::ReservationCoordination msg;
 	msg.timestamp = newAuctionStartTime;
 	msg.robotId = agentId;
-	msg.auctionId = newAuctionId;
-	msg.isReservationMessage = 1;
+	msg.auctionId = auctionId;
+	msg.isReservationMessage = static_cast<unsigned char>(true);
 	msg.reservations.clear();
 
 	publisher->publish(msg);

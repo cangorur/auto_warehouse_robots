@@ -7,7 +7,7 @@ ChargingManagement::ChargingManagement(Agent* a) {
 	agent = a;
 	agentID = agent->getAgentID();
 	agentBatt = agent->getAgentBattery();
-	ROS_INFO("[ChargingManagement] Started, agent ID: [%s], agent Batt: [%f] ", agentID.c_str(), agentBatt);
+	//ROS_INFO("[ChargingManagement] Started, agent ID: [%s], agent Batt: [%f] ", agentID.c_str(), agentBatt);
 
 }
 

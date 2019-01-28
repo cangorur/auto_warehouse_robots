@@ -100,8 +100,8 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	visualisationPublisher = pn.advertise<visualization_msgs::Marker>("visualization_" + agentID, 100, true);
 	vizPublicationTimer = pn.createTimer(ros::Duration(0.5f), &Agent::publishVisualisation, this); // in seconds
 	
-	reservationCoordination_pub = pn.advertise<auto_smart_factory::ReservationCoordination>("revervation_coordination", 100);
-	reservationCoordination_sub = pn.subscribe("reservation_coordination", 100, &Agent::reservationCoordinationCallback, this);
+	reservationCoordination_pub = pn.advertise<auto_smart_factory::ReservationCoordination>("/reservation_coordination", 100, true);
+	reservationCoordination_sub = pn.subscribe("/reservation_coordination", 100, &Agent::reservationCoordinationCallback, this);
 
 	try {
 		this->motionPlanner = new MotionPlanner(this, this->robotConfig, &(this->motion_pub));
@@ -242,14 +242,14 @@ void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& ms
 bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_factory::AssignTask::Response& res) {
 	try {
 		if(isIdle) {
-			ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
+			//ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
 
 			int task_id = req.task_id;
 			auto_smart_factory::Tray input_tray = getTray(req.input_tray);
 			auto_smart_factory::Tray storage_tray = getTray(req.storage_tray);
 
-			ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
-			ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
+			//ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
+			//ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
 
 			// create Task and add it to task handler
 			Path sourcePath;
@@ -269,8 +269,7 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 			}			
 
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
-			ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, 
-				ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
+			//ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
 			res.success = true;
 		} else {
 			ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);
