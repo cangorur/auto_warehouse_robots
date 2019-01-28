@@ -127,6 +127,7 @@ void MapConfigServer::setRectangularObstacle(float x, float y, float width, floa
 	rectangle.sizeX = width;
 	rectangle.sizeY = height;
 	rectangle.rotation = rotation;	
+	rectangle.ownerId = -1;
 	
 	warehouseConfig.map_configuration.obstacles.push_back(rectangle);
 }

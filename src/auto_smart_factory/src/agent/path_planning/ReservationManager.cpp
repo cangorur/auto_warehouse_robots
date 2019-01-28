@@ -76,25 +76,50 @@ void ReservationManager::startNewAuction(int newAuctionId, double newAuctionStar
 
 void ReservationManager::closeAuction() {
 	if(currentAuctionHighestBid.agentId == agentId) {
-		// Reserve path
-		map->addReservations(pathToReserve.generateReservations());
-		
+		ROS_INFO("[ReservationManager %d] Won auction for path with duration %f", agentId, pathToReserve.getDuration());
 		isBidingForReservation = false;
 		hasReservedPath = true;
 
-		ROS_INFO("[ReservationManager %d] Won auction for path with duration %f", agentId, pathToReserve.getDuration());
+		std::vector<Rectangle> reservations = pathToReserve.generateReservations(agentId);
+		map->addReservations(reservations);
+
+		publishReservations(reservations);				
 	} else {
 		if(isBidingForReservation) {
 			// Recalculate path to match timing
 			pathToReserve = map->getThetaStarPath(pathToReserve.getNodes().front(), pathToReserve.getNodes().back(), ros::Time::now().toSec());
-		} else {
-			// Check if anyone is biding at all
-			if(currentAuctionHighestBid.agentId == -1) {
-				// TODO solve this. Either start immideately -> overhead OR delay new Auction OR go to NO_Bidder state and the agent first who wants to bid starts a new auction (what if two start at the same time...)
-				startNewAuction(currentAuctionId + 1, ros::Time::now().toSec());
-			}
+
+		} else if(currentAuctionHighestBid.agentId == -1) {
+			// If no one is bidding at all => no winner message => no new auction
+			
+			// TODO solve this. Either start immideately -> overhead OR delay new Auction OR go to NO_Bidder state and the agent first who wants to bid starts a new auction (what if two start at the same time...)
+			//startNewAuction(currentAuctionId + 1, ros::Time::now().toSec());
 		}		
 	}
+}
+
+void ReservationManager::publishReservations(std::vector<Rectangle> reservations) {
+	auto_smart_factory::ReservationCoordination msg;
+	msg.timestamp = ros::Time::now().toSec();
+	msg.robotId = agentId;
+	msg.auctionId = currentAuctionId;
+	msg.isReservationMessage = 1;
+	
+	for(const auto& r : reservations) {
+		auto_smart_factory::Rectangle rectangle;
+		rectangle.posX = r.getPosition().x;
+		rectangle.posY = r.getPosition().y;
+		rectangle.sizeX = r.getSize().x;
+		rectangle.sizeY = r.getSize().y;
+		rectangle.rotation = r.getRotation();
+		rectangle.startTime = r.getStartTime();
+		rectangle.endTime = r.getEndTime();
+		rectangle.ownerId = r.getOwnerId();
+		
+		msg.reservations.push_back(rectangle);		
+	}		
+
+	publisher->publish(msg);
 }
 
 void ReservationManager::bidForPathReservation(Point startPoint, Point endPoint) {

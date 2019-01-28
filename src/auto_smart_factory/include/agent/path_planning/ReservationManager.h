@@ -46,6 +46,7 @@ private:
 	void updateBid(ReservationBid newBid);
 	void startNewAuction(int newAuctionId, double newAuctionStartTime);
 	void closeAuction();
+	void publishReservations(std::vector<Rectangle> reservations);
 	
 };
 

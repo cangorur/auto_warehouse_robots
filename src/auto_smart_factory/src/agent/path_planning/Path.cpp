@@ -53,7 +53,7 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 	}
 }
 
-const std::vector<Rectangle> Path::generateReservations() const {
+const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	std::vector<Rectangle> reservations;
 
 	float reservationSize = ROBOT_DIAMETER * 2.0f;
@@ -66,7 +66,7 @@ const std::vector<Rectangle> Path::generateReservations() const {
 
 		// Waiting time
 		if(waitTimes.at(i) > 0) {
-			reservations.emplace_back(nodes[i], Point(reservationSize, reservationSize), currentRotation, currentTime, currentTime + waitTimes[i]);
+			reservations.emplace_back(nodes[i], Point(reservationSize, reservationSize), currentRotation, currentTime, currentTime + waitTimes[i], ownerId);
 			currentTime += waitTimes[i];
 		}
 
@@ -82,7 +82,7 @@ const std::vector<Rectangle> Path::generateReservations() const {
 			double startTime = startTimeOffset + currentTime + (segment * segmentLength) - reservationSize / 2.f;
 			double endTime = startTimeOffset + currentTime + ((segment + 1) * segmentLength) + reservationSize / 2.f;
 
-			reservations.emplace_back(pos, Point(segmentLength + reservationSize, reservationSize), currentRotation, startTime, endTime);
+			reservations.emplace_back(pos, Point(segmentLength + reservationSize, reservationSize), currentRotation, startTime, endTime, ownerId);
 		}
 
 		currentTime += currentLength;

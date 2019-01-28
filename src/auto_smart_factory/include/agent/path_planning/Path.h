@@ -39,7 +39,7 @@ public:
 	double getStartTimeOffset() const;
 	RobotHardwareProfile* getRobotHardwareProfile() const;
 
-	const std::vector<Rectangle> generateReservations() const;
+	const std::vector<Rectangle> generateReservations(int ownerId) const;
 	
 	// ROS visualisation
 	visualization_msgs::Marker getVisualizationMsgPoints();

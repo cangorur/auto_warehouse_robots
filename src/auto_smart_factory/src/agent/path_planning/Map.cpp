@@ -27,7 +27,7 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 	thetaStarMap = ThetaStarMap(this, warehouseConfig.map_configuration.resolutionThetaStar);
 	reservations.clear();
 	
-	reservations.emplace_back(Point(5,5), Point(3,3), 0, ros::Time::now().toSec(), ros::Time::now().toSec() + ros::Duration(20).toSec());
+	reservations.push_back(Rectangle(Point(5,5), Point(3,3), 0, ros::Time::now().toSec(), ros::Time::now().toSec() + ros::Duration(20).toSec(), 1));
 }
 
 bool Map::isInsideAnyInflatedObstacle(const Point& point) const {
@@ -186,7 +186,7 @@ void Map::deleteExpiredReservations(double time) {
 
 void Map::addReservations(std::vector<Rectangle> newReservations) {
 	for(const auto& r : newReservations) {
-		reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime());
+		reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime(), r.getOwnerId());
 	}
 }
 
