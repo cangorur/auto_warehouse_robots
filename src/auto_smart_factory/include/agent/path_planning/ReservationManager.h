@@ -13,22 +13,23 @@ public:
 	ReservationManager(ros::Publisher* publisher, Map* map, int agentId, int agentCount);
 	~ReservationManager() = default;
 
+	void update();
+	
 	// TODO add timeout
-
 	void reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg);
 
 	// Path reservations
 	void bidForPathReservation(Point startPoint, Point endPoint);
+	
+	// Getter
 	Path getReservedPath();
 	bool getIsBidingForReservation() const;
 	bool getHasReservedPath() const;
 	
-	// TODO SEND RESERVATION MESSAGE IF WON AUCTION 
-	
 private:
+	// General info
 	ros::Publisher* publisher;
-	Map* map;
-	
+	Map* map;	
 	int agentId;
 	int agentCount;
 	
@@ -38,15 +39,23 @@ private:
 	int currentAuctionReceivedBids;
 	ReservationBid currentAuctionHighestBid;
 	
+	// Path bidding
 	bool isBidingForReservation;
 	bool hasReservedPath;
 	Path pathToReserve;
 	
+	// Delayed auction start
+	bool initializeNewDelayedAuction;
+	double timestampToInitializeDelayedAuction;
+
+	std::vector<std::pair<int, ReservationBid>> reservationBidQueue;
+	
 	void addReservations(const auto_smart_factory::ReservationCoordination& msg);
+	void publishReservations(std::vector<Rectangle> reservations);
 	void updateBid(ReservationBid newBid);
 	void startNewAuction(int newAuctionId, double newAuctionStartTime);
+	void initializeNewAuction(int newAuctionId, double newAuctionStartTime);
 	void closeAuction();
-	void publishReservations(std::vector<Rectangle> reservations);
 	
 };
 

@@ -37,9 +37,9 @@ void Agent::update() {
 			sendHeartbeat();
 		}
 		
-		// Update Map
-		map->deleteExpiredReservations(ros::Time::now().toSec());
-		
+		// Update Map and Reservations
+		reservationManager->update();
+				
 		/* Task Execution */
 		this->taskHandler->update();		
 
