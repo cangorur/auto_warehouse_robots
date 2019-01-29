@@ -47,12 +47,8 @@ void MapConfigServer::readMapConfig(std::string file) {
 	
 	warehouseConfig.map_configuration.width = configTree.get<float>("map.width");
 	warehouseConfig.map_configuration.height = configTree.get<float>("map.height");
-	
-	// Hardcoded in robots_config radius as 0.25
-	warehouseConfig.map_configuration.margin = 0.5f;
-	
-	// Hardcoded here
-	warehouseConfig.map_configuration.resolutionThetaStar = 0.5f;	
+	warehouseConfig.map_configuration.margin = configTree.get<float>("map.margin");
+	warehouseConfig.map_configuration.resolutionThetaStar = configTree.get<float>("map.theta_star_resolution");	
 	
 	// read tray config
 	warehouseConfig.tray_geometry.width = configTree.get<float>("tray_geometry.width");

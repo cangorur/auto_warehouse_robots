@@ -36,6 +36,8 @@ ThetaStarMap::ThetaStarMap(Map* map, float resolution) :
 		linkToNode(element.second, element.second.pos + Point(+ resolution, - resolution));
 		linkToNode(element.second, element.second.pos + Point(+ resolution, + resolution));
 	}
+	
+	ROS_INFO("[Theta*] Generated map with %d nodes", (int) nodes.size());
 }
 
 void ThetaStarMap::linkToNode(GridNode& node, Point targetPos) {

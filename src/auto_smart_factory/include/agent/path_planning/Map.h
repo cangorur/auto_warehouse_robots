@@ -40,7 +40,7 @@ public:
 	bool isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const;
 	bool isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
 	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
-	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, float waitingTime, float drivingTime) const;
+	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const;
 	
 	bool isPointInMap(const Point& pos) const;
 	Point getRandomFreePoint() const;
