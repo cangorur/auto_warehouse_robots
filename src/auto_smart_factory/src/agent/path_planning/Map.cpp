@@ -1,9 +1,6 @@
 #include <utility>
 #include <iostream>
-#include <include/agent/path_planning/Map.h>
-
 #include "ros/ros.h"
-
 #include "Math.h"
 #include "agent/path_planning/Rectangle.h"
 #include "agent/path_planning/Map.h"
@@ -26,8 +23,6 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 	
 	thetaStarMap = ThetaStarMap(this, warehouseConfig.map_configuration.resolutionThetaStar);
 	reservations.clear();
-	
-	reservations.emplace_back(Point(5,5), Point(3,3), 0, ros::Time::now().toSec(), ros::Time::now().toSec() + ros::Duration(20).toSec());
 }
 
 bool Map::isInsideAnyInflatedObstacle(const Point& point) const {
@@ -98,7 +93,9 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 	return result;
 }
 
-bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, float waitingTime, float drivingTime) const {
+bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const {
+	// Does not check against static obstacles, this is only used to verify a already planned connection
+	
 	double endTime = startTime + waitingTime + drivingTime;
 
 	for(const Rectangle& reservation : reservations) {
@@ -142,27 +139,27 @@ float Map::getMargin() const {
 	return margin;
 }
 
-Path Map::getThetaStarPath(const Point& start, const Point& end, double startingTime) {
+Path Map::getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	return thetaStarPathPlanner.findPath(start, end, startingTime);
 }
 
-Path Map::getThetaStarPath(const Point& start, const auto_smart_factory::Tray& end, double startingTime) {
+Path Map::getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
-	const Point endPoint = Point(getPointInFrontOfTray(end));
+	const OrientedPoint endPoint = getPointInFrontOfTray(end);
 	return thetaStarPathPlanner.findPath(start, endPoint, startingTime);
 }
 
-Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const Point& end, double startingTime) {
+Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
-	const Point startPoint = Point(getPointInFrontOfTray(start));
+	const OrientedPoint startPoint = getPointInFrontOfTray(start);
 	return thetaStarPathPlanner.findPath(startPoint, end, startingTime);
 }
 
 Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
-	const Point startPoint = Point(getPointInFrontOfTray(start));
-	const Point endPoint = Point(getPointInFrontOfTray(end));
+	const OrientedPoint startPoint = getPointInFrontOfTray(start);
+	const OrientedPoint endPoint = getPointInFrontOfTray(end);
 	return thetaStarPathPlanner.findPath(startPoint, endPoint, startingTime);
 }
 
@@ -184,7 +181,7 @@ void Map::deleteExpiredReservations(double time) {
 
 void Map::addReservations(std::vector<Rectangle> newReservations) {
 	for(const auto& r : newReservations) {
-		reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime());
+		reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime(), r.getOwnerId());
 	}
 }
 
@@ -255,7 +252,7 @@ visualization_msgs::Marker Map::getObstacleVisualization() {
 	return msg;
 }
 
-visualization_msgs::Marker Map::getReservationVisualization() {
+visualization_msgs::Marker Map::getReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type color) {
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";
 	msg.header.stamp = ros::Time::now();
@@ -271,16 +268,17 @@ visualization_msgs::Marker Map::getReservationVisualization() {
 	msg.scale.y = 1.f;
 	msg.scale.z = 1.f;
 
-	// Todo add custom robot color here
-	msg.color.r = 1.0f;
-	msg.color.g = 0.1f;
-	msg.color.b = 0.1f;
+	msg.color = color;
 	msg.color.a = 0.4;
 
 	geometry_msgs::Point p;
 	p.z = 0.f;
 	// Obstacles
 	for(const Rectangle& reservation : reservations) {
+		if(reservation.getOwnerId() != ownerId) {
+			continue;
+		}
+		
 		const Point* points = reservation.getPointsInflated();
 		// First triangle
 		p.x = points[0].x;

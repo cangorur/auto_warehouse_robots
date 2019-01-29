@@ -1,8 +1,13 @@
 #include "agent/task_handling/Task.h"
 
-Task::Task(uint32_t targetId, OrientedPoint targetPosition, Path pathToTarget, Type type, double startTime) : 
-	targetId(targetId), targetPosition(targetPosition), pathToTarget(pathToTarget), type(type), 
-	state(State::WAITING), startTime(startTime) {
+Task::Task(uint32_t targetId, Path pathToTarget, Type type, double startTime) : 
+	targetId(targetId),
+	type(type), 
+	state(State::WAITING), startTime(startTime)
+{
+	targetDuration = pathToTarget.getDuration();
+	targetBatCons = pathToTarget.getBatteryConsumption();
+	targetPosition = OrientedPoint(pathToTarget.getNodes().back().x, pathToTarget.getNodes().back().y, 0.0f);
 }
 
 uint32_t Task::getTargetTrayId() {
@@ -11,10 +16,6 @@ uint32_t Task::getTargetTrayId() {
 
 OrientedPoint Task::getTargetPosition() {
 	return targetPosition;
-}
-
-Path* Task::getPathToTarget() {
-	return &pathToTarget;
 }
 
 Task::Type Task::getType() {

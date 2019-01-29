@@ -149,10 +149,7 @@ bool TaskPlanner::newInputRequest(auto_smart_factory::NewPackageInputRequest& re
 	                                                                                          req.input_tray_id);
 	RequestPtr inputRequest = std::make_shared<Request>(this, taskRequirements, "input");
 
-	ROS_INFO(
-			"[request %d] New input request at input tray %d for package %d of type %d.",
-			inputRequest->getId(), req.input_tray_id, req.package.id,
-			req.package.type_id);
+	ROS_INFO("[request %d] New input request at input tray %d for package %d of type %d.", inputRequest->getId(), req.input_tray_id, req.package.id, req.package.type_id);
 	
 	inputRequests.push_back(inputRequest);
 	try {
@@ -196,11 +193,7 @@ bool TaskPlanner::newOutputRequest(NewPackageOutputRequest& req,
 	                                                                                           req.output_tray_id);
 	RequestPtr outputRequest = std::make_shared<Request>(this, taskRequirements, "output");
 
-	ROS_INFO(
-			"[request %d] New output request at output tray %d for package type %d.",
-			outputRequest->getId(), req.output_tray_id, req.package.type_id);
-
-	outputRequests.push_back(outputRequest);
+	ROS_INFO("[request %d] New output request at output tray %d for package type %d.", outputRequest->getId(), req.output_tray_id, req.package.type_id); outputRequests.push_back(outputRequest);
 	try {
 		// try to allocate resources for request
 		TaskData taskData = outputRequest->allocateResources();

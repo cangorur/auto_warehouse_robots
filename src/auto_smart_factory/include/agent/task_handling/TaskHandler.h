@@ -3,6 +3,7 @@
 
 #include <list>
 #include <string>
+#include <include/agent/path_planning/ReservationManager.h>
 
 #include "ros/ros.h"
 #include "agent/task_handling/Task.h"
@@ -18,7 +19,7 @@
 class TaskHandler
 {
 	public:
-    	explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm);
+    	explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm);
 
     	void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId);
 		void rejectTask(unsigned int requestId);
@@ -27,10 +28,10 @@ class TaskHandler
 
     	virtual ~TaskHandler();
 
-    	void addTransportationTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
-					uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath, double startTime);
+    	void addTransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, 
+				Path sourcePath, Path targetPath, double startTime);
 
-    	void addChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath, double startTime);
+    	void addChargingTask(uint32_t targetID, Path targetPath, double startTime);
 
 		void executeTask(void);
 
@@ -46,9 +47,7 @@ class TaskHandler
 
 		float getBatteryConsumption(void);
 
-		float getDistance(void);
-
-		double getDuration();
+		double getDuration(void);
 
 		Task* getLastTask(void);
 
@@ -66,6 +65,7 @@ class TaskHandler
 		MotionPlanner* motionPlanner;
 		Gripper* gripper;
 		ChargingManagement* chargingManagement;
+		ReservationManager* reservationManager;
 
 		// the id of the agent to which this taskHandler belongs
 	    std::string agentId;

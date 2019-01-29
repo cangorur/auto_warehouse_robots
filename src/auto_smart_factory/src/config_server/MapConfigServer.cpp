@@ -29,8 +29,6 @@ MapConfigServer::MapConfigServer() {
 	addStaticObstacles();
 
 	configService = nh.advertiseService("get_map_configuration", &MapConfigServer::configCallback, this);
-	//mapPublisher = nh.advertise<nav_msgs::OccupancyGrid>("occupancy_map", 1, true);
-	//mapPublisher.publish(warehouseConfig.occupancy_map);
 }
 
 void MapConfigServer::readMapConfig(std::string file) {
@@ -49,12 +47,8 @@ void MapConfigServer::readMapConfig(std::string file) {
 	
 	warehouseConfig.map_configuration.width = configTree.get<float>("map.width");
 	warehouseConfig.map_configuration.height = configTree.get<float>("map.height");
-	
-	// Hardcoded in robots_config radius as 0.25
-	warehouseConfig.map_configuration.margin = 0.5f;
-	
-	// Hardcoded here
-	warehouseConfig.map_configuration.resolutionThetaStar = 0.5f;	
+	warehouseConfig.map_configuration.margin = configTree.get<float>("map.margin");
+	warehouseConfig.map_configuration.resolutionThetaStar = configTree.get<float>("map.theta_star_resolution");	
 	
 	// read tray config
 	warehouseConfig.tray_geometry.width = configTree.get<float>("tray_geometry.width");
@@ -127,6 +121,7 @@ void MapConfigServer::setRectangularObstacle(float x, float y, float width, floa
 	rectangle.sizeX = width;
 	rectangle.sizeY = height;
 	rectangle.rotation = rotation;	
+	rectangle.ownerId = -1;
 	
 	warehouseConfig.map_configuration.obstacles.push_back(rectangle);
 }

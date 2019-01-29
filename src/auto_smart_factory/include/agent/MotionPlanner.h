@@ -61,6 +61,8 @@ public:
 
 	visualization_msgs::Marker getVisualizationMsgPoints();
 	visualization_msgs::Marker getVisualizationMsgLines();
+	
+	OrientedPoint getOrientedPoint();
 
 private:
 	/* Follow a path using the pid */

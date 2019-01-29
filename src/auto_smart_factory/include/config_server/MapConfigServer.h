@@ -55,7 +55,6 @@ protected:
 
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;
 	ros::ServiceServer configService;
-	//ros::Publisher mapPublisher;
 	
 	// Create a new unique tray id.
 	static unsigned int getUniqueTrayId();

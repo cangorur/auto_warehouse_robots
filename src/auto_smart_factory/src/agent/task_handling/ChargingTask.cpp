@@ -1,21 +1,26 @@
 #include "agent/task_handling/ChargingTask.h"
 
-ChargingTask::ChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath, double startTime) : 
-	Task(targetID, targetPos, targetPath, Type::CHARGING, startTime){ 
+ChargingTask::ChargingTask(uint32_t targetID, Path targetPath, double startTime) : 
+	Task(targetID, targetPath, Type::CHARGING, startTime){
 	}
 
 ChargingTask::~ChargingTask() = default;
 
-float ChargingTask::getBatteryConsumption(void){
-	return pathToTarget.getBatteryConsumption();
-}
-
-float ChargingTask::getDistance(void){
-	return pathToTarget.getDistance();
+double ChargingTask::getBatteryConsumption(void){
+	if( state == Task::State::WAITING || state == Task::State::TO_TARGET) {
+		return targetBatCons;
+	} else {
+		return 0.0;
+	}
 }
 
 double ChargingTask::getDuration(void){
-	return pathToTarget.getDuration() + chargingTime;
+	if( state == Task::State::WAITING || state == Task::State::TO_TARGET) {
+		return targetDuration + chargingTime;
+	} else if (state == Task::State::CHARGING) {
+		return chargingTime;
+	} 
+	return 0.0;
 }
 
 void ChargingTask::setState(Task::State state) {

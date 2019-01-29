@@ -44,7 +44,7 @@ unsigned int Request::getNewId() {
 }
 
 TaskData Request::allocateResources() {
-	ROS_WARN("[request %d] Allocate resources...", status.id);
+	ROS_INFO("[request %d] Allocate resources...", status.id);
 
 	// find candidate source tray(s)
 	std::vector<Tray> sourceTrayCandidates;
@@ -53,8 +53,7 @@ TaskData Request::allocateResources() {
 		throw std::runtime_error(this->status.status);
 	}
 
-	ROS_WARN("[request %d] Found %ld source tray candidates.", status.id,
-	         sourceTrayCandidates.size());
+	ROS_INFO("[request %d] Found %ld source tray candidates.", status.id, sourceTrayCandidates.size());
 
 	// find candidate target tray(s)
 	std::vector<Tray> targetTrayCandidates;
@@ -63,51 +62,36 @@ TaskData Request::allocateResources() {
 		throw std::runtime_error(this->status.status);
 	}
 
-	ROS_WARN("[request %d] Found %ld target tray candidates.", status.id,
-	         targetTrayCandidates.size());
+	ROS_INFO("[request %d] Found %ld target tray candidates.", status.id, targetTrayCandidates.size());
 
 	// find candidate robot(s)
 	this->status.status = "getting candidates";
-	if(!getRobotCandidates(sourceTrayCandidates,
-	                       targetTrayCandidates)) {
+	if(!getRobotCandidates(sourceTrayCandidates, targetTrayCandidates)) {
 		this->status.status = "No robot candidates available.";
 		throw std::runtime_error(this->status.status);
 	}
 
-	ROS_INFO("[request %d] got robot candidates", status.id);
 	this->status.status = "trying to allocate a candidate";
-	ROS_WARN("[request %d] TEST after robot candidates", this->status.id);
-	ROS_WARN("[request %d] Found %ld robot candidates.", status.id,
-	         robotCandidates.size());
+	ROS_INFO("[request %d] Found %ld robot candidates.", status.id, robotCandidates.size());
 
 	// try one robot after the other until success
 	for(const RobotCandidate* cand : robotCandidates) {
-		ROS_INFO("[request %d] trying to allocate robots", this->status.id);
-		// allocate trays
-		ROS_INFO("[request %d] for %s Source tray id is: %d and target tray id is %d", status.id, cand->robotId.c_str(), cand->source.id, cand->target.id);
-		TrayAllocatorPtr sourceTray = TrayAllocator::allocateTray(
-				cand->source.id);
-		TrayAllocatorPtr targetTray = TrayAllocator::allocateTray(
-				cand->target.id);
+		ROS_INFO("[request %d] Allocating robots for %s Source tray id is: %d and target tray id is %d", status.id, cand->robotId.c_str(), cand->source.id, cand->target.id);
+		TrayAllocatorPtr sourceTray = TrayAllocator::allocateTray(cand->source.id);
+		TrayAllocatorPtr targetTray = TrayAllocator::allocateTray(cand->target.id);
 
 		if(sourceTray->isValid() && targetTray->isValid()) {
-			ROS_WARN(
-					"[request %d] Successfully allocated source %d and target %d.",
-					status.id, cand->source.id, cand->target.id);
+			ROS_INFO("[request %d] Successfully allocated source %d and target %d.", status.id, cand->source.id, cand->target.id);
 
 			// assure that source and target are still suitable
 			if(!requirements->checkAllocatedSourceTray(cand->source)) {
-				ROS_INFO("[request %d] Checking allocated source tray failed.", this->status.id);
+				//ROS_INFO("[request %d] Checking allocated source tray failed.", this->status.id);
 				continue;
 			}
 			if(!requirements->checkAllocatedTargetTray(cand->target)) {
-				ROS_INFO("[request %d] Checking allocated target tray failed.", this->status.id);
+				//ROS_INFO("[request %d] Checking allocated target tray failed.", this->status.id);
 				continue;
 			}
-
-			ROS_WARN(
-					"[request %d] Successfully checked robot ID %s allocated the source %d and the target %d.",
-					this->status.id, cand->robotId.c_str(), cand->source.id, cand->target.id);
 
 			// allocate robot (try to assign task)
 			if(!allocateRobot(*cand)) {
@@ -118,18 +102,13 @@ TaskData Request::allocateResources() {
 			// copy package information
 			Package pkg = sourceTray->getPackage();
 			if(!targetTray->setPackage(pkg)) {
-				ROS_ERROR("[request %d] Could not set package information at target tray (id: %d, type: %d)!",
-				          this->status.id, pkg.id, pkg.type_id);
+				ROS_ERROR("[request %d] Could not set package information at target tray (id: %d, type: %d)!", this->status.id, pkg.id, pkg.type_id);
 			} else {
-				ROS_WARN("[request %d] Successfully set package at target tray (id: %d, type: %d)!", this->status.id, pkg.id,
-				         pkg.type_id);
+				ROS_INFO("[request %d] Successfully set package at target tray (id: %d, type: %d)!", this->status.id, pkg.id, pkg.type_id);
 			}
 
-			ROS_WARN("[request %d] Successfully allocated robot %s.", this->status.id,
-			         cand->robotId.c_str());
-			ROS_INFO(
-					"[request %d] All resources were allocated successfully! Starting execution...",
-					this->status.id);
+			ROS_INFO("[request %d] Successfully allocated robot %s.", this->status.id, cand->robotId.c_str());
+			//ROS_INFO("[request %d] All resources were allocated successfully! Starting execution...", this->status.id);
 
 			// successfully allocated all resources
 			this->status.status = "allocated resources";
@@ -238,8 +217,7 @@ void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 		robotCandidates.push_back(cand);
 	}
 	answeredRobots[tr.robot_id] = tr.reject;
-	ROS_INFO("[Request %d] still missing %d answers, %d candidates", this->status.id, (int)(taskPlanner->getRegisteredRobots().size() 
-			- answeredRobots.size()), (unsigned int) robotCandidates.size());
+	ROS_INFO("[Request %d] still missing %d answers, %d candidates", this->status.id, (int)(taskPlanner->getRegisteredRobots().size()	- answeredRobots.size()), (unsigned int) robotCandidates.size());
 }
 
 bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates,

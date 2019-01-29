@@ -1,5 +1,4 @@
 #include <utility>
-
 #include "ros/ros.h"
 
 #include "agent/Agent.h"
@@ -7,6 +6,7 @@
 
 #include "agent/MotionPlanner.h"
 #include <cmath>
+#include <include/agent/MotionPlanner.h>
 
 
 MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
@@ -209,3 +209,6 @@ visualization_msgs::Marker MotionPlanner::getVisualizationMsgLines() {
 	return pathObject.getVisualizationMsgLines();
 }
 
+OrientedPoint MotionPlanner::getOrientedPoint() {
+	return OrientedPoint(pos.x, pos.y, pos.o);
+}

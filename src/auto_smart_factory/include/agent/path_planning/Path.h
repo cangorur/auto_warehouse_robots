@@ -9,7 +9,7 @@
 
 class Path {
 public:
-	double maxReservationLength = 20;
+	double maxReservationLength = 8;
 	
 private:
 	double startTimeOffset = 0;
@@ -39,7 +39,7 @@ public:
 	double getStartTimeOffset() const;
 	RobotHardwareProfile* getRobotHardwareProfile() const;
 
-	const std::vector<Rectangle> generateReservations() const;
+	const std::vector<Rectangle> generateReservations(int ownerId) const;
 	
 	// ROS visualisation
 	visualization_msgs::Marker getVisualizationMsgPoints();

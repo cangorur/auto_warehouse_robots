@@ -3,12 +3,13 @@
 #include "agent/path_planning/Rectangle.h"
 #include "Math.h"
 
-Rectangle::Rectangle(Point pos_, Point size_, float rotation_, double startTime, double endTime) :
+Rectangle::Rectangle(Point pos_, Point size_, float rotation_, double startTime, double endTime, int ownerId) :
 		pos(pos_),
 		size(size_),
 		rotation(rotation_),
 		startTime(startTime),
-		endTime(endTime)
+		endTime(endTime),
+		ownerId(ownerId)
 {
 	isAxisAligned = false;
 	if(static_cast<int>(std::roundf(rotation)) % 90 == 0) {
@@ -40,7 +41,7 @@ Rectangle::Rectangle(Point pos_, Point size_, float rotation_, double startTime,
 }
 
 Rectangle::Rectangle(Point pos, Point size, float rotation) :
-		Rectangle(pos, size, rotation, -1, -1) {}
+		Rectangle(pos, size, rotation, -1, -1, -1) {}
 
 bool Rectangle::isInsideInflated(const Point& point) const {
 	bool isInAxisAligned = isInsideAxisAlignedInflated(point);
@@ -117,6 +118,10 @@ double Rectangle::getStartTime() const {
 
 double Rectangle::getEndTime() const {
 	return endTime;
+}
+
+int Rectangle::getOwnerId() const {
+	return ownerId;
 }
 
 

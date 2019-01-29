@@ -9,8 +9,8 @@ private:
 	float drivingBatteryConsumption;
 
 	// Used to get average estimates from max speed values 
-	const float averageDrivingEfficiency = 0.9f;
-	const float averageTurningEfficiency = 0.7f;
+	const float averageDrivingEfficiency = 0.75f;
+	const float averageTurningEfficiency = 0.45f;
 
 public:
 	RobotHardwareProfile(float maxDrivingSpeed, float maxTurningSpeed, float idleBatteryConsumption, float drivingBatteryConsumption);

@@ -10,13 +10,11 @@ class ChargingTask : public Task
 {
 	public:
 
-		explicit ChargingTask(uint32_t targetID, OrientedPoint targetPos, Path targetPath, double startTime);
+		explicit ChargingTask(uint32_t targetID, Path targetPath, double startTime);
 
 		virtual ~ChargingTask();
 
-		float getBatteryConsumption(void);
-
-		float getDistance(void);
+		double getBatteryConsumption(void);
 
 		double getDuration(void);
 

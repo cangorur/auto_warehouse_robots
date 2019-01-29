@@ -25,7 +25,7 @@ public:
 	 */
 	Gripper(Agent* _agent, ros::Publisher* gripper_state_pub);
 
-	virtual ~Gripper();
+	virtual ~Gripper() = default;
 
 	/**
 	 * Calls the gripper service to load or unload a package. 
