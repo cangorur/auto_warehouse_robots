@@ -43,12 +43,17 @@ private:
 	bool isBidingForReservation;
 	bool hasReservedPath;
 	Path pathToReserve;
+	Point startPoint;
+	Point endPoint;
 	
 	// Delayed auction start
 	bool initializeNewDelayedAuction;
 	double timestampToInitializeDelayedAuction;
 
 	std::vector<std::pair<int, ReservationBid>> reservationBidQueue;
+	
+	const double emptyAuctionDelay = 0.2f;
+	const double pathReservationStartingTimeOffset = 0.2f;
 	
 	void addReservations(const auto_smart_factory::ReservationCoordination& msg);
 	void publishReservations(std::vector<Rectangle> reservations);

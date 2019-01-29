@@ -16,7 +16,7 @@ ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int 
 
 	if(agentId == agentCount) {
 		initializeNewDelayedAuction = true;
-		timestampToInitializeDelayedAuction = ros::Time::now().toSec() + ros::Duration(0.1f).toSec();
+		timestampToInitializeDelayedAuction = ros::Time::now().toSec() + emptyAuctionDelay;
 	} else {
 		initializeNewDelayedAuction = false;
 	}
@@ -143,12 +143,12 @@ void ReservationManager::closeAuction() {
 
 			// Agent with highest id starts new auction but delayed to avoid overhead
 			initializeNewDelayedAuction = true;
-			timestampToInitializeDelayedAuction = ros::Time::now().toSec() + ros::Duration(0.1f).toSec();
+			timestampToInitializeDelayedAuction = ros::Time::now().toSec() + emptyAuctionDelay;
 		}	
 	} else {
 		if(isBidingForReservation) {
 			// Recalculate path to match timing
-			pathToReserve = map->getThetaStarPath(pathToReserve.getNodes().front(), pathToReserve.getNodes().back(), ros::Time::now().toSec());
+			pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
 		}		
 	}
 }
@@ -178,7 +178,10 @@ void ReservationManager::publishReservations(std::vector<Rectangle> reservations
 }
 
 void ReservationManager::bidForPathReservation(Point startPoint, Point endPoint) {
-	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec());
+	this->startPoint = startPoint;
+	this->endPoint = endPoint;
+	
+	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
 	if(pathToReserve.getDistance() > 0) {
 		isBidingForReservation = true;
 		hasReservedPath = false;
