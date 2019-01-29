@@ -6,6 +6,26 @@
 #include <vector>
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotHeartbeat.h>
+#include "auto_smart_factory/Tray.h"
+
+class ChargingStation {
+public:
+	//ID of charging Station
+	uint8_t id;
+
+	//Corresponding Charging tray
+	auto_smart_factory::Tray Tray;
+
+	//Is occupied or not
+	bool occupancy;
+
+	//Assigned Robot
+	auto_smart_factory::Robot robot;
+
+	//Charging Rate //TODO??
+	float rate;
+
+};
 
 class Agent;
 /**
@@ -18,7 +38,7 @@ public:
 	 * Default constructor.
 	 * Sets up the initialize service.
 	 */
-	ChargingManagement(Agent* agent);
+	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration);
 
 	virtual ~ChargingManagement();
 
@@ -33,11 +53,42 @@ public:
 	 * @returns Score multiplier LOWER IS BETTER
 	 */
 	float getScoreMultiplier(float cumulatedEnergyConsumption);
-private:
 
+	/*
+	 * Get All Charging Stations
+	 */
+	void getAllChargingStations();
+
+	/*
+	 * Returns true if charging station is available, otherwise false
+	 * @param searchid: id of charging station
+	 */
+	bool isChargingStationAvailable(uint8_t searchid);
+
+	/*
+	 * Returns true if charging station is successfully reserved, otherwise false
+	 * @param reserveid: id of charging station
+	 * @param associated_robot: robot who is now associated with this charging station
+	 */
+
+	bool reserveChargingStation(uint8_t reserveid, auto_smart_factory::Robot associated_robot);
+
+	/*
+	 * Returns true if charging station is successfully unreserved, otherwise false
+	 * @param reserveid: id of charging station
+	 */
+
+	bool unreserveChargingStation(uint8_t reserveid);
+
+
+private:
 	Agent* agent;
 
+	//Agent ID from where the CM is called
 	std::string agentID;
+
+	// information about the current warehouse map
+	auto_smart_factory::WarehouseConfiguration warehouseConfig;
 
 	// Max energy level of the agent to participate in charging
 	float upperThreshold = 90.00;
@@ -48,8 +99,11 @@ private:
 	// Minimum energy level of the agent to participate in charging
 	float criticalMinimum = 10.00;
 
-	// Operating battery
-	float operatingBatt = upperThreshold - criticalMinimum;
+	//Vector of all the Charging Trays
+	std::vector <auto_smart_factory::Tray> charging_trays;
+
+	//Vector of all Charging Stations'
+	std::vector <ChargingStation> charging_stations;
 
 	//Current battery of the agent
 	double agentBatt;
@@ -57,5 +111,7 @@ private:
 	//Estimated energy of the agent after task and charging
 	float energyAfterTask;
 };
+
+
 
 #endif /* AGENT_CHARGINGMANAGEMENT_H_ */
