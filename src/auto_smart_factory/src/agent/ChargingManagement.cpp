@@ -37,12 +37,64 @@ void ChargingManagement:: getAllChargingStations(){
 	}
 
 	//Fill charging stations vector
+
 	for(int i= 0; i<charging_trays.size(); i++){
+
+		//ID of charging station, same as iterator for now
+		charging_stations[i].id = i;
+
+		//Tray corresponding to charging station
 		charging_stations[i].Tray = charging_trays[i];
+
+		//All stations unoccupied
 		charging_stations[i].occupancy = false;
 	}
 }
 
+
+bool ChargingManagement :: isChargingStationAvailable(uint8_t searchid){
+
+	for(int i= 0; i<charging_stations.size(); i++){
+		if(charging_stations[i].id == searchid){
+			return charging_stations[i].occupancy;
+		}
+		else {
+			ROS_ERROR("[Charging Management]: Searched for Non Existent Charging Station (%d) !",searchid);
+			return false;
+		}
+	}
+}
+
+bool ChargingManagement :: reserveChargingStation(uint8_t reserveid, auto_smart_factory::Robot associated_robot){
+
+	for(int i= 0; i<charging_stations.size(); i++){
+		if(charging_stations[i].id == reserveid){
+			charging_stations[i].occupancy = true;
+			charging_stations[i].robot = associated_robot;
+			return true;
+		}
+		else {
+			ROS_ERROR("[Charging Management]: Tried to reserve a Non Existent Charging Station (%d) !",reserveid);
+			return false;
+		}
+	}
+}
+
+
+bool ChargingManagement :: unreserveChargingStation(uint8_t reserveid){
+
+	for(int i= 0; i<charging_stations.size(); i++){
+		if(charging_stations[i].id == reserveid){
+			charging_stations[i].occupancy = false;
+			charging_stations[i].robot = {};
+			return true;
+		}
+		else {
+			ROS_ERROR("[Charging Management]: Tried to unreserve a Non Existent Charging Station (%d) !",reserveid);
+			return false;
+		}
+	}
+}
 
 
 float ChargingManagement::getScoreMultiplier(float cumulatedEnergyConsumption){

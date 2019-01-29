@@ -10,6 +10,9 @@
 
 class ChargingStation {
 public:
+	//ID of charging Station
+	uint8_t id;
+
 	//Corresponding Charging tray
 	auto_smart_factory::Tray Tray;
 
@@ -55,6 +58,28 @@ public:
 	 * Get All Charging Stations
 	 */
 	void getAllChargingStations();
+
+	/*
+	 * Returns true if charging station is available, otherwise false
+	 * @param searchid: id of charging station
+	 */
+	bool isChargingStationAvailable(uint8_t searchid);
+
+	/*
+	 * Returns true if charging station is successfully reserved, otherwise false
+	 * @param reserveid: id of charging station
+	 * @param associated_robot: robot who is now associated with this charging station
+	 */
+
+	bool reserveChargingStation(uint8_t reserveid, auto_smart_factory::Robot associated_robot);
+
+	/*
+	 * Returns true if charging station is successfully unreserved, otherwise false
+	 * @param reserveid: id of charging station
+	 */
+
+	bool unreserveChargingStation(uint8_t reserveid);
+
 
 private:
 	Agent* agent;
