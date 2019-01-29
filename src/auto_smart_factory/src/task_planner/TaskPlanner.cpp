@@ -411,19 +411,9 @@ void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourc
 
 void TaskPlanner::extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa){
 	for(Tray t : sourceTrays){
-		geometry_msgs::Point p;
-		p.x = t.x;
-		p.y = t.y;
-		p.z = 0.0;
-		tsa->start_points.push_back(p);
 		tsa->start_ids.push_back(t.id);
 	}
 	for(Tray t : targetTrays){
-		geometry_msgs::Point p;
-		p.x = t.x;
-		p.y = t.y;
-		p.z = 0.0;
-		tsa->end_points.push_back(p);
 		tsa->end_ids.push_back(t.id);
 	}
 }
