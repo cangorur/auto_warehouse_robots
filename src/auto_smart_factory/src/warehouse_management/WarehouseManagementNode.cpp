@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
 
 	WarehouseManagement warehouseManagement;
 	warehouseManagement.start();
-	//ROS_INFO("WarehouseManagement ready!");
+	ROS_INFO("WarehouseManagement ready!");
 
 	ros::Rate r(10); // 10 hz
 	while(ros::ok()) {

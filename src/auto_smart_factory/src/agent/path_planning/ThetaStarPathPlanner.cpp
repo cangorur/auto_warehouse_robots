@@ -11,12 +11,14 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 {	
 }
 
-Path ThetaStarPathPlanner::findPath(Point start, Point target, double startingTime) {
-	const GridNode* startNode = map->getNodeClosestTo(start);
-	const GridNode* targetNode = map->getNodeClosestTo(target);
+Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, double startingTime) {
+	startPoint = start;
+	endPoint = target;	
+	const GridNode* startNode = map->getNodeClosestTo(Point(start));
+	const GridNode* targetNode = map->getNodeClosestTo(Point(target));
 
 	if(startNode == nullptr || targetNode == nullptr) {
-		std::cout << "Error: Start or Target not in ThetaStar map!" << std::endl;
+		ROS_ERROR("Start or Target not in ThetaStar map!");
 		return Path();
 	}
 
@@ -122,7 +124,7 @@ Path ThetaStarPathPlanner::findPath(Point start, Point target, double startingTi
 	if(targetFound) {
 		return constructPath(startingTime, targetInformation);
 	} else {
-		std::cout << "No path found!" << std::endl;
+		ROS_WARN("No path found!");
 		return Path();
 	}
 }
@@ -135,12 +137,15 @@ double ThetaStarPathPlanner::getDrivingTime(ThetaStarGridNodeInformation* curren
 	// Include turningTime to current line segment if prev is available
 	double turningTime = 0;
 
+	float prevLineSegmentRotation = 0;
 	if(current->prev != nullptr) {
-		float prevLineSegmentRotation = Math::getRotation(current->node->pos - current->prev->node->pos);
-		float currLineSegmentRotation = Math::getRotation(target->node->pos - current->node->pos);
-
-		turningTime = hardwareProfile->getTurningDuration(std::abs(prevLineSegmentRotation - currLineSegmentRotation));
+		float prevLineSegmentRotation = Math::getRotation(current->node->pos - current->prev->node->pos);		
+	} else {
+		prevLineSegmentRotation = startPoint.o;
 	}
+
+	float currLineSegmentRotation = Math::getRotation(target->node->pos - current->node->pos);
+	turningTime = hardwareProfile->getTurningDuration(std::abs(prevLineSegmentRotation - currLineSegmentRotation));
 
 	return hardwareProfile->getDrivingDuration(Math::getDistance(current->node->pos, target->node->pos)) + turningTime;
 }

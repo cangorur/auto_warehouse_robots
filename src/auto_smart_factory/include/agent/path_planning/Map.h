@@ -51,9 +51,9 @@ public:
 	void addReservations(std::vector<Rectangle> newReservations);
 		
 	// Path queries
-	Path getThetaStarPath(const Point& start, const Point& end, double startingTime);
-	Path getThetaStarPath(const Point& start, const auto_smart_factory::Tray& end, double startingTime);
-	Path getThetaStarPath(const auto_smart_factory::Tray& start, const Point& end, double startingTime);
+	Path getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime);
+	Path getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime);
+	Path getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime);
 	Path getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime);
 	
 	// Getter

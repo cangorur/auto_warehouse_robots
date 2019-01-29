@@ -144,27 +144,27 @@ float Map::getMargin() const {
 	return margin;
 }
 
-Path Map::getThetaStarPath(const Point& start, const Point& end, double startingTime) {
+Path Map::getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	return thetaStarPathPlanner.findPath(start, end, startingTime);
 }
 
-Path Map::getThetaStarPath(const Point& start, const auto_smart_factory::Tray& end, double startingTime) {
+Path Map::getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
-	const Point endPoint = Point(getPointInFrontOfTray(end));
+	const OrientedPoint endPoint = getPointInFrontOfTray(end);
 	return thetaStarPathPlanner.findPath(start, endPoint, startingTime);
 }
 
-Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const Point& end, double startingTime) {
+Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
-	const Point startPoint = Point(getPointInFrontOfTray(start));
+	const OrientedPoint startPoint = getPointInFrontOfTray(start);
 	return thetaStarPathPlanner.findPath(startPoint, end, startingTime);
 }
 
 Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
-	const Point startPoint = Point(getPointInFrontOfTray(start));
-	const Point endPoint = Point(getPointInFrontOfTray(end));
+	const OrientedPoint startPoint = getPointInFrontOfTray(start);
+	const OrientedPoint endPoint = getPointInFrontOfTray(end);
 	return thetaStarPathPlanner.findPath(startPoint, endPoint, startingTime);
 }
 

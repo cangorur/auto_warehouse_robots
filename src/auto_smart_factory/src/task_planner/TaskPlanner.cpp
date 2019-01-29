@@ -13,7 +13,7 @@ TaskPlanner::TaskPlanner() {
 	ros::NodeHandle pn("~");
 	initServer = pn.advertiseService("init", &TaskPlanner::initialize, this);
 
-	//ROS_INFO("Task planner created...");
+	ROS_INFO("Task planner created...");
 }
 
 TaskPlanner::~TaskPlanner() {
@@ -80,7 +80,7 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 
 	taskAnnouncerPub = pn.advertise<TaskAnnouncement>("task_broadcast", 1);
 
-	//ROS_INFO("Task planner initialized.");
+	ROS_INFO("Task planner initialized.");
 
 	res.success = true;
 	return true;
@@ -149,7 +149,7 @@ bool TaskPlanner::newInputRequest(auto_smart_factory::NewPackageInputRequest& re
 	                                                                                          req.input_tray_id);
 	RequestPtr inputRequest = std::make_shared<Request>(this, taskRequirements, "input");
 
-	//ROS_INFO("[request %d] New input request at input tray %d for package %d of type %d.", inputRequest->getId(), req.input_tray_id, req.package.id, req.package.type_id);
+	ROS_INFO("[request %d] New input request at input tray %d for package %d of type %d.", inputRequest->getId(), req.input_tray_id, req.package.id, req.package.type_id);
 	
 	inputRequests.push_back(inputRequest);
 	try {
@@ -193,7 +193,7 @@ bool TaskPlanner::newOutputRequest(NewPackageOutputRequest& req,
 	                                                                                           req.output_tray_id);
 	RequestPtr outputRequest = std::make_shared<Request>(this, taskRequirements, "output");
 
-	//ROS_INFO("[request %d] New output request at output tray %d for package type %d.", outputRequest->getId(), req.output_tray_id, req.package.type_id); outputRequests.push_back(outputRequest);
+	ROS_INFO("[request %d] New output request at output tray %d for package type %d.", outputRequest->getId(), req.output_tray_id, req.package.type_id); outputRequests.push_back(outputRequest);
 	try {
 		// try to allocate resources for request
 		TaskData taskData = outputRequest->allocateResources();
@@ -227,7 +227,7 @@ bool TaskPlanner::registerAgent(RegisterAgentRequest& req,
 		registeredRobots[req.agent_id].first = req.robot_configuration;
 		registeredRobots[req.agent_id].second = false;
 
-		//ROS_INFO("Registered agent: %s", req.agent_id.c_str());
+		ROS_INFO("Registered agent: %s", req.agent_id.c_str());
 
 		res.success = true;
 	} else {
@@ -242,18 +242,18 @@ void TaskPlanner::rescheduleEvent(const ros::TimerEvent& e) {
 }
 
 void TaskPlanner::resourceChangeEvent() {
-	//ROS_INFO("[task planner] Resource change event!");
+	ROS_INFO("[task planner] Resource change event!");
 
 	if(!idleRobotAvailable()) {
 		// there is no idle robot, so nothing can be started
-		//ROS_INFO("[task planner] No idle robot available. No check is performed.");
+		ROS_INFO("[task planner] No idle robot available. No check is performed.");
 		return;
 	}
 	// first, check if any output request can be started
 	for(std::vector<RequestPtr>::iterator outputRequest = outputRequests.begin();
 	    outputRequest != outputRequests.end();) {
 
-		//ROS_INFO("[task planner] Checking output request %d.", (*outputRequest)->getId());
+		ROS_INFO("[task planner] Checking output request %d.", (*outputRequest)->getId());
 
 		try {
 			// try to allocate resources for request
@@ -281,11 +281,11 @@ void TaskPlanner::resourceChangeEvent() {
 	for(std::vector<RequestPtr>::iterator inputRequest = inputRequests.begin();
 	    inputRequest != inputRequests.end();) {
 
-		//ROS_INFO("[task planner] Checking input request %d.", (*inputRequest)->getId());
+		ROS_INFO("[task planner] Checking input request %d.", (*inputRequest)->getId());
 
 		// remove input request if it is not pending anymore
 		if(!((*inputRequest)->isPending())) {
-			//ROS_INFO("[task planner] Input request %d is not pending anymore. It is deleted.", (*inputRequest)->getId());
+			ROS_INFO("[task planner] Input request %d is not pending anymore. It is deleted.", (*inputRequest)->getId());
 
 			// remove request from queue
 			inputRequest = inputRequests.erase(inputRequest);
@@ -294,7 +294,7 @@ void TaskPlanner::resourceChangeEvent() {
 		}
 
 		try {
-			//ROS_INFO("allocating input task data");
+			ROS_INFO("allocating input task data");
 
 			// try to allocate resources for request
 			TaskData taskData = (*inputRequest)->allocateResources();
@@ -383,7 +383,7 @@ bool TaskPlanner::idleRobotAvailable() const {
 
 void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 	// go through requests and get the one for which the response is intended:
-	//ROS_INFO("Receiving score for Request %d; Reject is %d", tr.request_id, tr.reject);
+	ROS_INFO("Receiving score for Request %d; Reject is %d", tr.request_id, tr.reject);
 	for(RequestPtr& r : inputRequests){
 		if(r->getId() == tr.request_id){
 			r->receiveTaskResponse(tr);
@@ -396,7 +396,7 @@ void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 			return;
 		}
 	}
-	//ROS_INFO("No request with id %d found", tr.request_id);
+	ROS_INFO("No request with id %d found", tr.request_id);
 }
 
 void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,

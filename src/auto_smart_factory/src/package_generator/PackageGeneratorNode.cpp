@@ -6,7 +6,7 @@ int main(int argc, char** argv) {
 
 	PackageGenerator packageGenerator;
 
-	//ROS_INFO("PackageGenerator ready!");
+	ROS_INFO("PackageGenerator ready!");
 
 	ros::Rate r(1); //1 hz
 	while(ros::ok()) {

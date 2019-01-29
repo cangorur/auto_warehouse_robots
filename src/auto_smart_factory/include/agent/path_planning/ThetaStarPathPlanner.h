@@ -10,9 +10,14 @@
 #include "RobotHardwareProfile.h"
 
 class ThetaStarPathPlanner {
+public:
+	explicit ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile);
+
+	Path findPath(OrientedPoint start, OrientedPoint target, double startingTime);
+
 private:
 	double initialTime = std::numeric_limits<double>::max() - 10000;
-	
+
 	typedef std::pair<double, ThetaStarGridNodeInformation*> GridInformationPair;
 	struct GridInformationPairComparator {
 		bool operator()(GridInformationPair const& lhs, GridInformationPair const& rhs){
@@ -24,17 +29,14 @@ private:
 
 	ThetaStarMap* map;
 	RobotHardwareProfile* hardwareProfile;
-
-public:
-	explicit ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile);
-
-	Path findPath(Point start, Point target, double startingTime);
-
-private:
+	
 	double getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const;
 	double getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
 
 	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation) const;
+	
+	OrientedPoint startPoint;
+	OrientedPoint endPoint;
 };
 
 

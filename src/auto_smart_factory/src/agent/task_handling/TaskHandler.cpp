@@ -89,9 +89,9 @@ void TaskHandler::executeTask() {
             } else {
                 // Start to bid for path reservations
                 if(currentTask->isTransportation()) {
-                    reservationManager->bidForPathReservation(motionPlanner->getPosition(), Point(((TransportationTask*) currentTask)->getSourcePosition()));
+                    reservationManager->bidForPathReservation(motionPlanner->getOrientedPosition(), ((TransportationTask*) currentTask)->getSourcePosition());
                 } else if(currentTask->isCharging()) {
-                    reservationManager->bidForPathReservation(motionPlanner->getPosition(), Point(currentTask->getTargetPosition()));
+                    reservationManager->bidForPathReservation(motionPlanner->getOrientedPosition(), currentTask->getTargetPosition());
                 } else {
                     ROS_ERROR("Task is neither Transportation task nor charging task!");
                 }
@@ -111,7 +111,7 @@ void TaskHandler::executeTask() {
                 gripper->loadPackage(true);
                 ros::Duration(2).sleep();
                 currentTask->setState(Task::State::RESERVING_TARGET);
-                reservationManager->bidForPathReservation(Point(((TransportationTask*) currentTask)->getSourcePosition()), Point(currentTask->getTargetPosition()));
+                reservationManager->bidForPathReservation(((TransportationTask*) currentTask)->getSourcePosition(), currentTask->getTargetPosition());
             }
             break;
 

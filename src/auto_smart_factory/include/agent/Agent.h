@@ -72,6 +72,8 @@ public:
 
 	/* Returns current orientation of this agent */
 	geometry_msgs::Quaternion getCurrentOrientation();
+	
+	OrientedPoint getCurrentOrientedPosition() const;
 
 	/* Manages the current state of the agent and defines which actions to execute in order to
 	 * keep this agent doing what it is supposed to. E.g. publish the heartbeat at every step.

@@ -191,6 +191,6 @@ std::vector<std::vector<int>> ObstacleDetection::detectObstacle(std::vector<geom
 
 void ObstacleDetection::dealWithObstacles(std::vector<geometry_msgs::Point> obstacles) {
 	//TODO: Fill this function with your strategies
-	//ROS_INFO("obstacleDetected::dealWithObstacles");
+	ROS_INFO("obstacleDetected::dealWithObstacles");
 
 }

@@ -31,7 +31,7 @@ Task::Task(unsigned int id, TaskData taskData)
 	state.requestCreateTime = taskData.createTime;
 	state.estimatedDuration = taskData.robotOffer.estimatedDuration;
 
-	//ROS_INFO("[task %d] New task created: Robot %s carries package %d from tray %d to tray %d. Estimated duration is: %f sec", getId(), state.robot.c_str(), state.package.id, state.sourceTray, state.targetTray, state.estimatedDuration.toSec());
+	ROS_INFO("[task %d] New task created: Robot %s carries package %d from tray %d to tray %d. Estimated duration is: %f sec", getId(), state.robot.c_str(), state.package.id, state.sourceTray, state.targetTray, state.estimatedDuration.toSec());
 }
 
 unsigned int Task::getId() const {
@@ -62,7 +62,7 @@ void Task::run() {
 }
 
 bool Task::superviseExecution() {
-	//ROS_INFO("[task %d] Start execution supervision...", getId());
+	ROS_INFO("[task %d] Start execution supervision...", getId());
 
 	// supervise robot using TaskData
 	// this should be executed in a separate task since it includes waiting
@@ -81,14 +81,14 @@ bool Task::superviseExecution() {
 
 	state.status = "Load acknowledged. Waiting for unload acknowledgment.";
 
-	//ROS_INFO("[task %d] Received load acknowledgment.", getId());
+	ROS_INFO("[task %d] Received load acknowledgment.", getId());
 
 	// clear package info and release allocated source tray after safety duration
 	ros::Duration(1.0).sleep();
 	taskData.allocatedSource->setPackage(Package());
 	taskData.allocatedSource = nullptr;
 
-	//ROS_INFO("[task %d] Released source tray.", getId());
+	ROS_INFO("[task %d] Released source tray.", getId());
 
 	// wait for load acknowledgment
 	if(!waitForUnloadAck()) {
@@ -102,13 +102,13 @@ bool Task::superviseExecution() {
 
 	state.status = "Unload acknowledged.";
 
-	//ROS_INFO("[task %d] Received unload acknowledgment.", getId());
+	ROS_INFO("[task %d] Received unload acknowledgment.", getId());
 
 	// release allocated target tray after safety duration
 	ros::Duration(1.0).sleep();
 	taskData.allocatedTarget = nullptr;
 
-	//ROS_INFO("[task %d] Released target tray.", getId());
+	ROS_INFO("[task %d] Released target tray.", getId());
 
 	return true;
 }
@@ -116,7 +116,7 @@ bool Task::superviseExecution() {
 void Task::receiveLoadStorageUpdate(const StorageUpdate& msg) {
 	if(msg.state.id == taskData.robotOffer.source.id && msg.action == StorageUpdate::DEOCCUPATION) {
 		loadAck = true;
-		//ROS_INFO("[task %d] Received tray load ack from tray %d.", getId(), msg.state.id);
+		ROS_INFO("[task %d] Received tray load ack from tray %d.", getId(), msg.state.id);
 	} else if(msg.state.id == taskData.robotOffer.source.id && msg.action == StorageUpdate::OCCUPATION) {
 		loadAck = false;
 		ROS_WARN("[task %d] Package that should be removed from tray %d was again put into it.", getId(), msg.state.id);
@@ -126,7 +126,7 @@ void Task::receiveLoadStorageUpdate(const StorageUpdate& msg) {
 void Task::receiveUnloadStorageUpdate(const StorageUpdate& msg) {
 	if(msg.state.id == taskData.robotOffer.target.id && msg.action == StorageUpdate::OCCUPATION) {
 		unloadAck = true;
-		//ROS_INFO("[task %d] Received tray unload ack from tray %d.", getId(), msg.state.id);
+		ROS_INFO("[task %d] Received tray unload ack from tray %d.", getId(), msg.state.id);
 	} else if(msg.state.id == taskData.robotOffer.target.id && msg.action == StorageUpdate::DEOCCUPATION) {
 		unloadAck = false;
 		ROS_WARN("[task %d] Package that should be put into tray %d was again removed from it.", getId(), msg.state.id);
@@ -136,7 +136,7 @@ void Task::receiveUnloadStorageUpdate(const StorageUpdate& msg) {
 void Task::receiveRobotGripperUpdate(const auto_smart_factory::GripperState& msg) {
 	if(msg.loaded) {
 		robotGrabAck = true;
-		//ROS_INFO("[task %d] Received gripper grab ack from robot.", getId());
+		ROS_INFO("[task %d] Received gripper grab ack from robot.", getId());
 
 		if(msg.package.id != taskData.package.id || msg.package.type_id != taskData.package.type_id) {
 			ROS_ERROR(
@@ -145,7 +145,7 @@ void Task::receiveRobotGripperUpdate(const auto_smart_factory::GripperState& msg
 		}
 	} else {
 		robotReleaseAck = true;
-		//ROS_INFO("[task %d] Received gripper release ack from robot.", getId());
+		ROS_INFO("[task %d] Received gripper release ack from robot.", getId());
 
 		if(msg.package.id != taskData.package.id || msg.package.type_id != taskData.package.type_id) {
 			ROS_ERROR(

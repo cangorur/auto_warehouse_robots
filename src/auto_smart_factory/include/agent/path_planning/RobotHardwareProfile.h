@@ -9,7 +9,7 @@ private:
 	float drivingBatteryConsumption;
 
 	// Used to get average estimates from max speed values 
-	const float averageDrivingEfficiency = 0.9f;
+	const float averageDrivingEfficiency = 0.8f;
 	const float averageTurningEfficiency = 0.7f;
 
 public:

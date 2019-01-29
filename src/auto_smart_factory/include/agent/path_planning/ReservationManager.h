@@ -3,6 +3,7 @@
 
 #include <ros/publisher.h>
 #include <auto_smart_factory/ReservationCoordination.h>
+#include "agent/path_planning/OrientedPoint.h"
 #include "Map.h"
 #include "ReservationBid.h"
 #include "queue"
@@ -19,7 +20,7 @@ public:
 	void reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg);
 
 	// Path reservations
-	void bidForPathReservation(Point startPoint, Point endPoint);
+	void bidForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint);
 	
 	// Getter
 	Path getReservedPath();
@@ -43,8 +44,8 @@ private:
 	bool isBidingForReservation;
 	bool hasReservedPath;
 	Path pathToReserve;
-	Point startPoint;
-	Point endPoint;
+	OrientedPoint startPoint;
+	OrientedPoint endPoint;
 	
 	// Delayed auction start
 	bool initializeNewDelayedAuction;

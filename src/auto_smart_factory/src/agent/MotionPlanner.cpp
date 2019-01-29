@@ -7,6 +7,7 @@
 
 #include "agent/MotionPlanner.h"
 #include <cmath>
+#include <include/agent/MotionPlanner.h>
 
 
 MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
@@ -65,7 +66,8 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
-	if (pathObject.getDepartureTimes().at(currentTargetIndex) > ros::Time::now().toSec()) {
+	// TODO Patrick use correct index
+	if (pathObject.getDepartureTimes().at(currentTargetIndex - 1) > ros::Time::now().toSec()) {
 		if (mode == Mode::PID || mode == Mode::READY) {
 			publishVelocity(0.0, 0.0);
 		}
@@ -289,4 +291,8 @@ visualization_msgs::Marker MotionPlanner::getVisualizationMsgLines() {
 
 Point MotionPlanner::getPosition() {
 	return Point(pos.x, pos.y);
+}
+
+OrientedPoint MotionPlanner::getOrientedPosition() {
+	return OrientedPoint(pos.x, pos.y, getRotationFromOrientation(pos.o));
 }

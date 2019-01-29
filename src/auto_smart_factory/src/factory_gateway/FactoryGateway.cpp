@@ -32,7 +32,7 @@ FactoryGateway::FactoryGateway() {
 	ros::NodeHandle pn("~");
 	initialize();
 
-	//ROS_INFO("FactoryGateway is created...");
+	ROS_INFO("FactoryGateway is created...");
 }
 
 FactoryGateway::~FactoryGateway() {
@@ -64,7 +64,7 @@ void FactoryGateway::initialize() {
 	statusUpdatePub = pn.advertise<TaskPlannerState>("status", 1);
 	*/
 
-	//ROS_INFO("Warehouse Gateway is initialized.");
+	ROS_INFO("Warehouse Gateway is initialized.");
 }
 
 /*
@@ -259,7 +259,7 @@ boost::property_tree::ptree FactoryGateway::GetStateOfStorages(boost::property_t
 	boost::property_tree::ptree storage_state_node;
 	storage_state_node.push_back(make_pair("storagestates", tray_node));
 	message_pt.put_child("response", storage_state_node);
-	//ROS_INFO("The up-to-date Storage States have been shared!");
+	ROS_INFO("The up-to-date Storage States have been shared!");
 	return message_pt;
 }
 
@@ -297,7 +297,7 @@ boost::property_tree::ptree FactoryGateway::GetStateOfInputContainers(boost::pro
 	boost::property_tree::ptree input_state_node;
 	input_state_node.push_back(make_pair("inputcontainerstates", tray_node));
 	message_pt.put_child("response", input_state_node);
-	//ROS_INFO("The up-to-date Container States have been shared!");
+	ROS_INFO("The up-to-date Container States have been shared!");
 	return message_pt;
 }
 
@@ -329,7 +329,7 @@ boost::property_tree::ptree FactoryGateway::GetStateOfDeliveryContainers(boost::
 	boost::property_tree::ptree delivery_state_node;
 	delivery_state_node.push_back(make_pair("deliverycontainerstates", tray_node));
 	message_pt.put_child("response", delivery_state_node);
-	//ROS_INFO("The up-to-date Container States have been shared!");
+	ROS_INFO("The up-to-date Container States have been shared!");
 	return message_pt;
 }
 
@@ -377,7 +377,7 @@ boost::property_tree::ptree FactoryGateway::GetStateOfDeliveryContainers(boost::
 	boost::property_tree::ptree chargingstation_state_node;
 	chargingstation_state_node.push_back(make_pair("chargingstationstates", station_node));
 	message_pt.put_child("response", chargingstation_state_node);
-	//ROS_INFO("The up-to-date Charging Station occupancies has been shared!");
+	ROS_INFO("The up-to-date Charging Station occupancies has been shared!");
 	return message_pt;
 }*/
 
@@ -430,7 +430,7 @@ boost::property_tree::ptree FactoryGateway::GetStateOfDeliveryRobots(boost::prop
 
 	//robot_node.push_back(make_pair(tray_id, tray_status));
 
-	//ROS_INFO("The up-to-date requested delivery robot states have been shared!");
+	ROS_INFO("The up-to-date requested delivery robot states have been shared!");
 	return message_pt;
 }
 
