@@ -45,7 +45,6 @@ void ReservationManager::update() {
 			updateHighestBid(ReservationBid((*iter).second.bid, (*iter).second.agentId));
 			
 			iter = reservationBidQueue.erase(iter);
-			ROS_INFO("[ReservationManager %d] Applied bid for auction %d from queue", agentId, currentAuctionId);
 		} else {
 			iter++;
 		}
@@ -113,8 +112,7 @@ void ReservationManager::startNewAuction(int newAuctionId, double newAuctionStar
 	msg.isReservationMessage = static_cast<unsigned char>(false);
 	
 	if(isBidingForReservation) {
-		ROS_INFO("[ReservationManager %d] Starting new auction %d - bidding", agentId, newAuctionId);
-
+		//ROS_INFO("[ReservationManager %d] Starting new auction %d - bidding", agentId, newAuctionId);
 		msg.bid = static_cast<float>(pathToReserve.getDuration());
 	} else {
 		msg.bid = -1.f;
@@ -139,7 +137,7 @@ void ReservationManager::closeAuction() {
 			publishReservations(reservations);
 			startNewAuction(currentAuctionId + 1, ros::Time::now().toSec());	
 		} else {
-			ROS_INFO("[ReservationManager %d] Won empty auction %d initializing new auction", agentId, currentAuctionId);
+			//ROS_INFO("[ReservationManager %d] Won empty auction %d initializing new auction", agentId, currentAuctionId);
 
 			// Agent with highest id starts new auction but delayed to avoid overhead
 			initializeNewDelayedAuction = true;
@@ -181,14 +179,11 @@ void ReservationManager::bidForPathReservation(OrientedPoint startPoint, Oriente
 	this->startPoint = startPoint;
 	this->endPoint = endPoint;
 	
-	ROS_INFO("StartingPointOrientation: %f", startPoint.o);
-	
 	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
 	if(pathToReserve.getDistance() > 0) {
 		isBidingForReservation = true;
 		hasReservedPath = false;
 
-		ROS_INFO("[ReservationManager %d] Starting to bid for path with duration %f on auction %d", agentId, pathToReserve.getDuration(), currentAuctionId + 1);	
 	} else {
 		ROS_ERROR("[ReservationManager %d] Tried to generate path but no path was found. Distance start-end: %f", agentId, Math::getDistance(Point(startPoint), Point(endPoint)));
 	}	
@@ -210,7 +205,6 @@ Path ReservationManager::getReservedPath() {
 }
 
 void ReservationManager::initializeNewAuction(int auctionId, double newAuctionStartTime) {
-	ROS_INFO("[ReservationManager %d] Sending initializing new auction message for auctionId %d", agentId, auctionId + 1);
 	auto_smart_factory::ReservationCoordination msg;
 	msg.timestamp = newAuctionStartTime;
 	msg.robotId = agentId;
