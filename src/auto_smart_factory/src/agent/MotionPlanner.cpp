@@ -1,5 +1,4 @@
 #include <utility>
-
 #include "ros/ros.h"
 
 #include "agent/Agent.h"
@@ -50,7 +49,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
-	if (waypointReached(&pos)) {
+	if (isWaypointReached()) {
 		if (!isCurrentPointLastPoint())	{
 			advanceToNextPathPoint();
 		} else {
@@ -66,8 +65,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
-	// TODO Patrick use correct index
-	if (pathObject.getDepartureTimes().at(currentTargetIndex - 1) > ros::Time::now().toSec()) {
+	if (previousTargetIndex >= 0 && pathObject.getDepartureTimes().at(previousTargetIndex) > ros::Time::now().toSec()) {
 		if (mode == Mode::PID || mode == Mode::READY) {
 			publishVelocity(0.0, 0.0);
 		}
@@ -75,15 +73,21 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
+
+	followPath();
+}
+
+void MotionPlanner::followPath() {
 	mode = Mode::PID;
-	double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(pos.x, pos.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(position.x, position.y));
+	
+	double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(pos.x, pos.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(pos.x, pos.y));
 	double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
 	angularVelocity = std::min(std::max(angularVelocity, (double) -maxTurningSpeed), (double) maxTurningSpeed);
 
 	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed-minDrivingSpeed);
 
 	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.4f) {
-		linearVelocity = 0.1;
+		linearVelocity = std::max(0.1, (double) Math::getDistance(Point(pos.x, pos.y), currentTarget));
 	}
 
 	publishVelocity(linearVelocity, angularVelocity);
@@ -138,6 +142,17 @@ void MotionPlanner::newPath(Path path) {
 	}	
 }
 
+void MotionPlanner::advanceToNextPathPoint() {
+	previousTarget = pathObject.getNodes().at(static_cast<unsigned long>(currentTargetIndex));
+	previousTargetIndex = currentTargetIndex;
+	currentTargetIndex++;
+	currentTarget = pathObject.getNodes().at(static_cast<unsigned long>(currentTargetIndex));
+}
+
+bool MotionPlanner::isCurrentPointLastPoint() {
+	return currentTargetIndex == pathObject.getNodes().size() - 1;
+}
+
 MotionPlanner::Mode MotionPlanner::getMode() {
 	return mode;
 }
@@ -159,6 +174,18 @@ bool MotionPlanner::hasPath() {
 	return pathObject.getDistance() > 0;
 }
 
+bool MotionPlanner::isDrivingBackwards() {
+	return false;
+}
+
+bool MotionPlanner::isWaypointReached() {
+	if (!isCurrentPointLastPoint())	{
+		return (Math::getDistance(Point(pos.x, pos.y), currentTarget) <= distToReachPoint);
+	} else {
+		return (Math::getDistance(Point(pos.x, pos.y), currentTarget) <= distToReachFinalPoint);
+	}
+}
+
 void MotionPlanner::publishVelocity(double speed, double angle) {
 	geometry_msgs::Twist msg;
 
@@ -166,113 +193,6 @@ void MotionPlanner::publishVelocity(double speed, double angle) {
 	msg.angular.z = angle;
 
 	motionPub->publish(msg);
-}
-
-bool MotionPlanner::waypointReached(Position *current) {
-	if (!isCurrentPointLastPoint())	{
-		return (Math::getDistance(Point(current->x, current->y), currentTarget) <= distToReachPoint);
-	} else {
-		return (Math::getDistance(Point(current->x, current->y), currentTarget) <= distToReachFinalPoint);
-	}
-}
-
-bool MotionPlanner::driveCurrentPath(Position currentPosition) {
-	geometry_msgs::Twist motion;
-
-	float distToTarget = Math::getDistance(Point(currentPosition.x, currentPosition.y), currentTarget);
-	float rotationToTarget = getRotationToTarget(currentPosition, currentTarget);
-	
-	float rotationSign = rotationToTarget < 0.f ? -1.f : 1.f;
-	rotationToTarget = std::fabs(rotationToTarget);
-	
-	if(rotationToTarget < allowedRotationDifference) {
-		rotationToTarget = 0;
-	}
-	
-	// has reached next point?
-	if(distToTarget <= distToReachPoint && !isCurrentPointLastPoint()) {
-		// Rerun with new point
-		advanceToNextPathPoint();
-		return driveCurrentPath(currentPosition);
-	} else if(distToTarget <= distToReachFinalPoint && isCurrentPointLastPoint()) {
-		// Todo rotate till final rotation is guaranteed
-		stop();
-		motionPub->publish(motion);
-		mode = Mode::FINISHED;
-		return true;
-	}
-	
-	// Totally wrong direction
-	if(rotationToTarget >= maxRotationDifference) {
-		motion.angular.z = Math::clamp(rotationToTarget, 0, maxTurningSpeed) * rotationSign;
-		motion.linear.x = 0;
-	} else {
-		float rotationAlpha = Math::clamp(rotationToTarget/maxRotationDifference, 0, 1);
-		motion.angular.z = Math::lerp(minTurningSpeed, maxTurningSpeed, rotationAlpha) * rotationSign;
-		
-		float speedAlphaThroughRotation = 1.f - rotationAlpha;
-		if(speedAlphaThroughRotation < 0.9f) {
-			speedAlphaThroughRotation /= 3.f;
-		}
-		
-		float speedAlphaThroughDist = 1.f;
-		if(distToTarget <= distToSlowDown) {
-			speedAlphaThroughDist = Math::clamp((distToTarget - distToReachPoint) / (distToSlowDown - distToReachPoint), 0, 1.f);
-		}
-		
-		float speedAlpha = std::min(speedAlphaThroughDist, speedAlphaThroughRotation);
-		
-		motion.linear.x = Math::lerp(minDrivingSpeed, maxDrivingSpeed, speedAlpha);
-	}
-	
-	motionPub->publish(motion);
-	return false;
-}
-
-/* Returns the angle of the given orientation.
-	 * @param orientation: orientation e.g
-	 *       0.5
-	 *        ||
-	 *  1/-1--  --0
-	 *        ||
-	 *      -0.5
-	  @returns an orientation angle e.g.
-	 *      270
-	 *      ||
-	 * 180--  --0/360
- 	 *      ||
-	 *     90
-	 *     */
-float MotionPlanner::getRotationFromOrientation(double orientation) {
-	if(orientation > 1.f) {
-		orientation = -(2.f - orientation);
-	} else if(orientation < -1.f) {
-		orientation = 2.f + orientation;
-	}
-	
-	if(orientation < 0) {
-		return static_cast<float>(std::fabs(orientation) * 180.f);
-	} else {
-		return static_cast<float>(360.f - orientation * 180.f);
-	}
-}
-
-float MotionPlanner::getRotationFromOrientationDifference(double orientation) {
-	return static_cast<float>(orientation * 180.f);
-}
-
-void MotionPlanner::advanceToNextPathPoint() {
-	previousTarget = pathObject.getNodes().at(static_cast<unsigned long>(currentTargetIndex));
-	currentTargetIndex++;
-	currentTarget = pathObject.getNodes().at(static_cast<unsigned long>(currentTargetIndex));
-}
-
-bool MotionPlanner::isCurrentPointLastPoint() {
-	return currentTargetIndex == pathObject.getNodes().size() - 1;
-}
-
-bool MotionPlanner::isDrivingBackwards() {
-	return false;
 }
 
 double MotionPlanner::getRotationToTarget(Position currentPosition, Point targetPosition) {
