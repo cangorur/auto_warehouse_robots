@@ -28,12 +28,22 @@ bool ChargingManagement::isEnergyAvailable(double energy){
 
 
 void ChargingManagement:: getAllChargingStations(){
+
+	//Iterate through all the trays and separate out charging trays
 	for(int i = 0; i < warehouseConfig.trays.size(); i++) {
 		if(warehouseConfig.trays[i].type.compare("charging station")) {
-			charging_stations.push_back(warehouseConfig.trays[i]);
+			charging_trays.push_back(warehouseConfig.trays[i]);
 		}
 	}
+
+	//Fill charging stations vector
+	for(int i= 0; i<charging_trays.size(); i++){
+		charging_stations[i].Tray = charging_trays[i];
+		charging_stations[i].occupancy = false;
+	}
 }
+
+
 
 float ChargingManagement::getScoreMultiplier(float cumulatedEnergyConsumption){
 

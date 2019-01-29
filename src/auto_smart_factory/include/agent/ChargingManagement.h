@@ -8,6 +8,21 @@
 #include <auto_smart_factory/RobotHeartbeat.h>
 #include "auto_smart_factory/Tray.h"
 
+class ChargingStation {
+public:
+	//Corresponding Charging tray
+	auto_smart_factory::Tray Tray;
+
+	//Is occupied or not
+	bool occupancy;
+
+	//Assigned Robot
+	auto_smart_factory::Robot robot;
+
+	//Charging Rate //TODO??
+	float rate;
+
+};
 
 class Agent;
 /**
@@ -59,8 +74,11 @@ private:
 	// Minimum energy level of the agent to participate in charging
 	float criticalMinimum = 10.00;
 
-	//Vector of all the Charging Stations
-	std::vector <auto_smart_factory::Tray> charging_stations;
+	//Vector of all the Charging Trays
+	std::vector <auto_smart_factory::Tray> charging_trays;
+
+	//Vector of all Charging Stations'
+	std::vector <ChargingStation> charging_stations;
 
 	//Current battery of the agent
 	double agentBatt;
@@ -68,5 +86,7 @@ private:
 	//Estimated energy of the agent after task and charging
 	float energyAfterTask;
 };
+
+
 
 #endif /* AGENT_CHARGINGMANAGEMENT_H_ */
