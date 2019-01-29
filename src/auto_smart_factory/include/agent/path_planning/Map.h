@@ -14,6 +14,7 @@
 #include "agent/path_planning/TimedLineOfSightResult.h"
 
 class Map {
+	// For visualisation messages
 	static int visualisationId;
 	
 private:

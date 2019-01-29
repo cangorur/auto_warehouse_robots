@@ -9,6 +9,10 @@
 #include "agent/path_planning/ThetaStarGridNodeInformation.h"
 #include "RobotHardwareProfile.h"
 
+// TODO fix starting in reservation -> no path found (crash)
+// TODO ignore own reservations during theta star!!!!!!!
+
+
 class ThetaStarPathPlanner {
 public:
 	explicit ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile);
