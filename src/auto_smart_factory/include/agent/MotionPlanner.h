@@ -44,13 +44,6 @@ public:
 	 * @param orientation: current orientation of the agent*/
 	void update(geometry_msgs::Point position, double orientation);
 
-	/* Follow a path using the pid */
-	void followPath(void);
-
-	/* Turn the robot on spot facing orientation when finished */
-	void turnTowards(Point target);
-	void turnTowards(double direction);
-
 	/* Align the robots towards a target / direction */
 	void alignTowards(Point target);
 	void alignTowards(double direction);
@@ -64,77 +57,69 @@ public:
 	void stop();
 	bool isDone();
 	bool hasPath();
-	
 	bool isDrivingBackwards();
 
 	visualization_msgs::Marker getVisualizationMsgPoints();
 	visualization_msgs::Marker getVisualizationMsgLines();
 
 private:
-	/* Hands over the currently sensed position and orientation of the robot to execute the driving
-	 * of the current path. Manages the current path and decides wheter to turn or not and publishes
-	 * the velocities to the motion actuator topic.
-	 * @param position: current position of the robot
-	 * @param orientation: current oriientation of the robot
-	 * @return True if the current plan has been driven successfully*/
-	bool driveCurrentPath(Position currentPosition);
-	
-	float getRotationFromOrientation(double orientation);
-	float getRotationFromOrientationDifference(double orientation);
-	
+	/* Follow a path using the pid */
+	void followPath(void);
+
+	/* Turn the robot on spot facing orientation when finished */
+	void turnTowards(Point target);
+	void turnTowards(double direction);
+
+	/* Functions to handle Waypoints */
+	bool isWaypointReached(void);
 	bool isCurrentPointLastPoint();
+
 	void advanceToNextPathPoint();
-	Point getPathPointAtIndex(int index);
 	
+	/* Calculate rotation to target */
 	double getRotationToTarget(Position currentPosition, Point targetPosition);
 
+	/* Helper function to publish the velocity on the robots motion topic */
 	void publishVelocity(double speed, double angle);
-
-	bool isWaypointReached(void);
 
 	/// information about the current role of the agent
 	auto_smart_factory::RobotConfiguration robotConfig;
 
 	/// Publisher for the motion actuator topic
 	ros::Publisher* motionPub;
-	ros::Publisher pathPub;
 
-	/// the current path to drive
-	std::vector<geometry_msgs::Point> path;
+	/// Publisher for the visualization messages (rviz)
+	ros::Publisher pathPub;
 
 	/// the current mode
 	Mode mode = Mode::STOP;
 	
-	/////////////////////////////////////
+	/// the current path of the robot
 	Path pathObject;
 	
+	/// the current target for the robot with its index
 	Point currentTarget;
 	int currentTargetIndex = -1;
 
 	Point previousTarget;
+	int previousTargetIndex = -1;
 
+	/// Members for turnTowards functionality
 	Point alignTarget;
-	double alignDirection;
+	double alignDirection = -1;
 
+	/// Threshold when robot should stop and turn on spot instead of pid controlled
 	double turnThreshold = Math::toRad(65);
-
-	float minTurningSpeed = 0.08;
 	
-	float maxTurningSpeed; // = 1;
-	float minDrivingSpeed; // = 0.2;
-	float maxDrivingSpeed; // = 1;
+	/// Turning and Driving Speed Limitations from robots config file
+	float maxTurningSpeed;
+	float minDrivingSpeed;
+	float maxDrivingSpeed;
 
+	/// Precision configuration to reach points
 	float distToReachPoint = 0.3f;
 	float distToReachFinalPoint = 0.1f;
 	float distToSlowDown = 0.9f;
-
-	//float maxRotationDifference = 45;
-	float maxRotationDifference = 0.38f;
-	
-	/* Accuracy that determines the allowed orientaion difference of the current robot
-	 * orientation while driving & the direction of the goal position to not steer.*/
-	float allowedRotationDifference = 0.001f;
-
 
 protected:
 	Agent* agent;
