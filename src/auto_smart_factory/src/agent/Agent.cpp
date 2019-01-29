@@ -113,7 +113,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		this->map = new Map(warehouseConfig, obstacles, hardwareProfile);
 
 		// Charging MAnagement
-		this->chargingManagement = new ChargingManagement(this);
+		this->chargingManagement = new ChargingManagement(this,this->warehouseConfig);
 
 		// Task Handler
 		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub), this->map, this->motionPlanner, this->gripper, 

@@ -6,6 +6,8 @@
 #include <vector>
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotHeartbeat.h>
+#include "auto_smart_factory/Tray.h"
+
 
 class Agent;
 /**
@@ -18,7 +20,7 @@ public:
 	 * Default constructor.
 	 * Sets up the initialize service.
 	 */
-	ChargingManagement(Agent* agent);
+	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration);
 
 	virtual ~ChargingManagement();
 
@@ -33,11 +35,20 @@ public:
 	 * @returns Score multiplier LOWER IS BETTER
 	 */
 	float getScoreMultiplier(float cumulatedEnergyConsumption);
-private:
 
+	/*
+	 * Get All Charging Stations
+	 */
+	void getAllChargingStations();
+
+private:
 	Agent* agent;
 
+	//Agent ID from where the CM is called
 	std::string agentID;
+
+	// information about the current warehouse map
+	auto_smart_factory::WarehouseConfiguration warehouseConfig;
 
 	// Max energy level of the agent to participate in charging
 	float upperThreshold = 90.00;
@@ -48,8 +59,8 @@ private:
 	// Minimum energy level of the agent to participate in charging
 	float criticalMinimum = 10.00;
 
-	// Operating battery
-	float operatingBatt = upperThreshold - criticalMinimum;
+	//Vector of all the Charging Stations
+	std::vector <auto_smart_factory::Tray> charging_stations;
 
 	//Current battery of the agent
 	double agentBatt;

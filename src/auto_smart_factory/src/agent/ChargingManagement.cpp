@@ -2,13 +2,14 @@
 #include "agent/Agent.h"
 
 
-ChargingManagement::ChargingManagement(Agent* a) {
+ChargingManagement::ChargingManagement(Agent* a, auto_smart_factory::WarehouseConfiguration warehouse_configuration) {
 
 	agent = a;
 	agentID = agent->getAgentID();
 	agentBatt = agent->getAgentBattery();
+	warehouseConfig = warehouse_configuration;
 	ROS_INFO("[ChargingManagement] Started, agent ID: [%s], agent Batt: [%f] ", agentID.c_str(), agentBatt);
-
+	getAllChargingStations();
 }
 
 ChargingManagement::~ChargingManagement() {
@@ -25,6 +26,14 @@ bool ChargingManagement::isEnergyAvailable(double energy){
     return false;
 }
 
+
+void ChargingManagement:: getAllChargingStations(){
+	for(int i = 0; i < warehouseConfig.trays.size(); i++) {
+		if(warehouseConfig.trays[i].type.compare("charging station")) {
+			charging_stations.push_back(warehouseConfig.trays[i]);
+		}
+	}
+}
 
 float ChargingManagement::getScoreMultiplier(float cumulatedEnergyConsumption){
 
