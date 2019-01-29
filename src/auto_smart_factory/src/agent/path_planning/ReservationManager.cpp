@@ -176,8 +176,10 @@ void ReservationManager::publishReservations(std::vector<Rectangle> reservations
 }
 
 void ReservationManager::bidForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint) {
-	this->startPoint = startPoint;
-	this->endPoint = endPoint;
+	// Convert to degree TODO change internally
+	this->startPoint = OrientedPoint(startPoint.x, startPoint.y, Math::toDeg(startPoint.o));
+	this->endPoint = OrientedPoint(endPoint.x, endPoint.y, Math::toDeg(endPoint.o));;
+	
 	
 	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
 	if(pathToReserve.getDistance() > 0) {

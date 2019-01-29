@@ -89,9 +89,9 @@ void TaskHandler::executeTask() {
             } else {
                 // Start to bid for path reservations
                 if(currentTask->isTransportation()) {
-                    reservationManager->bidForPathReservation(motionPlanner->getOrientedPosition(), ((TransportationTask*) currentTask)->getSourcePosition());
+                    reservationManager->bidForPathReservation(motionPlanner->getOrientedPoint(), ((TransportationTask*) currentTask)->getSourcePosition());
                 } else if(currentTask->isCharging()) {
-                    reservationManager->bidForPathReservation(motionPlanner->getOrientedPosition(), currentTask->getTargetPosition());
+                    reservationManager->bidForPathReservation(motionPlanner->getOrientedPoint(), currentTask->getTargetPosition());
                 } else {
                     ROS_ERROR("Task is neither Transportation task nor charging task!");
                 }

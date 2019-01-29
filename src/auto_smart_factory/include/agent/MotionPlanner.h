@@ -66,9 +66,8 @@ public:
 
 	visualization_msgs::Marker getVisualizationMsgPoints();
 	visualization_msgs::Marker getVisualizationMsgLines();
-
-	Point getPosition();
-	OrientedPoint getOrientedPosition();
+	
+	OrientedPoint getOrientedPoint();
 
 private:
 	/* Hands over the currently sensed position and orientation of the robot to execute the driving
