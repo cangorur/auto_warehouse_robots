@@ -1,377 +1,214 @@
-#include <agent/MotionPlanner.h>
-#include <agent/Agent.h>
+#include <utility>
+#include "ros/ros.h"
 
-MotionPlanner::MotionPlanner(Agent *a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher *motion_pub){
-	robotConfig = robot_config;
-	drivingMinSpeed = robotConfig.min_linear_vel;
-	drivingMaxSpeed = robotConfig.max_linear_vel;
-	turningMaxSpeed = robotConfig.max_angular_vel;
+#include "agent/Agent.h"
+#include <visualization_msgs/Marker.h>
+
+#include "agent/MotionPlanner.h"
+#include <cmath>
+#include <include/agent/MotionPlanner.h>
+
+
+MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
+	pathObject(Path())
+{
+	robotConfig = std::move(robot_config);
+	
+	minDrivingSpeed = robotConfig.min_linear_vel;
+	maxDrivingSpeed = robotConfig.max_linear_vel;
+	maxTurningSpeed = robotConfig.max_angular_vel;
+	
 	motionPub = motion_pub;
 	agent = a;
-  agentID = agent->getAgentID();
-	std::stringstream ss;
-  ss << "/motion_planner_" << agentID << "/activate_tests";
-  test_enable_paramStr = ss.str();
-	ros::param::set(test_enable_paramStr, tests_enabled); // false by default
+	agentID = agent->getAgentID();
+
+	ros::NodeHandle n;
+	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+
+	steerPid = new PidController(0.0, 1.8, 0.0, 4.0);
 }
 
-MotionPlanner::~MotionPlanner(){
-}
+MotionPlanner::~MotionPlanner() {
+	delete steerPid;
+};
 
-void MotionPlanner::update(geometry_msgs::Point position, double orientation){
-		bool prev_test_enable = tests_enabled;
-		ros::param::get(test_enable_paramStr, tests_enabled);
-		if(enabled || tests_enabled) { // if "enabled" by the operation or "test_enable" is triggered
-			if(tests_enabled){ // if test enable, the robot will only be controlled with manual commands
-				if(!prev_test_enable) // if tests are just enabled, first stop the prev motion command
-					stop();
-				start();
-			}
-			else if(!done && !standStill)
-				done = driveCurrentPath(position, orientation);
-			else
-				stop();
+void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
+	pos.update(position.x, position.y, orientation, ros::Time::now());
+
+	if (mode == Mode::FINISHED || mode == Mode::STOP) {
+		publishVelocity(0.0, 0.0);
+		return;
 	}
-}
 
-void MotionPlanner::newPath(geometry_msgs::Point start_position, std::vector<geometry_msgs::Point> new_path,
-		geometry_msgs::Point end_direction_point, bool drive_backwards){
-	startPosition = start_position;
-	driveBackwards = drive_backwards;
-	path = new_path;
-	smoothPath(path);
-	endDirectionPoint = end_direction_point;
-	currentTargetIndex = 0;
-	turnDirection = 0;
-	turningStart = true;
-	numberTurns = 0;
-	turning = true;
-	done = false;
-}
+	if (mode == Mode::ALIGN) {
+		if (alignDirection == -1.0)
+			turnTowards(alignTarget);
+		else
+			turnTowards(alignDirection);
 
-void MotionPlanner::smoothPath(std::vector<geometry_msgs::Point> &path,double weight_data,double weight_smooth,double tolerance){
+		return;
+	}
 
-	std::vector<geometry_msgs::Point> newPath=path;		//Deep copy
-
-	for(int k=0;k<newPath.size();++k){
-		if (k != 0 and k != path.size()-1){
-            double force_org_x,force_org_y,force_dyn_x,force_dyn_y,force_tot_x=10,force_tot_y=10;
-			while (( pow(force_tot_x,2) + pow(force_tot_y,2)) >= pow(tolerance,2)){
-				force_org_x=weight_data*(path[k].x-newPath[k].x);
-				force_dyn_x=weight_smooth*(newPath[k-1].x+newPath[k+1].x-(2*newPath[k].x));   //TODO 2*
-				force_tot_x = force_org_x + force_dyn_x;
-				newPath[k].x += force_tot_x;
-
-				force_org_y=weight_data*(path[k].y-newPath[k].y);
-				force_dyn_y=weight_smooth*(newPath[k-1].y+newPath[k+1].y-(2*newPath[k].y));   //TODO 2*
-				force_tot_y = force_org_y + force_dyn_y;
-				newPath[k].y += force_tot_y;
-			}
+	if (isWaypointReached()) {
+		if (!isCurrentPointLastPoint())	{
+			advanceToNextPathPoint();
+		} else {
+			mode = Mode::FINISHED;
+			publishVelocity(0.0, 0.0);
+			return;
 		}
 	}
-	path=newPath;
-}
 
-bool MotionPlanner::comparePaths(std::vector<geometry_msgs::Point> new_path) {
-	int j = path.size() - 1;
-	for(int i = new_path.size() - 1; i >= 0; i--) {
-		if(j < 0 || new_path[i].x != path[j].x || new_path[i].y != path[j].y)
-			return false;
-		j--;
+	if (mode == Mode::TURN || std::abs(getRotationToTarget(pos, currentTarget)) >= turnThreshold) {
+		mode = Mode::TURN;
+		turnTowards(currentTarget);
+		return;
 	}
-	if(j > currentTargetIndex)
-		return false;
-	return true;
+
+	if (previousTargetIndex >= 0 && pathObject.getDepartureTimes().at(previousTargetIndex) > ros::Time::now().toSec()) {
+		if (mode == Mode::PID || mode == Mode::READY) {
+			publishVelocity(0.0, 0.0);
+		}
+		mode = Mode::WAIT;
+		return;
+	}
+
+
+	followPath();
 }
 
-void MotionPlanner::enable(bool enable) {
-	this->enabled = enable;
+void MotionPlanner::followPath() {
+	mode = Mode::PID;
+	
+	double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(pos.x, pos.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(pos.x, pos.y));
+	double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
+	angularVelocity = std::min(std::max(angularVelocity, (double) -maxTurningSpeed), (double) maxTurningSpeed);
+
+	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed-minDrivingSpeed);
+
+	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.4f) {
+		linearVelocity = std::max(0.1, (double) Math::getDistance(Point(pos.x, pos.y), currentTarget));
+	}
+
+	publishVelocity(linearVelocity, angularVelocity);
 }
 
-bool MotionPlanner::isEnabled(){
-	return this->enabled;
+void MotionPlanner::turnTowards(Point target) {
+	double rotation = getRotationToTarget(pos, target);
+	if(std::abs(rotation) <= 0.1f) {
+		mode = Mode::PID;
+		return;
+	}
+	publishVelocity(0, Math::clamp(std::abs(rotation), 0, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
 }
 
-bool MotionPlanner::isTestsEnabled(){ // adjusted through ros param
-	return this->tests_enabled;
+void MotionPlanner::turnTowards(double direction) {
+	double rotation = static_cast<double>(Math::getAngleDifferenceInRad(pos.o, direction));
+	if(std::abs(rotation) <= 0.1f) {
+		mode = Mode::FINISHED;
+		return;
+	}
+	publishVelocity(0, Math::clamp(std::abs(rotation), 0.3, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
 }
 
-void MotionPlanner::start(){
-	this->standStill = false;
+void MotionPlanner::alignTowards(Point target) {
+	mode = Mode::ALIGN;
+	alignTarget = target;
+	alignDirection = -1.0;
 }
 
-void MotionPlanner::stop(){
-	this->standStill = true;
-	geometry_msgs::Twist motion;
-	this->motionPub->publish(motion);
+void MotionPlanner::alignTowards(double direction) {
+	mode = Mode::ALIGN;
+	alignDirection = direction;
 }
 
-bool MotionPlanner::isDone(){
-	return done;
+void MotionPlanner::newPath(Path* path) {
+	// Create local copy
+	newPath(Path(path->getStartTimeOffset(), path->getNodes(), path->getWaitTimes(), path->getRobotHardwareProfile()));	
 }
 
-bool MotionPlanner::isTurning() {
-	return turning;
+void MotionPlanner::newPath(Path path) {
+	pathObject = path;
+	
+	if(path.getDistance() > 0) {
+		currentTarget = pathObject.getNodes().front();
+		currentTargetIndex = 0;
+		mode = Mode::READY;
+		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgPoints());
+		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
+	} else {
+		printf("[MotionPlanner - %s]: Got path with length 0", agentID.c_str());
+		mode = Mode::FINISHED;
+	}	
 }
 
-bool MotionPlanner::isTurningLeft() {
-	return turnsLeft;
+void MotionPlanner::advanceToNextPathPoint() {
+	previousTarget = pathObject.getNodes().at(static_cast<unsigned long>(currentTargetIndex));
+	previousTargetIndex = currentTargetIndex;
+	currentTargetIndex++;
+	currentTarget = pathObject.getNodes().at(static_cast<unsigned long>(currentTargetIndex));
 }
 
-double MotionPlanner::getTurnDirection() {
-	return turnDirection;
+bool MotionPlanner::isCurrentPointLastPoint() {
+	return currentTargetIndex == pathObject.getNodes().size() - 1;
 }
 
-void MotionPlanner::changeTurningDirection() {
-	turningStart = false;
-	turnsLeft = !turnsLeft;
-	numberTurns++;
+MotionPlanner::Mode MotionPlanner::getMode() {
+	return mode;
 }
 
-int MotionPlanner::getNumberTurns() {
-	return numberTurns;
+void MotionPlanner::start() {
+	mode = Mode::READY;
+}
+
+void MotionPlanner::stop() {
+	mode = Mode::STOP;
+	publishVelocity(0.0, 0.0);
+}
+
+bool MotionPlanner::isDone() {
+	return (mode == Mode::FINISHED);
 }
 
 bool MotionPlanner::hasPath() {
-	return path.size() > 0;
-}
-
-std::vector<geometry_msgs::Point> MotionPlanner::getRemainingPath() {
-	std::vector<geometry_msgs::Point> p;
-	for(int i=currentTargetIndex; i<path.size(); i++)
-		p.push_back(path[i]);
-	return p;
+	return pathObject.getDistance() > 0;
 }
 
 bool MotionPlanner::isDrivingBackwards() {
-	return driveBackwards;
-}
-
-bool MotionPlanner::hasDifferentGoal(std::vector<geometry_msgs::Point> new_path) {
-	//prevent new path from having a different target
-	if(getGoalPosition().x != path[path.size() - 1].x ||
-		getGoalPosition().y != path[path.size() - 1].y)
-		return true;
 	return false;
 }
 
-geometry_msgs::Point MotionPlanner::getLastPosition() {
-	if(currentTargetIndex <= 0)
-		return startPosition;
-	else if(currentTargetIndex >= path.size())
-		return path[path.size() - 1];
-	else
-		return path[currentTargetIndex - 1];
-}
-
-geometry_msgs::Point MotionPlanner::getNextPosition() {
-	if(currentTargetIndex <= 0)
-		return path[0];
-	else if(currentTargetIndex >= path.size())
-		return path[path.size() - 1];
-	else
-		return path[currentTargetIndex];
-}
-
-geometry_msgs::Point MotionPlanner::getGoalPosition() {
-	return path[path.size() - 1];
-}
-
-geometry_msgs::Point MotionPlanner::getEndDirectionPoint() {
-	return endDirectionPoint;
-}
-
-double MotionPlanner::getDriveForwardDistanceAccuracy() {
-	return driveForwardDistanceAccuracy;
-}
-
-double MotionPlanner::getDriveBackwardsDistanceAccuracy() {
-	return driveBackwardsDistanceAccuracy;
-}
-
-bool MotionPlanner::driveCurrentPath(geometry_msgs::Point position, double orientation){
-	geometry_msgs::Twist motion;
-	if(currentTargetIndex < path.size() || turning){
-		double p_x = position.x;
-		double p_y = position.y;
-		orientation = orientation/(PI/2.0);
-		geometry_msgs::Point t;
-		if(currentTargetIndex < path.size())
-			t = path[currentTargetIndex];
-		else {
-			//to handle endorientation the right way
-			if(driveBackwards) {
-				driveBackwards = false;
-			}
-			t = endDirectionPoint;
-		}
-
-
-		if(turning)
-			motion = turnOnSpot(p_x, p_y, t.x, t.y, orientation);
-		if(!turning && currentTargetIndex < path.size())
-			motion = driveStraight(p_x, p_y, t.x, t.y, orientation);
-
-		//motion.linear.x = 0.7;
-		//standStill = false;
-
-		if(standStill)
-			stop();
-		else
-			motionPub->publish(motion);
-		return false;
+bool MotionPlanner::isWaypointReached() {
+	if (!isCurrentPointLastPoint())	{
+		return (Math::getDistance(Point(pos.x, pos.y), currentTarget) <= distToReachPoint);
 	} else {
-    		stop();
-		return true;
+		return (Math::getDistance(Point(pos.x, pos.y), currentTarget) <= distToReachFinalPoint);
 	}
 }
 
-geometry_msgs::Twist MotionPlanner::driveStraight(double p_x, double p_y, double t_x, double t_y,
-		double orientation){
+void MotionPlanner::publishVelocity(double speed, double angle) {
+	geometry_msgs::Twist msg;
 
-	geometry_msgs::Twist motion;
-	double distance = getDistance(p_x, p_y, t_x, t_y);
+	msg.linear.x = speed;
+	msg.angular.z = angle;
 
-	double d_accuracy = driveForwardDistanceAccuracy;
-	//bigger backwards accuracy
-	//tried to work around failing to reach back driving goal
-	if(driveBackwards)
-		d_accuracy = driveBackwardsDistanceAccuracy;
-
-	if(distance > d_accuracy){
-		motion.linear.x = 1.0 * distance;
-		motion.linear.x = scaleSpeed(motion.linear.x, drivingMaxSpeed, drivingMinSpeed);
-
-		if(driveBackwards)
-			motion.linear.x *= -1.0;
-
-
-		double direction = getDirection(p_x, p_y, t_x, t_y);
-		double orientation_diff = getOrientationDiff(orientation, direction);
-
-		if(fabs(orientation_diff) > steeringAccuracy){
-			motion.angular.z = 17 * orientation_diff * fabs(motion.linear.x)
-				/ drivingMaxSpeed;
-			motion.angular.z = scaleSpeed(motion.angular.z, turningMaxSpeed, 0);
-			if(driveBackwards)
-				motion.angular.z *= -1.0;
-		}
-	} else
-		nextWayPoint();
-
-	return motion;
+	motionPub->publish(msg);
 }
 
-void MotionPlanner::nextWayPoint(){
-	currentTargetIndex++;
-	numberTurns = 0;
-	turning = true;
+double MotionPlanner::getRotationToTarget(Position currentPosition, Point targetPosition) {
+	double direction = std::atan2(targetPosition.y - currentPosition.y, targetPosition.x - currentPosition.x);
+
+	return static_cast<double>(Math::getAngleDifferenceInRad(currentPosition.o, direction));
 }
 
-geometry_msgs::Twist MotionPlanner::turnOnSpot(double p_x, double p_y, double t_x, double t_y,
-		double orientation){
-		//turnOnSpotAccuracy = 0.6;
-	bool stop = false;
-	geometry_msgs::Twist motion;
-	if(p_x == t_x && p_y == t_y)
-		stop = true;
-	else {
-		double direction;
-		if(driveBackwards)
-			direction = getDirection(t_x, t_y, p_x, p_y);
-		else
-			direction = getDirection(p_x, p_y, t_x, t_y);
-
-		double orientation_diff = getOrientationDiff(orientation, direction);
-
-		if(fabs(orientation_diff) > turnOnSpotAccuracy){
-			double speed = 0;
-			if(turningStart) {
-				speed = orientation_diff;
-				turnsLeft = speed >= 0;
-			} else {
-				if(turnsLeft) {
-					if(orientation_diff > 0)
-						speed = orientation_diff;
-					else
-						speed = 2 + orientation_diff;
-				} else {
-					if(orientation_diff > 0)
-						speed = -2 + orientation_diff;
-					else
-						speed = orientation_diff;
-				}
-			}
-			speed = 10 * speed;
-			speed = scaleSpeed(speed, turningMaxSpeed, turningMinSpeed);
-			motion.angular.z = speed;
-			turnDirection = speed;
-		} else
-			stop = true;
-	}
-
-	if(stop) {
-		turning = false;
-		turningStart = true;
-		turnDirection = 0;
-	}
-	return motion;
+visualization_msgs::Marker MotionPlanner::getVisualizationMsgPoints() {
+	return pathObject.getVisualizationMsgPoints();
 }
 
-double MotionPlanner::scaleSpeed(double speed, double max, double min){
-	int p = (speed >= 0) ? 1 : -1;
-	if(p * speed > max)
-		return p * max;
-	else if(p * speed < min)
-		return p * min;
-	else
-		return speed;
+visualization_msgs::Marker MotionPlanner::getVisualizationMsgLines() {
+	return pathObject.getVisualizationMsgLines();
 }
 
-double MotionPlanner::getDirection(double p_x, double p_y, double t_x, double t_y){
-	return (std::atan2(t_y - p_y, t_x - p_x))/PI;
-}
-
-double MotionPlanner::getDistance(double p1_x, double p1_y, double p2_x, double p2_y){
-	return  sqrt(pow(p1_x - p2_x, 2.0) + pow(p1_y - p2_y, 2.0));
-}
-
-double MotionPlanner::getOrientationDiff(double orientation, double direction){
-	double diff;
-	if(orientation >= 0 && direction >= 0){
-		diff = direction - orientation;
-	} else if(orientation < 0 && direction < 0){
-		diff = direction - orientation;
-	} else if(orientation >= 0 && direction < 0){
-		if(orientation - direction <= 1)
-			diff = direction - orientation;
-		else
-			diff = (1 - orientation) + (1 + direction);
-	} else if(orientation < 0 && direction >= 0){
-		if(direction - orientation <= 1)
-			diff = direction - orientation;
-		else
-			diff = direction - orientation - 2;
-	}
-	return diff;
-}
-
-double MotionPlanner::getAngle(double orientation){
-	return (orientation >= 0) ? 180 * orientation : 360 + 180 * orientation;
-}
-
-void MotionPlanner::emgRetreat(float stop_interval, float retreat_interval ){
-	geometry_msgs::Twist motion;
-	motion.linear.x = -0.1;
-	motion.linear.y = 0.0;
-	motion.angular.x = 0.0;
-	motion.angular.y = 0.0;
-	motion.angular.z = 0.0;
-			stop();
-			ros::Duration(1*stop_interval).sleep();
-			motionPub->publish(motion);
-			ROS_INFO("Retreating");
-			ros::Duration(1*retreat_interval).sleep();
-		stop();
-		start();
+OrientedPoint MotionPlanner::getOrientedPoint() {
+	return OrientedPoint(pos.x, pos.y, pos.o);
 }

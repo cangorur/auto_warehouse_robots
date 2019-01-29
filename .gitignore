@@ -7,5 +7,12 @@ src/CMakeLists.txt
 *.swp
 *.orig
 *.pyc
-*/.idea/
-*/cmake-build-debug
+
+#Clion
+.idea
+**cmake-build-debug**
+
+# vscode
+.vscode/*
+
+\.metadata/

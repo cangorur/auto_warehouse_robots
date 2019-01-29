@@ -13,7 +13,8 @@
 using namespace auto_smart_factory;
 
 TaskRequirements::TaskRequirements(
-		auto_smart_factory::PackageConfiguration pkgConfig) :
+		auto_smart_factory::PackageConfiguration pkgConfig)
+		:
 		pkgConfig(pkgConfig) {
 
 }
@@ -22,7 +23,7 @@ TaskRequirements::~TaskRequirements() {
 }
 
 bool TaskRequirements::isLegalRobot(
-		const auto_smart_factory::RobotConfiguration &robotConfig) const {
+		const auto_smart_factory::RobotConfiguration& robotConfig) const {
 	return pkgConfig.weight <= robotConfig.max_load;
 }
 
@@ -38,7 +39,7 @@ auto_smart_factory::TrayState TaskRequirements::getTrayState(
 	GetTrayState srv;
 	srv.request.trayId = trayId;
 
-	if (!client.call(srv)) {
+	if(!client.call(srv)) {
 		ROS_ERROR("Service call to get storage state failed!");
 	}
 

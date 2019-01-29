@@ -1,4 +1,0 @@
-uint32 tray_id
-bool end
----
-bool success

@@ -80,16 +80,19 @@ def create_tray_sensor(x, y, z, t_id, tray_type):
 
 def create_id_texts(tray, tray_id, x, y, z, orientation):
     # TODO: These below are all hard coded due to the auto assignment of trays regardless of their types. Those id assignment should be fixed !
-    if tray['type'] == 'input':
-        tray_id_txt = str(tray_id - 7)
-    if tray['type'] == 'output':
-        tray_id_txt = str(tray_id - 30)
-    if tray['type'] == 'storage':
-        tray_id_txt = str(tray_id - 11)
-    if tray['type'] == 'charging station':
-        tray_id_txt = str(tray_id + 1)
-
+    # if tray['type'] == 'input':
+    #     tray_id_txt = str(tray_id)
+    # if tray['type'] == 'output':
+    #     tray_id_txt = str(tray_id)
+    # if tray['type'] == 'storage':
+    #     tray_id_txt = str(tray_id)
+    # if tray['type'] == 'charging station':
+    #     tray_id_txt = str(tray_id + 1)
+    if tray_id > 20:
+        tray_id = 20
+    tray_id_txt = str(tray_id)
     tray_id_text = PassiveObject('tray_labels/tray_' + tray_id_txt + '.blend', 'Text')
+    #print(tray_id_text)
     # put the text with an offset so that it is on the floor right in front of the tray
     if orientation == -90:
         y -= 0.50
@@ -107,7 +110,7 @@ def create_id_texts(tray, tray_id, x, y, z, orientation):
     tray_id_text.rotate(0.0, 0.0, math.radians(orientation + 90))
 
 
-def create_tray(tray_id, tray, simply_flag):
+def create_tray(tray_id, typeCnt, tray, simply_flag):
     # determine model
     if tray['type'] == 'input':
         tray_model_file = 'input_tray.blend'
@@ -129,7 +132,7 @@ def create_tray(tray_id, tray, simply_flag):
     create_tray_sensor(tray['x'], tray['y'], 0.28, tray_id, tray['type']) # 0.3
 
     # add ids of trays
-    create_id_texts(tray, tray_id, tray['x'], tray['y'], 0, tray['orientation'])
+    create_id_texts(tray, typeCnt, tray['x'], tray['y'], 0, tray['orientation'])
 
 def create_conveyor(map_config):
     for conveyor in map_config['human_robot_collaboration']['conveyors']:
@@ -240,13 +243,13 @@ def rotate_point(x, y, angle):
     yn = y * math.cos(angle) + x * math.sin(angle)
     return (xn, yn)
 
-def create_charging_station(tray_id, tray):
+def create_charging_station(tray_id, typeCnt, tray):
     # create charging station object
     charging_station = PassiveObject('charging_station.blend', 'ChargingStation')
     charging_station.translate(tray['x'], tray['y'], 0.0)
     angle = math.radians(tray['orientation'])
     charging_station.rotate(0.0, 0.0, angle)
-    create_id_texts(tray, tray_id, tray['x'], tray['y'], 0, tray['orientation'])
+    create_id_texts(tray, typeCnt, tray['x'], tray['y'], 0, tray['orientation'])
 
     # define charging zone
     charging_zone = Zone(type = 'Charging')
@@ -286,16 +289,27 @@ def setup_warehouse_map(map_config, robot_config, simplfy_flag):
     add_human_robot.create_human_and_robot(map_config)
 
     # create trays and charging stations (which are considered special type of trays)
+    inputCnt = 0
+    outputCnt = 0
+    storageCnt = 0
+    chargingCnt = 0
+
     for tray_id, tray in enumerate(map_config['trays']):
-
         if tray['type'] == 'charging station':
-            create_charging_station(tray_id, tray)
+            chargingCnt += 1
+            create_charging_station(tray_id, chargingCnt, tray)
 
-        #if tray['type'] == 'input':
-        #if tray['type'] == 'output':
-        #if tray['type'] == 'storage':
-        else:
-            create_tray(tray_id, tray, simplfy_flag)
+        if tray['type'] == 'input':
+            inputCnt += 1
+            create_tray(tray_id, inputCnt, tray, simplfy_flag)
+        if tray['type'] == 'output':
+            outputCnt += 1
+            create_tray(tray_id, outputCnt, tray, simplfy_flag)
+        if tray['type'] == 'storage':
+            storageCnt += 1
+            create_tray(tray_id, storageCnt, tray, simplfy_flag)
+        # else:
+        #     create_tray(tray_id, tray, simplfy_flag)
 
 
     # create robots
@@ -314,3 +328,4 @@ def setup_warehouse_map(map_config, robot_config, simplfy_flag):
             kuka_jido.create_robot(robot['name'], robot['idle_position']['x'], robot['idle_position']['y'], math.radians(robot['idle_position']['orientation']), robot_config[type])
             continue
         print('Unknown robot type. Skip robot creation.')
+

@@ -12,11 +12,13 @@
 
 #include <auto_smart_factory/Tray.h>
 #include <auto_smart_factory/RequestStatus.h>
-#include <auto_smart_factory/CalculateETA.h>
 
 #include <task_planner/InputTaskRequirements.h>
 #include <task_planner/OutputTaskRequirements.h>
 #include <task_planner/TaskData.h>
+
+#include <auto_smart_factory/TaskAnnouncement.h>
+#include <auto_smart_factory/TaskRating.h>
 
 class TaskPlanner;
 
@@ -32,7 +34,7 @@ public:
 	 * @param taskRequirements The task requirements object defining the properties of this request
 	 * @param type String representation of the task type, e.g. 'input' or 'output'
 	 */
-	Request(TaskPlanner *tp, TaskRequirementsConstPtr taskRequirements, std::string type);
+	Request(TaskPlanner* tp, TaskRequirementsConstPtr taskRequirements, std::string type);
 
 	virtual ~Request();
 
@@ -69,6 +71,12 @@ public:
 	 */
 	TaskRequirementsConstPtr getRequirements() const;
 
+	/*
+	 * Receive response to an task announcement
+	 * @param TODO!!
+	*/
+	void receiveTaskResponse(const auto_smart_factory::TaskRating& tr);
+
 protected:
 	/**
 	 * Creates a list of possible source tray candidates for this request.
@@ -76,7 +84,7 @@ protected:
 	 * @return True if candidate list is non-empty
 	 */
 	bool findSourceCandidates(
-			std::vector<auto_smart_factory::Tray> &sourceTrayCandidates) const;
+			std::vector<auto_smart_factory::Tray>& sourceTrayCandidates) const;
 
 	/**
 	 * Creates a list of possible target tray candidates for this request.
@@ -84,7 +92,7 @@ protected:
 	 * @return True if candidate list is non-empty
 	 */
 	bool findTargetCandidates(
-			std::vector<auto_smart_factory::Tray> &targetTrayCandidates) const;
+			std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
 
 	/**
 	 * Creates a list of possible robot candidates using lists of source and target tray candidates.
@@ -94,24 +102,9 @@ protected:
 	 * @param targetTrayCandidates List of output tray candidates
 	 * @return True if robot candidate list is non-empty
 	 */
-	bool getRobotCandidates(std::vector<RobotCandidate> &robotCandidates,
-			const std::vector<auto_smart_factory::Tray> &sourceTrayCandidates,
-			const std::vector<auto_smart_factory::Tray> &targetTrayCandidates) const;
+	bool getRobotCandidates(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
+	                        const std::vector<auto_smart_factory::Tray>& targetTrayCandidates);
 
-    /**
-	 * Sends requests to ETAServer to get an estimated duration for a task.
-	 * @param robotId Id of the robot
-	 * @param cand Output of the robot response
-	 * @param sourceTrayCandidates Source tray candidates
-	 * @param targetTrayCandidates target tray candidates
-	 * @return
-	 * @todo eta server is to be implemented by the students. Please adjust the necessary
-	 * parts mentioned in function in the source (Request.cpp line 229) to successfully call a ROS
-	 * service to be implemented under ETA server. 
-	 */
-    bool getRobotETA(std::string robotId, RobotCandidate &cand,
-			const std::vector<auto_smart_factory::Tray> &sourceTrayCandidates,
-			const std::vector<auto_smart_factory::Tray> &targetTrayCandidates) const;
 
 	/**
 	 * Sends a request to one robot using source and target tray candidates
@@ -122,9 +115,9 @@ protected:
 	 * @param targetTrayCandidates target tray candidates
 	 * @return
 	 */
-	bool sendRobotRequest(std::string robotId, RobotCandidate &cand,
-			const std::vector<auto_smart_factory::Tray> &sourceTrayCandidates,
-			const std::vector<auto_smart_factory::Tray> &targetTrayCandidates) const;
+	bool sendRobotRequest(std::string robotId, RobotCandidate& cand,
+	                      const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
+	                      const std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
 
 	/**
 	 * Assign request/task to robot for includes the setup of the task in the robot.
@@ -139,7 +132,7 @@ protected:
 	auto_smart_factory::RequestStatus status;
 
 	/// reference to the task planner
-	TaskPlanner *taskPlanner;
+	TaskPlanner* taskPlanner;
 
 	/// requirements that need to be fulfilled
 	TaskRequirementsConstPtr requirements;
@@ -148,12 +141,26 @@ protected:
 	/// estimated duration (true) or just random choice (false)
 	bool useBestETA;
 
+	/// vector of robot candidates
+	std::vector<RobotCandidate*> robotCandidates;
+
+	/// a map of robots who answered with robot_id as key and their reject flag as value
+	std::map<std::string, bool> answeredRobots;
+
 protected:
 	/// used to generate unique ids
 	static unsigned int nextId;
 
 	/// generate new unique id
 	static unsigned int getNewId();
+
+	/// wait with a frequency until each robot has answered or a timeout occurs
+	void waitForRobotScores(ros::Duration timeout, ros::Rate frequency);
+
+	/// delete all robot candidates in the internal listing
+	void clearRobotCandidates(void);
 };
+
+typedef std::shared_ptr<Request> RequestPtr;
 
 #endif /* AUTO_SMART_FACTORY_SRC_TASK_PLANNER_REQUEST_H_ */

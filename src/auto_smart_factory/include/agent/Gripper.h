@@ -16,15 +16,16 @@ class Agent;
  * It magically just grips or releases packages in front of the gripper without handling 
  * any armature gestures.
  */
-class Gripper{
+class Gripper {
 public:
 	/**
 	 * Constructor that hands over the agents id and the publisher for the gripper state topic.
 	 * @param _agent: agent this gripper instance belongs to
 	 * @param gripper_state_pub: publisher for the gripper state topic
 	 */
-	Gripper(Agent* _agent, ros::Publisher *gripper_state_pub);
-	virtual ~Gripper();
+	Gripper(Agent* _agent, ros::Publisher* gripper_state_pub);
+
+	virtual ~Gripper() = default;
 
 	/**
 	 * Calls the gripper service to load or unload a package. 
@@ -42,19 +43,19 @@ protected:
 	 * @param sep: the char where the string should be splitted
 	 * @return list of substrings
 	 */
-	std::vector<std::string> split(std::string &text, char sep);
+	std::vector<std::string> split(std::string& text, char sep);
 
 	/// ROS Nodehandle
 	ros::NodeHandle n;
 
 	/// Publisher for the gripper state topic
-	ros::Publisher *gripperStatePub;
+	ros::Publisher* gripperStatePub;
 
-    /// The agent to which this gripper is attached to
-    Agent *agent;
+	/// The agent to which this gripper is attached to
+	Agent* agent;
 
-    /// ID of the agent the gripper belongs to
-	std::string agentID; 
+	/// ID of the agent the gripper belongs to
+	std::string agentID;
 
 	/// Actual gripped or attatched package - saved here till detatching
 	auto_smart_factory::Package package;

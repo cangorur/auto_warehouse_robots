@@ -22,7 +22,9 @@
  */
 class TaskData {
 public:
-	TaskData(const RobotCandidate &cand, TrayAllocatorPtr allocatedSource, TrayAllocatorPtr allocatedTarget, auto_smart_factory::Package pkg, ros::Time createTime);
+	TaskData(const RobotCandidate& cand, TrayAllocatorPtr allocatedSource, TrayAllocatorPtr allocatedTarget,
+	         auto_smart_factory::Package pkg, ros::Time createTime);
+
 	virtual ~TaskData();
 
 	/// The response of the robot containing robot id, estimated duration, source and target trays

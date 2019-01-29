@@ -10,14 +10,15 @@
 using namespace auto_smart_factory;
 
 InputTaskRequirements::InputTaskRequirements(PackageConfiguration pkgConfig,
-		unsigned int inputTrayId) :
+                                             unsigned int inputTrayId)
+		:
 		TaskRequirements(pkgConfig), inputTrayId(inputTrayId) {
 }
 
 InputTaskRequirements::~InputTaskRequirements() {
 }
 
-bool InputTaskRequirements::isLegalSourceTray(const Tray &tray) const {
+bool InputTaskRequirements::isLegalSourceTray(const Tray& tray) const {
 	bool legal = true;
 
 	// is desired input tray
@@ -26,7 +27,7 @@ bool InputTaskRequirements::isLegalSourceTray(const Tray &tray) const {
 	// is input tray
 	legal &= (tray.type == "input");
 
-	if (!legal) {
+	if(!legal) {
 		return false;
 	}
 
@@ -48,7 +49,7 @@ bool InputTaskRequirements::isLegalSourceTray(const Tray &tray) const {
 	return legal;
 }
 
-bool InputTaskRequirements::isLegalTargetTray(const Tray &tray) const {
+bool InputTaskRequirements::isLegalTargetTray(const Tray& tray) const {
 	bool legal = true;
 
 	// is storage tray
@@ -57,7 +58,7 @@ bool InputTaskRequirements::isLegalTargetTray(const Tray &tray) const {
 	// is suitable
 	legal &= (pkgConfig.weight <= tray.max_load);
 
-	if (!legal) {
+	if(!legal) {
 		return false;
 	}
 
@@ -73,7 +74,7 @@ bool InputTaskRequirements::isLegalTargetTray(const Tray &tray) const {
 	return legal;
 }
 
-bool InputTaskRequirements::checkAllocatedSourceTray(const auto_smart_factory::Tray &tray) const {
+bool InputTaskRequirements::checkAllocatedSourceTray(const auto_smart_factory::Tray& tray) const {
 	bool legal = true;
 
 	// is desired input tray
@@ -82,7 +83,7 @@ bool InputTaskRequirements::checkAllocatedSourceTray(const auto_smart_factory::T
 	// is input tray
 	legal &= (tray.type == "input");
 
-	if (!legal) {
+	if(!legal) {
 		return false;
 	}
 
@@ -104,7 +105,7 @@ bool InputTaskRequirements::checkAllocatedSourceTray(const auto_smart_factory::T
 	return legal;
 }
 
-bool InputTaskRequirements::checkAllocatedTargetTray(const auto_smart_factory::Tray &tray) const {
+bool InputTaskRequirements::checkAllocatedTargetTray(const auto_smart_factory::Tray& tray) const {
 	bool legal = true;
 
 	// is storage tray
@@ -113,7 +114,7 @@ bool InputTaskRequirements::checkAllocatedTargetTray(const auto_smart_factory::T
 	// is suitable
 	legal &= (pkgConfig.weight <= tray.max_load);
 
-	if (!legal) {
+	if(!legal) {
 		return false;
 	}
 

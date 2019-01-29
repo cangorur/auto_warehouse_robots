@@ -31,14 +31,14 @@ public:
 	 * @param tray The tray to be checked
 	 * @return Result of the check
 	 */
-	virtual bool isLegalSourceTray(const auto_smart_factory::Tray &tray) const = 0;
+	virtual bool isLegalSourceTray(const auto_smart_factory::Tray& tray) const = 0;
 
 	/**
 	 * Checks if the specified tray is the legal target tray.
 	 * @param tray The tray to be checked
 	 * @return Result of the check
 	 */
-	virtual bool isLegalTargetTray(const auto_smart_factory::Tray &tray) const = 0;
+	virtual bool isLegalTargetTray(const auto_smart_factory::Tray& tray) const = 0;
 
 	/**
 	 * Checks if an allocated (reserved) tray still fulfills the requirements for the source tray.
@@ -46,7 +46,7 @@ public:
 	 * @param tray The allocated tray to be checked
 	 * @return Result of the check
 	 */
-	virtual bool checkAllocatedSourceTray(const auto_smart_factory::Tray &tray) const = 0;
+	virtual bool checkAllocatedSourceTray(const auto_smart_factory::Tray& tray) const = 0;
 
 	/**
 	 * Checks if an allocated (reserved) tray still fulfills the requirements for the target tray.
@@ -54,7 +54,7 @@ public:
 	 * @param tray The allocated tray to be checked
 	 * @return Result of the check
 	 */
-	virtual bool checkAllocatedTargetTray(const auto_smart_factory::Tray &tray) const = 0;
+	virtual bool checkAllocatedTargetTray(const auto_smart_factory::Tray& tray) const = 0;
 
 	/**
 	 * Checks if the robot is suitable for this task, i.e. the package weight is
@@ -62,7 +62,7 @@ public:
 	 * @param robotConfig Configuration of the robot
 	 * @return True if robot is suitable
 	 */
-	bool isLegalRobot(const auto_smart_factory::RobotConfiguration &robotConfig) const;
+	bool isLegalRobot(const auto_smart_factory::RobotConfiguration& robotConfig) const;
 
 	/**
 	 * This is only used to determine which request to send to the agent.
