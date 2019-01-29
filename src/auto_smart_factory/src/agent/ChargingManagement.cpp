@@ -27,7 +27,7 @@ bool ChargingManagement::isEnergyAvailable(double energy){
 }
 
 
-void ChargingManagement:: getAllChargingStations(){
+void ChargingManagement::getAllChargingStations(){
 
 	//Iterate through all the trays and separate out charging trays
 	for(int i = 0; i < warehouseConfig.trays.size(); i++) {
@@ -38,17 +38,23 @@ void ChargingManagement:: getAllChargingStations(){
 
 	//Fill charging stations vector
 
-	for(int i= 0; i<charging_trays.size(); i++){
+//	for(int i= 0; i<charging_trays.size(); i++){
 
 		//ID of charging station, same as iterator for now
-		charging_stations[i].id = i;
+//		charging_stations[i].id = i;
 
 		//Tray corresponding to charging station
-		charging_stations[i].Tray = charging_trays[i];
+//		charging_stations[i].Tray = charging_trays[i];
 
 		//All stations unoccupied
-		charging_stations[i].occupancy = false;
-	}
+//		charging_stations[i].occupancy = false;
+
+//		charging_stations[i].robot = {};
+
+//		charging_stations[i].rate = 0;
+
+
+//	}
 }
 
 
