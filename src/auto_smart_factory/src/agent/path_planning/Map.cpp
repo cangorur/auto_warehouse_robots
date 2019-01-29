@@ -271,7 +271,6 @@ visualization_msgs::Marker Map::getReservationVisualization(int ownerId, visuali
 	msg.scale.y = 1.f;
 	msg.scale.z = 1.f;
 
-	// Todo add custom robot color here
 	msg.color = color;
 	msg.color.a = 0.4;
 
