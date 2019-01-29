@@ -26,8 +26,6 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 	
 	thetaStarMap = ThetaStarMap(this, warehouseConfig.map_configuration.resolutionThetaStar);
 	reservations.clear();
-	
-	reservations.push_back(Rectangle(Point(5,5), Point(3,3), 0, ros::Time::now().toSec(), ros::Time::now().toSec() + ros::Duration(20).toSec(), 1));
 }
 
 bool Map::isInsideAnyInflatedObstacle(const Point& point) const {
@@ -257,7 +255,7 @@ visualization_msgs::Marker Map::getObstacleVisualization() {
 	return msg;
 }
 
-visualization_msgs::Marker Map::getReservationVisualization() {
+visualization_msgs::Marker Map::getReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type color) {
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";
 	msg.header.stamp = ros::Time::now();
@@ -274,15 +272,17 @@ visualization_msgs::Marker Map::getReservationVisualization() {
 	msg.scale.z = 1.f;
 
 	// Todo add custom robot color here
-	msg.color.r = 1.0f;
-	msg.color.g = 0.1f;
-	msg.color.b = 0.1f;
+	msg.color = color;
 	msg.color.a = 0.4;
 
 	geometry_msgs::Point p;
 	p.z = 0.f;
 	// Obstacles
 	for(const Rectangle& reservation : reservations) {
+		if(reservation.getOwnerId() != ownerId) {
+			continue;
+		}
+		
 		const Point* points = reservation.getPointsInflated();
 		// First triangle
 		p.x = points[0].x;

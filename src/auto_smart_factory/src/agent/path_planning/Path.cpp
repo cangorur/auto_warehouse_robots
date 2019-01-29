@@ -1,12 +1,9 @@
 #include <utility>
 #include <cmath>
 
+#include "Math.h"
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
-#include <include/agent/path_planning/Path.h>
-
-
-#include "Math.h"
 #include "agent/path_planning/Path.h"
 
 Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile) :
@@ -16,7 +13,7 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		hardwareProfile(hardwareProfile)
 {
 	if(nodes.size() != waitTimes.size()) {
-		std::cout << "ERROR: nodes.size() != waitTimes.size()" << std::endl;
+		ROS_ERROR("nodes.size() != waitTimes.size()");
 	}
 
 	// Turning time is considered as part of the following line segment.

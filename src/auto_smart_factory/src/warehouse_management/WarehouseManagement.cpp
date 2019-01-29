@@ -1,6 +1,6 @@
 #include <warehouse_management/WarehouseManagement.h>
-
 #include <tf/transform_datatypes.h>
+#include <include/warehouse_management/WarehouseManagement.h>
 
 WarehouseManagement::WarehouseManagement() {
 	ros::NodeHandle n;
@@ -306,7 +306,7 @@ void WarehouseManagement::receiveHeartbeat(auto_smart_factory::RobotHeartbeat hb
 	m2.scale.x = 2. * robotRadius;
 	m2.scale.y = 2. * robotRadius;
 	m2.scale.z = 2. * robotRadius;
-	m2.color = batteryLevelToColor(hb.battery_level);
+	m2.color = agentIdToColor(id);
 	m2.color.a = 1.;
 	m2.lifetime = ros::Duration(0);
 	m2.frame_locked = true;
@@ -324,9 +324,12 @@ void WarehouseManagement::receiveHeartbeat(auto_smart_factory::RobotHeartbeat hb
 	label.action = visualization_msgs::Marker::ADD;
 	label.scale.z = 0.3;
 	label.color.a = 1;
-	label.color.r = 1. - m.color.r;
-	label.color.b = 1. - m.color.b;
-	label.color.g = 1. - m.color.g;
+	//label.color.r = 1. - m.color.r;
+	//label.color.b = 1. - m.color.b;
+	//label.color.g = 1. - m.color.g;
+	label.color.r = 1.f;
+	label.color.g = 1.f;
+	label.color.b = 1.f;
 
 	if(hb.idle) {
 		label.text = std::to_string(id);
@@ -391,4 +394,48 @@ void WarehouseManagement::receiveTaskPlannerState(auto_smart_factory::TaskPlanne
 	}
 
 	ROS_INFO("--------------------------------------------------------");
+}
+
+std_msgs::ColorRGBA WarehouseManagement::agentIdToColor(int agentId) {
+	std_msgs::ColorRGBA color;
+	color.a = 1.f;
+	color.r = 0.f;
+	color.g = 0.f;
+	color.b = 0.f;
+
+	switch(agentId) {
+		case 1:
+			color.r = 1.f;
+			break;
+		case 2:
+			color.g = 1.f;
+			break;
+		case 3:
+			color.b = 1.f;
+			break;
+		case 4:
+			color.r = 1.f;
+			color.g = 0.5f;
+			break;
+		case 5:
+			color.r = 1.f;
+			color.b = 1.f;
+			break;
+		case 6:
+			color.g = 1.f;
+			color.b = 1.f;
+			break;
+		case 7:
+			color.r = 0.5f;
+			color.b = 1.f;
+			break;
+		case 8:
+			color.r = 0.5f;
+			color.g = 1.f;
+			break;
+
+		default:break;
+	}
+
+	return color;
 }

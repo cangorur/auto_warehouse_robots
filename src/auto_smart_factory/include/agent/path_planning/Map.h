@@ -33,7 +33,7 @@ public:
 
 	// Visualisation
 	visualization_msgs::Marker getObstacleVisualization();
-	visualization_msgs::Marker getReservationVisualization();
+	visualization_msgs::Marker getReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type color);
 
 	// Line of sight checks
 	bool isInsideAnyInflatedObstacle(const Point& point) const;	

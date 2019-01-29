@@ -81,6 +81,8 @@ public:
 	void update();
 
 	ros::Publisher* getVisualisationPublisher();
+	
+	static std_msgs::ColorRGBA agentIdToColor(int agentId);
 
 protected:
 
