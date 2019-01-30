@@ -46,7 +46,7 @@ void ChargingManagement::getAllChargingStations(){
 		}
 	}
 
-	ROS_INFO("[Charging Management]:Found (%d) Charging Stations !",charging_trays.size());
+	ROS_INFO("[Charging Management]:Found (%d) Charging Stations !",(unsigned int) charging_trays.size());
 
 	for(int i= 0; i<charging_trays.size(); i++){
 		ROS_INFO("[Charging Management]:Charging Station ID :%d, Position: x = %f, y = %f !",charging_trays[i].id, charging_trays[i].x, charging_trays[i].y );
