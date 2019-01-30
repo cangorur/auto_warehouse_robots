@@ -7,25 +7,7 @@
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotHeartbeat.h>
 #include "auto_smart_factory/Tray.h"
-
-class ChargingStation {
-public:
-	//ID of charging Station
-	uint8_t id;
-
-	//Corresponding Charging tray
-	auto_smart_factory::Tray Tray;
-
-	//Is occupied or not
-	bool occupancy;
-
-	//Assigned Robot
-	auto_smart_factory::Robot robot;
-
-	//Charging Rate //TODO??
-	float rate;
-
-};
+#include "agent/path_planning/Map.h"
 
 class Agent;
 /**
@@ -38,7 +20,7 @@ public:
 	 * Default constructor.
 	 * Sets up the initialize service.
 	 */
-	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration);
+	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration, Map* map);
 
 	virtual ~ChargingManagement();
 
@@ -52,7 +34,7 @@ public:
 	 * @param Energy consumption of all the tasks to be done
 	 * @returns Score multiplier LOWER IS BETTER
 	 */
-	float getScoreMultiplier(float cumulatedEnergyConsumption);
+	double getScoreMultiplier(float cumulatedEnergyConsumption);
 
 	/*
 	 * Get All Charging Stations
@@ -60,25 +42,16 @@ public:
 	void getAllChargingStations();
 
 	/*
-	 * Returns true if charging station is available, otherwise false
-	 * @param searchid: id of charging station
+	 * Find all possible paths to the nearest charging stations and then return the shortest one
 	 */
-	bool isChargingStationAvailable(uint8_t searchid);
+	Path getPathToNearestChargingStation(OrientedPoint start, double startingTime);
 
 	/*
-	 * Returns true if charging station is successfully reserved, otherwise false
-	 * @param reserveid: id of charging station
-	 * @param associated_robot: robot who is now associated with this charging station
+	 * Returns 100-Current Battery
 	 */
 
-	bool reserveChargingStation(uint8_t reserveid, auto_smart_factory::Robot associated_robot);
+	double getDischargedBattery();
 
-	/*
-	 * Returns true if charging station is successfully unreserved, otherwise false
-	 * @param reserveid: id of charging station
-	 */
-
-	bool unreserveChargingStation(uint8_t reserveid);
 
 
 private:
@@ -86,6 +59,9 @@ private:
 
 	//Agent ID from where the CM is called
 	std::string agentID;
+
+	//Map of the system
+	Map* map;
 
 	// information about the current warehouse map
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;
@@ -101,9 +77,6 @@ private:
 
 	//Vector of all the Charging Trays
 	std::vector <auto_smart_factory::Tray> charging_trays;
-
-	//Vector of all Charging Stations'
-	std::vector <ChargingStation> charging_stations;
 
 	//Current battery of the agent
 	double agentBatt;
