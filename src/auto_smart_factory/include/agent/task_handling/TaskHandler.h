@@ -45,7 +45,7 @@ class TaskHandler
 
 		Task* getCurrentTask(void);
 
-		float getBatteryConsumption(void);
+		double getBatteryConsumption(void);
 
 		double getDuration(void);
 

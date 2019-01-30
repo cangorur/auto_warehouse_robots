@@ -188,13 +188,21 @@ Task* TaskHandler::getCurrentTask() {
     return currentTask;
 }
 
-float TaskHandler::getBatteryConsumption() {
-    float batteryCons = 0.0;
+double TaskHandler::getBatteryConsumption() {
+    double batteryCons = 0.0;
     for(Task* t : queue) {
-        batteryCons += t->getBatteryConsumption();
+        if(t->isCharging()) {
+            batteryCons -= chargingManagement->getDischargedBattery();
+        } else {
+            batteryCons += t->getBatteryConsumption();
+        }
     }
     if(currentTask != nullptr) {
-        batteryCons += currentTask->getBatteryConsumption();
+        if(currentTask->isCharging()) {
+            batteryCons -= chargingManagement->getDischargedBattery();
+        } else {
+            batteryCons += currentTask->getBatteryConsumption();
+        }
     }
     return batteryCons;
 }
