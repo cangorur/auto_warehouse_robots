@@ -47,10 +47,6 @@ void ChargingManagement::getAllChargingStations(){
 	}
 
 	ROS_INFO("[Charging Management]:Found (%d) Charging Stations !",(unsigned int) charging_trays.size());
-
-	for(int i= 0; i<charging_trays.size(); i++){
-		ROS_INFO("[Charging Management]:Charging Station ID :%d, Position: x = %f, y = %f !",charging_trays[i].id, charging_trays[i].x, charging_trays[i].y );
-	}
 }
 
 Path ChargingManagement::getPathToNearestChargingStation(OrientedPoint start, double startingTime){
@@ -65,11 +61,6 @@ Path ChargingManagement::getPathToNearestChargingStation(OrientedPoint start, do
 
     //Sort paths according to their duration, lower is better
 	std::sort(paths.begin(), paths.end(), sortByDuration);
-
-	//Lists all paths
-    for(int i= 0; i< paths.size(); i++){
-		ROS_INFO("[Charging Management]:Path to Charging Station Rank :%d, Duration:%f !",i, paths[i].getDuration());
-	}
 
     return paths[0];
 }
