@@ -92,8 +92,7 @@ bool PackageGenerator::generateService(auto_smart_factory::NewPackageGenerator::
 			break; // means the requested tray is available
 		} else if(i == (selected.size() - 1)) {
 			res.success = false;
-			ROS_INFO("[package generator] The requested tray is not available: Type: %s || ID: %d",
-			         input_chosen ? "Input" : "Output", req.tray.id);
+			ROS_INFO("[package generator] The requested tray is not available: Type: %s || ID: %d", input_chosen ? "Input" : "Output", req.tray.id);
 			return false;
 		}
 	}
@@ -103,8 +102,7 @@ bool PackageGenerator::generateService(auto_smart_factory::NewPackageGenerator::
 			req.tray.id); // TODO: here will be updated to get the trays not only through their inputs but also their types !
 	if((tray.package_type != 0) && (tray.package_type != req.package.type_id)) {
 		res.success = false;
-		ROS_INFO("[package generator] The requested tray: %d does not support package type: %d", tray.id,
-		         req.package.type_id);
+		ROS_INFO("[package generator] The requested tray: %d does not support package type: %d", tray.id, req.package.type_id);
 		return false;
 	}
 
@@ -326,8 +324,7 @@ bool PackageGenerator::newPackageInputOnConveyor(auto_smart_factory::Tray tray, 
 		         package.id);
 		return false;
 	} else {
-		ROS_INFO("[package generator] Package ID with: %d and TYPE: %d was set to TRAY_ID:%d", package.id,
-		         package.type_id, tray.id);
+		ROS_INFO("[package generator] Package ID with: %d and TYPE: %d was set to TRAY_ID:%d", package.id, package.type_id, tray.id);
 	}
 
 	// move package
@@ -402,8 +399,7 @@ bool PackageGenerator::newPackageInput(auto_smart_factory::Tray tray, auto_smart
 		         package.id);
 		return false;
 	} else {
-		ROS_INFO("[package generator] Package ID with: %d and TYPE: %d was set to TRAY_ID:%d", package.id,
-		         package.type_id, tray.id);
+		ROS_INFO("[package generator] Package ID with: %d and TYPE: %d was set to TRAY_ID:%d", package.id, package.type_id, tray.id);
 	}
 
 	// move package
@@ -460,8 +456,7 @@ bool PackageGenerator::newPackageOutput(int output_tray_id,
 
 	if(client.call(srv)) {
 		if(srv.response.success) {
-			ROS_INFO("[package generator] New output request generated at tray %i!",
-			         output_tray_id);
+			ROS_INFO("[package generator] New output request generated at tray %i!", output_tray_id);
 			return true;
 		} else {
 			ROS_INFO("[package generator] Output tray %i is not available for an output request!", output_tray_id);
@@ -474,8 +469,7 @@ bool PackageGenerator::newPackageOutput(int output_tray_id,
 }
 
 void PackageGenerator::clearOutput(auto_smart_factory::TrayState tray_state) {
-	ROS_INFO("[package generator] Clear tray_id: %d, pkg%d_%d",
-	         tray_state.id, tray_state.package.type_id, tray_state.package.id);
+	ROS_INFO("[package generator] Clear tray_id: %d, pkg%d_%d", tray_state.id, tray_state.package.type_id, tray_state.package.id);
 	// reserve output tray
 	TrayAllocator allocatedOutputTray(tray_state.id);
 
@@ -495,8 +489,7 @@ void PackageGenerator::clearOutput(auto_smart_factory::TrayState tray_state) {
 		// wait for package to actually be moved
 		auto_smart_factory::TrayState outputTrayState = tray_state;
 		while(outputTrayState.occupied) {
-			ROS_INFO("[package generator] Output tray %d is still occupied. Wait for the package to be moved...",
-			         tray_state.id);
+			ROS_INFO("[package generator] Output tray %d is still occupied. Wait for the package to be moved...", tray_state.id);
 			ros::Duration(0.5).sleep();
 			outputTrayState = getTrayState(tray_state.id);
 		}

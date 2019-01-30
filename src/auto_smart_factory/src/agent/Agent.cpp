@@ -1,6 +1,10 @@
 #include "agent/Agent.h"
 #include "Math.h"
 
+#include <tf/transform_datatypes.h>
+#include <include/agent/Agent.h>
+#include "warehouse_management/WarehouseManagement.h"
+
 Agent::Agent(std::string agent_id) {
 	agentID = agent_id;
 	agentIdInt = std::stoi(agentID.substr(6, 1));
@@ -11,9 +15,6 @@ Agent::Agent(std::string agent_id) {
 	//setup init_agent service
 	pn.setParam(agentID, "~init");
 	init_srv = pn.advertiseService("init", &Agent::init, this);
-
-	visualisationPublisher = pn.advertise<visualization_msgs::Marker>("visualization_" + agent_id, 100);
-	vizPublicationTimer = pn.createTimer(ros::Duration(1), &Agent::publishVisualization, this);
 }
 
 Agent::~Agent() {
@@ -22,24 +23,25 @@ Agent::~Agent() {
 	this->obstacleDetection->~ObstacleDetection();
 	this->map->~Map();
 	this->chargingManagement->~ChargingManagement();
-
+	this->taskHandler->~TaskHandler();
+	this->reservationManager->~ReservationManager();
 }
 
 void Agent::update() {
 	if(initialized) {
-		//register at taskplanner if not already done
+		// Register at task planner if not already done
 		if(!registered && registerAgent()) {
 			setupTaskHandling();
 		}
-
-		//send heartbeat if the time has come to do so
 		if(isTimeForHeartbeat()) {
 			sendHeartbeat();
 		}
-
-		setState(true);
-
-		// TODO: Work on Task? or assign new one
+		
+		// Update Map and Reservations
+		reservationManager->update();
+				
+		/* Task Execution */
+		this->taskHandler->update();				
 	}
 }
 
@@ -61,6 +63,10 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	ros::NodeHandle pn("~");
 	warehouseConfig = warehouse_configuration;
 	robotConfig = robot_configuration;
+	
+	float maxTurningSpeedInDegree = Math::toDeg(robot_configuration.max_angular_vel);
+	hardwareProfile = new RobotHardwareProfile(robot_configuration.max_linear_vel, maxTurningSpeedInDegree, robot_configuration.discharging_rate, 0.f);
+	//ROS_INFO("[%s]: MaxSpeed: %f m/s | MaxTurningSpeed: %f deg/s", agentID.c_str(), robot_configuration.max_linear_vel,maxTurningSpeedInDegree);
 
 	if(!setupIdlePosition()) {
 		return false;
@@ -77,6 +83,12 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	// TODO: Below topic can give some hints (example information an agent may need). They are not published in any of the nodes
 	// this->collision_alert_sub = n.subscribe("/collisionAlert", 1, &Agent::collisionAlertCallback, this);
 
+	visualisationPublisher = pn.advertise<visualization_msgs::Marker>("visualization_" + agentID, 100, true);
+	vizPublicationTimer = pn.createTimer(ros::Duration(0.5f), &Agent::publishVisualisation, this); // in seconds
+	
+	reservationCoordination_pub = pn.advertise<auto_smart_factory::ReservationCoordination>("/reservation_coordination", 100, true);
+	reservationCoordination_sub = pn.subscribe("/reservation_coordination", 100, &Agent::reservationCoordinationCallback, this);
+
 	try {
 		this->motionPlanner = new MotionPlanner(this, this->robotConfig, &(this->motion_pub));
 		this->gripper = new Gripper(this, &(this->gripper_state_pub));
@@ -85,35 +97,37 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		this->obstacleDetection = new ObstacleDetection(agentID, *motionPlanner, robotConfig, warehouseConfig);
 		this->obstacleDetection->enable(false);
 
-		// Task Handler
-		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub));
-
-		// Charging MAnagement
-		this->chargingManagement = new ChargingManagement(this);
-
 		// Generate map
 		std::vector<Rectangle> obstacles;
 		for(auto o : warehouseConfig.map_configuration.obstacles) {
 			obstacles.emplace_back(Point(o.posX, o.posY), Point(o.sizeX, o.sizeY), o.rotation);
 		}
+		this->map = new Map(warehouseConfig, obstacles, hardwareProfile);
+
+		// Charging Management
+		this->chargingManagement = new ChargingManagement(this,this->warehouseConfig, this->map);
+
+		// Reservation Manager
+		reservationManager = new ReservationManager(&reservationCoordination_pub, map, agentIdInt, static_cast<int>(warehouse_configuration.robots.size()));
 		
-		this->map = new Map(warehouseConfig.map_configuration.width, warehouseConfig.map_configuration.height, warehouseConfig.map_configuration.margin, warehouseConfig.map_configuration.resolutionThetaStar, obstacles);
+		// Task Handler
+		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub), this->map, this->motionPlanner, this->gripper, this->chargingManagement, reservationManager);
 		
+		ROS_WARN("Finished Initialize [%s]", agentID.c_str());
 		return true;
 	} catch(...) {
 		ROS_ERROR("[%s]: Exception occured!", agentID.c_str());
 		return false;
 	}
-	ROS_WARN("Finished Initialize [%s]", agentID.c_str());
 }
 
 bool Agent::setupIdlePosition() {
-	for(int i = 0; i < warehouseConfig.idle_positions.size(); i++)
-		if(warehouseConfig.idle_positions[i].id == agentID) {
+	for(auto& idle_position : warehouseConfig.idle_positions)
+		if(idle_position.id == agentID) {
 
-			idlePosition.x = warehouseConfig.idle_positions[i].pose.x;
-			idlePosition.y = warehouseConfig.idle_positions[i].pose.y;
-			double rad = warehouseConfig.idle_positions[i].pose.theta / 180.0 * PI;
+			idlePosition.x = idle_position.pose.x;
+			idlePosition.y = idle_position.pose.y;
+			double rad = idle_position.pose.theta / 180.0 * PI;
 			idleOrientationPoint.x = idlePosition.x + cos(rad) * 1.0;
 			idleOrientationPoint.y = idlePosition.y + sin(rad) * 1.0;
 			return true;
@@ -124,11 +138,11 @@ bool Agent::setupIdlePosition() {
 
 bool Agent::registerAgent() {
 	std::string srv_name = "task_planner/register_agent";
-	ros::ServiceClient client = n.serviceClient<auto_smart_factory::RegisterAgent>(srv_name.c_str());
+	ros::ServiceClient client = n.serviceClient<auto_smart_factory::RegisterAgent>(srv_name);
 	auto_smart_factory::RegisterAgent srv;
 	srv.request.agent_id = agentID;
 	srv.request.robot_configuration = robotConfig;
-	ros::service::waitForService(srv_name.c_str());
+	ros::service::waitForService(srv_name);
 
 	// for testing register just one agent
 	//if (agentID.compare("robot_1") == 0 && client.call(srv)){
@@ -156,7 +170,7 @@ void Agent::setupTaskHandling() {
 	this->assign_task_srv = pn.advertiseService("assign_task", &Agent::assignTask, this);
 }
 
-void Agent::setState(bool idle) {
+void Agent::setIdle(bool idle) {
 	if((isIdle && !idle) || (!isIdle && idle)) {
 		isIdle = idle;
 		sendHeartbeat();
@@ -166,10 +180,7 @@ void Agent::setState(bool idle) {
 bool Agent::isTimeForHeartbeat() {
 	timeval time;
 	gettimeofday(&time, 0);
-	if(lastTimestamp == 0 || time.tv_sec - lastTimestamp >= breakDuration) {
-		return true;
-	}
-	return false;
+	return lastTimestamp == 0 || time.tv_sec - lastTimestamp >= breakDuration;
 }
 
 void Agent::sendHeartbeat() {
@@ -211,12 +222,10 @@ void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& ms
 			this->motionPlanner->start();
 			this->obstacleDetection->enable(true);
 		}
-
 	}
 }
 
-bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
-                       auto_smart_factory::AssignTask::Response& res) {
+bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_factory::AssignTask::Response& res) {
 	try {
 		if(isIdle) {
 			ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
@@ -225,65 +234,57 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req,
 			auto_smart_factory::Tray input_tray = getTray(req.input_tray);
 			auto_smart_factory::Tray storage_tray = getTray(req.storage_tray);
 
-			geometry_msgs::Point input_tray_position;
-			geometry_msgs::Point storage_tray_position;
-
-			input_tray_position.x = input_tray.x;
-			input_tray_position.y = input_tray.y;
-			storage_tray_position.x = storage_tray.x;
-			storage_tray_position.y = storage_tray.y;
-
 			ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
 			ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
 
 			// create Task and add it to task handler
-			// TODO: Add correct orientation
-			OrientedPoint sourcePos = OrientedPoint(input_tray.x, input_tray.y, 0.0);
-			OrientedPoint targetPos = OrientedPoint(storage_tray.x, storage_tray.y, 0.0);
-			// TODO: get Paths
-			Path sourcePath = Path({});
-			Path targetPath = Path({});
-			taskHandler->addTransportationTask(task_id, req.input_tray, sourcePos, req.storage_tray, targetPos, 
-					sourcePath, targetPath);
+			Path sourcePath;
+			Path targetPath;
+
+			Task* lastTask = taskHandler->getLastTask();
+			if(lastTask != nullptr){
+				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, lastTask->getEndTime());
+				targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration());
+				taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
+			} else {
+				// take the current position
+				double now = ros::Time::now().toSec();
+				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, now);
+				targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration());
+				taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
+			}			
 
 			initialTimeOfCurrentTask = ros::Time::now().toSec();
-			ROS_INFO("[%s]: Task %i successfully assigned at %.2f! Queue size is %i", agentID.c_str(), req.task_id, 
-					ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
+			ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
 			res.success = true;
 		} else {
-			ROS_WARN("[%s]: Is busy! - Task %i has not been assigned!",
-			         agentID.c_str(), req.task_id);
+			ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);
 			res.success = false;
 		}
 	} catch(std::out_of_range& e) {
 		// task does not exist
-		ROS_ERROR("[%s]: Attempted to assign inexistent task (specified id: %d)",
-		          agentID.c_str(), req.task_id);
+		ROS_ERROR("[%d]: Attempted to assign inexistent task (specified id: %d)", agentIdInt, req.task_id);
 		res.success = false;
 	}
 	return res.success;
 }
 
 auto_smart_factory::Tray Agent::getTray(unsigned int tray_id) {
-	for(int i = 0; i < warehouseConfig.trays.size(); i++)
-		if(tray_id == warehouseConfig.trays[i].id) {
-			return warehouseConfig.trays[i];
+	for(auto& tray : warehouseConfig.trays)
+		if(tray_id == tray.id) {
+			return tray;
 		}
-	ROS_ERROR("[%s]: Tray with id %u inexistent!",
-	          agentID.c_str(), tray_id);
+	ROS_ERROR("[%s]: Tray with id %u inexistent!", agentID.c_str(), tray_id);
 }
-
 
 void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 	position = msg.pose.position;
 	orientation = msg.pose.orientation;
 
-	if(this->motionPlanner->isEnabled()) {
-		// this->obstacleDetection->enable(true);
-		this->motionPlanner->update(position, 2*asin(orientation.z));
-	} else {
-		// this->obstacleDetection->enable(false);
-	}
+	// this->obstacleDetection->enable(true);
+	tf::Quaternion q;
+	tf::quaternionMsgToTF(orientation, q);
+	this->motionPlanner->update(position, tf::getYaw(q));
 }
 
 void Agent::laserCallback(const sensor_msgs::LaserScan& msg) {
@@ -300,14 +301,61 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 }
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
-	// ROS_WARN("[TaskHandler - %s] Received Task Announcement for Request %d!", agentID.c_str(), taskAnnouncement.request_id);
-	this->taskHandler->announcementCallback(taskAnnouncement);
+	// TODO: compute this for all 
+	std::vector< TrayScore* > scores;
+	double queuedDuration = taskHandler->getDuration();
+	double queuedBatteryConsumption = taskHandler->getBatteryConsumption();
+	for(uint32_t it_id : taskAnnouncement.start_ids){
+		for(uint32_t st_id : taskAnnouncement.end_ids){
+			// get Path
+			auto_smart_factory::Tray input_tray = getTray(it_id);
+			auto_smart_factory::Tray storage_tray = getTray(st_id);
+			Path sourcePath = Path();
+			if(taskHandler->getLastTask() != nullptr){
+				// take the last position of the last task
+				sourcePath = map->getThetaStarPath(taskHandler->getLastTask()->getTargetPosition(), input_tray, 0);
+			} else {
+				// take the current position
+				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, 0);
+			}
+			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, 0);
+			// get Battery consumption
+			double batCons = queuedBatteryConsumption + sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
+			// check battery consumption
+			if(chargingManagement->isEnergyAvailable(batCons)){
+				// get Path duration pickup and dropoff constants are ignored as every robot has to do them
+				double duration = queuedDuration + sourcePath.getDuration() + targetPath.getDuration();
+				// get score multiplier
+				double scoreFactor = chargingManagement->getScoreMultiplier(batCons);
+				// compute score
+				double score = (1/scoreFactor) * duration;
+				// add score to list
+				scores.push_back(new TrayScore(it_id, st_id, score));
+			}
+		}
+	}
+	if(!scores.empty()){
+		std::sort(scores.begin(), scores.end(),
+			[](TrayScore* first, TrayScore* second) 
+				{return first->score < second->score;}
+			);
+		TrayScore* best = scores.front();
+		// publish score
+		this->taskHandler->publishScore(taskAnnouncement.request_id, best->score, best->sourceTray, best->targetTray);
+		// clean list
+		for(TrayScore* s : scores){
+			delete s;
+		}
+		scores.clear();
+	} else {
+		// reject task
+		this->taskHandler->rejectTask(taskAnnouncement.request_id);
+	}
 }
 
 std::string Agent::getAgentID() {
 	return agentID;
 }
-
 
 int Agent::getAgentIdInt() {
 	return agentIdInt;
@@ -317,8 +365,6 @@ float Agent::getAgentBattery() {
 	return batteryLevel;
 }
 
-
-
 geometry_msgs::Point Agent::getCurrentPosition() {
 	return position;
 }
@@ -327,9 +373,21 @@ geometry_msgs::Quaternion Agent::getCurrentOrientation() {
 	return orientation;
 }
 
-void Agent::publishVisualization(const ros::TimerEvent& e) {
+OrientedPoint Agent::getCurrentOrientedPosition() const {
+	tf::Quaternion q;
+	tf::quaternionMsgToTF(orientation, q);
+	
+	return OrientedPoint(position.x, position.y, tf::getYaw(q));
+}
+
+void Agent::publishVisualisation(const ros::TimerEvent& e) {
 	if(map != nullptr) {
-		visualisationPublisher.publish(map->getVisualization());
+		visualisationPublisher.publish(map->getObstacleVisualization());
+		
+		auto reservationMsg = map->getReservationVisualization(agentIdInt, agentIdToColor(agentIdInt));
+		if(!reservationMsg.points.empty()) {
+			visualisationPublisher.publish(reservationMsg);
+		}
 	}
 }
 
@@ -337,3 +395,50 @@ ros::Publisher* Agent::getVisualisationPublisher() {
 	return &visualisationPublisher;
 }
 
+void Agent::reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg) {
+	reservationManager->reservationCoordinationCallback(msg);
+}
+
+std_msgs::ColorRGBA Agent::agentIdToColor(int agentId) {
+	std_msgs::ColorRGBA color;
+	color.a = 1.f;
+	color.r = 0.f;
+	color.g = 0.f;
+	color.b = 0.f;
+
+	switch(agentId) {
+		case 1:
+			color.r = 1.f;
+			break;
+		case 2:
+			color.g = 1.f;
+			break;
+		case 3:
+			color.b = 1.f;
+			break;
+		case 4:
+			color.r = 1.f;
+			color.g = 0.5f;
+			break;
+		case 5:
+			color.r = 1.f;
+			color.b = 1.f;
+			break;
+		case 6:
+			color.g = 1.f;
+			color.b = 1.f;
+			break;
+		case 7:
+			color.r = 0.5f;
+			color.b = 1.f;
+			break;
+		case 8:
+			color.r = 0.5f;
+			color.g = 1.f;
+			break;
+
+		default:break;
+	}
+
+	return color;
+}

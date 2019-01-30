@@ -4,10 +4,9 @@
 class OrientedPoint {
 public:
 	explicit OrientedPoint();
-
 	explicit OrientedPoint(float x, float y, float o);
 
-	virtual ~OrientedPoint();
+	virtual ~OrientedPoint() = default;
 
 	float x;
 	float y;

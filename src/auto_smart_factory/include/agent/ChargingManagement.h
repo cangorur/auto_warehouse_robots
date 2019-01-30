@@ -6,6 +6,8 @@
 #include <vector>
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotHeartbeat.h>
+#include "auto_smart_factory/Tray.h"
+#include "agent/path_planning/Map.h"
 
 class Agent;
 /**
@@ -18,30 +20,9 @@ public:
 	 * Default constructor.
 	 * Sets up the initialize service.
 	 */
-	ChargingManagement(Agent* agent);
+	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration, Map* map);
 
 	virtual ~ChargingManagement();
-
-private:
-
-	Agent* agent;
-
-	std::string agentID;
-
-	// Max energy level of the agent to participate in charging
-	float upperThreshohold = 70.00;
-
-	// Minimum energy level of the agent to participate in charging
-	float criticalMinimum = 15.00;
-
-	// Operating battery
-	float operatingBatt = upperThreshohold - criticalMinimum;
-
-	//Current battery of the agent
-	double agentBatt;
-
-	//Estimated energy of the agent after task and charging
-	float energyAfterTask;
 
 	/* Returns true if the agent can perform the task of given energy
 	 * @param energy: expected energy of the task
@@ -53,7 +34,57 @@ private:
 	 * @param Energy consumption of all the tasks to be done
 	 * @returns Score multiplier LOWER IS BETTER
 	 */
-	float getScoreMultiplier(float cumulatedEnergyConsumption);
+	double getScoreMultiplier(float cumulatedEnergyConsumption);
+
+	/*
+	 * Get All Charging Stations
+	 */
+	void getAllChargingStations();
+
+	/*
+	 * Find all possible paths to the nearest charging stations and then return the shortest one
+	 */
+	Path getPathToNearestChargingStation(OrientedPoint start, double startingTime);
+
+	/*
+	 * Returns 100-Current Battery
+	 */
+
+	double getDischargedBattery();
+
+
+
+private:
+	Agent* agent;
+
+	//Agent ID from where the CM is called
+	std::string agentID;
+
+	//Map of the system
+	Map* map;
+
+	// information about the current warehouse map
+	auto_smart_factory::WarehouseConfiguration warehouseConfig;
+
+	// Max energy level of the agent to participate in charging
+	float upperThreshold = 90.00;
+
+	// Energy level between upper and critical for non-linear score
+	float lowerThreshold = 35.00;
+
+	// Minimum energy level of the agent to participate in charging
+	float criticalMinimum = 10.00;
+
+	//Vector of all the Charging Trays
+	std::vector <auto_smart_factory::Tray> charging_trays;
+
+	//Current battery of the agent
+	double agentBatt;
+
+	//Estimated energy of the agent after task and charging
+	float energyAfterTask;
 };
+
+
 
 #endif /* AGENT_CHARGINGMANAGEMENT_H_ */

@@ -3,51 +3,67 @@
 
 #include <vector>
 
+#include "auto_smart_factory/Tray.h"
+#include <auto_smart_factory/WarehouseConfiguration.h>
 #include "agent/path_planning/Rectangle.h"
 #include "agent/path_planning/GridNode.h"
 #include "agent/path_planning/ThetaStarMap.h"
 #include "agent/path_planning/Path.h"
 #include "agent/path_planning/OrientedPoint.h"
-#include <auto_smart_factory/Tray.h>
-
-/*
-#include "Dubins/OrientationPoint.hpp"
-#include "Dubins/DubinsTrajectory.hpp"
-#include "PathFlowField.hpp"*/
+#include "agent/path_planning/RobotHardwareProfile.h"
+#include "agent/path_planning/TimedLineOfSightResult.h"
 
 class Map {
+	// For visualisation messages
+	static int visualisationId;
+	
 private:
 	float width;
 	float height;
 	float margin;
+	auto_smart_factory::WarehouseConfiguration warehouseConfig;
 	
 	std::vector<Rectangle> obstacles;
+	std::vector<Rectangle> reservations;
 	ThetaStarMap thetaStarMap;
+	RobotHardwareProfile* hardwareProfile;
 
 public:
 	Map() = default;
-	Map(float width, float height, float margin, float resolutionThetaStar, std::vector<Rectangle>& obstacles);
+	Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle> &obstacles, RobotHardwareProfile* hardwareProfile);
 
-	visualization_msgs::Marker getVisualization();
-	
+	// Visualisation
+	visualization_msgs::Marker getObstacleVisualization();
+	visualization_msgs::Marker getReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type color);
+
+	// Line of sight checks
 	bool isInsideAnyInflatedObstacle(const Point& point) const;	
-	bool isLineOfSightFree(const Point& pos1, const Point& pos2) const;
-	//bool isTrajectoryFree(DubinsTrajectory& trajectory) const;
+	bool isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const;
+	bool isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
+	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
+	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const;
 	
+	bool isPointInMap(const Point& pos) const;
 	Point getRandomFreePoint() const;
-	//OrientationPoint getRandomFreeOrientationPoint() const;
-	//OrientationPoint getRandomFreeOrientationPointAlongPath(PathFlowField& pathFlowField) const;
-	
-	Path getThetaStarPath(const Point& start, const Point& end);
+	OrientedPoint getPointInFrontOfTray(const auto_smart_factory::Tray& tray);
+
+	// Reservations
+	void deleteExpiredReservations(double time);
+	void addReservations(std::vector<Rectangle> newReservations);
+		
+	// Path queries
+	Path getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime);
+	Path getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime);
+	Path getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime);
+	Path getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime);
 	
 	// Getter
 	float getWidth() const;
 	float getHeight() const;
 	float getMargin() const;
-	
-	bool isPointInMap(const Point& pos) const;
-	
-	OrientedPoint getPointInFrontOfTray(const auto_smart_factory::Tray& tray);
+
+private:
+
 };
 
 

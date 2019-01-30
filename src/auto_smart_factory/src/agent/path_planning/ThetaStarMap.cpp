@@ -36,36 +36,13 @@ ThetaStarMap::ThetaStarMap(Map* map, float resolution) :
 		linkToNode(element.second, element.second.pos + Point(+ resolution, - resolution));
 		linkToNode(element.second, element.second.pos + Point(+ resolution, + resolution));
 	}
+	
+	ROS_INFO("[Theta*] Generated map with %d nodes", (int) nodes.size());
 }
-
-/*void ThetaStarMap::draw(sf::RenderWindow& renderWindow) {
-	sf::CircleShape circleShape(0.2f);
-	circleShape.setFillColor(sf::Color(200, 200, 200));
-	circleShape.setOrigin(0.2f, 0.2f);
-
-	for(const auto& element : nodes) {
-		if(DRAW_EDGES) {
-			sf::Vertex line[8 * 2];
-			sf::Color edgesColor = sf::Color(0, 255, 0, 40);
-			
-			int i = 0;
-			for(auto neighbour : element.second.neighbours) {
-				line[i] = sf::Vertex(element.second.pos, edgesColor);
-				line[i + 1] = sf::Vertex(neighbour->pos, edgesColor);
-				i += 2;
-			}
-
-			renderWindow.draw(line, static_cast<size_t>(i), sf::Lines);
-		}
-		
-		circleShape.setPosition(element.second.pos);
-		renderWindow.draw(circleShape);	
-	}
-}*/
 
 void ThetaStarMap::linkToNode(GridNode& node, Point targetPos) {
 	auto iter = nodes.find(targetPos);
-	if(iter != nodes.end() && map->isLineOfSightFree(node.pos, targetPos)) {
+	if(iter != nodes.end() && map->isStaticLineOfSightFree(node.pos, targetPos)) {
 		node.neighbours.push_back(&iter->second);
 	}
 }
@@ -90,6 +67,18 @@ const GridNode* ThetaStarMap::getNodeClosestTo(const Point& pos) const {
 	return nearestNode;
 }
 
-bool ThetaStarMap::isLineOfSightFree(const Point& pos1, const Point& pos2) const {
-	return map->isLineOfSightFree(pos1, pos2);
+bool ThetaStarMap::isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const {
+	return map->isStaticLineOfSightFree(pos1, pos2);
+}
+
+bool ThetaStarMap::isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
+	return map->isTimedLineOfSightFree(pos1, startTime, pos2, endTime);
+}
+
+TimedLineOfSightResult ThetaStarMap::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
+	return map->whenIsTimedLineOfSightFree(pos1, startTime, pos2, endTime);
+}
+
+bool ThetaStarMap::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const {
+	return map->isTimedConnectionFree(pos1, pos2, startTime, waitingTime, drivingTime);
 }

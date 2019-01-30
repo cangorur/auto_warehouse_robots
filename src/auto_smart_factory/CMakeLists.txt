@@ -96,6 +96,7 @@ add_message_files(
 		CollisionAction.msg
 		MapConfiguration.msg
 		Rectangle.msg
+		ReservationCoordination.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -248,12 +249,15 @@ add_executable(agent_node
 		src/agent/path_planning/Map.cpp
 		src/agent/path_planning/OrientedPoint.cpp
 		src/agent/path_planning/Path.cpp
-		src/agent/path_planning/PathPlanner.cpp
 		src/agent/path_planning/Point.cpp
 		src/agent/path_planning/Rectangle.cpp
 		src/agent/path_planning/ThetaStarGridNodeInformation.cpp
 		src/agent/path_planning/ThetaStarMap.cpp
 		src/agent/path_planning/ThetaStarPathPlanner.cpp
+		src/agent/path_planning/RobotHardwareProfile.cpp
+		src/agent/path_planning/TimedLineOfSightResult.cpp
+		src/agent/path_planning/ReservationManager.cpp
+		src/agent/path_planning/ReservationBid.cpp
 
 		src/agent/Agent.cpp
 		src/agent/AgentNode.cpp
@@ -264,10 +268,13 @@ add_executable(agent_node
 
 		src/agent/ChargingManagement.cpp
 
-		src/agent/TaskHandler.cpp
-		src/agent/Task.cpp
-		src/agent/TransportationTask.cpp
-		src/agent/ChargingTask.cpp
+		src/agent/task_handling/TaskHandler.cpp
+		src/agent/task_handling/Task.cpp
+		src/agent/task_handling/TransportationTask.cpp
+		src/agent/task_handling/ChargingTask.cpp
+		src/agent/task_handling/TrayScore.cpp
+
+		src/agent/PidController.cpp
 
 		src/Math.cpp
 		)

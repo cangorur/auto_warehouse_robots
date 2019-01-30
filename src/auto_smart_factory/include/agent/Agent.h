@@ -4,7 +4,8 @@
 #include "agent/MotionPlanner.h"
 #include "agent/Gripper.h"
 #include "agent/ObstacleDetection.h"
-#include "agent/TaskHandler.h"
+#include "agent/task_handling/TaskHandler.h"
+#include "agent/task_handling/TrayScore.h"
 #include "agent/ChargingManagement.h"
 
 #include <random>
@@ -35,8 +36,11 @@
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotConfiguration.h>
 #include <auto_smart_factory/CollisionAction.h>
-
+#include <auto_smart_factory/ReservationCoordination.h>
+#include <include/agent/path_planning/ReservationManager.h>
 #include "agent/path_planning/Map.h"
+#include "agent/path_planning/RobotHardwareProfile.h"
+
 
 // defines the task id type
 typedef uint32_t TaskId;
@@ -63,12 +67,13 @@ public:
 	/* Returns Battery of this agent */
 	float getAgentBattery();
 
-
 	/* Returns current position of this agent */
 	geometry_msgs::Point getCurrentPosition();
 
 	/* Returns current orientation of this agent */
 	geometry_msgs::Quaternion getCurrentOrientation();
+	
+	OrientedPoint getCurrentOrientedPosition() const;
 
 	/* Manages the current state of the agent and defines which actions to execute in order to
 	 * keep this agent doing what it is supposed to. E.g. publish the heartbeat at every step.
@@ -76,6 +81,8 @@ public:
 	void update();
 
 	ros::Publisher* getVisualisationPublisher();
+	
+	static std_msgs::ColorRGBA agentIdToColor(int agentId);
 
 protected:
 
@@ -84,8 +91,7 @@ protected:
 	/* Initializes this agent and sets up sensors & actuators.
 	 * @param warehouse_configuration: information about the current warehouse map
 	 * @param robot_configuration: information about the robot role this agent has */
-	bool initialize(auto_smart_factory::WarehouseConfiguration warehouse_configuration,
-	                auto_smart_factory::RobotConfiguration robot_configuration);
+	bool initialize(auto_smart_factory::WarehouseConfiguration warehouse_configuration, auto_smart_factory::RobotConfiguration robot_configuration);
 
 	/* Extracts the idle position of this agent from the warehouse config.
 	 * @return True if idle postion extracted successfully. */
@@ -101,7 +107,7 @@ protected:
 
 	/* Sets if this agent is idle or not and if the state has been changed it sends a heartbeat.
 	 * @param idle: whether to set to idle state */
-	void setState(bool idle);
+	void setIdle(bool idle);
 
 	/* Returns whether it's time for next heartbeat to send.
 	 * @return True if next heartbeat should be sended */
@@ -118,23 +124,6 @@ protected:
 	/* Resets the timer. */
 	void updateTimer();
 
-	/* Handles the idle state which leads to driving back to the robots idle position. */
-	void handleIdleState();
-
-	/* Store package service handler.
-	 * @param req Request object
-	 * @param res Response object
-	 * @return True if store package task calculation has been succesful */
-	bool storePackage(auto_smart_factory::StorePackage::Request& req,
-	                  auto_smart_factory::StorePackage::Response& res);
-
-	/* Retrieve package service handler.
-	 * @param req Request object
-	 * @param res Response object
-	 * @return True if retrieve package task calculation has been succesful */
-	bool retrievePackage(auto_smart_factory::RetrievePackage::Request& req,
-	                     auto_smart_factory::RetrievePackage::Response& res);
-
 	/* Assign task service handler. If agent is idle it replaces the current plan with the plan
 	 * corresponding to the given task, that has been calculated previously and should have
 	 * been stored before in the tasks list. This is service called by the Task Planner, thru
@@ -142,8 +131,7 @@ protected:
 	 * @param req Request object
 	 * @param res Request object
 	 * @return True if the task has successfully been assigned */
-	bool assignTask(auto_smart_factory::AssignTask::Request& req,
-	                auto_smart_factory::AssignTask::Response& res);
+	bool assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_factory::AssignTask::Response& res);
 
 	/* Returns the tray with the given tray id.
 	 * @param tray_id: id of the specified tray
@@ -169,12 +157,14 @@ protected:
 	**/
 	void collisionAlertCallback(const auto_smart_factory::CollisionAction& msg);
 	
-	void publishVisualization(const ros::TimerEvent& e);
+	void publishVisualisation(const ros::TimerEvent& e);
 
 	// Task Handler
 	void announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement);
 	
-	
+	// Reservation coordination
+	void reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg);
+
 	// ROS Nodehandle
 	ros::NodeHandle n;
 
@@ -184,6 +174,8 @@ protected:
 	
 	///////////////////////////////////////////////////////////
 	Map* map;
+	
+	RobotHardwareProfile* hardwareProfile;
 	
 	// information about the current warehouse map
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;
@@ -211,6 +203,12 @@ protected:
 
 	// Flag that shows if the robot is currently in idle state or not
 	bool isIdle = true;
+
+	// Publisher/Subscriber for ReservationCoordination
+	ReservationManager* reservationManager;
+	
+	ros::Publisher reservationCoordination_pub;
+	ros::Subscriber reservationCoordination_sub;
 
 	// Server for initialization request
 	ros::ServiceServer init_srv;
@@ -322,8 +320,7 @@ protected:
 	geometry_msgs::Quaternion sample_orientation;
 
 	// Stores the time when the current task was assigned to the agent
-	float initialTimeOfCurrentTask = -1.0;
-
+	double initialTimeOfCurrentTask = -1.0;
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_AGENT_H_ */

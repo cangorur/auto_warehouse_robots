@@ -1,5 +1,7 @@
 #include <cmath>
 #include <time.h>
+#include <include/Math.h>
+
 
 #include "Math.h"
 #include "agent/path_planning/Point.h"
@@ -20,6 +22,10 @@ float Math::getRandom(float min, float max) {
 
 float Math::dotProduct(const Point& v1, const Point& v2) {
 	return v1.x*v2.x + v1.y*v2.y;
+}
+
+float Math::crossProduct(const Point& v1, const Point& v2) {
+	return v1.x*v2.y - v1.y*v2.x;
 }
 
 Point Math::rotateVector(const Point& v, float angle) {
@@ -92,23 +98,6 @@ bool Math::doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, con
 	return s > 0.f && s < 1.f && t > 0.f && t < 1.f;
 }
 
-bool Math::doesLineSegmentIntersectRectangle(const Point& lStart, const Point& lEnd, Rectangle& rectangle) {
-	bool intersectsAxisAligned = doesLineSegmentIntersectAxisAlignedRectangle(lStart, lEnd, rectangle);
-
-	if(rectangle.getIsAxisAligned()) {
-		return intersectsAxisAligned;
-	} else {
-		if(!intersectsAxisAligned) {
-			return false;
-		}
-
-		return (doLineSegmentsIntersect(lStart, lEnd, rectangle.getPointsInflated()[0], rectangle.getPointsInflated()[1]) ||
-		        doLineSegmentsIntersect(lStart, lEnd, rectangle.getPointsInflated()[1], rectangle.getPointsInflated()[2]) ||
-		        doLineSegmentsIntersect(lStart, lEnd, rectangle.getPointsInflated()[2], rectangle.getPointsInflated()[3]) ||
-		        doLineSegmentsIntersect(lStart, lEnd, rectangle.getPointsInflated()[3], rectangle.getPointsInflated()[0]));
-	}
-}
-
 float Math::getRotation(const Point& v) {
 	if(v.x != 0 || v.y != 0) {
 		double d = (std::atan2(v.y, v.x) * TO_DEG);
@@ -127,65 +116,6 @@ float Math::toRad(float angle) {
 
 float Math::toDeg(float angle) {
 	return angle * TO_DEG;
-}
-
-bool Math::doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, Rectangle& rectangle) {
-	// Find min and max X for the segment
-	float minX = lStart.x;
-	float maxX = lEnd.x;
-
-	if(lStart.x > lEnd.x) {
-		minX = lEnd.x;
-		maxX = lStart.x;
-	}
-
-	// Find the intersection of the segment's and rectangle's x-projections
-	if(minX < rectangle.getMinXInflated()) {
-		minX = rectangle.getMinXInflated();
-	}
-	if(maxX > rectangle.getMaxXInflated()) {
-		maxX = rectangle.getMaxXInflated();
-	}
-
-	// If their projections do not intersect return false
-	if(minX > maxX) {
-		return false;
-	}
-
-	// Find corresponding min and max Y for min and max X we found before
-	float minY = lStart.y;
-	float maxY = lEnd.y;
-
-	float dx = lEnd.x - lStart.x;
-
-	if(std::fabs(dx) > 0.0000001f) {
-		float a = (lEnd.y - lStart.y) / dx;
-		float b = lStart.y - a * lStart.x;
-		minY = a * minX + b;
-		maxY = a * maxX + b;
-	}
-
-	if(minY > maxY) {
-		float tmp = maxY;
-		maxY = minY;
-		minY = tmp;
-	}
-
-	// Find the intersection of the segment's and rectangle's y-projections
-	if(maxY > rectangle.getMaxYInflated()) {
-		maxY = rectangle.getMaxYInflated();
-	}
-
-	if(minY < rectangle.getMinYInflated()) {
-		minY = rectangle.getMinYInflated();
-	}
-
-	// If Y-projections do not intersect return false
-	if(minY > maxY) {
-		return false;
-	}
-
-	return true;
 }
 
 float Math::projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
@@ -208,6 +138,42 @@ float Math::getDistanceToLineSegment(const Point& lStart, const Point& lEnd, con
 	} else {
 		return getDistance(point, lStart + t * line);
 	}
+}
+
+int Math::getDirectionToLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
+	Point nEnd = lEnd - lStart;
+	Point nPoint = point - lStart;
+	float cP = crossProduct(nEnd, nPoint);
+
+	if(cP > 0)
+		return 1;
+	
+	if(cP < 0)
+		return -1;
+	
+	return 0;
+}
+
+float Math::getDistanceToLine(const Point& lStart, const Point& lEnd, const Point& point) {
+	Point line = lEnd - lStart;
+	Point startToPoint = point - lStart;
+	float lengthSquared = getDistanceSquared(lStart, lEnd);
+	float t = dotProduct(line, startToPoint) / lengthSquared;
+
+
+	return getDistance(point, lStart + t * line);
+}
+
+float Math::getAngleBetweenVectors(const Point& v1, const Point& v2) {
+	return acos(dotProduct(v1, v2) / (getLength(v1)*getLength(v2)));
+}
+
+Point Math::getVectorFromOrientation(float o) {
+	return Point(cos(o), sin(o));
+}
+
+float Math::getOrientationFromVector(const Point& v) {
+	return std::atan2(v.y, v.x);
 }
 
 float Math::getAngleMedian(float a1, float a2) {
@@ -252,4 +218,118 @@ float Math::getAngleDifferenceInRad(float source, float target) {
 	}
 
 	return angle;
+}
+
+double Math::normalizeRad(double angle) {
+	if(angle > M_PI) {
+		angle = angle - 2*M_PI;
+	} else if(angle < -M_PI){
+		angle = angle + 2*M_PI;
+	}
+
+	return angle;
+}
+
+double Math::normalizeDegree(double angle) {
+	if(angle > 180) {
+		angle = angle - 360;
+	} else if(angle < -180){
+		angle = angle + 360;
+	}
+
+	return angle;
+}
+
+double Math::mapRange(double x, double in_min, double in_max, double out_min, double out_max) {
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+bool Math::doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle) {
+	// Find min and max X for the segment
+	float minX = lStart.x;
+	float maxX = lEnd.x;
+
+	if(lStart.x > lEnd.x) {
+		minX = lEnd.x;
+		maxX = lStart.x;
+	}
+
+	// Find the intersection of the segment's and rectangle's x-projections
+	if(minX < rectangle.getMinXInflated()) {
+		minX = rectangle.getMinXInflated();
+	}
+	if(maxX > rectangle.getMaxXInflated()) {
+		maxX = rectangle.getMaxXInflated();
+	}
+
+	// If their projections do not intersect return false
+	if(minX > maxX) {
+		return false;
+	}
+
+	// Find corresponding min and max Y for min and max X we found before
+	float minY = lStart.y;
+	float maxY = lEnd.y;
+
+	float dx = lEnd.x - lStart.x;
+
+	if(std::fabs(dx) > EPS) {
+		float a = (lEnd.y - lStart.y) / dx;
+		float b = lStart.y - a * lStart.x;
+		minY = a * minX + b;
+		maxY = a * maxX + b;
+	}
+
+	if(minY > maxY) {
+		float tmp = maxY;
+		maxY = minY;
+		minY = tmp;
+	}
+
+	// Find the intersection of the segment's and rectangle's y-projections
+	if(maxY > rectangle.getMaxYInflated()) {
+		maxY = rectangle.getMaxYInflated();
+	}
+
+	if(minY < rectangle.getMinYInflated()) {
+		minY = rectangle.getMinYInflated();
+	}
+
+	// If Y-projections do not intersect return false
+	if(minY > maxY) {
+		return false;
+	}
+
+	return true;
+}
+
+bool Math::doesLineSegmentIntersectNonAxisAlignedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle) {
+	const Point* rect = rectangle.getPointsInflated();
+
+	return (doLineSegmentsIntersect(lStart, lEnd, rect[0], rect[1]) ||
+	        doLineSegmentsIntersect(lStart, lEnd, rect[1], rect[2]) ||
+	        doLineSegmentsIntersect(lStart, lEnd, rect[2], rect[3]) ||
+	        doLineSegmentsIntersect(lStart, lEnd, rect[3], rect[0]) ||
+	        isPointInRectangle(lStart, rectangle) ||
+	        isPointInRectangle(lEnd, rectangle));
+}
+
+bool Math::isPointInRectangle(const Point& p, const Rectangle& rectangle) {
+	// https://math.stackexchange.com/a/190373
+	//(0<AM⋅AB<AB⋅AB)∧(0<AM⋅AD<AD⋅AD)
+	const Point* rect = rectangle.getPointsInflated();
+
+	Point ap = rect[0] - p;
+	Point ab = rect[0] - rect[1];
+	Point ad = rect[0] - rect[3];
+
+	return (0 < dotProduct(ap,ab) && dotProduct(ap,ab) < dotProduct(ab, ab)) && (0 < dotProduct(ap, ad) && dotProduct(ap, ad) < dotProduct(ad, ad));
+}
+
+bool Math::doesLineSegmentIntersectRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle) {
+	if(rectangle.getIsAxisAligned()) {
+		return doesLineSegmentIntersectAxisAlignedRectangle(lStart, lEnd, rectangle);
+	} else {
+		return doesLineSegmentIntersectNonAxisAlignedRectangle(lStart, lEnd, rectangle);
+	}
 }

@@ -2,7 +2,7 @@
 #define AGENT_TRANSPORTATIONTASK_H_
 
 #include "ros/ros.h"
-#include "agent/Task.h"
+#include "agent/task_handling/Task.h"
 #include "agent/path_planning/OrientedPoint.h"
 #include "agent/path_planning/Path.h"
 
@@ -10,8 +10,8 @@ class TransportationTask : public Task
 {
 	public:
 
-		explicit TransportationTask(unsigned int id, uint32_t sourceID, OrientedPoint sourcePos, 
-					uint32_t targetID, OrientedPoint targetPos, Path sourcePath, Path targetPath);
+		explicit TransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, 
+				Path sourcePath, Path targetPath, double startTime);
 
 		virtual ~TransportationTask();
 
@@ -21,11 +21,11 @@ class TransportationTask : public Task
 
 		OrientedPoint getSourcePosition();
 
-		Path* getPathToSource();
+		double getBatteryConsumption();
 
-		float getBatteryConsumption(void);
+		double getDuration();
 
-		float getDistance(void);
+		void setState(Task::State state);
 
 	protected:
 
@@ -36,10 +36,15 @@ class TransportationTask : public Task
 		uint32_t sourceId;
 		// source Tray position
 		OrientedPoint sourcePosition;
+		// 
+		double sourceDuration;
 
-		// Path to source
-		Path pathToSource;
+		double sourceBatCons;
 
+		// time to pick up a packet
+		const float pickUpTime = 0.0f;
+		// time to drop off a packet
+		const float dropOffTime = 0.0f;
 };
 
 #endif /* AGENT_TRANSPORTATIONTASK_H_ */

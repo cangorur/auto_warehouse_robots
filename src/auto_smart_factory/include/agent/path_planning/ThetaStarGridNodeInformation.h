@@ -6,11 +6,13 @@ class GridNode;
 class ThetaStarGridNodeInformation {
 public:
 	const GridNode* node;
-	float g;
+	double time;
 	ThetaStarGridNodeInformation* prev;
-	ThetaStarGridNodeInformation* expandedBy;
+
+	// This is ONLY for reversal path construction
+	double waitTimeAtPrev;
 	
-	ThetaStarGridNodeInformation(const GridNode* node, ThetaStarGridNodeInformation* prev, float g);
+	ThetaStarGridNodeInformation(const GridNode* node, ThetaStarGridNodeInformation* prev, double time);
 };
 
 

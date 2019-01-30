@@ -16,6 +16,8 @@ public:
 
     double getDistance(Position* target);
 
+	void update(double nx, double ny, double no, ros::Time nt);
+
 	double x;
 	double y;
 	double o;

@@ -31,13 +31,7 @@ Task::Task(unsigned int id, TaskData taskData)
 	state.requestCreateTime = taskData.createTime;
 	state.estimatedDuration = taskData.robotOffer.estimatedDuration;
 
-	ROS_INFO(
-			"[task %d] New task created: Robot %s carries package %d from tray %d to tray %d. Estimated duration is: %f sec",
-			getId(), state.robot.c_str(), state.package.id, state.sourceTray,
-			state.targetTray, state.estimatedDuration.toSec());
-}
-
-Task::~Task() {
+	ROS_INFO("[task %d] New task created: Robot %s carries package %d from tray %d to tray %d. Estimated duration is: %f sec", getId(), state.robot.c_str(), state.package.id, state.sourceTray, state.targetTray, state.estimatedDuration.toSec());
 }
 
 unsigned int Task::getId() const {
