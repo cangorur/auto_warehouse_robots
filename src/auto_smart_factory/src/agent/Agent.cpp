@@ -288,8 +288,7 @@ void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 }
 
 void Agent::laserCallback(const sensor_msgs::LaserScan& msg) {
-	ROS_DEBUG("[%s]: Laser callback: angle_min=%f, angle_max=%f, ranges_size=%lu",
-	          agentID.c_str(), msg.angle_min, msg.angle_max, msg.ranges.size());
+	ROS_DEBUG("[%s]: Laser callback: angle_min=%f, angle_max=%f, ranges_size=%lu", agentID.c_str(), msg.angle_min, msg.angle_max, msg.ranges.size());
 	if(this->obstacleDetection->isEnabled()) {
 		this->obstacleDetection->update(position, asin(orientation.z), msg);
 	}
