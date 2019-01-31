@@ -193,3 +193,11 @@ double Path::getStartTimeOffset() const {
 RobotHardwareProfile* Path::getRobotHardwareProfile() const {
 	return hardwareProfile;
 }
+
+float Path::getStartOrientation(){
+	return 0.0f;
+}
+
+float Path::getEndOrientation(){
+	return 0.0f;
+}
