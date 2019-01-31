@@ -245,18 +245,33 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 			if(lastTask != nullptr){
 				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, lastTask->getEndTime());
 				targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration());
-				taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
+				if(sourcePath.getDistance() > 0 && targetPath.getDistance() > 0) {
+					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
+					initialTimeOfCurrentTask = ros::Time::now().toSec();
+					// ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
+					res.success = true;
+				} else {
+					ROS_WARN("[%s] task %d can not be assigned, as source or target path has distance 0", agentID.c_str(), task_id);
+					res.success = false;
+				}
+				
 			} else {
 				// take the current position
 				double now = ros::Time::now().toSec();
 				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, now);
 				targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration());
-				taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
+				if(sourcePath.getDistance() > 0 && targetPath.getDistance() > 0){
+					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
+					initialTimeOfCurrentTask = ros::Time::now().toSec();
+					// ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
+					res.success = true;
+				} else {
+					ROS_WARN("[%s] task %d can not be assigned, as source or target path has distance 0", agentID.c_str(), task_id);
+					res.success = false;
+				}
 			}			
 
-			initialTimeOfCurrentTask = ros::Time::now().toSec();
-			// ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
-			res.success = true;
+			
 		} else {
 			// ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);
 			res.success = false;

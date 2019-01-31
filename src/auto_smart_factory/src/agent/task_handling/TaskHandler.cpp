@@ -40,8 +40,12 @@ void TaskHandler::update() {
                 std::pair<Path, uint32_t> pathToCS = this->chargingManagement->getPathToNearestChargingStation(
                     this->motionPlanner->getOrientedPoint(), now);
                 // add charging task
-                addChargingTask(pathToCS.second, pathToCS.first, now);
-                ROS_WARN("[%s] adding charging task while in idle state", agentId.c_str());
+                if(pathToCS.first.getDistance() > 0) {
+                    addChargingTask(pathToCS.second, pathToCS.first, now);
+                    ROS_WARN("[%s] adding charging task while in idle state", agentId.c_str());
+                } else {
+                    ROS_WARN("[%s] could not add charging task while idling, because its length is 0", agentId.c_str());
+                }
             }
         }
         nextTask();

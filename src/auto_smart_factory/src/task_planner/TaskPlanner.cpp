@@ -321,7 +321,7 @@ void TaskPlanner::startTask(TaskPtr task) {
 	// insert task into list of running tasks
 	auto res = runningTasks.insert(
 			std::pair<unsigned int, TaskPtr>(task->getId(), task));
-	ROS_WARN("in TaskPlanner::startTask");
+	// ROS_WARN("in TaskPlanner::startTask");
 	if(!res.second) {
 		ROS_FATAL(
 				"Starting new task failed because task with same id is already running!");
