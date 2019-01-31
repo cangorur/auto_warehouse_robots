@@ -6,7 +6,6 @@
 
 #include "agent/MotionPlanner.h"
 #include <cmath>
-#include <include/agent/MotionPlanner.h>
 
 
 MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
@@ -40,15 +39,18 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
+	/* Align towards a point or direction (orientation) */
 	if (mode == Mode::ALIGN) {
-		if (alignDirection == -1.0)
+		if (alignDirection == -1.0) {
 			turnTowards(alignTarget);
-		else
+		} else {
 			turnTowards(alignDirection);
+		}
 
 		return;
 	}
 
+	/* Check if the current target waypoint is reached and advance to next one or stop if it is the last one */
 	if (isWaypointReached()) {
 		if (!isCurrentPointLastPoint())	{
 			advanceToNextPathPoint();
@@ -59,21 +61,25 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		}
 	}
 
+	/* Turn towards target orientation on spot when curve angle is above turnThreshold */
 	if (mode == Mode::TURN || std::abs(getRotationToTarget(pos, currentTarget)) >= turnThreshold) {
-		mode = Mode::TURN;
 		turnTowards(currentTarget);
 		return;
 	}
 
 	if (previousTargetIndex >= 0 && pathObject.getDepartureTimes().at(previousTargetIndex) > ros::Time::now().toSec()) {
+		/* While waiting already turn into target direction to not waste time */
+		turnTowards(currentTarget);
+
+		/* If mode is driving, stop and go into WAIT mode until departure time is reached */
 		if (mode == Mode::PID || mode == Mode::READY) {
 			publishVelocity(0.0, 0.0);
+			mode = Mode::WAIT;
 		}
-		mode = Mode::WAIT;
 		return;
 	}
 
-
+	/* Follow the path using the pid controller */
 	followPath();
 }
 
@@ -94,6 +100,7 @@ void MotionPlanner::followPath() {
 }
 
 void MotionPlanner::turnTowards(Point target) {
+	mode = Mode::TURN;
 	double rotation = getRotationToTarget(pos, target);
 	if(std::abs(rotation) <= 0.1f) {
 		mode = Mode::PID;
@@ -139,7 +146,7 @@ void MotionPlanner::newPath(Path path) {
 	} else {
 		printf("[MotionPlanner - %s]: Got path with length 0", agentID.c_str());
 		mode = Mode::FINISHED;
-	}	
+	}
 }
 
 void MotionPlanner::advanceToNextPathPoint() {
