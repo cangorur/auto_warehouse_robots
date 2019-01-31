@@ -75,7 +75,7 @@ TaskData Request::allocateResources() {
 	// ROS_INFO("[request %d] Found %ld robot candidates.", status.id, robotCandidates.size());
 
 	// try one robot after the other until success
-	for(const RobotCandidate* cand : robotCandidates) {
+	for(const RobotCandidatePtr cand : robotCandidates) {
 		// ROS_INFO("[request %d] Allocating robots for %s Source tray id is: %d and target tray id is %d", status.id, cand->robotId.c_str(), cand->source.id, cand->target.id);
 		TrayAllocatorPtr sourceTray = TrayAllocator::allocateTray(cand->source.id);
 		TrayAllocatorPtr targetTray = TrayAllocator::allocateTray(cand->target.id);
@@ -206,7 +206,7 @@ void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 	}
 	if(!tr.reject){
 		// add robot as candidate
-		RobotCandidate* cand = new RobotCandidate;
+		RobotCandidatePtr cand = std::make_shared<RobotCandidate>();
 		cand->score = tr.score;
 		cand->robotId = tr.robot_id;
 		// ROS_INFO("[Request %d] looking for source tray %d and target tray %d", this->status.id, tr.start_id, tr.end_id);
@@ -228,7 +228,7 @@ bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates,
 	waitForRobotScores(ros::Duration(1), ros::Rate(10));
 
 	std::sort(robotCandidates.begin(), robotCandidates.end(),
-		          [](RobotCandidate* first, RobotCandidate* second) {
+		          [](RobotCandidatePtr first, RobotCandidatePtr second) {
 			          return first->score < second->score;
 		          });
 
@@ -254,8 +254,10 @@ void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){
 }
 
 void Request::clearRobotCandidates(void){
-	for(RobotCandidate* cand : robotCandidates){
-		delete cand;
+	for(RobotCandidatePtr cand : robotCandidates){
+		if(cand.unique()){
+			cand.reset();
+		}
 	}
 	robotCandidates.clear();
 }

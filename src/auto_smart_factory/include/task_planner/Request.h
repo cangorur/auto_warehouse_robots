@@ -142,7 +142,7 @@ protected:
 	bool useBestETA;
 
 	/// vector of robot candidates
-	std::vector<RobotCandidate*> robotCandidates;
+	std::vector<RobotCandidatePtr> robotCandidates;
 
 	/// a map of robots who answered with robot_id as key and their reject flag as value
 	std::map<std::string, bool> answeredRobots;
