@@ -383,7 +383,6 @@ bool TaskPlanner::idleRobotAvailable() const {
 
 void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 	// go through requests and get the one for which the response is intended:
-	ROS_INFO("Receiving score for Request %d; Reject is %d", tr.request_id, tr.reject);
 	for(RequestPtr& r : inputRequests){
 		if(r->getId() == tr.request_id){
 			r->receiveTaskResponse(tr);
@@ -396,7 +395,7 @@ void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 			return;
 		}
 	}
-	ROS_INFO("No request with id %d found", tr.request_id);
+	ROS_WARN("No request with id %d found", tr.request_id);
 }
 
 void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
