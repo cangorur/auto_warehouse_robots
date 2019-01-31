@@ -1,7 +1,7 @@
 #include <agent/ChargingManagement.h>
 #include "agent/Agent.h"
 
-bool sortByDuration(const Path &lhs, const Path &rhs) { return lhs.getDuration() < rhs.getDuration(); }
+bool sortByDuration(const std::pair<Path, uint32_t> &lhs, const std::pair<Path, uint32_t> &rhs) { return lhs.first.getDuration() < rhs.first.getDuration(); }
 
 
 
@@ -49,14 +49,14 @@ void ChargingManagement::getAllChargingStations(){
 	ROS_INFO("[Charging Management]:Found (%d) Charging Stations !",(unsigned int) charging_trays.size());
 }
 
-Path ChargingManagement::getPathToNearestChargingStation(OrientedPoint start, double startingTime){
+std::pair<Path, uint32_t> ChargingManagement::getPathToNearestChargingStation(OrientedPoint start, double startingTime){
 
 	//Vector for all paths found
-	std::vector<Path> paths;
+	std::vector<std::pair<Path, uint32_t>> paths;
 
 	//Find paths for all possible charging stations
 	for(int i= 0; i<charging_trays.size(); i++){
-		paths.push_back(map->getThetaStarPath(start,charging_trays[i], startingTime));
+		paths.push_back(std::make_pair(map->getThetaStarPath(start,charging_trays[i], startingTime), charging_trays[i].id));
 	}
 
     //Sort paths according to their duration, lower is better
@@ -85,3 +85,12 @@ double ChargingManagement::getScoreMultiplier(float cumulatedEnergyConsumption){
 }
 
 
+bool ChargingManagement::isChargingAppropriate(){
+	agentBatt = agent->getAgentBattery();
+	return (agentBatt <= upperThreshold);
+}
+
+bool ChargingManagement::isCharged(){
+	agentBatt = agent->getAgentBattery();
+	return (agentBatt <= 100.0f);
+}

@@ -24,13 +24,14 @@ public:
 
 	virtual ~ChargingManagement();
 
-	/* Returns true if the agent can perform the task of given energy
+	/* 
+	 * Returns true if the agent can perform the task of given energy
 	 * @param energy: expected energy of the task
 	 */
 	bool isEnergyAvailable(double energy);
 
 	/*
-	 * Score multiplier for current set of tasks +  charging
+	 * Score multiplier for current set of tasks + charging
 	 * @param Energy consumption of all the tasks to be done
 	 * @returns Score multiplier LOWER IS BETTER
 	 */
@@ -43,15 +44,26 @@ public:
 
 	/*
 	 * Find all possible paths to the nearest charging stations and then return the shortest one
+	 * @param start: The point where the robo will be when it starts to drive to the nearest charging tray
+	 * @param startingTime: the time at which the robot will start to drive to the nearest charging tray
+	 * @returns a pair of the path and the id of the selected tray
 	 */
-	Path getPathToNearestChargingStation(OrientedPoint start, double startingTime);
+	std::pair<Path, uint32_t> getPathToNearestChargingStation(OrientedPoint start, double startingTime);
 
 	/*
-	 * Returns 100-Current Battery
+	 * Return the current amount of discharged battery
 	 */
-
 	double getDischargedBattery();
 
+	/*
+	 * Returns if charging should be done
+	 */
+	bool isChargingAppropriate();
+
+	/*
+	 * Returns if the robot is sufficiently charged
+	 */
+	bool isCharged();
 
 
 private:
