@@ -232,6 +232,8 @@ void TaskPlanner::rescheduleEvent(const ros::TimerEvent& e) {
 }
 
 void TaskPlanner::resourceChangeEvent() {
+	return;
+	
 	ROS_INFO("[task planner] Resource change event!");
 
 	if(!idleRobotAvailable()) {
@@ -240,9 +242,8 @@ void TaskPlanner::resourceChangeEvent() {
 		return;
 	}
 	// first, check if any output request can be started
-	for(std::vector<RequestPtr>::iterator outputRequest = outputRequests.begin();
-	    outputRequest != outputRequests.end();) {
-
+	std::vector<RequestPtr>::iterator outputRequest = outputRequests.begin();
+	while(outputRequest != outputRequests.end()) {
 		ROS_INFO("[task planner] Checking output request %d.", (*outputRequest)->getId());
 
 		try {
@@ -250,8 +251,7 @@ void TaskPlanner::resourceChangeEvent() {
 			TaskData taskData = (*outputRequest)->allocateResources();
 
 			// allocation was successful, create task
-			TaskPtr outputTask = std::make_shared<Task>((*outputRequest)->getId(),
-			                                            taskData);
+			TaskPtr outputTask = std::make_shared<Task>((*outputRequest)->getId(), taskData);
 
 			// remove request from queue
 			outputRequest = outputRequests.erase(outputRequest);
@@ -259,18 +259,14 @@ void TaskPlanner::resourceChangeEvent() {
 			// start execution of task
 			startTask(outputTask);
 		} catch(std::runtime_error& e) {
-			ROS_DEBUG(
-					"[request %d] Resource allocation of output request failed: %s",
-					(*outputRequest)->getId(), e.what());
-
-			++outputRequest;
+			ROS_DEBUG("[request %d] Resource allocation of output request failed: %s", (*outputRequest)->getId(), e.what());
+			outputRequest++;
 		}
 	}
 
 	// then, check if any input request can be started
-	for(std::vector<RequestPtr>::iterator inputRequest = inputRequests.begin();
-	    inputRequest != inputRequests.end();) {
-
+	std::vector<RequestPtr>::iterator inputRequest = inputRequests.begin();
+	while(inputRequest != inputRequests.end()) {
 		ROS_INFO("[task planner] Checking input request %d.", (*inputRequest)->getId());
 
 		// remove input request if it is not pending anymore
@@ -279,7 +275,6 @@ void TaskPlanner::resourceChangeEvent() {
 
 			// remove request from queue
 			inputRequest = inputRequests.erase(inputRequest);
-
 			continue;
 		}
 
@@ -290,19 +285,15 @@ void TaskPlanner::resourceChangeEvent() {
 			TaskData taskData = (*inputRequest)->allocateResources();
 
 			// allocation was successful, create task
-			TaskPtr inputTask = std::make_shared<Task>((*inputRequest)->getId(),
-			                                           taskData);
+			TaskPtr inputTask = std::make_shared<Task>((*inputRequest)->getId(), taskData);
 			// remove request from queue
 			inputRequest = inputRequests.erase(inputRequest);
 			// start execution of task
 			startTask(inputTask);
 
 		} catch(std::runtime_error& e) {
-			ROS_DEBUG(
-					"[request %d] Resource allocation of input request failed: %s",
-					(*inputRequest)->getId(), e.what());
-
-			++inputRequest;
+			ROS_DEBUG("[request %d] Resource allocation of input request failed: %s", (*inputRequest)->getId(), e.what());
+			inputRequest++;
 		}
 	}
 }
