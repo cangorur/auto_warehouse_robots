@@ -372,6 +372,7 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 		if(lastTask != nullptr && !(lastTask->isCharging()) ) {
 			std::pair<Path, uint32_t> pathToCS = this->chargingManagement->getPathToNearestChargingStation(lastTask->getTargetPosition(), lastTask->getEndTime());
 			// add charging task
+			ROS_INFO("[Agent %d] Adding charging task because new task could not be taken", agentIdInt);
 			this->taskHandler->addChargingTask(pathToCS.second, pathToCS.first, lastTask->getEndTime());
 		}
 	}
