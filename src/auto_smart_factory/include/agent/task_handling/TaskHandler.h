@@ -45,7 +45,7 @@ class TaskHandler
 
 		Task* getCurrentTask(void);
 
-		double getBatteryConsumption(void);
+		double getEstimatedBatteryLevelAfterQueuedTasks(void);
 
 		double getDuration(void);
 

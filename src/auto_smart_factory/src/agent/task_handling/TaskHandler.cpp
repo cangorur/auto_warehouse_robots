@@ -66,19 +66,23 @@ TaskHandler::~TaskHandler(){
 
 void TaskHandler::addTransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, 
 				Path sourcePath, Path targetPath, double startTime) {
-    // create new task
-    TransportationTask* t = new TransportationTask(id, sourceID, targetID, sourcePath, targetPath, startTime);
+    if(sourcePath.getDistance() > 0 && targetPath.getDistance() > 0){
+        // create new task
+        TransportationTask* t = new TransportationTask(id, sourceID, targetID, sourcePath, targetPath, startTime);
 
-    // add task to list
-    queue.push_back(t);
+        // add task to list
+        queue.push_back(t);
+    }
 }
 
 void TaskHandler::addChargingTask(uint32_t targetID, Path targetPath, double startTime) {
-    // create new charging task
-    ChargingTask* t = new ChargingTask(targetID, targetPath, startTime);
+    if(targetPath.getDistance() > 0){
+        // create new charging task
+        ChargingTask* t = new ChargingTask(targetID, targetPath, startTime);
 
-    // add task to list
-    queue.push_back(t);
+        // add task to list
+        queue.push_back(t);
+    }
 }
 
 void TaskHandler::executeTask() {
@@ -206,23 +210,25 @@ Task* TaskHandler::getCurrentTask() {
     return currentTask;
 }
 
-double TaskHandler::getBatteryConsumption() {
-    double batteryCons = 0.0;
-    for(Task* t : queue) {
-        if(t->isCharging()) {
-            batteryCons -= chargingManagement->getDischargedBattery();
-        } else {
-            batteryCons += t->getBatteryConsumption();
-        }
-    }
+double TaskHandler::getEstimatedBatteryLevelAfterQueuedTasks() {
+	double estimatedBattery = chargingManagement->getCurrentBattery();
+
     if(currentTask != nullptr) {
         if(currentTask->isCharging()) {
-            batteryCons -= chargingManagement->getDischargedBattery();
+            estimatedBattery = 99.f;
         } else {
-            batteryCons += currentTask->getBatteryConsumption();
+            estimatedBattery -= currentTask->getBatteryConsumption();
+        }
+    }	
+    for(Task* t : queue) {
+        if(t->isCharging()) {
+            estimatedBattery = 99.f;
+        } else {
+            estimatedBattery -= t->getBatteryConsumption();
         }
     }
-    return batteryCons;
+ 
+    return estimatedBattery;
 }
 
 double TaskHandler::getDuration() {
