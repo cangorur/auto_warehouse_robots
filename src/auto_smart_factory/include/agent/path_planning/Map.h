@@ -27,10 +27,12 @@ private:
 	std::vector<Rectangle> reservations;
 	ThetaStarMap thetaStarMap;
 	RobotHardwareProfile* hardwareProfile;
+	
+	int ownerId;
 
 public:
-	Map() = default;
-	Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle> &obstacles, RobotHardwareProfile* hardwareProfile);
+	Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle> &obstacles, RobotHardwareProfile* hardwareProfile, int ownerId);
+	~Map() = default;
 
 	// Visualisation
 	visualization_msgs::Marker getObstacleVisualization();
@@ -57,10 +59,15 @@ public:
 	Path getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime);
 	Path getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime);
 	
+	bool isPointTargetOfAnotherRobot(OrientedPoint pos);
+	bool isPointTargetOfAnotherRobot(const auto_smart_factory::Tray& tray);
+	
 	// Getter
 	float getWidth() const;
 	float getHeight() const;
 	float getMargin() const;
+	
+	void listAllReservationsIn(Point p);
 
 private:
 

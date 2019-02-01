@@ -18,7 +18,13 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 	const GridNode* targetNode = map->getNodeClosestTo(Point(target));
 
 	if(startNode == nullptr || targetNode == nullptr) {
-		ROS_ERROR("Start or Target not in ThetaStar map!");
+		if(startNode == nullptr) {
+			ROS_FATAL("StartPoint %f/%f is no in theta* map!", start.x, start.y);
+		}
+		if(targetNode == nullptr) {
+			ROS_FATAL("TargetPoint %f/%f is no in theta* map!", target.x, target.y);
+		}
+		exit(1);
 		return Path();
 	}
 
@@ -114,8 +120,6 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 					neighbour->prev = newPrev;
 					neighbour->waitTimeAtPrev = waitingTime;
 					queue.push(std::make_pair(neighbour->time + heuristic, neighbour));
-
-					//printf("Added %.1f/%.1f with time %f\n", neighbour->node->pos.x, neighbour->node->pos.y, neighbour->time);
 				}
 			}
 		}
@@ -124,7 +128,10 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 	if(targetFound) {
 		return constructPath(startingTime, targetInformation);
 	} else {
-		ROS_WARN("No path found!");
+		ROS_FATAL("No path found from node %f/%f to node %f/%f!", startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
+		map->listAllReservationsIn(targetNode->pos);
+		
+		exit(1);
 		return Path();
 	}
 }

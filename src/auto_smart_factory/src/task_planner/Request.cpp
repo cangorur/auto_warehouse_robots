@@ -179,7 +179,7 @@ bool Request::allocateRobot(RobotCandidate candidate) const {
 	srv.request.storage_tray = candidate.target.id;
 
 	if(assignTaskClient.call(srv)) {
-		ROS_FATAL("[request %d] was assigned to %s with Task score %.2f", status.id, candidate.robotId.c_str(), candidate.score);
+		ROS_INFO("[request %d] was assigned to %s with Task score %.2f", status.id, candidate.robotId.c_str(), candidate.score);
 		return srv.response.success;
 	}
 

@@ -35,9 +35,9 @@ void TaskHandler::update() {
     if (!isTaskInExecution()) {
         if (isIdle()) {
             // check battery status,
-            if(this->chargingManagement->isChargingAppropriate()) {
+            if(chargingManagement->isChargingAppropriate()) {
                 double now = ros::Time::now().toSec();
-                std::pair<Path, uint32_t> pathToCS = this->chargingManagement->getPathToNearestChargingStation(this->motionPlanner->getOrientedPoint(), now);
+                std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(motionPlanner->getOrientedPoint(), now);
                 // add charging task
                 if(pathToCS.first.getDistance() > 0) {
                     ROS_WARN("[%s] adding charging task while in idle state", agentId.c_str());

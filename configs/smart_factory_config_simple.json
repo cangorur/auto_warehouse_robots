@@ -3,7 +3,7 @@
         "width" : 16,
         "height" : 16,
 	"margin" : 0.5,
-	"theta_star_resolution" : 0.5
+	"theta_star_resolution" : 0.125
     },
     "tray_geometry" : {
         "width" : 0.5,

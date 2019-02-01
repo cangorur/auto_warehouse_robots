@@ -1,3 +1,6 @@
+
+#include <include/agent/path_planning/ThetaStarMap.h>
+
 #include "Math.h"
 
 #include "ros/ros.h"
@@ -81,4 +84,8 @@ TimedLineOfSightResult ThetaStarMap::whenIsTimedLineOfSightFree(const Point& pos
 
 bool ThetaStarMap::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const {
 	return map->isTimedConnectionFree(pos1, pos2, startTime, waitingTime, drivingTime);
+}
+
+void ThetaStarMap::listAllReservationsIn(Point p) {
+	map->listAllReservationsIn(p);
 }

@@ -16,29 +16,21 @@ TaskPlanner::TaskPlanner() {
 	ROS_INFO("Task planner created...");
 }
 
-TaskPlanner::~TaskPlanner() {
-}
-
-bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
-                             InitTaskPlannerResponse& res) {
+bool TaskPlanner::initialize(InitTaskPlannerRequest& req, InitTaskPlannerResponse& res) {
 	ros::NodeHandle n;
 	ros::NodeHandle pn("~");
 
 	// build package config map
 	for(auto config : req.package_configurations) {
-		if(!pkgConfigs.insert(
-				std::pair<unsigned int, PackageConfiguration>(config.id,
-				                                              config)).second) {
+		if(!pkgConfigs.insert(std::pair<unsigned int, PackageConfiguration>(config.id, config)).second) {
 			ROS_FATAL("Package configuration IDs are not unique!");
 			return false;
 		}
 	}
 
 	// build tray config map
-
 	for(auto config : req.warehouse_configuration.trays) {
-		if(!trayConfigs.insert(
-				std::pair<unsigned int, Tray>(config.id, config)).second) {
+		if(!trayConfigs.insert(std::pair<unsigned int, Tray>(config.id, config)).second) {
 			ROS_FATAL("Tray configuration IDs are not unique!");
 			return false;
 		}
@@ -46,9 +38,7 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 
 	// build robot config map
 	for(auto config : req.robot_configurations) {
-		if(!robotConfigs.insert(
-				std::pair<std::string, RobotConfiguration>(config.type_name,
-				                                           config)).second) {
+		if(!robotConfigs.insert(std::pair<std::string, RobotConfiguration>(config.type_name, config)).second) {
 			ROS_FATAL("Robot configuration IDs are not unique!");
 			return false;
 		}
@@ -319,12 +309,9 @@ void TaskPlanner::resourceChangeEvent() {
 
 void TaskPlanner::startTask(TaskPtr task) {
 	// insert task into list of running tasks
-	auto res = runningTasks.insert(
-			std::pair<unsigned int, TaskPtr>(task->getId(), task));
-	// ROS_WARN("in TaskPlanner::startTask");
+	auto res = runningTasks.insert(std::pair<unsigned int, TaskPtr>(task->getId(), task));
 	if(!res.second) {
-		ROS_FATAL(
-				"Starting new task failed because task with same id is already running!");
+		ROS_FATAL("Starting new task failed because task with same id is already running!");
 		return;
 	}
 

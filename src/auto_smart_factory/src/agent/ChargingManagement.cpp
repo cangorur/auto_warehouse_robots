@@ -34,6 +34,10 @@ std::pair<Path, uint32_t> ChargingManagement::getPathToNearestChargingStation(Or
 	
 	//Find paths for all possible charging stations
 	for(auto& charging_tray : charging_trays) {
+		if(map->isPointTargetOfAnotherRobot(charging_tray)) {
+			continue;
+		}		
+		
 		Path path = map->getThetaStarPath(start, charging_tray, startingTime);
 		
 		if(path.getDuration() < nearestStationDuration) {

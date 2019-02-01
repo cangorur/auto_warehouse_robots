@@ -7,7 +7,8 @@
 
 Agent::Agent(std::string agent_id) {
 	agentID = agent_id;
-	agentIdInt = std::stoi(agentID.substr(6, 1));
+	std::string idStr = agentID.substr(agentID.find('_') + 1);
+	agentIdInt = std::stoi(idStr);
 	position.z = -1;
 	map = nullptr;
 
@@ -28,7 +29,7 @@ Agent::~Agent() {
 }
 
 void Agent::update() {
-	if(initialized) {
+	if(isInitializedCompletely()) {
 		// Register at task planner if not already done
 		if(!registered && registerAgent()) {
 			setupTaskHandling();
@@ -68,9 +69,6 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	hardwareProfile = new RobotHardwareProfile(robot_configuration.max_linear_vel, maxTurningSpeedInDegree, robot_configuration.discharging_rate, 0.f);
 	//ROS_INFO("[%s]: MaxSpeed: %f m/s | MaxTurningSpeed: %f deg/s", agentID.c_str(), robot_configuration.max_linear_vel,maxTurningSpeedInDegree);
 
-	if(!setupIdlePosition()) {
-		return false;
-	}
 	this->pose_sub = n.subscribe(agentID + "/pose", 1, &Agent::poseCallback, this);
 	this->battery_sub = n.subscribe(agentID + "/battery", 1, &Agent::batteryCallback, this);
 	this->hokuyo_sub = n.subscribe(agentID + "/laser_scanner", 1, &Agent::laserCallback, this);
@@ -102,7 +100,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		for(auto o : warehouseConfig.map_configuration.obstacles) {
 			obstacles.emplace_back(Point(o.posX, o.posY), Point(o.sizeX, o.sizeY), o.rotation);
 		}
-		this->map = new Map(warehouseConfig, obstacles, hardwareProfile);
+		this->map = new Map(warehouseConfig, obstacles, hardwareProfile, agentIdInt);
 
 		// Charging Management
 		this->chargingManagement = new ChargingManagement(this,this->warehouseConfig, this->map);
@@ -119,21 +117,6 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		ROS_ERROR("[%s]: Exception occured!", agentID.c_str());
 		return false;
 	}
-}
-
-bool Agent::setupIdlePosition() {
-	for(auto& idle_position : warehouseConfig.idle_positions)
-		if(idle_position.id == agentID) {
-
-			idlePosition.x = idle_position.pose.x;
-			idlePosition.y = idle_position.pose.y;
-			double rad = idle_position.pose.theta / 180.0 * PI;
-			idleOrientationPoint.x = idlePosition.x + cos(rad) * 1.0;
-			idleOrientationPoint.y = idlePosition.y + sin(rad) * 1.0;
-			return true;
-		}
-	ROS_ERROR("[%s]: Failed to setup idle position!", agentID.c_str());
-	return false;
 }
 
 bool Agent::registerAgent() {
@@ -466,4 +449,8 @@ std_msgs::ColorRGBA Agent::agentIdToColor(int agentId) {
 	}
 
 	return color;
+}
+
+bool Agent::isInitializedCompletely() {
+	return initialized && motionPlanner->getOrientedPoint().x != 0 && motionPlanner->getOrientedPoint().y != 0;
 }

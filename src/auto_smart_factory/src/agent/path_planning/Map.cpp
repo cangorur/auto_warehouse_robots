@@ -1,5 +1,7 @@
 #include <utility>
 #include <iostream>
+#include <include/agent/path_planning/Map.h>
+
 #include "ros/ros.h"
 #include "Math.h"
 #include "agent/path_planning/Rectangle.h"
@@ -9,12 +11,13 @@
 
 int Map::visualisationId = 0;
 
-Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle>& obstacles, RobotHardwareProfile* hardwareProfile) :
+Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle>& obstacles, RobotHardwareProfile* hardwareProfile, int ownerId) :
 		warehouseConfig(warehouseConfig),
 		width(warehouseConfig.map_configuration.width),
 		height(warehouseConfig.map_configuration.height),
 		margin(warehouseConfig.map_configuration.margin),
-		hardwareProfile(hardwareProfile)
+		hardwareProfile(hardwareProfile),
+		ownerId(ownerId)
 {
 	this->obstacles.clear();
 	for(const Rectangle& o : obstacles) {
@@ -23,6 +26,15 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 	
 	thetaStarMap = ThetaStarMap(this, warehouseConfig.map_configuration.resolutionThetaStar);
 	reservations.clear();
+	
+	// Add idle reservations
+	for(const auto& idlePosition : warehouseConfig.idle_positions) {
+		std::string idStr = idlePosition.id.substr(idlePosition.id.find('_') + 1);
+		int id = std::stoi(idStr);
+		Point pos = Point(static_cast<float>(idlePosition.pose.x), static_cast<float>(idlePosition.pose.y));
+		
+		reservations.emplace_back(pos, Point(ROBOT_DIAMETER * 2.f, ROBOT_DIAMETER * 2.f), 0, 0, MaxReservationTime, id);
+	}
 }
 
 bool Map::isInsideAnyInflatedObstacle(const Point& point) const {
@@ -51,7 +63,7 @@ bool Map::isTimedLineOfSightFree(const Point& pos1, double startTime, const Poin
 	}
 
 	for(const Rectangle& reservation : reservations) {
-		if(reservation.doesOverlapTimeRange(startTime, endTime) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+		if(reservation.doesOverlapTimeRange(startTime, endTime) && reservation.getOwnerId() != ownerId && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
 			return false;
 		}
 	}
@@ -69,7 +81,7 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 
 	for(const Rectangle& reservation : reservations) {
 		// Directly blocked
-		if(reservation.doesOverlapTimeRange(startTime + 0.01f, endTime) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+		if(reservation.doesOverlapTimeRange(startTime + 0.01f, endTime) && reservation.getOwnerId() != ownerId && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
 			result.blockedByTimed = true;
 			if(reservation.getFreeAfter() > result.freeAfter) {
 				result.freeAfter = reservation.getFreeAfter();
@@ -77,7 +89,7 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 		}
 
 		// Upcoming obstacles			
-		if(Math::isPointInRectangle(pos2, reservation) && reservation.getStartTime() > endTime) {
+		if(Math::isPointInRectangle(pos2, reservation) && reservation.getStartTime() > endTime && reservation.getOwnerId() != ownerId) {
 			result.hasUpcomingObstacle = true;
 			// Todo make adaptive
 			double minTimeToLeave = 15;
@@ -100,13 +112,13 @@ bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double sta
 
 	for(const Rectangle& reservation : reservations) {
 		// Check if the waiting part is free
-		if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime) && Math::isPointInRectangle(pos1, reservation)) {
+		if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime) && reservation.getOwnerId() != ownerId && Math::isPointInRectangle(pos1, reservation)) {
 			//printf("Connection dropped due to waiting: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
 			return false;
 		}
 
 		// Check if the driving part is free
-		if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.001f, endTime) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+		if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.001f, endTime) && reservation.getOwnerId() != ownerId && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
 			//printf("Connection dropped due to driving: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
 			return false;
 		}
@@ -147,12 +159,14 @@ Path Map::getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end,
 Path Map::getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	const OrientedPoint endPoint = getPointInFrontOfTray(end);
+	ROS_INFO("Computing path from (%f/%f) to tray of type %s (%f/%f)", start.x, start.y, end.type.c_str(), getPointInFrontOfTray(end).x, getPointInFrontOfTray(end).y);
 	return thetaStarPathPlanner.findPath(start, endPoint, startingTime);
 }
 
 Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	const OrientedPoint startPoint = getPointInFrontOfTray(start);
+	ROS_INFO("Computing path from tray of type %s (%f/%f) to (%f/%f)", start.type.c_str(), getPointInFrontOfTray(start).x, getPointInFrontOfTray(start).y, end.x, end.y);
 	return thetaStarPathPlanner.findPath(startPoint, end, startingTime);
 }
 
@@ -160,6 +174,7 @@ Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_sma
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	const OrientedPoint startPoint = getPointInFrontOfTray(start);
 	const OrientedPoint endPoint = getPointInFrontOfTray(end);
+	ROS_INFO("Computing path from tray of type %s (%f/%f) to tray of type %s (%f/%f)", start.type.c_str(), getPointInFrontOfTray(start).x, getPointInFrontOfTray(start).y, end.type.c_str(), getPointInFrontOfTray(end).x, getPointInFrontOfTray(end).y);
 	return thetaStarPathPlanner.findPath(startPoint, endPoint, startingTime);
 }
 
@@ -314,4 +329,26 @@ visualization_msgs::Marker Map::getReservationVisualization(int ownerId, visuali
 	}
 
 	return msg;
+}
+
+void Map::listAllReservationsIn(Point p) {
+	ROS_WARN("Reservations for robot %d", ownerId);
+	for(const auto& r : reservations) {
+		ROS_WARN("Reservations: At %f/%f | Size %f/%f | Rot: %f | ID: %d, from %f until %f", r.getPosition().x, r.getPosition().y, r.getSize().x, r.getSize().y, r.getRotation(), r.getOwnerId(), r.getStartTime(), r.getEndTime());
+	}
+}
+
+bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
+	for(const auto& r : reservations) {
+		// TODO add check if endTime == maxReservationTime
+		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId) {
+			return true;
+		}		
+	}
+	
+	return false;
+}
+
+bool Map::isPointTargetOfAnotherRobot(const auto_smart_factory::Tray& tray) {
+	return isPointTargetOfAnotherRobot(getPointInFrontOfTray(tray));
 }
