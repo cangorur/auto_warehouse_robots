@@ -1,6 +1,5 @@
 #include <warehouse_management/WarehouseManagement.h>
 #include <tf/transform_datatypes.h>
-#include <include/warehouse_management/WarehouseManagement.h>
 
 WarehouseManagement::WarehouseManagement() {
 	ros::NodeHandle n;
@@ -314,6 +313,29 @@ void WarehouseManagement::receiveHeartbeat(auto_smart_factory::RobotHeartbeat hb
 	m2.pose.position.y = hb.position.y;
 	m2.pose.position.z = hb.position.z;
 	m2.pose.orientation = tf::createQuaternionMsgFromYaw(hb.orientation);
+	
+	// Set colors
+	ros::NodeHandle nh;
+	double color_r;
+	double color_g;
+	double color_b;
+	if(!nh.getParam("/" + hb.id + "/color_r", color_r)) {
+		color_r = 30;
+	}
+	
+	if(!nh.getParam("/" + hb.id + "/color_g", color_g)) {
+		color_g = 200;
+	}
+
+	if(!nh.getParam("/" + hb.id + "/color_b", color_b)) {
+		color_b = 40;
+	}
+	
+	m2.color.r = color_r / 255;
+	m2.color.g = color_g / 255;
+	m2.color.b = color_b / 255;
+
+
 
 	visualization_msgs::Marker label;
 	label.header.frame_id = "map";
@@ -324,9 +346,9 @@ void WarehouseManagement::receiveHeartbeat(auto_smart_factory::RobotHeartbeat hb
 	label.action = visualization_msgs::Marker::ADD;
 	label.scale.z = 0.3;
 	label.color.a = 1;
-	//label.color.r = 1. - m.color.r;
-	//label.color.b = 1. - m.color.b;
-	//label.color.g = 1. - m.color.g;
+	//label.color.r = 1. - m2.color.r;
+	//label.color.b = 1. - m2.color.b;
+	//label.color.g = 1. - m2.color.g;
 	label.color.r = 1.f;
 	label.color.g = 1.f;
 	label.color.b = 1.f;

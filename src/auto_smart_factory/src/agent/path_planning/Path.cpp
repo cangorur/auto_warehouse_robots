@@ -141,6 +141,7 @@ visualization_msgs::Marker Path::getVisualizationMsgPoints() {
 }
 
 visualization_msgs::Marker Path::getVisualizationMsgLines() {
+
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";
 	msg.header.stamp = ros::Time::now();
@@ -152,8 +153,27 @@ visualization_msgs::Marker Path::getVisualizationMsgLines() {
 	msg.type = visualization_msgs::Marker::LINE_STRIP;
 	msg.scale.x = 0.1;
 
-	msg.color.g = 1.0f;
+	// Set colors
+	ros::NodeHandle nh("~");
+	double color_r;
+	double color_g;
+	double color_b;
+	if(!nh.getParam("color_r", color_r)) {
+		color_r = 30;
+	}
+	
+	if(!nh.getParam("color_g", color_g)) {
+		color_g = 200;
+	}
+
+	if(!nh.getParam("color_b", color_b)) {
+		color_b = 40;
+	}
 	msg.color.a = 0.6f;
+	msg.color.r = color_r / 255;
+	msg.color.g = color_g / 255;
+	msg.color.b = color_b / 255;
+
 
 	for(const Point& point : nodes) {
 		geometry_msgs::Point p;
@@ -172,4 +192,12 @@ double Path::getStartTimeOffset() const {
 
 RobotHardwareProfile* Path::getRobotHardwareProfile() const {
 	return hardwareProfile;
+}
+
+float Path::getStartOrientation(){
+	return 0.0f;
+}
+
+float Path::getEndOrientation(){
+	return 0.0f;
 }

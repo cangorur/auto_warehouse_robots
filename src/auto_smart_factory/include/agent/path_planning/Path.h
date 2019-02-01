@@ -45,6 +45,9 @@ public:
 	visualization_msgs::Marker getVisualizationMsgPoints();
 	visualization_msgs::Marker getVisualizationMsgLines();
 
+	float getStartOrientation();
+	float getEndOrientation();
+
 };
 
 #endif /* AGENT_PATH_H_ */

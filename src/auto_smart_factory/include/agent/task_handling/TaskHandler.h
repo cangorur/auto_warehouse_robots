@@ -3,12 +3,12 @@
 
 #include <list>
 #include <string>
-#include <include/agent/path_planning/ReservationManager.h>
 
 #include "ros/ros.h"
 #include "agent/task_handling/Task.h"
 #include "agent/task_handling/TransportationTask.h"
 #include "agent/task_handling/ChargingTask.h"
+#include "agent/path_planning/ReservationManager.h"
 #include "auto_smart_factory/TaskAnnouncement.h"
 #include "auto_smart_factory/TaskRating.h"
 #include "agent/path_planning/Map.h"
@@ -45,7 +45,7 @@ class TaskHandler
 
 		Task* getCurrentTask(void);
 
-		float getBatteryConsumption(void);
+		double getBatteryConsumption(void);
 
 		double getDuration(void);
 

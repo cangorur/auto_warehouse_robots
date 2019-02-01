@@ -6,6 +6,8 @@
 #include <vector>
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotHeartbeat.h>
+#include "auto_smart_factory/Tray.h"
+#include "agent/path_planning/Map.h"
 
 class Agent;
 /**
@@ -18,26 +20,63 @@ public:
 	 * Default constructor.
 	 * Sets up the initialize service.
 	 */
-	ChargingManagement(Agent* agent);
+	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration, Map* map);
 
 	virtual ~ChargingManagement();
 
-	/* Returns true if the agent can perform the task of given energy
+	/* 
+	 * Returns true if the agent can perform the task of given energy
 	 * @param energy: expected energy of the task
 	 */
 	bool isEnergyAvailable(double energy);
 
 	/*
-	 * Score multiplier for current set of tasks +  charging
+	 * Score multiplier for current set of tasks + charging
 	 * @param Energy consumption of all the tasks to be done
 	 * @returns Score multiplier LOWER IS BETTER
 	 */
-	float getScoreMultiplier(float cumulatedEnergyConsumption);
-private:
+	double getScoreMultiplier(float cumulatedEnergyConsumption);
 
+	/*
+	 * Get All Charging Stations
+	 */
+	void getAllChargingStations();
+
+	/*
+	 * Find all possible paths to the nearest charging stations and then return the shortest one
+	 * @param start: The point where the robo will be when it starts to drive to the nearest charging tray
+	 * @param startingTime: the time at which the robot will start to drive to the nearest charging tray
+	 * @returns a pair of the path and the id of the selected tray
+	 */
+	std::pair<Path, uint32_t> getPathToNearestChargingStation(OrientedPoint start, double startingTime);
+
+	/*
+	 * Return the current amount of discharged battery
+	 */
+	double getDischargedBattery();
+
+	/*
+	 * Returns if charging should be done
+	 */
+	bool isChargingAppropriate();
+
+	/*
+	 * Returns if the robot is sufficiently charged
+	 */
+	bool isCharged();
+
+
+private:
 	Agent* agent;
 
+	//Agent ID from where the CM is called
 	std::string agentID;
+
+	//Map of the system
+	Map* map;
+
+	// information about the current warehouse map
+	auto_smart_factory::WarehouseConfiguration warehouseConfig;
 
 	// Max energy level of the agent to participate in charging
 	float upperThreshold = 90.00;
@@ -48,8 +87,8 @@ private:
 	// Minimum energy level of the agent to participate in charging
 	float criticalMinimum = 10.00;
 
-	// Operating battery
-	float operatingBatt = upperThreshold - criticalMinimum;
+	//Vector of all the Charging Trays
+	std::vector <auto_smart_factory::Tray> charging_trays;
 
 	//Current battery of the agent
 	double agentBatt;
@@ -57,5 +96,7 @@ private:
 	//Estimated energy of the agent after task and charging
 	float energyAfterTask;
 };
+
+
 
 #endif /* AGENT_CHARGINGMANAGEMENT_H_ */

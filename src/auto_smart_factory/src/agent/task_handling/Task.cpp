@@ -7,7 +7,7 @@ Task::Task(uint32_t targetId, Path pathToTarget, Type type, double startTime) :
 {
 	targetDuration = pathToTarget.getDuration();
 	targetBatCons = pathToTarget.getBatteryConsumption();
-	targetPosition = OrientedPoint(pathToTarget.getNodes().back().x, pathToTarget.getNodes().back().y, 0.0f);
+	targetPosition = OrientedPoint(pathToTarget.getNodes().back().x, pathToTarget.getNodes().back().y, pathToTarget.getEndOrientation());
 }
 
 uint32_t Task::getTargetTrayId() {

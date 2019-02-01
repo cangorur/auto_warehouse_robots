@@ -7,7 +7,7 @@ TransportationTask::TransportationTask(unsigned int id, uint32_t sourceID, uint3
 	sourceId(sourceID) {
 		sourceDuration = sourcePath.getDuration();
 		sourceBatCons = sourcePath.getBatteryConsumption();
-		sourcePosition = OrientedPoint(sourcePath.getNodes().back().x, sourcePath.getNodes().back().y, 0.0f);
+		sourcePosition = OrientedPoint(sourcePath.getNodes().back().x, sourcePath.getNodes().back().y, sourcePath.getEndOrientation());
 }
 
 TransportationTask::~TransportationTask() = default;

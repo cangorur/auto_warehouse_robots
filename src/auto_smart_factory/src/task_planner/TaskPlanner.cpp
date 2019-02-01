@@ -321,7 +321,7 @@ void TaskPlanner::startTask(TaskPtr task) {
 	// insert task into list of running tasks
 	auto res = runningTasks.insert(
 			std::pair<unsigned int, TaskPtr>(task->getId(), task));
-	ROS_WARN("in TaskPlanner::startTask");
+	// ROS_WARN("in TaskPlanner::startTask");
 	if(!res.second) {
 		ROS_FATAL(
 				"Starting new task failed because task with same id is already running!");
@@ -383,7 +383,6 @@ bool TaskPlanner::idleRobotAvailable() const {
 
 void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 	// go through requests and get the one for which the response is intended:
-	ROS_INFO("Receiving score for Request %d; Reject is %d", tr.request_id, tr.reject);
 	for(RequestPtr& r : inputRequests){
 		if(r->getId() == tr.request_id){
 			r->receiveTaskResponse(tr);
@@ -396,7 +395,7 @@ void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 			return;
 		}
 	}
-	ROS_INFO("No request with id %d found", tr.request_id);
+	ROS_WARN("No request with id %d found", tr.request_id);
 }
 
 void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
@@ -411,19 +410,9 @@ void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourc
 
 void TaskPlanner::extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa){
 	for(Tray t : sourceTrays){
-		geometry_msgs::Point p;
-		p.x = t.x;
-		p.y = t.y;
-		p.z = 0.0;
-		tsa->start_points.push_back(p);
 		tsa->start_ids.push_back(t.id);
 	}
 	for(Tray t : targetTrays){
-		geometry_msgs::Point p;
-		p.x = t.x;
-		p.y = t.y;
-		p.z = 0.0;
-		tsa->end_points.push_back(p);
 		tsa->end_ids.push_back(t.id);
 	}
 }

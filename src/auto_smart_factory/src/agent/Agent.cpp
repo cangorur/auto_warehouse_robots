@@ -105,7 +105,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		this->map = new Map(warehouseConfig, obstacles, hardwareProfile);
 
 		// Charging Management
-		this->chargingManagement = new ChargingManagement(this);
+		this->chargingManagement = new ChargingManagement(this,this->warehouseConfig, this->map);
 
 		// Reservation Manager
 		reservationManager = new ReservationManager(&reservationCoordination_pub, map, agentIdInt, static_cast<int>(warehouse_configuration.robots.size()));
@@ -228,14 +228,14 @@ void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& ms
 bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_factory::AssignTask::Response& res) {
 	try {
 		if(isIdle) {
-			ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
+			// ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
 
 			int task_id = req.task_id;
 			auto_smart_factory::Tray input_tray = getTray(req.input_tray);
 			auto_smart_factory::Tray storage_tray = getTray(req.storage_tray);
 
-			ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
-			ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
+			// ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
+			// ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
 
 			// create Task and add it to task handler
 			Path sourcePath;
@@ -245,20 +245,35 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 			if(lastTask != nullptr){
 				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, lastTask->getEndTime());
 				targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration());
-				taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
+				if(sourcePath.getDistance() > 0 && targetPath.getDistance() > 0) {
+					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
+					initialTimeOfCurrentTask = ros::Time::now().toSec();
+					// ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
+					res.success = true;
+				} else {
+					ROS_WARN("[%s] task %d can not be assigned, as source or target path has distance 0", agentID.c_str(), task_id);
+					res.success = false;
+				}
+				
 			} else {
 				// take the current position
 				double now = ros::Time::now().toSec();
 				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, now);
 				targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration());
-				taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
+				if(sourcePath.getDistance() > 0 && targetPath.getDistance() > 0){
+					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
+					initialTimeOfCurrentTask = ros::Time::now().toSec();
+					// ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
+					res.success = true;
+				} else {
+					ROS_WARN("[%s] task %d can not be assigned, as source or target path has distance 0", agentID.c_str(), task_id);
+					res.success = false;
+				}
 			}			
 
-			initialTimeOfCurrentTask = ros::Time::now().toSec();
-			ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
-			res.success = true;
+			
 		} else {
-			ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);
+			// ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);
 			res.success = false;
 		}
 	} catch(std::out_of_range& e) {
@@ -300,24 +315,27 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 }
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
-	// TODO: compute this for all 
 	std::vector< TrayScore* > scores;
 	double queuedDuration = taskHandler->getDuration();
 	double queuedBatteryConsumption = taskHandler->getBatteryConsumption();
+	Task* lastTask = taskHandler->getLastTask();
 	for(uint32_t it_id : taskAnnouncement.start_ids){
 		for(uint32_t st_id : taskAnnouncement.end_ids){
 			// get Path
 			auto_smart_factory::Tray input_tray = getTray(it_id);
 			auto_smart_factory::Tray storage_tray = getTray(st_id);
 			Path sourcePath = Path();
-			if(taskHandler->getLastTask() != nullptr){
+			double startTime = 0.0;
+			if(lastTask != nullptr){
 				// take the last position of the last task
-				sourcePath = map->getThetaStarPath(taskHandler->getLastTask()->getTargetPosition(), input_tray, 0);
+				startTime = lastTask->getEndTime();
+				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, startTime);
 			} else {
 				// take the current position
-				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, 0);
+				startTime = ros::Time::now().toSec();
+				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, startTime);
 			}
-			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, 0);
+			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, startTime + sourcePath.getDuration());
 			// get Battery consumption
 			double batCons = queuedBatteryConsumption + sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
 			// check battery consumption
@@ -349,6 +367,11 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 	} else {
 		// reject task
 		this->taskHandler->rejectTask(taskAnnouncement.request_id);
+		if(lastTask != nullptr && !(lastTask->isCharging()) ) {
+			std::pair<Path, uint32_t> pathToCS = this->chargingManagement->getPathToNearestChargingStation(lastTask->getTargetPosition(), lastTask->getEndTime());
+			// add charging task
+			this->taskHandler->addChargingTask(pathToCS.second, pathToCS.first, lastTask->getEndTime());
+		}
 	}
 }
 
