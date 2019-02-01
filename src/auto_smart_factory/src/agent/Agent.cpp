@@ -318,15 +318,17 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
 	std::vector< TrayScore* > scores;
 	double queuedDuration = taskHandler->getDuration();
-	double queuedBatteryConsumption = taskHandler->getBatteryConsumption();
+	double estimatedBatteryAfterQueuedTasks = taskHandler->getEstimatedBatteryLevelAfterQueuedTasks();
 	Task* lastTask = taskHandler->getLastTask();
+	
 	for(uint32_t it_id : taskAnnouncement.start_ids){
 		for(uint32_t st_id : taskAnnouncement.end_ids){
 			// get Path
 			auto_smart_factory::Tray input_tray = getTray(it_id);
 			auto_smart_factory::Tray storage_tray = getTray(st_id);
-			Path sourcePath = Path();
-			double startTime = 0.0;
+			Path sourcePath;
+			double startTime;
+			
 			if(lastTask != nullptr){
 				// take the last position of the last task
 				startTime = lastTask->getEndTime();
@@ -336,22 +338,22 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 				startTime = ros::Time::now().toSec();
 				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, startTime);
 			}
+			
 			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, startTime + sourcePath.getDuration());
-			// get Battery consumption
-			double batCons = queuedBatteryConsumption + sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
-			// check battery consumption
-			if(chargingManagement->isEnergyAvailable(batCons)){
-				// get Path duration pickup and dropoff constants are ignored as every robot has to do them
+			double estimatedNewConsumption = sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
+
+			// Check if task can be completed
+			if(chargingManagement->isConsumptionPossible(estimatedBatteryAfterQueuedTasks, estimatedNewConsumption)) {
 				double duration = queuedDuration + sourcePath.getDuration() + targetPath.getDuration();
-				// get score multiplier
-				double scoreFactor = chargingManagement->getScoreMultiplier(batCons);
-				// compute score
-				double score = (1/scoreFactor) * duration;
+				double scoreFactor = chargingManagement->getScoreMultiplierForBatteryLevel(estimatedBatteryAfterQueuedTasks - estimatedNewConsumption);
+				double score = (1.f / scoreFactor) * duration;
+				
 				// add score to list
 				scores.push_back(new TrayScore(it_id, st_id, score));
 			}
 		}
 	}
+	
 	if(!scores.empty()){
 		std::sort(scores.begin(), scores.end(),
 			[](TrayScore* first, TrayScore* second) 

@@ -22,20 +22,14 @@ public:
 	 */
 	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration, Map* map);
 
-	virtual ~ChargingManagement();
-
-	/* 
-	 * Returns true if the agent can perform the task of given energy
-	 * @param energy: expected energy of the task
-	 */
-	bool isEnergyAvailable(double energy);
+	virtual ~ChargingManagement() = default;
 
 	/*
 	 * Score multiplier for current set of tasks + charging
 	 * @param Energy consumption of all the tasks to be done
 	 * @returns Score multiplier LOWER IS BETTER
 	 */
-	double getScoreMultiplier(float cumulatedEnergyConsumption);
+	double getScoreMultiplierForBatteryLevel(double batteryLevel);
 
 	/*
 	 * Get All Charging Stations
@@ -50,21 +44,20 @@ public:
 	 */
 	std::pair<Path, uint32_t> getPathToNearestChargingStation(OrientedPoint start, double startingTime);
 
-	/*
-	 * Return the current amount of discharged battery
-	 */
-	double getDischargedBattery();
-
-	/*
-	 * Returns if charging should be done
-	 */
+	// Returns if charging should be done
 	bool isChargingAppropriate();
 
-	/*
-	 * Returns if the robot is sufficiently charged
-	 */
+	// Returns if the robot is sufficiently charged
 	bool isCharged();
 
+	// Returns the current battery of the agent
+	double getCurrentBattery();
+
+	// Checks if the battery consumption is possible
+	bool isConsumptionPossible(double consumption);
+
+	// Checks if the battery consumption is possible given the theoretical battery level
+	bool isConsumptionPossible(double agentBatteryLevel, double consumption);
 
 private:
 	Agent* agent;
@@ -79,22 +72,18 @@ private:
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;
 
 	// Max energy level of the agent to participate in charging
-	float upperThreshold = 90.00;
+	float upperThreshold = 70.00;
 
 	// Energy level between upper and critical for non-linear score
 	float lowerThreshold = 35.00;
 
 	// Minimum energy level of the agent to participate in charging
 	float criticalMinimum = 10.00;
+	
+	float estimatedBatteryConsumptionToNearestChargingStation = 10.f;
 
 	//Vector of all the Charging Trays
 	std::vector <auto_smart_factory::Tray> charging_trays;
-
-	//Current battery of the agent
-	double agentBatt;
-
-	//Estimated energy of the agent after task and charging
-	float energyAfterTask;
 };
 
 
