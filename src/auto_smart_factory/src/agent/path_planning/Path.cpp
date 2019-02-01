@@ -85,6 +85,8 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 
 		currentTime += currentDuration;
 	}
+	
+	reservations.emplace_back(nodes.back(), Point(ROBOT_DIAMETER * 2.f, ROBOT_DIAMETER * 2.f), 0, currentTime - reservationMargin, MaxReservationTime, ownerId);
 
 	return reservations;
 }

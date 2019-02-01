@@ -9,8 +9,8 @@
 
 class Path {
 public:
-	const double maxReservationLength = 8;
-	const double reservationMargin = 1.5f;
+	double maxReservationLength = 8;
+	double reservationMargin = 1.5f;
 	
 private:
 	double startTimeOffset = 0;
