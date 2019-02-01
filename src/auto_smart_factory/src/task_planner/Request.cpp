@@ -75,7 +75,7 @@ TaskData Request::allocateResources() {
 	// ROS_INFO("[request %d] Found %ld robot candidates.", status.id, robotCandidates.size());
 
 	// try one robot after the other until success
-	for(const RobotCandidatePtr cand : robotCandidates) {
+	for(const RobotCandidate* cand : robotCandidates) {
 		// ROS_INFO("[request %d] Allocating robots for %s Source tray id is: %d and target tray id is %d", status.id, cand->robotId.c_str(), cand->source.id, cand->target.id);
 		TrayAllocatorPtr sourceTray = TrayAllocator::allocateTray(cand->source.id);
 		TrayAllocatorPtr targetTray = TrayAllocator::allocateTray(cand->target.id);
@@ -198,14 +198,14 @@ TaskRequirementsConstPtr Request::getRequirements() const {
 	return requirements;
 }
 
-void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
+void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr) {
 	if(this->status.id != tr.request_id){
 		ROS_INFO("[Request %d] received answer to another [Request %d] from %s", this->status.id, tr.request_id, tr.robot_id.c_str());
 		return;
 	}
 	if(!tr.reject){
 		// add robot as candidate
-		RobotCandidatePtr cand = std::make_shared<RobotCandidate>();
+		RobotCandidate* cand = new RobotCandidate();
 		cand->score = tr.score;
 		cand->robotId = tr.robot_id;
 		// ROS_INFO("[Request %d] looking for source tray %d and target tray %d", this->status.id, tr.start_id, tr.end_id);
@@ -213,6 +213,7 @@ void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 		cand->target = taskPlanner->getTrayConfig(tr.end_id);
 		robotCandidates.push_back(cand);
 	}
+	
 	answeredRobots[tr.robot_id] = tr.reject;
 }
 
@@ -225,7 +226,7 @@ bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates, 
 	waitForRobotScores(ros::Duration(1), ros::Rate(10));
 
 	std::sort(robotCandidates.begin(), robotCandidates.end(),
-		          [](RobotCandidatePtr first, RobotCandidatePtr second) {
+		          [](RobotCandidate* first, RobotCandidate* second) {
 			          return first->score < second->score;
 		          });
 
@@ -251,10 +252,8 @@ void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){
 }
 
 void Request::clearRobotCandidates(){
-	for(RobotCandidatePtr candidate : robotCandidates){
-		if(candidate.unique()){
-			candidate.reset();
-		}
+	for(RobotCandidate* candidate : robotCandidates){
+		delete candidate;
 	}
 	robotCandidates.clear();
 }

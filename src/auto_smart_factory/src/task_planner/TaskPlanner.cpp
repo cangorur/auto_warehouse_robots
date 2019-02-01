@@ -45,29 +45,17 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req, InitTaskPlannerRespons
 	}
 
 	// subscribe to the storage update topic
-	storageUpdateSub = n.subscribe("/storage_management/storage_update", 1000,
-	                               &TaskPlanner::receiveStorageUpdate, this);
+	storageUpdateSub = n.subscribe("/storage_management/storage_update", 1000, &TaskPlanner::receiveStorageUpdate, this);
+	robotHeartbeatSub = n.subscribe("/robot_heartbeats", 1000, &TaskPlanner::receiveRobotHeartbeat, this);
 
-	robotHeartbeatSub = n.subscribe("/robot_heartbeats", 1000,
-	                                &TaskPlanner::receiveRobotHeartbeat, this);
-
-	newInputTaskServer = pn.advertiseService("new_input_task",
-	                                         &TaskPlanner::newInputRequest, this);
-	newOutputTaskServer = pn.advertiseService("new_output_task",
-	                                          &TaskPlanner::newOutputRequest, this);
-	registerAgentServer = pn.advertiseService("register_agent",
-	                                          &TaskPlanner::registerAgent, this);
-
-	statusUpdatePub = pn.advertise<TaskPlannerState>("status", 1);
+	newInputTaskServer = pn.advertiseService("new_input_task", &TaskPlanner::newInputRequest, this);
+	newOutputTaskServer = pn.advertiseService("new_output_task", &TaskPlanner::newOutputRequest, this);
+	registerAgentServer = pn.advertiseService("register_agent", &TaskPlanner::registerAgent, this);
 	
-	rescheduleTimer = n.createTimer(ros::Duration(10.0),
-	                                &TaskPlanner::rescheduleEvent, this);
-	statusUpdateTimer = n.createTimer(ros::Duration(2.0),
-	                                  &TaskPlanner::taskStateUpdateEvent, this);
-
-	taskResponseSub = n.subscribe("/task_response", 1000, 
-									&TaskPlanner::receiveTaskResponse, this);
-
+	statusUpdatePub = pn.advertise<TaskPlannerState>("status", 1);
+	rescheduleTimer = n.createTimer(ros::Duration(10.0), &TaskPlanner::rescheduleEvent, this);
+	statusUpdateTimer = n.createTimer(ros::Duration(2.0), &TaskPlanner::taskStateUpdateEvent, this);
+	taskResponseSub = n.subscribe("/task_response", 1000, &TaskPlanner::receiveTaskResponse, this);
 	taskAnnouncerPub = pn.advertise<TaskAnnouncement>("task_broadcast", 1);
 
 	ROS_INFO("Task planner initialized.");
@@ -76,8 +64,7 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req, InitTaskPlannerRespons
 	return true;
 }
 
-const PackageConfiguration& TaskPlanner::getPkgConfig(
-		unsigned int typeId) const {
+const PackageConfiguration& TaskPlanner::getPkgConfig(unsigned int typeId) const {
 	return pkgConfigs.at(typeId);
 }
 
@@ -210,8 +197,7 @@ const std::map<std::string, std::pair<RobotConfiguration, bool> >& TaskPlanner::
 	return registeredRobots;
 }
 
-bool TaskPlanner::registerAgent(RegisterAgentRequest& req,
-                                RegisterAgentResponse& res) {
+bool TaskPlanner::registerAgent(RegisterAgentRequest& req, RegisterAgentResponse& res) {
 	if(registeredRobots.count(req.agent_id) == 0) {
 		// add new registered robot
 		registeredRobots[req.agent_id].first = req.robot_configuration;

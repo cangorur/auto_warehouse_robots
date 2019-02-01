@@ -39,6 +39,4 @@ public:
 	double score;
 };
 
-typedef std::shared_ptr<RobotCandidate> RobotCandidatePtr;
-
 #endif /* AUTO_SMART_FACTORY_SRC_TASK_PLANNER_ROBOTCANDIDATE_H_ */

@@ -83,16 +83,14 @@ protected:
 	 * @param sourceTrayCandidates Output vector for candidates
 	 * @return True if candidate list is non-empty
 	 */
-	bool findSourceCandidates(
-			std::vector<auto_smart_factory::Tray>& sourceTrayCandidates) const;
+	bool findSourceCandidates(std::vector<auto_smart_factory::Tray>& sourceTrayCandidates) const;
 
 	/**
 	 * Creates a list of possible target tray candidates for this request.
 	 * @param targetTrayCandidates Output vector for candidates
 	 * @return True if candidate list is non-empty
 	 */
-	bool findTargetCandidates(
-			std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
+	bool findTargetCandidates(std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
 
 	/**
 	 * Creates a list of possible robot candidates using lists of source and target tray candidates.
@@ -102,22 +100,7 @@ protected:
 	 * @param targetTrayCandidates List of output tray candidates
 	 * @return True if robot candidate list is non-empty
 	 */
-	bool getRobotCandidates(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
-	                        const std::vector<auto_smart_factory::Tray>& targetTrayCandidates);
-
-
-	/**
-	 * Sends a request to one robot using source and target tray candidates
-	 * to get an estimated duration.
-	 * @param robotId Id of the robot
-	 * @param cand Output of the robot response
-	 * @param sourceTrayCandidates Source tray candidates
-	 * @param targetTrayCandidates target tray candidates
-	 * @return
-	 */
-	bool sendRobotRequest(std::string robotId, RobotCandidate& cand,
-	                      const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
-	                      const std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
+	bool getRobotCandidates(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates, const std::vector<auto_smart_factory::Tray>& targetTrayCandidates);
 
 	/**
 	 * Assign request/task to robot for includes the setup of the task in the robot.
@@ -142,7 +125,7 @@ protected:
 	bool useBestETA;
 
 	/// vector of robot candidates
-	std::vector<RobotCandidatePtr> robotCandidates;
+	std::vector<RobotCandidate*> robotCandidates;
 
 	/// a map of robots who answered with robot_id as key and their reject flag as value
 	std::map<std::string, bool> answeredRobots;
@@ -158,7 +141,7 @@ protected:
 	void waitForRobotScores(ros::Duration timeout, ros::Rate frequency);
 
 	/// delete all robot candidates in the internal listing
-	void clearRobotCandidates(void);
+	void clearRobotCandidates();
 };
 
 typedef std::shared_ptr<Request> RequestPtr;
