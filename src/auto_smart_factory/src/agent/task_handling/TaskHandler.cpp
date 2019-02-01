@@ -66,19 +66,23 @@ TaskHandler::~TaskHandler(){
 
 void TaskHandler::addTransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, 
 				Path sourcePath, Path targetPath, double startTime) {
-    // create new task
-    TransportationTask* t = new TransportationTask(id, sourceID, targetID, sourcePath, targetPath, startTime);
+    if(sourcePath.getDistance() > 0 && targetPath.getDistance() > 0){
+        // create new task
+        TransportationTask* t = new TransportationTask(id, sourceID, targetID, sourcePath, targetPath, startTime);
 
-    // add task to list
-    queue.push_back(t);
+        // add task to list
+        queue.push_back(t);
+    }
 }
 
 void TaskHandler::addChargingTask(uint32_t targetID, Path targetPath, double startTime) {
-    // create new charging task
-    ChargingTask* t = new ChargingTask(targetID, targetPath, startTime);
+    if(targetPath.getDistance() > 0){
+        // create new charging task
+        ChargingTask* t = new ChargingTask(targetID, targetPath, startTime);
 
-    // add task to list
-    queue.push_back(t);
+        // add task to list
+        queue.push_back(t);
+    }
 }
 
 void TaskHandler::executeTask() {
