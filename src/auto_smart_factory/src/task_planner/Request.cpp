@@ -17,9 +17,9 @@ using namespace auto_smart_factory;
 
 unsigned int Request::nextId = 0;
 
-Request::Request(TaskPlanner* tp, TaskRequirementsConstPtr taskRequirements, std::string type)
-		:
-		taskPlanner(tp), requirements(taskRequirements) {
+Request::Request(TaskPlanner* tp, TaskRequirementsConstPtr taskRequirements, std::string type) :
+		taskPlanner(tp),
+		requirements(taskRequirements) {
 	ROS_ASSERT(tp);
 	ROS_ASSERT(taskRequirements);
 
@@ -136,8 +136,7 @@ bool Request::isPending() const {
 	throw std::runtime_error("Request type has invalid value!");
 }
 
-bool Request::findSourceCandidates(
-		std::vector<auto_smart_factory::Tray>& sourceTrayCandidates) const {
+bool Request::findSourceCandidates(std::vector<auto_smart_factory::Tray>& sourceTrayCandidates) const {
 	sourceTrayCandidates.clear();
 
 	for(auto const& tray : taskPlanner->getTrayConfigs()) {
@@ -217,9 +216,7 @@ void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 	answeredRobots[tr.robot_id] = tr.reject;
 }
 
-bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates,
-                                 const std::vector<Tray>& targetTrayCandidates){
-
+bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates, const std::vector<Tray>& targetTrayCandidates) {
 	clearRobotCandidates();
 	answeredRobots.clear();
 
@@ -253,10 +250,10 @@ void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){
 	// ROS_INFO("[Request %d] Timeout while waiting for robot scores, got %d scores", status.id, (unsigned int)answeredRobots.size());
 }
 
-void Request::clearRobotCandidates(void){
-	for(RobotCandidatePtr cand : robotCandidates){
-		if(cand.unique()){
-			cand.reset();
+void Request::clearRobotCandidates(){
+	for(RobotCandidatePtr candidate : robotCandidates){
+		if(candidate.unique()){
+			candidate.reset();
 		}
 	}
 	robotCandidates.clear();
