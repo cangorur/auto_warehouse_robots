@@ -156,7 +156,7 @@ void MotionPlanner::advanceToNextPathPoint() {
 }
 
 bool MotionPlanner::isCurrentPointLastPoint() {
-	return currentTargetIndex == pathObject.getNodes().size() - 1;
+	return (currentTargetIndex == pathObject.getNodes().size() - 1) && pathObject.isValid();
 }
 
 MotionPlanner::Mode MotionPlanner::getMode() {
