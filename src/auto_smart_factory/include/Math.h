@@ -13,7 +13,7 @@
 #define EPS 1e-6
 
 // Defined as 0.25 + error margin
-#define ROBOT_DIAMETER 0.275f
+#define ROBOT_DIAMETER 0.26f
 
 // Rotation  0  = >
 // Rotation 90  = v

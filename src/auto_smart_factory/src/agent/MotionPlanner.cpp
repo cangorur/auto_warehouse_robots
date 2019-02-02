@@ -115,6 +115,7 @@ void MotionPlanner::turnTowards(Point target) {
 }
 
 void MotionPlanner::turnTowards(double direction) {
+	ROS_INFO("Turning towards %f", direction);
 	double rotation = static_cast<double>(Math::getAngleDifferenceInRad(pos.o, direction));
 	if(std::abs(rotation) <= 0.1f) {
 		mode = Mode::FINISHED;

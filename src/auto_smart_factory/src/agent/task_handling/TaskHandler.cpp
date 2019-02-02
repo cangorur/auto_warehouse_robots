@@ -63,8 +63,7 @@ TaskHandler::~TaskHandler(){
     queue.clear();
 }
 
-void TaskHandler::addTransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, 
-				Path sourcePath, Path targetPath, double startTime) {
+void TaskHandler::addTransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, Path sourcePath, Path targetPath, double startTime) {
     if(sourcePath.getDistance() > 0 && targetPath.getDistance() > 0){
         // create new task
         TransportationTask* t = new TransportationTask(id, sourceID, targetID, sourcePath, targetPath, startTime);
@@ -85,7 +84,7 @@ void TaskHandler::addChargingTask(uint32_t targetID, Path targetPath, double sta
 }
 
 void TaskHandler::executeTask() {
-    if (isIdle()) {
+    if(isIdle()) {
         return;
     }
 

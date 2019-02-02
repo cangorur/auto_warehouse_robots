@@ -62,7 +62,7 @@ double ChargingManagement::getScoreMultiplierForBatteryLevel(double batteryLevel
 	return batteryLevel / 100.f;
 }
 
-bool ChargingManagement::isChargingAppropriate(){
+bool ChargingManagement::isChargingAppropriate() {
 	return (agent->getAgentBattery() <= upperThreshold);
 }
 

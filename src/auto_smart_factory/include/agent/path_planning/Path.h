@@ -17,6 +17,9 @@ private:
 	std::vector<Point> nodes;
 	std::vector<double> waitTimes;
 	RobotHardwareProfile* hardwareProfile;
+	
+	OrientedPoint start;
+	OrientedPoint end;
 
 	// Computed internally for motion planner
 	std::vector<double> departureTimes;
@@ -26,7 +29,7 @@ private:
 
 public:
 	explicit Path() = default;
-	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile);
+	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint end);
 	
 	virtual ~Path() = default;
 
@@ -46,8 +49,8 @@ public:
 	visualization_msgs::Marker getVisualizationMsgPoints();
 	visualization_msgs::Marker getVisualizationMsgLines();
 
-	float getStartOrientation();
-	float getEndOrientation();
+	OrientedPoint getStart();
+	OrientedPoint getEnd();
 
 };
 

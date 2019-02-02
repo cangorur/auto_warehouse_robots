@@ -12,8 +12,9 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 }
 
 Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, double startingTime) {
-	startPoint = start;
-	endPoint = target;
+	// Convert to degree	
+	startPoint = OrientedPoint(start.x, start.y, Math::toDeg(start.o));
+	endPoint = OrientedPoint(target.x, target.y, Math::toDeg(target.o));
 
 	map->addAdditionalNode(Point(start.x, target.y));
 	map->addAdditionalNode(Point(target.x, target.y));
@@ -141,7 +142,6 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 		ROS_FATAL("No path found from node %f/%f to node %f/%f!", startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
 		map->listAllReservationsIn(targetNode->pos);
 		
-		exit(1);
 		return Path();
 	}
 }
@@ -167,7 +167,9 @@ double ThetaStarPathPlanner::getDrivingTime(ThetaStarGridNodeInformation* curren
 	return hardwareProfile->getDrivingDuration(Math::getDistance(current->node->pos, target->node->pos)) + turningTime;
 }
 
-Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, OrientedPoint start, OrientedPoint target, double initialWaitTime) const {
+// Todo add estimated turning times to path reservation generation
+
+Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, OrientedPoint start, OrientedPoint end, double initialWaitTime) const {
 	std::vector<Point> pathNodes;
 	std::vector<double> waitTimes;
 	ThetaStarGridNodeInformation* currentGridInformation = targetInformation;
@@ -181,16 +183,16 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 		currentGridInformation = currentGridInformation->prev;
 	}
 
-	if(!(pathNodes.back() == Point(start))) {
-		pathNodes.emplace_back(Point(start.x, start.y));
-		waitTimes.push_back(initialWaitTime);
-	} else {
-		//waitTimes.front() = initialWaitTime;
-	}
-	
 	std::reverse(pathNodes.begin(), pathNodes.end());
 	std::reverse(waitTimes.begin(), waitTimes.end());
 
-	return Path(startingTime, pathNodes, waitTimes, hardwareProfile);
+	// Convert start/end orientation to rad
+	OrientedPoint startOrientation = start;
+	startOrientation.o = Math::toRad(startOrientation.o);
+
+	OrientedPoint endOrientation = end;
+	endOrientation.o = Math::toRad(endOrientation.o);
+	
+	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, startOrientation, endOrientation);
 }
 

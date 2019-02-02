@@ -4,13 +4,17 @@
 #include "Math.h"
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
+#include <include/agent/path_planning/Path.h>
+
 #include "agent/path_planning/Path.h"
 
-Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile) :
+Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint end) :
 		startTimeOffset(startTimeOffset),
 		nodes(std::move(nodes_)),
 		waitTimes(std::move(waitTimes_)),
-		hardwareProfile(hardwareProfile)
+		hardwareProfile(hardwareProfile),
+		start(start),
+		end(end)
 {
 	if(nodes.size() != waitTimes.size()) {
 		ROS_ERROR("nodes.size() != waitTimes.size()");
@@ -197,10 +201,11 @@ RobotHardwareProfile* Path::getRobotHardwareProfile() const {
 	return hardwareProfile;
 }
 
-float Path::getStartOrientation(){
-	return 0.0f;
+OrientedPoint Path::getStart() {
+	return start;
 }
 
-float Path::getEndOrientation(){
-	return 0.0f;
+OrientedPoint Path::getEnd() {
+	return end;
 }
+

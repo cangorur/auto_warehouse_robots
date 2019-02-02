@@ -4,10 +4,11 @@ TransportationTask::TransportationTask(unsigned int id, uint32_t sourceID, uint3
 		Path sourcePath, Path targetPath, double startTime) : 
 	Task(targetID, targetPath, Type::TRANSPORTATION, startTime),
 	id(id), 
-	sourceId(sourceID) {
+	sourceId(sourceID)
+{
 		sourceDuration = sourcePath.getDuration();
 		sourceBatCons = sourcePath.getBatteryConsumption();
-		sourcePosition = OrientedPoint(sourcePath.getNodes().back().x, sourcePath.getNodes().back().y, sourcePath.getEndOrientation());
+		sourcePosition = sourcePath.getEnd();
 }
 
 TransportationTask::~TransportationTask() = default;
