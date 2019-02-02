@@ -14,7 +14,8 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		waitTimes(std::move(waitTimes_)),
 		hardwareProfile(hardwareProfile),
 		start(start),
-		end(end)
+		end(end),
+		isValidPath(true)
 {
 	if(nodes.size() != waitTimes.size()) {
 		ROS_FATAL("nodes.size() != waitTimes.size()");
