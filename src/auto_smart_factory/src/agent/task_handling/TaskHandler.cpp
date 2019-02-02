@@ -120,7 +120,6 @@ void TaskHandler::executeTask() {
             if (this->motionPlanner->isDone()) {
                 currentTask->setState(Task::State::PICKUP);
                 motionPlanner->alignTowards(((TransportationTask*) currentTask)->getSourcePosition().o);
-                this->motionPlanner->stop();
             }
             break;
 
@@ -149,13 +148,11 @@ void TaskHandler::executeTask() {
                 if (motionPlanner->isDone()) {
                     currentTask->setState(Task::State::DROPOFF);
                     motionPlanner->alignTowards(currentTask->getTargetPosition().o);
-                    this->motionPlanner->stop();
                 }
             } else if (currentTask->isCharging()) {
                 if (motionPlanner->isDone()) {
                     currentTask->setState(Task::State::CHARGING);
                     motionPlanner->alignTowards(currentTask->getTargetPosition().o);
-                    this->motionPlanner->stop();
                 }
             }
             break;

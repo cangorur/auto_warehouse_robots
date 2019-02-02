@@ -106,12 +106,7 @@ void MotionPlanner::turnTowards(Point target) {
 		mode = Mode::PID;
 		return;
 	}
-	
-	if(rotation >= 0.3f) {
-		publishVelocity(0, maxTurningSpeed * (rotation < 0.f ? -1.f : 1.f));
-	} else {
-		publishVelocity(0, Math::clamp(std::abs(rotation), 0.3f, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
-	}
+	publishVelocity(0, Math::clamp(std::abs(rotation), 0, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
 }
 
 void MotionPlanner::turnTowards(double direction) {
@@ -121,12 +116,7 @@ void MotionPlanner::turnTowards(double direction) {
 		mode = Mode::FINISHED;
 		return;
 	}
-
-	if(rotation >= 0.3f) {
-		publishVelocity(0, maxTurningSpeed * (rotation < 0.f ? -1.f : 1.f));
-	} else {
-		publishVelocity(0, Math::clamp(std::abs(rotation), 0.3f, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
-	}
+	publishVelocity(0, Math::clamp(std::abs(rotation), 0.3, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
 }
 
 void MotionPlanner::alignTowards(Point target) {
