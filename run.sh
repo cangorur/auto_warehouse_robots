@@ -8,9 +8,12 @@ fi
 tmux kill-session -t rosc &> /dev/null
 
 tmux new -s rosc -d
-tmux split-window -d -t rosc -v
-tmux split-window -d -t rosc -v
-tmux select-layout even-vertical
+tmux split-window -d -t rosc
+tmux split-window -d -t rosc
+#tmux select-layout even-vertical
+
+tmux resize-pane -t rosc.0 -U 15 
+tmux resize-pane -t rosc.2 -D 20 
 
 tmux send-keys -t rosc.0 "morse run auto_smart_factory auto_factory_simple_fast.py" enter
 
