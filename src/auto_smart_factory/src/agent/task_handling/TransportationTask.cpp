@@ -11,8 +11,6 @@ TransportationTask::TransportationTask(unsigned int id, uint32_t sourceID, uint3
 		sourcePosition = sourcePath.getEnd();
 }
 
-TransportationTask::~TransportationTask() = default;
-
 unsigned int TransportationTask::getId(){
 	return id;
 }

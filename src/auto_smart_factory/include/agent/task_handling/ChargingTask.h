@@ -6,23 +6,17 @@
 #include "agent/path_planning/OrientedPoint.h"
 #include "agent/path_planning/Path.h"
 
-class ChargingTask : public Task
-{
-	public:
+class ChargingTask : public Task {
+public:
+	explicit ChargingTask(uint32_t targetID, Path targetPath, double startTime);
+	~ChargingTask() override = default;
+	
+	double getBatteryConsumption() override;
+	double getDuration() override;
+	void setState(Task::State state) override;
 
-		explicit ChargingTask(uint32_t targetID, Path targetPath, double startTime);
-
-		virtual ~ChargingTask();
-
-		double getBatteryConsumption();
-
-		double getDuration();
-
-		void setState(Task::State state);
-
-	protected:
-
-		float chargingTime = 0;
+protected:
+	float chargingTime = 0;
 };
 
 #endif /* AGENT_CHARGINGTASK_H_ */

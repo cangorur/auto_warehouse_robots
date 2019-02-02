@@ -1,12 +1,11 @@
 #include "agent/task_handling/ChargingTask.h"
 
 ChargingTask::ChargingTask(uint32_t targetID, Path targetPath, double startTime) : 
-	Task(targetID, targetPath, Type::CHARGING, startTime){
-	}
+	Task(targetID, targetPath, Type::CHARGING, startTime)
+{
+}
 
-ChargingTask::~ChargingTask() = default;
-
-double ChargingTask::getBatteryConsumption(void){
+double ChargingTask::getBatteryConsumption() {
 	if( state == Task::State::WAITING || state == Task::State::TO_TARGET) {
 		return targetBatCons;
 	} else {
@@ -14,7 +13,7 @@ double ChargingTask::getBatteryConsumption(void){
 	}
 }
 
-double ChargingTask::getDuration(void){
+double ChargingTask::getDuration() {
 	if( state == Task::State::WAITING || state == Task::State::TO_TARGET) {
 		return targetDuration + chargingTime;
 	} else if (state == Task::State::CHARGING) {
