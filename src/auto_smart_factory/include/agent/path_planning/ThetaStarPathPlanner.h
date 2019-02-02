@@ -10,13 +10,10 @@
 #include "RobotHardwareProfile.h"
 
 // TODO fix starting in reservation -> no path found (crash)
-// TODO ignore own reservations during theta star!!!!!!!
-
 
 class ThetaStarPathPlanner {
 public:
 	explicit ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile);
-
 	Path findPath(OrientedPoint start, OrientedPoint target, double startingTime);
 
 private:
@@ -37,7 +34,7 @@ private:
 	double getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const;
 	double getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
 
-	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation) const;
+	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, OrientedPoint start, OrientedPoint target, double initialWaitTime) const;
 	
 	OrientedPoint startPoint;
 	OrientedPoint endPoint;

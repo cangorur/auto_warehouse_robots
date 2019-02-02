@@ -15,8 +15,6 @@ public:
 	~ReservationManager() = default;
 
 	void update();
-	
-	// TODO add timeout
 	void reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg);
 
 	// Path reservations
@@ -55,6 +53,7 @@ private:
 	
 	const double emptyAuctionDelay = 0.2f;
 	const double pathReservationStartingTimeOffset = 0.2f;
+	const double auctionTimeout = 1.0f;
 	
 	void addReservations(const auto_smart_factory::ReservationCoordination& msg);
 	void publishReservations(std::vector<Rectangle> reservations);

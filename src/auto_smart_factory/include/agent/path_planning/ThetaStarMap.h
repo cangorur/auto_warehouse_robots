@@ -12,8 +12,9 @@ class Map;
 class ThetaStarMap {
 private:
 	Map* map;
-	std::map<Point, GridNode, Math::PointComparator> nodes;
-
+	std::map<Point, GridNode*, Math::PointComparator> nodes;
+	float resolution;
+	
 public:
 	ThetaStarMap() = default;
 	ThetaStarMap(Map* map, float resolution);
@@ -26,8 +27,10 @@ public:
 
 	void listAllReservationsIn(Point p);
 
+	void addAdditionalNode(Point pos);
+
 private:
-	void linkToNode(GridNode& node, Point targetPos);
+	void linkToNode(GridNode* node, Point targetPos);
 
 };
 

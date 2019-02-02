@@ -24,7 +24,13 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 		this->obstacles.emplace_back(o.getPosition(), o.getSize(), o.getRotation());
 	}
 	
+	// Theta star map
 	thetaStarMap = ThetaStarMap(this, warehouseConfig.map_configuration.resolutionThetaStar);
+	for(const auto& tray : warehouseConfig.trays) {
+		OrientedPoint p = getPointInFrontOfTray(tray);
+		thetaStarMap.addAdditionalNode(Point(p.x, p.y));
+	}
+	
 	reservations.clear();
 	
 	// Add idle reservations
@@ -205,8 +211,8 @@ OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 
 	double input_dx = std::cos(tray.orientation * PI / 180);
 	double input_dy = std::sin(tray.orientation * PI / 180);
-	input_drive_point.x = static_cast<float>(tray.x + 0.5f * input_dx);
-	input_drive_point.y = static_cast<float>(tray.y + 0.5f * input_dy);
+	input_drive_point.x = static_cast<float>(tray.x + (0.51f + ROBOT_DIAMETER) * input_dx);
+	input_drive_point.y = static_cast<float>(tray.y + (0.51f + ROBOT_DIAMETER) * input_dy);
 	input_drive_point.o = Math::toRad(tray.orientation + 180);
 
 	return input_drive_point;
@@ -332,9 +338,9 @@ visualization_msgs::Marker Map::getReservationVisualization(int ownerId, visuali
 }
 
 void Map::listAllReservationsIn(Point p) {
-	ROS_WARN("Reservations for robot %d", ownerId);
+	ROS_INFO("Reservations for robot %d", ownerId);
 	for(const auto& r : reservations) {
-		ROS_WARN("Reservations: At %f/%f | Size %f/%f | Rot: %f | ID: %d, from %f until %f", r.getPosition().x, r.getPosition().y, r.getSize().x, r.getSize().y, r.getRotation(), r.getOwnerId(), r.getStartTime(), r.getEndTime());
+		ROS_INFO("Reservations: At %f/%f | Size %f/%f | Rot: %f | ID: %d, from %f until %f", r.getPosition().x, r.getPosition().y, r.getSize().x, r.getSize().y, r.getRotation(), r.getOwnerId(), r.getStartTime(), r.getEndTime());
 	}
 }
 

@@ -23,6 +23,7 @@ Point operator +(const Point& left, const Point& right);
 Point operator *(float factor, const Point& left);
 Point operator *(const Point& left, float factor);
 Point operator /(const Point& left, float factor);
+bool operator ==(const Point& left, const Point& right);
 
 Point& operator -=(const Point& left, const Point& right);
 Point& operator +=(const Point& left, const Point& right);

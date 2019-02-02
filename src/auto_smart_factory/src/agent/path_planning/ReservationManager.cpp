@@ -37,18 +37,25 @@ void ReservationManager::update() {
 	
 	// Process queued reservationBids
 	auto iter = reservationBidQueue.begin();
-
 	while(iter != reservationBidQueue.end()) {
 		if((*iter).first < currentAuctionId) {
 			iter = reservationBidQueue.erase(iter);
 		} else if((*iter).first == currentAuctionId) {
 			updateHighestBid(ReservationBid((*iter).second.bid, (*iter).second.agentId));
-			
 			iter = reservationBidQueue.erase(iter);
 		} else {
 			iter++;
 		}
 	}
+	
+	// Auction timeout
+	if(now >= currentAuctionStartTime + auctionTimeout) {
+		if(agentId == currentAuctionHighestBid.agentId) {
+			ROS_WARN("[ReservationManager %d]: Auction %d timed out. %d agents left", agentId, currentAuctionId, agentCount - 1);
+		}
+		agentCount -= 1;
+		startNewAuction(currentAuctionId + 1, now);
+	}	
 }
 
 void ReservationManager::reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg) {
@@ -59,8 +66,6 @@ void ReservationManager::reservationCoordinationCallback(const auto_smart_factor
 
 	// Queue out of order bidding messages, process reservation messages
 	if(msg.auctionId != currentAuctionId && !msg.isReservationMessage) {
-		//ROS_ERROR("[ReservationManager %d] Got bid with auction id %d but current auctionId is %d", agentId, msg.auctionId, currentAuctionId);
-		
 		if(msg.auctionId > currentAuctionId) {
 			reservationBidQueue.emplace_back(msg.auctionId, ReservationBid(msg.bid, msg.robotId));
 		}

@@ -10,8 +10,9 @@
 #include "agent/path_planning/Map.h"
 
 ThetaStarMap::ThetaStarMap(Map* map, float resolution) :
-	map(map) {
-	
+	map(map),
+	resolution(resolution)
+{
 	Point start(map->getMargin(), map->getMargin());
 	Point end(map->getWidth() - map->getMargin(), map->getHeight() - map->getMargin());
 
@@ -21,7 +22,7 @@ ThetaStarMap::ThetaStarMap(Map* map, float resolution) :
 		current.y = start.y;
 		while(current.y <= end.y) {
 			if(!map->isInsideAnyInflatedObstacle(current)) {
-				nodes.emplace(std::pair<Point, GridNode>(current, GridNode(current)));
+				nodes.emplace(std::pair<Point, GridNode*>(current, new GridNode(current)));
 			}
 			current.y += resolution;
 		}
@@ -29,24 +30,24 @@ ThetaStarMap::ThetaStarMap(Map* map, float resolution) :
 	}
 
 	// Link
-	for(auto& element : nodes) {
-		linkToNode(element.second, element.second.pos + Point(- resolution, 0));
-		linkToNode(element.second, element.second.pos + Point(- resolution, - resolution));
-		linkToNode(element.second, element.second.pos + Point(- resolution, + resolution));
-		linkToNode(element.second, element.second.pos + Point(0, - resolution));
-		linkToNode(element.second, element.second.pos + Point(0, + resolution));
-		linkToNode(element.second, element.second.pos + Point(+ resolution, 0));
-		linkToNode(element.second, element.second.pos + Point(+ resolution, - resolution));
-		linkToNode(element.second, element.second.pos + Point(+ resolution, + resolution));
+	for(const auto& element : nodes) {
+		linkToNode(element.second, element.second->pos + Point(- resolution, 0));
+		linkToNode(element.second, element.second->pos + Point(- resolution, - resolution));
+		linkToNode(element.second, element.second->pos + Point(- resolution, + resolution));
+		linkToNode(element.second, element.second->pos + Point(0, - resolution));
+		linkToNode(element.second, element.second->pos + Point(0, + resolution));
+		linkToNode(element.second, element.second->pos + Point(+ resolution, 0));
+		linkToNode(element.second, element.second->pos + Point(+ resolution, - resolution));
+		linkToNode(element.second, element.second->pos + Point(+ resolution, + resolution));
 	}
 	
 	ROS_INFO("[Theta*] Generated map with %d nodes", (int) nodes.size());
 }
 
-void ThetaStarMap::linkToNode(GridNode& node, Point targetPos) {
+void ThetaStarMap::linkToNode(GridNode* node, Point targetPos) {
 	auto iter = nodes.find(targetPos);
-	if(iter != nodes.end() && map->isStaticLineOfSightFree(node.pos, targetPos)) {
-		node.neighbours.push_back(&iter->second);
+	if(iter != nodes.end() && map->isStaticLineOfSightFree(node->pos, targetPos)) {
+		node->neighbours.push_back(iter->second);
 	}
 }
 
@@ -59,7 +60,7 @@ const GridNode* ThetaStarMap::getNodeClosestTo(const Point& pos) const {
 
 		if(distance < shortestDistance) {
 			shortestDistance = distance;
-			nearestNode = &element.second;
+			nearestNode = element.second;
 		}
 	}
 
@@ -88,4 +89,30 @@ bool ThetaStarMap::isTimedConnectionFree(const Point& pos1, const Point& pos2, d
 
 void ThetaStarMap::listAllReservationsIn(Point p) {
 	map->listAllReservationsIn(p);
+}
+
+void ThetaStarMap::addAdditionalNode(Point pos) {
+	if(!map->isPointInMap(pos) || map->isInsideAnyInflatedObstacle(pos)) {
+		return;
+	}
+
+	// Add new node
+	GridNode* newGridNode = new GridNode(pos);
+	auto emplaceResult = nodes.emplace(std::pair<Point, GridNode*>(pos, newGridNode));
+
+	// If node was newly added
+	if(emplaceResult.second) {
+		float maxDistance = resolution * resolution;
+
+		for(std::pair<Point, GridNode*> neighbour : nodes) {
+			float distance = Math::getDistanceSquared(neighbour.first, pos);
+
+			if(distance <= maxDistance && map->isStaticLineOfSightFree(pos, neighbour.first))  {
+				newGridNode->neighbours.push_back(neighbour.second);
+				neighbour.second->neighbours.push_back(newGridNode);
+			}
+		}
+	} else {
+		delete newGridNode;
+	}
 }

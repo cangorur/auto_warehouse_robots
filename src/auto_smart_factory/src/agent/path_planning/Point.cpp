@@ -58,4 +58,8 @@ Point operator /(const Point& left, float factor) {
 	return Point(left.x / factor, left.y / factor);
 }
 
+bool operator ==(const Point& left, const Point& right) {
+	return left.x == right.x && left.y == right.y;
+}
+
 

@@ -261,7 +261,7 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 		}
 	} catch(std::out_of_range& e) {
 		// task does not exist
-		ROS_ERROR("[%d]: Attempted to assign inexistent task (specified id: %d)", agentIdInt, req.task_id);
+		ROS_FATAL("[%d]: Attempted to assign inexistent task (specified id: %d)", agentIdInt, req.task_id);
 		res.success = false;
 	}
 	return res.success;
