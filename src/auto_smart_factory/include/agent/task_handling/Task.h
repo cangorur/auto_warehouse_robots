@@ -8,7 +8,7 @@
 class Task {
 public:
 	enum class Type {CHARGING, TRANSPORTATION};
-	enum class State {WAITING, TO_SOURCE, PICKUP, RESERVING_TARGET, TO_TARGET, DROPOFF, FINISHED, CHARGING};
+	enum class State {WAITING, TO_SOURCE, PICKUP, BACK_OFF, RESERVING_TARGET, TO_TARGET, APPROACH, DROPOFF, FINISHED, CHARGING};
 
 	Task(uint32_t targetID, Path targetPath, Type type, double startTime);
 	virtual ~Task() = default;

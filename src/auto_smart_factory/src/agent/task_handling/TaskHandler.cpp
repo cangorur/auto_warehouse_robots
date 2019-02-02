@@ -38,7 +38,7 @@ void TaskHandler::update() {
             // check battery status,
             if(chargingManagement->isChargingAppropriate()) {
                 double now = ros::Time::now().toSec();
-                std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(motionPlanner->getOrientedPoint(), now);
+                std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(motionPlanner->getPositionAsOrientedPoint(), now);
                 // add charging task
                 if(pathToCS.first.isValid()) {
                     ROS_WARN("[%s] Adding charging task while in idle state", agentId.c_str());
@@ -107,9 +107,9 @@ void TaskHandler::executeTask() {
             } else {
                 // Start to bid for path reservations
                 if(currentTask->isTransportation()) {
-                    reservationManager->bidForPathReservation(motionPlanner->getOrientedPoint(), ((TransportationTask*) currentTask)->getSourcePosition());
+                    reservationManager->bidForPathReservation(motionPlanner->getPositionAsOrientedPoint(), ((TransportationTask*) currentTask)->getSourcePosition());
                 } else if(currentTask->isCharging()) {
-                    reservationManager->bidForPathReservation(motionPlanner->getOrientedPoint(), currentTask->getTargetPosition());
+                    reservationManager->bidForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition());
                 } else {
                     ROS_ERROR("Task is neither Transportation task nor charging task!");
                 }
@@ -128,7 +128,14 @@ void TaskHandler::executeTask() {
             if (this->motionPlanner->isDone()) {
                 gripper->loadPackage(true);
                 ros::Duration(2).sleep();
-                reservationManager->bidForPathReservation(((TransportationTask*) currentTask)->getSourcePosition(), currentTask->getTargetPosition());
+                this->motionPlanner->driveBackward(0.3);
+                currentTask->setState(Task::State::BACK_OFF);
+            }
+            break;
+
+        case Task::State::BACK_OFF:
+            if (this->motionPlanner->isDone()) {
+                reservationManager->bidForPathReservation(this->motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition());
                 currentTask->setState(Task::State::RESERVING_TARGET);
             }
             break;

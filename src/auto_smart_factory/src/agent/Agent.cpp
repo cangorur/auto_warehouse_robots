@@ -454,5 +454,6 @@ std_msgs::ColorRGBA Agent::agentIdToColor(int agentId) {
 }
 
 bool Agent::isInitializedCompletely() {
-	return initialized && motionPlanner->getOrientedPoint().x != 0 && motionPlanner->getOrientedPoint().y != 0;
+	//return initialized && motionPlanner->getPositionAsOrientedPoint().x != 0 && motionPlanner->getPositionAsOrientedPoint().y != 0;
+	return initialized && motionPlanner->isPositionInitialized();
 }

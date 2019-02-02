@@ -33,6 +33,7 @@ MotionPlanner::~MotionPlanner() {
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	pos.update(position.x, position.y, orientation, ros::Time::now());
+	positionInitialized = true;
 
 	if (mode == Mode::FINISHED || mode == Mode::STOP) {
 		publishVelocity(0.0, 0.0);
@@ -47,6 +48,12 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 			turnTowards(alignDirection);
 		}
 
+		return;
+	}
+
+	/* Drive straight forward/backward */
+	if (mode == Mode::FORWARD || mode == Mode::BACKWARD) {
+		driveStraight();
 		return;
 	}
 
@@ -144,6 +151,33 @@ void MotionPlanner::alignTowards(double direction) {
 	alignDirection = direction;
 }
 
+void MotionPlanner::driveForward(double distance) {
+	mode = Mode::FORWARD;
+	driveDistance = distance;
+	driveStartPosition = pos;
+}
+
+void MotionPlanner::driveBackward(double distance) {
+	mode = Mode::BACKWARD;
+	driveDistance = distance;
+	driveStartPosition = pos;
+}
+
+void MotionPlanner::driveStraight() {
+	ROS_FATAL("[DRIVE %s] driveStartPosition (%.2f, %.2f)", agentID.c_str(), driveStartPosition.x, driveStartPosition.y);
+	if(Math::getDistance(Point(driveStartPosition.x, driveStartPosition.y), Point(pos.x, pos.y)) >= driveDistance) {
+		mode = Mode::FINISHED;
+		publishVelocity(0.0, 0.0);
+		return;
+	}
+
+	if(mode == Mode::FORWARD) {
+		publishVelocity(0.5, 0.0);
+	} else {
+		publishVelocity(-0.5, 0.0);
+	}
+}
+
 void MotionPlanner::newPath(Path path) {
 	pathObject = path;
 	
@@ -218,14 +252,18 @@ double MotionPlanner::getRotationToTarget(Position currentPosition, Point target
 	return static_cast<double>(Math::getAngleDifferenceInRad(currentPosition.o, direction));
 }
 
+OrientedPoint MotionPlanner::getPositionAsOrientedPoint() {
+	return OrientedPoint(pos.x, pos.y, pos.o);
+}
+
+bool MotionPlanner::isPositionInitialized()  {
+	return positionInitialized;
+}
+
 visualization_msgs::Marker MotionPlanner::getVisualizationMsgPoints() {
 	return pathObject.getVisualizationMsgPoints();
 }
 
 visualization_msgs::Marker MotionPlanner::getVisualizationMsgLines() {
 	return pathObject.getVisualizationMsgLines();
-}
-
-OrientedPoint MotionPlanner::getOrientedPoint() {
-	return OrientedPoint(pos.x, pos.y, pos.o);
 }

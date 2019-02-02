@@ -28,7 +28,7 @@ class Agent;
 class MotionPlanner {
 
 public:
-	enum class Mode {READY, PID, TURN, FINISHED, STOP, RECOVERY, ALIGN, WAIT};
+	enum class Mode {READY, PID, TURN, FINISHED, STOP, RECOVERY, ALIGN, WAIT, FORWARD, BACKWARD};
 
 	/* Constructor that hands over some the robot configuration as well as
 	 * the motion acutator publisher.
@@ -48,6 +48,10 @@ public:
 	void alignTowards(Point target);
 	void alignTowards(double direction);
 
+	/* Drive straight forward or backward for given distance */
+	void driveForward(double distance);
+	void driveBackward(double distance);
+
 	void newPath(Path* path);
 	void newPath(Path path);
 
@@ -62,7 +66,9 @@ public:
 	visualization_msgs::Marker getVisualizationMsgPoints();
 	visualization_msgs::Marker getVisualizationMsgLines();
 	
-	OrientedPoint getOrientedPoint();
+	OrientedPoint getPositionAsOrientedPoint();
+
+	bool isPositionInitialized();
 
 private:
 	/* Follow a path using the pid */
@@ -71,6 +77,9 @@ private:
 	/* Turn the robot on spot facing orientation when finished */
 	void turnTowards(Point target);
 	void turnTowards(double direction);
+
+	/* Drive the robot straight forward or backward based on mode for given distance */
+	void driveStraight();
 
 	/* Functions to handle Waypoints */
 	bool isWaypointReached();
@@ -110,6 +119,10 @@ private:
 	Point alignTarget;
 	double alignDirection = -1;
 
+	/// Members for driveForward and driveBackward functionality
+	Position driveStartPosition;
+	double driveDistance = 0.0;
+
 	/// Threshold when robot should stop and turn on spot instead of pid controlled
 	double turnThreshold = Math::toRad(65);
 	
@@ -122,6 +135,9 @@ private:
 	float distToReachPoint = 0.3f;
 	float distToReachFinalPoint = 0.1f;
 	float distToSlowDown = 0.9f;
+
+	/// Will be true when position is updated the first time
+	bool positionInitialized = false;
 
 protected:
 	Agent* agent;
