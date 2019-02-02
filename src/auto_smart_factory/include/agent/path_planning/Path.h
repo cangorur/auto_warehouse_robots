@@ -20,6 +20,7 @@ private:
 	
 	OrientedPoint start;
 	OrientedPoint end;
+	bool isValidPath;
 
 	// Computed internally for motion planner
 	std::vector<double> departureTimes;
@@ -28,7 +29,7 @@ private:
 	float batteryConsumption = 0;
 
 public:
-	explicit Path() = default;
+	explicit Path();
 	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint end);
 	
 	virtual ~Path() = default;
@@ -51,6 +52,8 @@ public:
 
 	OrientedPoint getStart();
 	OrientedPoint getEnd();
+	
+	bool isValid() const;
 
 };
 

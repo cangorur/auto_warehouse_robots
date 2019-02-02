@@ -34,6 +34,6 @@ bool Task::isCharging() {
 	return (this->type == Task::Type::CHARGING);
 }
 
-double Task::getEndTime(void) {
+double Task::getEndTime() {
 	return startTime + this->getDuration();
 }

@@ -24,7 +24,7 @@ class TaskHandler
     	void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId);
 		void rejectTask(unsigned int requestId);
 
-		void update(void);
+		void update();
 
     	virtual ~TaskHandler();
 
@@ -33,23 +33,23 @@ class TaskHandler
 
     	void addChargingTask(uint32_t targetID, Path targetPath, double startTime);
 
-		void executeTask(void);
+		void executeTask();
 
-    	void nextTask(void);
+    	void nextTask();
 
-		bool isTaskInExecution(void);
+		bool isTaskInExecution();
 
-		bool isIdle(void);
+		bool isIdle();
 
-		unsigned int numberQueuedTasks(void);
+		unsigned int numberQueuedTasks();
 
-		Task* getCurrentTask(void);
+		Task* getCurrentTask();
 
-		double getEstimatedBatteryLevelAfterQueuedTasks(void);
+		double getEstimatedBatteryLevelAfterQueuedTasks();
 
-		double getDuration(void);
+		double getDuration();
 
-		Task* getLastTask(void);
+		Task* getLastTask();
 
 	private:
 		// the current task

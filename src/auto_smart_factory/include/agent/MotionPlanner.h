@@ -66,14 +66,14 @@ public:
 
 private:
 	/* Follow a path using the pid */
-	void followPath(void);
+	void followPath();
 
 	/* Turn the robot on spot facing orientation when finished */
 	void turnTowards(Point target);
 	void turnTowards(double direction);
 
 	/* Functions to handle Waypoints */
-	bool isWaypointReached(void);
+	bool isWaypointReached();
 	bool isCurrentPointLastPoint();
 
 	void advanceToNextPathPoint();

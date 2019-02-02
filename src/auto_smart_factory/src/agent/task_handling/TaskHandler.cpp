@@ -39,11 +39,11 @@ void TaskHandler::update() {
                 double now = ros::Time::now().toSec();
                 std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(motionPlanner->getOrientedPoint(), now);
                 // add charging task
-                if(pathToCS.first.getDistance() > 0) {
-                    ROS_WARN("[%s] adding charging task while in idle state", agentId.c_str());
+                if(pathToCS.first.isValid()) {
+                    ROS_WARN("[%s] Adding charging task while in idle state", agentId.c_str());
                     addChargingTask(pathToCS.second, pathToCS.first, now);
                 } else {
-                    ROS_WARN("[%s] could not add charging task while idling, because its length is 0", agentId.c_str());
+                    ROS_WARN("[%s] Could not add charging task while idling, because its length is 0", agentId.c_str());
                 }
             }
         }
@@ -64,7 +64,7 @@ TaskHandler::~TaskHandler(){
 }
 
 void TaskHandler::addTransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, Path sourcePath, Path targetPath, double startTime) {
-    if(sourcePath.getDistance() > 0 && targetPath.getDistance() > 0){
+    if(sourcePath.isValid() && targetPath.isValid()) {
         // create new task
         TransportationTask* t = new TransportationTask(id, sourceID, targetID, sourcePath, targetPath, startTime);
 
@@ -74,7 +74,7 @@ void TaskHandler::addTransportationTask(unsigned int id, uint32_t sourceID, uint
 }
 
 void TaskHandler::addChargingTask(uint32_t targetID, Path targetPath, double startTime) {
-    if(targetPath.getDistance() > 0){
+    if(targetPath.isValid()) {
         // create new charging task
         ChargingTask* t = new ChargingTask(targetID, targetPath, startTime);
 

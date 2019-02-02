@@ -35,12 +35,12 @@ std::pair<Path, uint32_t> ChargingManagement::getPathToNearestChargingStation(Or
 	//Find paths for all possible charging stations
 	for(auto& charging_tray : charging_trays) {
 		if(map->isPointTargetOfAnotherRobot(charging_tray)) {
+			ROS_INFO("Skipping charging station because it is occupied");
 			continue;
 		}		
 		
 		Path path = map->getThetaStarPath(start, charging_tray, startingTime);
-		
-		if(path.getDuration() < nearestStationDuration) {
+		if(path.isValid() && path.getDuration() < nearestStationDuration) {
 			nearestStationDuration = path.getDuration();
 			
 			shortestPath = path;

@@ -186,12 +186,12 @@ void ReservationManager::bidForPathReservation(OrientedPoint startPoint, Oriente
 	this->endPoint = endPoint;	
 	
 	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
-	if(pathToReserve.getDistance() > 0) {
+	if(pathToReserve.isValid()) {
 		isBidingForReservation = true;
 		hasReservedPath = false;
 
 	} else {
-		ROS_ERROR("[ReservationManager %d] Tried to generate path but no path was found. Distance start-end: %f", agentId, Math::getDistance(Point(startPoint), Point(endPoint)));
+		ROS_ERROR("[ReservationManager %d] Tried to generate path but no path was found", agentId);
 	}	
 }
 

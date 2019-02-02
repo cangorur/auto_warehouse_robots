@@ -14,9 +14,9 @@ class ChargingTask : public Task
 
 		virtual ~ChargingTask();
 
-		double getBatteryConsumption(void);
+		double getBatteryConsumption();
 
-		double getDuration(void);
+		double getDuration();
 
 		void setState(Task::State state);
 

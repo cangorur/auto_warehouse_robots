@@ -110,7 +110,6 @@ void MotionPlanner::turnTowards(Point target) {
 }
 
 void MotionPlanner::turnTowards(double direction) {
-	ROS_INFO("Turning towards %f", direction);
 	double rotation = static_cast<double>(Math::getAngleDifferenceInRad(pos.o, direction));
 	if(std::abs(rotation) <= 0.1f) {
 		mode = Mode::FINISHED;
@@ -133,14 +132,14 @@ void MotionPlanner::alignTowards(double direction) {
 void MotionPlanner::newPath(Path path) {
 	pathObject = path;
 	
-	if(path.getDistance() > 0) {
+	if(path.isValid()) {
 		currentTarget = pathObject.getNodes().front();
 		currentTargetIndex = 0;
 		mode = Mode::READY;
 		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgPoints());
 		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
 	} else {
-		printf("[MotionPlanner - %s]: Got path with length 0", agentID.c_str());
+		ROS_ERROR("[MotionPlanner - %s]: Got invalid path", agentID.c_str());
 		mode = Mode::FINISHED;
 	}
 }
@@ -174,7 +173,7 @@ bool MotionPlanner::isDone() {
 }
 
 bool MotionPlanner::hasPath() {
-	return pathObject.getDistance() > 0;
+	return pathObject.isValid();
 }
 
 bool MotionPlanner::isDrivingBackwards() {

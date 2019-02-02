@@ -17,7 +17,12 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		end(end)
 {
 	if(nodes.size() != waitTimes.size()) {
-		ROS_ERROR("nodes.size() != waitTimes.size()");
+		ROS_FATAL("nodes.size() != waitTimes.size()");
+		isValidPath = false;
+	}
+	if(nodes.size() < 2) {
+		ROS_FATAL("Tried to construct path with no node points");
+		isValidPath = false;
 	}
 
 	// Turning time is considered as part of the following line segment.
@@ -52,6 +57,11 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 			}
 		}
 	}
+}
+
+Path::Path() : 
+	isValidPath(false)
+{
 }
 
 const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
@@ -207,5 +217,9 @@ OrientedPoint Path::getStart() {
 
 OrientedPoint Path::getEnd() {
 	return end;
+}
+
+bool Path::isValid() const {
+	return isValidPath;
 }
 
