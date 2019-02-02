@@ -119,8 +119,15 @@ void TaskHandler::executeTask() {
 
         case Task::State::TO_SOURCE:
             if (this->motionPlanner->isDone()) {
-                currentTask->setState(Task::State::PICKUP);
+                currentTask->setState(Task::State::APPROACH_SOURCE);
                 motionPlanner->alignTowards(((TransportationTask*) currentTask)->getSourcePosition().o);
+            }
+            break;
+
+        case Task::State::APPROACH_SOURCE:
+            if (this->motionPlanner->isDone()) {
+                currentTask->setState(Task::State::PICKUP);
+                motionPlanner->driveForward(0.4);
             }
             break;
 
@@ -129,11 +136,11 @@ void TaskHandler::executeTask() {
                 gripper->loadPackage(true);
                 ros::Duration(2).sleep();
                 this->motionPlanner->driveBackward(0.3);
-                currentTask->setState(Task::State::BACK_OFF);
+                currentTask->setState(Task::State::LEAVE_SOURCE);
             }
             break;
 
-        case Task::State::BACK_OFF:
+        case Task::State::LEAVE_SOURCE:
             if (this->motionPlanner->isDone()) {
                 reservationManager->bidForPathReservation(this->motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition());
                 currentTask->setState(Task::State::RESERVING_TARGET);
@@ -152,16 +159,20 @@ void TaskHandler::executeTask() {
             break;
 
         case Task::State::TO_TARGET:
-            if (currentTask->isTransportation()) {
-                if (motionPlanner->isDone()) {
+            if (motionPlanner->isDone()) {
+                currentTask->setState(Task::State::APPROACH_TARGET);
+                motionPlanner->alignTowards(currentTask->getTargetPosition().o);
+            }
+            break;
+
+        case Task::State::APPROACH_TARGET:
+            if (this->motionPlanner->isDone()) {
+                if (currentTask->isTransportation()) {
                     currentTask->setState(Task::State::DROPOFF);
-                    motionPlanner->alignTowards(currentTask->getTargetPosition().o);
-                }
-            } else if (currentTask->isCharging()) {
-                if (motionPlanner->isDone()) {
+                } else if (currentTask->isCharging()) {
                     currentTask->setState(Task::State::CHARGING);
-                    motionPlanner->alignTowards(currentTask->getTargetPosition().o);
                 }
+                motionPlanner->driveForward(0.4);
             }
             break;
 
@@ -175,9 +186,11 @@ void TaskHandler::executeTask() {
 
         case Task::State::CHARGING:
             // Check charging progress
-            this->motionPlanner->stop();
-            if (this->chargingManagement->isCharged()){
-                currentTask->setState(Task::State::FINISHED);
+            if (motionPlanner->isDone()) {
+                this->motionPlanner->stop();
+                if (this->chargingManagement->isCharged()){
+                    currentTask->setState(Task::State::FINISHED);
+                }
             }
             break;
 

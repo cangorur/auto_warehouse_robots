@@ -212,8 +212,8 @@ OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 	// Assume tray.orientation is in degree
 	double inputDx = std::cos(tray.orientation * PI / 180);
 	double inputDy = std::sin(tray.orientation * PI / 180);
-	p.x = static_cast<float>(tray.x + (0.51f + ROBOT_DIAMETER) * inputDx);
-	p.y = static_cast<float>(tray.y + (0.51f + ROBOT_DIAMETER) * inputDy);
+	p.x = static_cast<float>(tray.x + (0.81f + ROBOT_DIAMETER) * inputDx);
+	p.y = static_cast<float>(tray.y + (0.81f + ROBOT_DIAMETER) * inputDy);
 	p.o = static_cast<float>(Math::normalizeRad(Math::toRad(tray.orientation + 180.f)));
 	
 	return p;
