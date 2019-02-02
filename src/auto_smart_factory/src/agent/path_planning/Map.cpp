@@ -216,7 +216,6 @@ OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 	p.y = static_cast<float>(tray.y + (0.51f + ROBOT_DIAMETER) * inputDy);
 	p.o = static_cast<float>(Math::normalizeRad(Math::toRad(tray.orientation + 180.f)));
 	
-	ROS_WARN("Computing point in front of tray with orientation rad %f", p.o);
 	return p;
 }
 
