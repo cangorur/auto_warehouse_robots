@@ -12,11 +12,12 @@ TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub, Map* map
 {
 }
 
-void TaskHandler::publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId) {
+void TaskHandler::publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId, double estimatedDuration) {
     auto_smart_factory::TaskRating scoreMessage;
     scoreMessage.robot_id = agentId;
     scoreMessage.request_id = requestId;
     scoreMessage.score = score;
+    scoreMessage.estimatedDuration = estimatedDuration;
     scoreMessage.end_id = endTrayId;
     scoreMessage.start_id = startTrayId;
     scoreMessage.reject = false;

@@ -191,7 +191,7 @@ void ReservationManager::bidForPathReservation(OrientedPoint startPoint, Oriente
 		hasReservedPath = false;
 
 	} else {
-		ROS_ERROR("[ReservationManager %d] Tried to generate path but no path was found", agentId);
+		ROS_ERROR("[ReservationManager %d] Tried to generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
 	}	
 }
 

@@ -14,8 +14,6 @@ TaskData::TaskData(const RobotCandidate& cand, TrayAllocatorPtr allocatedSource,
 		allocatedTarget), package(pkg), createTime(createTime) {
 	ROS_ASSERT(cand.source.id == allocatedSource->getId());
 	ROS_ASSERT(cand.target.id == allocatedTarget->getId());
-}
-
-TaskData::~TaskData() {
+	ROS_ASSERT(cand.estimatedDuration.toSec() > 0);
 }
 

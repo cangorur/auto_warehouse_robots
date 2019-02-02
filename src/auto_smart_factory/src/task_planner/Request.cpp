@@ -208,9 +208,9 @@ void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr) {
 		RobotCandidate* cand = new RobotCandidate();
 		cand->score = tr.score;
 		cand->robotId = tr.robot_id;
-		// ROS_INFO("[Request %d] looking for source tray %d and target tray %d", this->status.id, tr.start_id, tr.end_id);
+		cand->estimatedDuration = ros::Duration(tr.estimatedDuration);
 		cand->source = taskPlanner->getTrayConfig(tr.start_id);
-		cand->target = taskPlanner->getTrayConfig(tr.end_id);
+		cand->target = taskPlanner->getTrayConfig(tr.end_id);		
 		robotCandidates.push_back(cand);
 	}
 	
@@ -239,16 +239,15 @@ void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){
 	ros::Time start = ros::Time::now();
 	ros::Time end = start + timeout;
 	// ROS_INFO("[Request %d] is waiting for robot scores", status.id);
-	ros::Time now = start;
 	while(ros::Time::now() < end){
 		if(taskPlanner->getRegisteredRobots().size() == answeredRobots.size()){
-			// ROS_INFO("[Request %d] received all answers", status.id);
+			ROS_INFO("[Request %d] received all answers", status.id);
 			return;
 		}
 		ros::spinOnce();
 		frequency.sleep();
 	}
-	// ROS_INFO("[Request %d] Timeout while waiting for robot scores, got %d scores", status.id, (unsigned int)answeredRobots.size());
+	ROS_WARN("[Request %d] Timeout while waiting for robot scores, got %d scores", status.id, (unsigned int)answeredRobots.size());
 }
 
 void Request::clearRobotCandidates(){

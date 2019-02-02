@@ -232,6 +232,7 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 				if(sourcePath.isValid() && targetPath.isValid()) {
 					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
 					initialTimeOfCurrentTask = ros::Time::now().toSec();
+					res.success = true;
 				} else {
 					ROS_WARN("[%s] task %d can not be assigned, as source or target path is invalid", agentID.c_str(), task_id);
 					res.success = false;
@@ -252,7 +253,6 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 					res.success = false;
 				}
 			}			
-
 			
 		} else {
 			// ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);
@@ -263,6 +263,7 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 		ROS_FATAL("[%d]: Attempted to assign inexistent task (specified id: %d)", agentIdInt, req.task_id);
 		res.success = false;
 	}
+	
 	return res.success;
 }
 
@@ -297,7 +298,7 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 }
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
-	std::vector< TrayScore* > scores;
+	std::vector<TrayScore*> scores;
 	double queuedDuration = taskHandler->getDuration();
 	double estimatedBatteryAfterQueuedTasks = taskHandler->getEstimatedBatteryLevelAfterQueuedTasks();
 	Task* lastTask = taskHandler->getLastTask();
@@ -330,19 +331,21 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 				double score = (1.f / scoreFactor) * duration;
 				
 				// add score to list
-				scores.push_back(new TrayScore(it_id, st_id, score));
+				double durationOfThisTask = sourcePath.getDuration() + targetPath.getDuration();
+				scores.push_back(new TrayScore(it_id, st_id, score, durationOfThisTask));
 			}
 		}
 	}
 	
-	if(!scores.empty()){
+	if(!scores.empty()) {
 		std::sort(scores.begin(), scores.end(),
 			[](TrayScore* first, TrayScore* second) 
 				{return first->score < second->score;}
 			);
+		
 		TrayScore* best = scores.front();
 		// publish score
-		this->taskHandler->publishScore(taskAnnouncement.request_id, best->score, best->sourceTray, best->targetTray);
+		this->taskHandler->publishScore(taskAnnouncement.request_id, best->score, best->sourceTray, best->targetTray, best->estimatedDuration);
 		// clean list
 		for(TrayScore* s : scores){
 			delete s;

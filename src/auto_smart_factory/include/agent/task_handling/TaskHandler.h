@@ -21,15 +21,14 @@ class TaskHandler
 	public:
     	explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm);
 
-    	void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId);
+    	void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId, double estimatedDuration);
 		void rejectTask(unsigned int requestId);
 
 		void update();
 
     	virtual ~TaskHandler();
 
-    	void addTransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, 
-				Path sourcePath, Path targetPath, double startTime);
+    	void addTransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, Path sourcePath, Path targetPath, double startTime);
 
     	void addChargingTask(uint32_t targetID, Path targetPath, double startTime);
 
