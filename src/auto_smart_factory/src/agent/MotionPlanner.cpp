@@ -66,6 +66,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 
 	/* Turn towards target orientation on spot when curve angle is above turnThreshold */
 	if (mode == Mode::TURN || std::abs(getRotationToTarget(pos, currentTarget)) >= turnThreshold) {
+		mode = Mode::TURN;
 		turnTowards(currentTarget);
 		return;
 	}
@@ -103,10 +104,15 @@ void MotionPlanner::followPath() {
 }
 
 void MotionPlanner::turnTowards(Point target) {
-	mode = Mode::TURN;
 	double rotation = getRotationToTarget(pos, target);
 	if(std::abs(rotation) <= 0.1f) {
-		mode = Mode::PID;
+		/* If in align mode, the task is finished after rotation. If not, the robot should continue driving afterwards */
+		if(mode == Mode::ALIGN) {
+			mode = Mode::FINISHED;
+			publishVelocity(0, 0);
+		} else {
+			mode = Mode::READY;
+		}
 		return;
 	}
 	publishVelocity(0, Math::clamp(std::abs(rotation), 0, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
@@ -115,8 +121,13 @@ void MotionPlanner::turnTowards(Point target) {
 void MotionPlanner::turnTowards(double direction) {
 	double rotation = static_cast<double>(Math::getAngleDifferenceInRad(pos.o, direction));
 	if(std::abs(rotation) <= 0.1f) {
-		mode = Mode::FINISHED;
-		publishVelocity(0, 0);
+		/* If in align mode, the task is finished after rotation. If not, the robot should continue driving afterwards */
+		if(mode == Mode::ALIGN) {
+			mode = Mode::FINISHED;
+			publishVelocity(0, 0);
+		} else {
+			mode = Mode::READY;
+		}
 		return;
 	}
 	publishVelocity(0, Math::clamp(std::abs(rotation), 0.3, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
