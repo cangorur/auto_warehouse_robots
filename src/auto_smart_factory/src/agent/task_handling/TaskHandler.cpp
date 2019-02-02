@@ -53,7 +53,7 @@ void TaskHandler::update() {
     }
 }
 
-TaskHandler::~TaskHandler(){
+TaskHandler::~TaskHandler() {
     if (currentTask != nullptr) {
         delete currentTask;
     }
@@ -124,10 +124,10 @@ void TaskHandler::executeTask() {
             break;
 
         case Task::State::PICKUP:
-            if (this->motionPlanner->isDone()) { 
+            if (this->motionPlanner->isDone()) {
                 gripper->loadPackage(true);
-                reservationManager->bidForPathReservation(((TransportationTask*) currentTask)->getSourcePosition(), currentTask->getTargetPosition());
                 ros::Duration(2).sleep();
+                reservationManager->bidForPathReservation(((TransportationTask*) currentTask)->getSourcePosition(), currentTask->getTargetPosition());
                 currentTask->setState(Task::State::RESERVING_TARGET);
             }
             break;
@@ -160,6 +160,7 @@ void TaskHandler::executeTask() {
         case Task::State::DROPOFF:
             if (motionPlanner->isDone()) {
                 gripper->loadPackage(false);
+                ros::Duration(2).sleep();
                 currentTask->setState(Task::State::FINISHED);
             }
             break;
