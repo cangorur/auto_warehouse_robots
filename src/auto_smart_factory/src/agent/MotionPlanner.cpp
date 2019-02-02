@@ -57,6 +57,9 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		} else {
 			mode = Mode::FINISHED;
 			publishVelocity(0.0, 0.0);
+			
+			agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgPoints());
+			agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
 			return;
 		}
 	}
@@ -113,6 +116,7 @@ void MotionPlanner::turnTowards(double direction) {
 	double rotation = static_cast<double>(Math::getAngleDifferenceInRad(pos.o, direction));
 	if(std::abs(rotation) <= 0.1f) {
 		mode = Mode::FINISHED;
+		publishVelocity(0, 0);
 		return;
 	}
 	publishVelocity(0, Math::clamp(std::abs(rotation), 0.3, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
