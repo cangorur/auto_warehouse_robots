@@ -106,7 +106,12 @@ void MotionPlanner::turnTowards(Point target) {
 		mode = Mode::PID;
 		return;
 	}
-	publishVelocity(0, Math::clamp(std::abs(rotation), 0, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+	
+	if(rotation >= 0.3f) {
+		publishVelocity(0, maxTurningSpeed * (rotation < 0.f ? -1.f : 1.f));
+	} else {
+		publishVelocity(0, Math::clamp(std::abs(rotation), 0.3f, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+	}
 }
 
 void MotionPlanner::turnTowards(double direction) {
@@ -115,7 +120,12 @@ void MotionPlanner::turnTowards(double direction) {
 		mode = Mode::FINISHED;
 		return;
 	}
-	publishVelocity(0, Math::clamp(std::abs(rotation), 0.3, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+
+	if(rotation >= 0.3f) {
+		publishVelocity(0, maxTurningSpeed * (rotation < 0.f ? -1.f : 1.f));
+	} else {
+		publishVelocity(0, Math::clamp(std::abs(rotation), 0.3f, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+	}
 }
 
 void MotionPlanner::alignTowards(Point target) {
@@ -127,11 +137,6 @@ void MotionPlanner::alignTowards(Point target) {
 void MotionPlanner::alignTowards(double direction) {
 	mode = Mode::ALIGN;
 	alignDirection = direction;
-}
-
-void MotionPlanner::newPath(Path* path) {
-	// Create local copy
-	newPath(Path(path->getStartTimeOffset(), path->getNodes(), path->getWaitTimes(), path->getRobotHardwareProfile()));	
 }
 
 void MotionPlanner::newPath(Path path) {
