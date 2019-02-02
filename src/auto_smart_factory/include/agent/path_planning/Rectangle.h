@@ -37,7 +37,7 @@ public:
 	float getMinYInflated() const;
 	float getMaxYInflated() const;
 
-	bool doesOverlapTimeRange(double start, double end) const;
+	bool doesOverlapTimeRange(double start, double end, int ownerId) const;
 	double getStartTime() const;
 	double getEndTime() const;
 	double getFreeAfter() const;

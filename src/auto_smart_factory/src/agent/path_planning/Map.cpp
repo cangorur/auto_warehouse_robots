@@ -69,7 +69,7 @@ bool Map::isTimedLineOfSightFree(const Point& pos1, double startTime, const Poin
 	}
 
 	for(const Rectangle& reservation : reservations) {
-		if(reservation.doesOverlapTimeRange(startTime, endTime) && reservation.getOwnerId() != ownerId && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+		if(reservation.doesOverlapTimeRange(startTime, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
 			return false;
 		}
 	}
@@ -87,7 +87,7 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 
 	for(const Rectangle& reservation : reservations) {
 		// Directly blocked
-		if(reservation.doesOverlapTimeRange(startTime + 0.01f, endTime) && reservation.getOwnerId() != ownerId && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+		if(reservation.doesOverlapTimeRange(startTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
 			result.blockedByTimed = true;
 			if(reservation.getFreeAfter() > result.freeAfter) {
 				result.freeAfter = reservation.getFreeAfter();
@@ -118,13 +118,13 @@ bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double sta
 
 	for(const Rectangle& reservation : reservations) {
 		// Check if the waiting part is free
-		if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime) && reservation.getOwnerId() != ownerId && Math::isPointInRectangle(pos1, reservation)) {
+		if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime, ownerId) && Math::isPointInRectangle(pos1, reservation)) {
 			//printf("Connection dropped due to waiting: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
 			return false;
 		}
 
 		// Check if the driving part is free
-		if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.001f, endTime) && reservation.getOwnerId() != ownerId && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+		if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.001f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
 			//printf("Connection dropped due to driving: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
 			return false;
 		}
