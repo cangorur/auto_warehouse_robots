@@ -218,6 +218,7 @@ void TaskPlanner::rescheduleEvent(const ros::TimerEvent& e) {
 }
 
 void TaskPlanner::resourceChangeEvent() {
+	// DONT REPLANN TODO Florian fix
 	return;
 	
 	ROS_INFO("[task planner] Resource change event!");
