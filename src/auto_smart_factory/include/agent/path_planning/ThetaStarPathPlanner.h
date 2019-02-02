@@ -32,7 +32,7 @@ private:
 	double getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const;
 	double getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
 
-	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, OrientedPoint start, OrientedPoint end, double initialWaitTime) const;
+	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double initialWaitTime) const;
 	
 	OrientedPoint startPoint;
 	OrientedPoint endPoint;

@@ -207,15 +207,17 @@ void Map::addReservations(std::vector<Rectangle> newReservations) {
 }
 
 OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
-	OrientedPoint input_drive_point;
+	OrientedPoint p;
 
-	double input_dx = std::cos(tray.orientation * PI / 180);
-	double input_dy = std::sin(tray.orientation * PI / 180);
-	input_drive_point.x = static_cast<float>(tray.x + (0.51f + ROBOT_DIAMETER) * input_dx);
-	input_drive_point.y = static_cast<float>(tray.y + (0.51f + ROBOT_DIAMETER) * input_dy);
-	input_drive_point.o = Math::toRad(tray.orientation + 180);
-
-	return input_drive_point;
+	// Assume tray.orientation is in degree
+	double inputDx = std::cos(tray.orientation * PI / 180);
+	double inputDy = std::sin(tray.orientation * PI / 180);
+	p.x = static_cast<float>(tray.x + (0.51f + ROBOT_DIAMETER) * inputDx);
+	p.y = static_cast<float>(tray.y + (0.51f + ROBOT_DIAMETER) * inputDy);
+	p.o = static_cast<float>(Math::normalizeRad(Math::toRad(tray.orientation + 180.f)));
+	
+	ROS_WARN("Computing point in front of tray with orientation rad %f", p.o);
+	return p;
 }
 
 visualization_msgs::Marker Map::getObstacleVisualization() {

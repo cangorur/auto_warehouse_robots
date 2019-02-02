@@ -12,7 +12,7 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 }
 
 Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, double startingTime) {
-	// Convert to degree	
+	// Convert to degree
 	startPoint = OrientedPoint(start.x, start.y, Math::toDeg(start.o));
 	endPoint = OrientedPoint(target.x, target.y, Math::toDeg(target.o));
 
@@ -137,7 +137,7 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 	}
 
 	if(targetFound) {
-		return constructPath(startingTime, targetInformation, start, target, initialWaitTime);
+		return constructPath(startingTime, targetInformation, initialWaitTime);
 	} else {
 		ROS_FATAL("No path found from node %f/%f to node %f/%f!", startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
 		map->listAllReservationsIn(targetNode->pos);
@@ -169,7 +169,7 @@ double ThetaStarPathPlanner::getDrivingTime(ThetaStarGridNodeInformation* curren
 
 // Todo add estimated turning times to path reservation generation
 
-Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, OrientedPoint start, OrientedPoint end, double initialWaitTime) const {
+Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double initialWaitTime) const {
 	std::vector<Point> pathNodes;
 	std::vector<double> waitTimes;
 	ThetaStarGridNodeInformation* currentGridInformation = targetInformation;
@@ -187,10 +187,10 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 	std::reverse(waitTimes.begin(), waitTimes.end());
 
 	// Convert start/end orientation to rad
-	OrientedPoint startOrientation = start;
+	OrientedPoint startOrientation = startPoint;
 	startOrientation.o = Math::toRad(startOrientation.o);
 
-	OrientedPoint endOrientation = end;
+	OrientedPoint endOrientation = endPoint;
 	endOrientation.o = Math::toRad(endOrientation.o);
 	
 	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, startOrientation, endOrientation);
