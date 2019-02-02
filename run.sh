@@ -17,7 +17,7 @@ tmux resize-pane -t rosc.2 -D 20
 
 tmux send-keys -t rosc.0 "morse run auto_smart_factory auto_factory_simple_fast.py" enter
 
-tmux send-keys -t rosc.1 "roslaunch --screen auto_smart_factory full_system_simple.launch" enter
+tmux send-keys -t rosc.1 "roslaunch --screen auto_smart_factory full_system_simple.launch | tee output.log" enter
 
 tmux send-keys -t rosc.2 "sleep 3 && roslaunch auto_smart_factory visualization.launch" enter
 
