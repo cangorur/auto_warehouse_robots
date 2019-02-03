@@ -3,7 +3,7 @@
 #include <iostream>
 
 
-Point::Point(float x, float y) :
+Point::Point(double x, double y) :
 		x(x),
 		y(y) { }
 
@@ -46,15 +46,15 @@ Point& operator +=(Point& left, const Point& right) {
 	return left;
 }
 
-Point operator *(float left, const Point& right) {
+Point operator *(double left, const Point& right) {
 	return Point(left * right.x, left * right.y);
 }
 
-Point operator *(const Point& left, float factor) {
+Point operator *(const Point& left, double factor) {
 	return Point(left.x * factor, left.y * factor);
 }
 
-Point operator /(const Point& left, float factor) {
+Point operator /(const Point& left, double factor) {
 	return Point(left.x / factor, left.y / factor);
 }
 
