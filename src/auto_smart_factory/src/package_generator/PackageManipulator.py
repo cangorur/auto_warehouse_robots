@@ -18,7 +18,8 @@ def handleMovePackage(req):
     global mutex
     rospy.loginfo(req.package_id)
     while mutex == 1:
-        rospy.loginfo("waiting")
+        pass
+        #rospy.loginfo("waiting")
     mutex = 1
     success = True
     try:
