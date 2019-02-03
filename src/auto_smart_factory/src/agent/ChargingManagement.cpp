@@ -18,8 +18,8 @@ ChargingManagement::ChargingManagement(Agent* a, auto_smart_factory::WarehouseCo
 	chargingRate = robotConfig.charging_rate;
 
 
-	ROS_INFO("[ChargingManagement] Started, agent ID: [%s], agent Batt: [%f] ", agentID.c_str(), agent->getAgentBattery());
-	ROS_INFO("[ChargingManagement] Charging Rate: [%f], Discharging Rate: [%f] ", chargingRate, dischargingRate);
+	ROS_INFO("[Charging Management] Started, agent ID: [%s], agent Batt: [%f] ", agentID.c_str(), agent->getAgentBattery());
+	ROS_INFO("[Charging Management] Charging Rate: [%f], Discharging Rate: [%f] ", chargingRate, dischargingRate);
 
 	getAllChargingStations();
 }
@@ -92,4 +92,14 @@ bool ChargingManagement::isConsumptionPossible(double consumption) {
 
 bool ChargingManagement::isConsumptionPossible(double agentBatteryLevel, double consumption) {
 	return agentBatteryLevel - consumption - estimatedBatteryConsumptionToNearestChargingStation > criticalMinimum;
+}
+
+void  ChargingManagement::checkBattery(){
+	float batt = agent->getAgentBattery();
+	if (batt>100){
+		ROS_ERROR("[Charging Management]:Agent %s battery >100! (%f)",agentID.c_str(), batt);
+	}else if(batt<0){
+		ROS_ERROR("[Charging Management]:Agent %s battery <0! (%f)",agentID.c_str(), batt);
+	}
+
 }

@@ -69,6 +69,11 @@ public:
 	 */
 	double getChargingTime(double consumptionTillCS);
 
+	/*
+	 * Check Battery for errors
+	 */
+	void checkBattery();
+
 private:
 	Agent* agent;
 
