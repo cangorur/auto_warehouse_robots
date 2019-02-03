@@ -348,24 +348,22 @@ bool TaskPlanner::idleRobotAvailable() const {
 
 void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 	// go through requests and get the one for which the response is intended:
-	for(RequestPtr& r : inputRequests){
-		if(r->getId() == tr.request_id){
+	for(RequestPtr& r : inputRequests) {
+		if(r->getId() == tr.request_id) {
 			r->receiveTaskResponse(tr);
 			return;
 		}
 	}
-	for(RequestPtr& r : outputRequests){
-		if(r->getId() == tr.request_id){
+	for(RequestPtr& r : outputRequests) {
+		if(r->getId() == tr.request_id) {
 			r->receiveTaskResponse(tr);
 			return;
 		}
 	}
-	ROS_WARN("No request with id %d found", tr.request_id);
+	ROS_WARN("Got answer for request %d but request isnt valid anymore. Answer was from %s", tr.request_id, tr.robot_id.c_str());
 }
 
-void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
-                	 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, 
-					 uint32_t requestId){
+void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates, const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, uint32_t requestId) {
 	TaskAnnouncement tsa;
 	tsa.request_id = requestId;
 	extractData(sourceTrayCandidates, targetTrayCandidates, &tsa);

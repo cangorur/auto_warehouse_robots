@@ -22,7 +22,7 @@
  */
 class TaskData {
 public:
-	TaskData(const RobotCandidate& cand, TrayAllocatorPtr allocatedSource, TrayAllocatorPtr allocatedTarget, auto_smart_factory::Package pkg, ros::Time createTime);
+	TaskData(const RobotCandidate& candidate, TrayAllocatorPtr allocatedSource, TrayAllocatorPtr allocatedTarget, auto_smart_factory::Package pkg, ros::Time createTime);
 
 	virtual ~TaskData() = default;
 

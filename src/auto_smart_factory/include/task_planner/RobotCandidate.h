@@ -19,8 +19,7 @@
  */
 class RobotCandidate {
 public:
-	RobotCandidate();
-
+	RobotCandidate(std::string robotId, auto_smart_factory::Tray source, auto_smart_factory::Tray target, double estimatedDuration, double score);
 	virtual ~RobotCandidate() = default;
 
 	/// Robot id
@@ -33,7 +32,7 @@ public:
 	auto_smart_factory::Tray target;
 
 	/// Estimated task duration
-	ros::Duration estimatedDuration;
+	double estimatedDuration;
 
 	/// score for a specific request
 	double score;

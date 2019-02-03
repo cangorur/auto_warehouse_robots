@@ -323,13 +323,17 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 				startTime = ros::Time::now().toSec();
 				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, startTime);
 			}
+			
 			if(!sourcePath.isValid()){
 				continue;
 			}
+			
 			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, startTime + sourcePath.getDuration());
-			if(!targetPath.isValid()){
+			
+			if(!targetPath.isValid()) {
 				continue;
 			}
+			
 			double estimatedNewConsumption = sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
 
 			// Check if task can be completed
@@ -339,13 +343,15 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 				double score = (1.f / scoreFactor) * duration;
 				
 				// add score to list
-				double durationOfThisTask = sourcePath.getDuration() + targetPath.getDuration();
-				// scores.push_back(new TrayScore(it_id, st_id, score, durationOfThisTask));
+				double estimatedDuration = sourcePath.getDuration() + targetPath.getDuration();
+				ROS_ASSERT_MSG(estimatedDuration > 0, "source-duration: %f | target-duration: %f", sourcePath.getDuration(), targetPath.getDuration());
+				
+				// Update best score
 				if(best == nullptr || score < best->score){
 					if(best != nullptr){
 						delete best;
 					}
-					best = new TrayScore(it_id, st_id, score, durationOfThisTask);
+					best = new TrayScore(it_id, st_id, score, estimatedDuration);
 				}
 			}
 		}

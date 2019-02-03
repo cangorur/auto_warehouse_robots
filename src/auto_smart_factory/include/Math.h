@@ -12,8 +12,8 @@
 #define PI 3.14159265359f
 #define EPS 1e-6
 
-// Defined as 0.25 + error margin
-#define ROBOT_DIAMETER 0.26f
+// Defined as ~~~~~ Check this: (0.25 + error margin)
+#define ROBOT_RADIUS 0.24f
 
 // Rotation  0  = >
 // Rotation 90  = v
