@@ -37,7 +37,13 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 	TimedLineOfSightResult initialCheckResult = map->whenIsTimedLineOfSightFree(Point(start.x, start.y), startingTime, startNode->pos, startingTime + 0.5f);
 	if(initialCheckResult.blockedByTimed) {
 		initialWaitTime = initialCheckResult.freeAfter - startingTime + 0.5f;
-		ROS_WARN("Path needed initial wait time of %f", initialWaitTime);
+		
+		if(initialWaitTime > 1000) {
+			ROS_FATAL("Initial wait time > 1000 -> standing in permanent obstacle, no valid path possible");
+			return Path();
+		} else {
+			ROS_WARN("Path needed initial wait time of %f", initialWaitTime);
+		}
 	}
 
 	GridInformationMap exploredSet;
@@ -174,6 +180,8 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 	std::vector<double> waitTimes;
 	ThetaStarGridNodeInformation* currentGridInformation = targetInformation;
 	double waitTimeAtPrev = 0;
+	
+	int i = 0;
 
 	while(currentGridInformation != nullptr) {
 		pathNodes.emplace_back(currentGridInformation->node->pos);
@@ -181,6 +189,11 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 
 		waitTimeAtPrev = currentGridInformation->waitTimeAtPrev;
 		currentGridInformation = currentGridInformation->prev;
+		
+		if(i++ > 100) {
+			ROS_FATAL("Endless loop in construct path => aborting");
+			return Path();
+		}
 	}
 
 	std::reverse(pathNodes.begin(), pathNodes.end());
