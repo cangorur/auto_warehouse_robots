@@ -78,7 +78,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	}
 
 	/* Turn towards target orientation on spot when curve angle is above turnThreshold */
-	if (mode == Mode::TURN || std::abs(getRotationToTarget(pos, currentTarget)) >= turnThreshold) {
+	if (mode == Mode::TURN || std::abs(getRotationToTarget(pos, currentTarget)) >= turnThreshold || (std::abs(getRotationToTarget(pos, currentTarget)) >= 0.2 && currentTargetIndex < 2)) {
 		mode = Mode::TURN;
 		turnTowards(currentTarget);
 		return;
@@ -110,6 +110,9 @@ void MotionPlanner::followPath() {
 	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed-minDrivingSpeed);
 
 	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.4f) {
+		linearVelocity = std::max(0.1, (double) Math::getDistance(Point(pos.x, pos.y), currentTarget));
+	}
+	if ((currentTargetIndex == pathObject.getNodes().size() - 1) && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.5f) {
 		linearVelocity = std::max(0.1, (double) Math::getDistance(Point(pos.x, pos.y), currentTarget));
 	}
 

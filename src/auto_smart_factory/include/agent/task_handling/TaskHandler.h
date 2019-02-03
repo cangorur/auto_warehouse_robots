@@ -71,6 +71,9 @@ class TaskHandler
 
 		// a pointer to the publisher for the score
     	ros::Publisher* scorePublisher;
+
+		// the task was changed to the next one in queue
+		bool isNextTask = false;
 };
 
 #endif /* AGENT_TASKHANDLER_H_ */

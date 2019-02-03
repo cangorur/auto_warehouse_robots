@@ -53,7 +53,7 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 				// Don't compute angle difference for last node
 				float angleDifference = 0;
 				if(i < nodes.size() - 1) {
-					angleDifference = Math::getAngleDifferenceInDegree(Math::getRotation(nodes[i] - nodes[i - 1]), Math::getRotation(nodes[i + 1] - nodes[i]));
+					angleDifference = Math::getAngleDifferenceInDegree(Math::getRotationInDeg(nodes[i] - nodes[i - 1]), Math::getRotationInDeg(nodes[i + 1] - nodes[i]));
 				}
 
 				distance += currentDistance;
@@ -86,7 +86,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
 		float currentDistance = Math::getDistance(nodes[i], nodes[i + 1]);
 		Point currentDir = (nodes[i + 1] - nodes[i]) * 1.f * (1.f/currentDistance);
-		float currentRotation = Math::getRotation(currentDir);
+		float currentRotation = Math::getRotationInDeg(currentDir);
 		double currentDuration = hardwareProfile->getDrivingDuration(currentDistance);
 
 		// Waiting time
@@ -221,3 +221,16 @@ bool Path::isValid() const {
 	return isValidPath;
 }
 
+bool operator ==(const Path& p1, const Path& p2){
+	if(p1.getNodes().size() != p2.getNodes().size()) {
+		return false;
+	}
+
+	for(unsigned int i = 0; i < p1.getNodes().size(); i++) {
+		if(!(p1.getNodes().at(i) == p2.getNodes().at(i))) {
+			return false;
+		}
+	}
+
+	return true;
+}

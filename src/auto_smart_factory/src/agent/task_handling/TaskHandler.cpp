@@ -95,15 +95,14 @@ void TaskHandler::executeTask() {
                 break;
             }
             
-            if(reservationManager->getHasReservedPath()) {
+            if(reservationManager->getHasReservedPath() && !isNextTask) {
                 if (currentTask->isTransportation()) {
                     currentTask->setState(Task::State::TO_SOURCE);
-                    this->motionPlanner->start();
                 } else if (currentTask->isCharging()) {
                     currentTask->setState(Task::State::TO_TARGET);
                 }
                 motionPlanner->newPath(reservationManager->getReservedPath());
-                
+                motionPlanner->start();
             } else {
                 // Start to bid for path reservations
                 if(currentTask->isTransportation()) {
@@ -111,10 +110,10 @@ void TaskHandler::executeTask() {
                 } else if(currentTask->isCharging()) {
 	                reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition());
                 } else {
-                    ROS_ERROR("Task is neither Transportation task nor charging task!");
+                    ROS_FATAL("[%s] Task is neither TransportationTask nor ChargingTask!", agentId.c_str());
                 }
-            }           
-            
+                isNextTask = false;
+            }
             break;
 
         case Task::State::TO_SOURCE:
@@ -180,18 +179,31 @@ void TaskHandler::executeTask() {
             if (motionPlanner->isDone()) {
                 gripper->loadPackage(false);
                 ros::Duration(2).sleep();
-                currentTask->setState(Task::State::FINISHED);
+                currentTask->setState(Task::State::LEAVE_TARGET);
+                motionPlanner->driveBackward(0.3);
             }
             break;
 
         case Task::State::CHARGING:
             // Check charging progress
             if (motionPlanner->isDone()) {
-                this->motionPlanner->stop();
                 if (this->chargingManagement->isCharged()){
-                    currentTask->setState(Task::State::FINISHED);
+                    currentTask->setState(Task::State::LEAVE_TARGET);
+                    motionPlanner->driveBackward(0.3);
                 }
             }
+            break;
+
+        case Task::State::LEAVE_TARGET:
+            if (motionPlanner->isDone()) {
+                motionPlanner->stop();
+                currentTask->setState(Task::State::FINISHED);
+            }
+            break;
+
+        case Task::State::FINISHED:
+            /* Wait for next task */
+            ROS_WARN("[STATE %s] Task FINISHED and should not be scheduled!", agentId.c_str());
             break;
 
         default:
@@ -206,6 +218,7 @@ void TaskHandler::nextTask() {
 	if(!queue.empty()){
 		currentTask = queue.front();
 		queue.pop_front();
+        isNextTask = true;
 	} else {
         currentTask = nullptr;
     }

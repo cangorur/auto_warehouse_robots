@@ -12,8 +12,8 @@
 #define PI 3.14159265359f
 #define EPS 1e-6
 
-// Defined as ~~~~~ Check this: (0.25 + error margin)
-#define ROBOT_RADIUS 0.24f
+// Defined as 0.25 + error margin
+#define ROBOT_RADIUS 0.26f
 
 // Rotation  0  = >
 // Rotation 90  = v
@@ -38,45 +38,43 @@ public:
 	/* Random */
 	static void initRandom();
 	static void initRandom(unsigned long seed);
-	static float getRandom(float min, float max);
+	static double getRandom(double min, double max);
 
-	static float toRad(float angle);
-	static float toDeg(float angle);
-	static float clamp(float value, float min, float max);
-	static float lerp(float start, float end, float alpha);	
+	static double toRad(double angle);
+	static double toDeg(double angle);
+	static double clamp(double value, double min, double max);
+	static double lerp(double start, double end, double alpha);	
 	
-	static float dotProduct(const Point& v1, const Point& v2);
-	static float crossProduct(const Point& v1, const Point& v2);
-	static Point rotateVector(const Point& v, float angle);
-	static float getRotation(const Point& v);
-	static float getDistance(const Point& v1, const Point& v2);
-	static float getLength(const Point& v);
-	static float getDistanceSquared(const Point& v1, const Point& v2);
+	static double dotProduct(const Point& v1, const Point& v2);
+	static double crossProduct(const Point& v1, const Point& v2);
+	static Point rotateVector(const Point& v, double angle);
+	static double getRotationInDeg(const Point& v);
+	static double getDistance(const Point& v1, const Point& v2);
+	static double getLength(const Point& v);
+	static double getDistanceSquared(const Point& v1, const Point& v2);
 	
 	static bool areLineSegmentsParallel(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End);
 	static bool doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End);
 	static bool doesLineSegmentIntersectRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
 	static bool isPointInRectangle(const Point& p, const Rectangle& rectangle);
 
-	static float projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
-	static float getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
+	static double projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
+	static double getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 	static int getDirectionToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 
-	static float getDistanceToLine(const Point& lStart, const Point& lEnd, const Point& point);
+	static double getDistanceToLine(const Point& lStart, const Point& lEnd, const Point& point);
 
-	static float getAngleBetweenVectors(const Point& v1, const Point &v2);
+	static double getAngleBetweenVectors(const Point& v1, const Point &v2);
 
-	static Point getVectorFromOrientation(float o);
-	static float getOrientationFromVector(const Point& v);
+	static Point getVectorFromOrientation(double o);
+	static double getOrientationFromVector(const Point& v);
 	
-	static float getAngleMedian(float a1, float a2);
-	static float getAngleDifferenceInDegree(float source, float target);
-	static float getAngleDifferenceInRad(float source, float target);
+	static double getAngleMedian(double a1, double a2);
+	static double getAngleDifferenceInDegree(double source, double target);
+	static double getAngleDifferenceInRad(double source, double target);
 
 	static double normalizeRad(double angle);
 	static double normalizeDegree(double angle);
-
-	static double mapRange(double x, double in_min, double in_max, double out_min, double out_max);
 
 private:
 	static bool doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
