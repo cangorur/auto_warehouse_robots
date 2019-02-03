@@ -21,6 +21,8 @@ class RobotCandidate {
 public:
 	RobotCandidate();
 
+	virtual ~RobotCandidate() = default;
+
 	/// Robot id
 	std::string robotId;
 

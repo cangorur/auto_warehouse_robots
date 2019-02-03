@@ -6,7 +6,6 @@
 
 #include "agent/MotionPlanner.h"
 #include <cmath>
-#include <include/agent/MotionPlanner.h>
 
 
 MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :
@@ -34,31 +33,52 @@ MotionPlanner::~MotionPlanner() {
 
 void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	pos.update(position.x, position.y, orientation, ros::Time::now());
+	positionInitialized = true;
 
 	if (mode == Mode::FINISHED || mode == Mode::STOP) {
 		publishVelocity(0.0, 0.0);
 		return;
 	}
 
+	/* Align towards a point or direction (orientation) */
 	if (mode == Mode::ALIGN) {
-		if (alignDirection == -1.0)
+		if (alignDirection == -1.0) {
 			turnTowards(alignTarget);
-		else
+		} else {
 			turnTowards(alignDirection);
+		}
 
 		return;
 	}
 
+	/* Drive straight forward/backward */
+	if (mode == Mode::FORWARD || mode == Mode::BACKWARD) {
+		driveStraight();
+		return;
+	}
+
+	/* Check if path is valid */
+	if (!pathObject.isValid()) {
+		publishVelocity(0.0, 0.0);
+		mode == Mode::FINISHED;
+		return;
+	}
+
+	/* Check if the current target waypoint is reached and advance to next one or stop if it is the last one */
 	if (isWaypointReached()) {
 		if (!isCurrentPointLastPoint())	{
 			advanceToNextPathPoint();
 		} else {
 			mode = Mode::FINISHED;
 			publishVelocity(0.0, 0.0);
+			
+			agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgPoints());
+			agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
 			return;
 		}
 	}
 
+	/* Turn towards target orientation on spot when curve angle is above turnThreshold */
 	if (mode == Mode::TURN || std::abs(getRotationToTarget(pos, currentTarget)) >= turnThreshold) {
 		mode = Mode::TURN;
 		turnTowards(currentTarget);
@@ -66,14 +86,18 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	}
 
 	if (previousTargetIndex >= 0 && pathObject.getDepartureTimes().at(previousTargetIndex) > ros::Time::now().toSec()) {
+		/* While waiting already turn into target direction to not waste time */
+		turnTowards(currentTarget);
+
+		/* If mode is driving, stop and go into WAIT mode until departure time is reached */
 		if (mode == Mode::PID || mode == Mode::READY) {
 			publishVelocity(0.0, 0.0);
+			mode = Mode::WAIT;
 		}
-		mode = Mode::WAIT;
 		return;
 	}
 
-
+	/* Follow the path using the pid controller */
 	followPath();
 }
 
@@ -96,7 +120,13 @@ void MotionPlanner::followPath() {
 void MotionPlanner::turnTowards(Point target) {
 	double rotation = getRotationToTarget(pos, target);
 	if(std::abs(rotation) <= 0.1f) {
-		mode = Mode::PID;
+		/* If in align mode, the task is finished after rotation. If not, the robot should continue driving afterwards */
+		if(mode == Mode::ALIGN) {
+			mode = Mode::FINISHED;
+			publishVelocity(0, 0);
+		} else {
+			mode = Mode::READY;
+		}
 		return;
 	}
 	publishVelocity(0, Math::clamp(std::abs(rotation), 0, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
@@ -105,7 +135,13 @@ void MotionPlanner::turnTowards(Point target) {
 void MotionPlanner::turnTowards(double direction) {
 	double rotation = static_cast<double>(Math::getAngleDifferenceInRad(pos.o, direction));
 	if(std::abs(rotation) <= 0.1f) {
-		mode = Mode::FINISHED;
+		/* If in align mode, the task is finished after rotation. If not, the robot should continue driving afterwards */
+		if(mode == Mode::ALIGN) {
+			mode = Mode::FINISHED;
+			publishVelocity(0, 0);
+		} else {
+			mode = Mode::READY;
+		}
 		return;
 	}
 	publishVelocity(0, Math::clamp(std::abs(rotation), 0.3, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
@@ -122,24 +158,45 @@ void MotionPlanner::alignTowards(double direction) {
 	alignDirection = direction;
 }
 
-void MotionPlanner::newPath(Path* path) {
-	// Create local copy
-	newPath(Path(path->getStartTimeOffset(), path->getNodes(), path->getWaitTimes(), path->getRobotHardwareProfile()));	
+void MotionPlanner::driveForward(double distance) {
+	mode = Mode::FORWARD;
+	driveDistance = distance;
+	driveStartPosition = pos;
+}
+
+void MotionPlanner::driveBackward(double distance) {
+	mode = Mode::BACKWARD;
+	driveDistance = distance;
+	driveStartPosition = pos;
+}
+
+void MotionPlanner::driveStraight() {
+	if(Math::getDistance(Point(driveStartPosition.x, driveStartPosition.y), Point(pos.x, pos.y)) >= driveDistance) {
+		mode = Mode::FINISHED;
+		publishVelocity(0.0, 0.0);
+		return;
+	}
+
+	if(mode == Mode::FORWARD) {
+		publishVelocity(0.5, 0.0);
+	} else {
+		publishVelocity(-0.5, 0.0);
+	}
 }
 
 void MotionPlanner::newPath(Path path) {
 	pathObject = path;
 	
-	if(path.getDistance() > 0) {
+	if(path.isValid()) {
 		currentTarget = pathObject.getNodes().front();
 		currentTargetIndex = 0;
 		mode = Mode::READY;
 		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgPoints());
 		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
 	} else {
-		printf("[MotionPlanner - %s]: Got path with length 0", agentID.c_str());
+		ROS_ERROR("[MotionPlanner - %s]: Got invalid path", agentID.c_str());
 		mode = Mode::FINISHED;
-	}	
+	}
 }
 
 void MotionPlanner::advanceToNextPathPoint() {
@@ -150,7 +207,7 @@ void MotionPlanner::advanceToNextPathPoint() {
 }
 
 bool MotionPlanner::isCurrentPointLastPoint() {
-	return currentTargetIndex == pathObject.getNodes().size() - 1;
+	return (currentTargetIndex == pathObject.getNodes().size() - 1) && pathObject.isValid();
 }
 
 MotionPlanner::Mode MotionPlanner::getMode() {
@@ -171,7 +228,7 @@ bool MotionPlanner::isDone() {
 }
 
 bool MotionPlanner::hasPath() {
-	return pathObject.getDistance() > 0;
+	return pathObject.isValid();
 }
 
 bool MotionPlanner::isDrivingBackwards() {
@@ -201,14 +258,18 @@ double MotionPlanner::getRotationToTarget(Position currentPosition, Point target
 	return static_cast<double>(Math::getAngleDifferenceInRad(currentPosition.o, direction));
 }
 
+OrientedPoint MotionPlanner::getPositionAsOrientedPoint() {
+	return OrientedPoint(pos.x, pos.y, pos.o);
+}
+
+bool MotionPlanner::isPositionInitialized()  {
+	return positionInitialized;
+}
+
 visualization_msgs::Marker MotionPlanner::getVisualizationMsgPoints() {
 	return pathObject.getVisualizationMsgPoints();
 }
 
 visualization_msgs::Marker MotionPlanner::getVisualizationMsgLines() {
 	return pathObject.getVisualizationMsgLines();
-}
-
-OrientedPoint MotionPlanner::getOrientedPoint() {
-	return OrientedPoint(pos.x, pos.y, pos.o);
 }

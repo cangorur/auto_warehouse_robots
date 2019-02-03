@@ -5,49 +5,49 @@
 #include "agent/path_planning/OrientedPoint.h"
 #include "agent/path_planning/Path.h"
 
-class Task
-{
-  public:
-		enum class Type {CHARGING, TRANSPORTATION};
-		enum class State {WAITING, TO_SOURCE, PICKUP, RESERVING_TARGET, TO_TARGET, DROPOFF, FINISHED, CHARGING};
+class Task {
+public:
+	enum class Type {CHARGING, TRANSPORTATION};
+	enum class State {WAITING, TO_SOURCE, APPROACH_SOURCE, PICKUP, LEAVE_SOURCE, RESERVING_TARGET, TO_TARGET, APPROACH_TARGET, DROPOFF, FINISHED, CHARGING};
 
-		Task(uint32_t targetID, Path targetPath, Type type, double startTime);
+	Task(uint32_t targetID, Path targetPath, Type type, double startTime);
+	virtual ~Task() = default;
+	
+	uint32_t getTargetTrayId();
 
-		uint32_t getTargetTrayId(void);
+	OrientedPoint getTargetPosition();
 
-		OrientedPoint getTargetPosition(void);
+	Task::Type getType();
 
-		Task::Type getType(void);
+	Task::State getState();
 
-		Task::State getState(void);
+	bool isTransportation();
+	bool isCharging();
 
-		bool isTransportation(void);
-		bool isCharging(void);
+	virtual void setState(Task::State state) = 0;
 
-		virtual void setState(Task::State state) = 0;
+	virtual double getBatteryConsumption() = 0;
 
-		virtual double getBatteryConsumption(void) = 0;
+	virtual double getDuration() = 0;
 
-		virtual double getDuration(void) = 0;
+	// returns the estimated end time of this task
+	double getEndTime();
 
-		// returns the estimated end time of this task
-		double getEndTime(void);
+protected:	
+	Task::Type type;
+	Task::State state;
 
-	protected:	
-		Task::Type type;
-		Task::State state;
+	// the estimated moment in time when the task will start execution
+	double startTime;
+	// the estimated time the task will take
+	double targetDuration;
+	// the estimated battery consumption the task will consume
+	double targetBatCons;
 
-		// the estimated moment in time when the task will start execution
-		double startTime;
-		// the estimated time the task will take
-		double targetDuration;
-		// the estimated battery consumption the task will consume
-		double targetBatCons;
-
-		// target Tray id
-		uint32_t targetId;
-		// target Tray position
-		OrientedPoint targetPosition;
+	// target Tray id
+	uint32_t targetId;
+	// target Tray position
+	OrientedPoint targetPosition;
 };
 
 #endif /* AGENT_TASK_H_ */

@@ -1,7 +1,10 @@
 #include "agent/task_handling/TrayScore.h"
 
-TrayScore::TrayScore(uint32_t sourceTray, uint32_t targetTray, double score) : sourceTray(sourceTray), 
-	targetTray(targetTray), score(score)
+TrayScore::TrayScore(uint32_t sourceTray, uint32_t targetTray, double score, double estimatedDuration) :
+	sourceTray(sourceTray), 
+	targetTray(targetTray),
+	score(score),
+	estimatedDuration(estimatedDuration)
 {
 }
 

@@ -3,6 +3,8 @@
 
 #include "agent/path_planning/Point.h"
 
+#define MaxReservationTime std::numeric_limits<double>::max() - 10000
+
 class Rectangle {
 private:	
 	Point pos;
@@ -13,8 +15,6 @@ private:
 	double endTime;
 	
 	int ownerId;
-	
-	// Todo add visualisation color
 	
 	// Faster physic processing
 	Point pointsInflated[4];
@@ -37,7 +37,7 @@ public:
 	float getMinYInflated() const;
 	float getMaxYInflated() const;
 
-	bool doesOverlapTimeRange(double start, double end) const;
+	bool doesOverlapTimeRange(double start, double end, int ownerId) const;
 	double getStartTime() const;
 	double getEndTime() const;
 	double getFreeAfter() const;

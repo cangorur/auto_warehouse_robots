@@ -11,7 +11,7 @@ class PidController
 
     double updateTargetValue(double targetValue);
     double calculate(double currentValue, double currentTime);
-    void reset(void);
+    void reset();
 
     virtual ~PidController() = default;
 

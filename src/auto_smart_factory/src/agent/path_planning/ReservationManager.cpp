@@ -37,18 +37,25 @@ void ReservationManager::update() {
 	
 	// Process queued reservationBids
 	auto iter = reservationBidQueue.begin();
-
 	while(iter != reservationBidQueue.end()) {
 		if((*iter).first < currentAuctionId) {
 			iter = reservationBidQueue.erase(iter);
 		} else if((*iter).first == currentAuctionId) {
 			updateHighestBid(ReservationBid((*iter).second.bid, (*iter).second.agentId));
-			
 			iter = reservationBidQueue.erase(iter);
 		} else {
 			iter++;
 		}
 	}
+	
+	// Auction timeout
+	if(now >= currentAuctionStartTime + auctionTimeout && currentAuctionId > 1) {
+		if(agentId == currentAuctionHighestBid.agentId) {
+			ROS_WARN("[ReservationManager %d]: Auction %d timed out. %d agents left", agentId, currentAuctionId, agentCount - 1);
+		}
+		agentCount -= 1;
+		startNewAuction(currentAuctionId + 1, now);
+	}	
 }
 
 void ReservationManager::reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg) {
@@ -59,8 +66,6 @@ void ReservationManager::reservationCoordinationCallback(const auto_smart_factor
 
 	// Queue out of order bidding messages, process reservation messages
 	if(msg.auctionId != currentAuctionId && !msg.isReservationMessage) {
-		//ROS_ERROR("[ReservationManager %d] Got bid with auction id %d but current auctionId is %d", agentId, msg.auctionId, currentAuctionId);
-		
 		if(msg.auctionId > currentAuctionId) {
 			reservationBidQueue.emplace_back(msg.auctionId, ReservationBid(msg.bid, msg.robotId));
 		}
@@ -176,18 +181,17 @@ void ReservationManager::publishReservations(std::vector<Rectangle> reservations
 }
 
 void ReservationManager::bidForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint) {
-	// Convert to degree TODO change internally
-	this->startPoint = OrientedPoint(startPoint.x, startPoint.y, Math::toDeg(startPoint.o));
-	this->endPoint = OrientedPoint(endPoint.x, endPoint.y, Math::toDeg(endPoint.o));;
-	
+	// Use Radiant here	
+	this->startPoint = startPoint;
+	this->endPoint = endPoint;	
 	
 	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
-	if(pathToReserve.getDistance() > 0) {
+	if(pathToReserve.isValid()) {
 		isBidingForReservation = true;
 		hasReservedPath = false;
 
 	} else {
-		ROS_ERROR("[ReservationManager %d] Tried to generate path but no path was found. Distance start-end: %f", agentId, Math::getDistance(Point(startPoint), Point(endPoint)));
+		ROS_ERROR("[ReservationManager %d] Tried to generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
 	}	
 }
 

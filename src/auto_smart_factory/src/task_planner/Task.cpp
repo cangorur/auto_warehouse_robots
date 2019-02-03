@@ -13,8 +13,7 @@
 
 using namespace auto_smart_factory;
 
-Task::Task(unsigned int id, TaskData taskData)
-		:
+Task::Task(unsigned int id, TaskData taskData) :
 		taskData(taskData) {
 	// init task state
 	state.id = id;

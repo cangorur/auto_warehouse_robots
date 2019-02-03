@@ -104,8 +104,8 @@ float Rectangle::getRotation() const {
 	return rotation;
 }
 
-bool Rectangle::doesOverlapTimeRange(double start, double end) const {
-	return (start <= this->endTime) && (end >= this->startTime);
+bool Rectangle::doesOverlapTimeRange(double start, double end, int ownerId) const {
+	return (start <= this->endTime) && (end >= this->startTime) && ownerId != this->ownerId;
 }
 
 double Rectangle::getFreeAfter() const {
