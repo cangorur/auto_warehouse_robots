@@ -10,6 +10,7 @@
 #include "agent/path_planning/ThetaStarPathPlanner.h"
 
 int Map::visualisationId = 0;
+double Map::infiniteReservationTime = 0;
 
 Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle>& obstacles, RobotHardwareProfile* hardwareProfile, int ownerId) :
 		warehouseConfig(warehouseConfig),
@@ -19,6 +20,10 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 		hardwareProfile(hardwareProfile),
 		ownerId(ownerId)
 {
+	if(infiniteReservationTime == 0) {
+		infiniteReservationTime = ros::Time::now().toSec() + 1000000.f;
+	}
+	
 	this->obstacles.clear();
 	for(const Rectangle& o : obstacles) {
 		this->obstacles.emplace_back(o.getPosition(), o.getSize(), o.getRotation());
@@ -39,7 +44,9 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 		int id = std::stoi(idStr);
 		Point pos = Point(static_cast<float>(idlePosition.pose.x), static_cast<float>(idlePosition.pose.y));
 		
-		reservations.emplace_back(pos, Point(ROBOT_DIAMETER * 2.f, ROBOT_DIAMETER * 2.f), 0, 0, MaxReservationTime, id);
+		//if(id != ownerId) {
+			reservations.emplace_back(pos, Point(ROBOT_DIAMETER * 2.f, ROBOT_DIAMETER * 2.f), 0, 0, infiniteReservationTime, id);
+		//}		
 	}
 }
 
@@ -202,7 +209,9 @@ void Map::deleteExpiredReservations(double time) {
 
 void Map::addReservations(std::vector<Rectangle> newReservations) {
 	for(const auto& r : newReservations) {
-		reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime(), r.getOwnerId());
+		//if(r.getOwnerId() != ownerId) {
+			reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime(), r.getOwnerId());
+		//}
 	}
 }
 
@@ -339,9 +348,11 @@ visualization_msgs::Marker Map::getReservationVisualization(int ownerId, visuali
 }
 
 void Map::listAllReservationsIn(Point p) {
-	ROS_INFO("Reservations for robot %d", ownerId);
+	ROS_INFO("Reservations for robot %d at point %f/%f", ownerId, p.x, p.y);
 	for(const auto& r : reservations) {
-		ROS_INFO("Reservations: At %f/%f | Size %f/%f | Rot: %f | ID: %d, from %f until %f", r.getPosition().x, r.getPosition().y, r.getSize().x, r.getSize().y, r.getRotation(), r.getOwnerId(), r.getStartTime(), r.getEndTime());
+		if(Math::isPointInRectangle(p, r)) {
+			ROS_INFO("Reservations At %f/%f | Size %f/%f | Rot: %f | ID: %d, from %f until %f", r.getPosition().x, r.getPosition().y, r.getSize().x, r.getSize().y, r.getRotation(), r.getOwnerId(), r.getStartTime(), r.getEndTime());	
+		}		
 	}
 }
 

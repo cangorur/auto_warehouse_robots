@@ -14,10 +14,13 @@
 #include "agent/path_planning/TimedLineOfSightResult.h"
 
 class Map {
+public:
+	static double infiniteReservationTime;
+	
+private:
 	// For visualisation messages
 	static int visualisationId;
 	
-private:
 	float width;
 	float height;
 	float margin;
