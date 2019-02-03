@@ -12,10 +12,7 @@
 	<node pkg="auto_smart_factory" type="storage_management" name="storage_management" output="screen"/>
 	
 	<!-- Task Planner -->
-	<node pkg="auto_smart_factory" type="task_planner" name="task_planner" output="screen">
-		<!-- this flag tells whether to use the robot offer with the shortest estimated duration (true) or just random choice (false) -->
-		<param name="use_best_eta" value="true" />
-	</node>
+	<node pkg="auto_smart_factory" type="task_planner" name="task_planner" output="screen" />
 
 	<!-- Charging Management -->
 	<node pkg="auto_smart_factory" type="charging_management" name="charging_management" output="screen"/>

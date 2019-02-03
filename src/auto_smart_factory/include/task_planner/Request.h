@@ -120,10 +120,6 @@ protected:
 	/// requirements that need to be fulfilled
 	TaskRequirementsConstPtr requirements;
 
-	/// this flag tells whether to use the robot offer with the shortest
-	/// estimated duration (true) or just random choice (false)
-	bool useBestETA;
-
 	/// vector of robot candidates
 	std::vector<RobotCandidate*> robotCandidates;
 

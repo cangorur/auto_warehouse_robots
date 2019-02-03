@@ -30,9 +30,6 @@ Request::Request(TaskPlanner* tp, TaskRequirementsConstPtr taskRequirements, std
 	status.pkg_config = taskRequirements->getPackageConfig();
 
 	ros::NodeHandle pn("~");
-	pn.param("use_best_eta", useBestETA, true);
-
-	ROS_INFO("[request %d] Use best ETA: %s", getId(), std::to_string(useBestETA).c_str());
 }
 
 Request::~Request() {
