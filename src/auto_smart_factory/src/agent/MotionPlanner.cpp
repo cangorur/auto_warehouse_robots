@@ -57,6 +57,13 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
+	/* Check if path is valid */
+	if (!pathObject.isValid()) {
+		publishVelocity(0.0, 0.0);
+		mode == Mode::FINISHED;
+		return;
+	}
+
 	/* Check if the current target waypoint is reached and advance to next one or stop if it is the last one */
 	if (isWaypointReached()) {
 		if (!isCurrentPointLastPoint())	{
