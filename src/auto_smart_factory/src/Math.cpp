@@ -98,12 +98,12 @@ bool Math::doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, con
 	return s > 0.f && s < 1.f && t > 0.f && t < 1.f;
 }
 
-double Math::getRotation(const Point& v) {
+double Math::getRotationInDeg(const Point& v) {
 	if(v.x != 0 || v.y != 0) {
 		double d = (std::atan2(v.y, v.x) * TO_DEG);
 
 		if(d < 0) {
-			d+= 360;
+			d += 360;
 		}
 		return d;
 	}

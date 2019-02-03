@@ -173,15 +173,15 @@ double ThetaStarPathPlanner::getDrivingTime(ThetaStarGridNodeInformation* curren
 	// Include turningTime to current line segment if prev is available
 	double turningTime = 0;
 
-	float prevLineSegmentRotation = 0;
+	double prevLineSegmentRotation = 0;
 	if(current->prev != nullptr) {
-		prevLineSegmentRotation = Math::getRotation(current->node->pos - current->prev->node->pos);		
+		prevLineSegmentRotation = Math::getRotationInDeg(current->node->pos - current->prev->node->pos);		
 	} else {
 		prevLineSegmentRotation = startPoint.o;
 	}
 
-	float currLineSegmentRotation = Math::getRotation(target->node->pos - current->node->pos);
-	turningTime = hardwareProfile->getTurningDuration(std::abs(prevLineSegmentRotation - currLineSegmentRotation));
+	double currLineSegmentRotation = Math::getRotationInDeg(target->node->pos - current->node->pos);
+	turningTime = hardwareProfile->getTurningDuration(std::abs(Math::getAngleDifferenceInDegree(prevLineSegmentRotation, currLineSegmentRotation)));
 
 	return hardwareProfile->getDrivingDuration(Math::getDistance(current->node->pos, target->node->pos)) + turningTime;
 }

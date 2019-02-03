@@ -12,8 +12,8 @@
 #define PI 3.14159265359f
 #define EPS 1e-6
 
-// Defined as ~~~~~ Check this: (0.25 + error margin)
-#define ROBOT_RADIUS 0.24f
+// Defined as 0.25 + error margin
+#define ROBOT_RADIUS 0.26f
 
 // Rotation  0  = >
 // Rotation 90  = v
@@ -48,7 +48,7 @@ public:
 	static double dotProduct(const Point& v1, const Point& v2);
 	static double crossProduct(const Point& v1, const Point& v2);
 	static Point rotateVector(const Point& v, double angle);
-	static double getRotation(const Point& v);
+	static double getRotationInDeg(const Point& v);
 	static double getDistance(const Point& v1, const Point& v2);
 	static double getLength(const Point& v);
 	static double getDistanceSquared(const Point& v1, const Point& v2);
