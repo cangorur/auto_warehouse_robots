@@ -11,6 +11,8 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 {	
 }
 
+// TODO  ensure that new infinite reservations dont intersect with existing ones (permanent and time-limited)
+
 Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, double startingTime) {
 	// Convert to degree
 	startPoint = OrientedPoint(start.x, start.y, Math::toDeg(start.o));
@@ -39,10 +41,18 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 		initialWaitTime = initialCheckResult.freeAfter - startingTime + 0.5f;
 		
 		if(initialWaitTime > 1000) {
-			ROS_FATAL("Initial wait time > 1000 -> standing in permanent obstacle, no valid path possible");
+			ROS_FATAL("Initial wait time > 1000 -> standing in infinite reservation, no valid path possible");
+			
+			ROS_WARN("Reservations for start:");
+			map->listAllReservationsIn(Point(start.x, start.y));
+
+			ROS_WARN("Reservations for startNode:");
+			map->listAllReservationsIn(startNode->pos);			
+			
 			return Path();
 		} else {
 			ROS_WARN("Path needed initial wait time of %f", initialWaitTime);
+			map->listAllReservationsIn(Point(start.x, start.y));
 		}
 	}
 
@@ -190,8 +200,11 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 		waitTimeAtPrev = currentGridInformation->waitTimeAtPrev;
 		currentGridInformation = currentGridInformation->prev;
 		
-		if(i++ > 100) {
+		if(i++ > 500) {
 			ROS_FATAL("Endless loop in construct path => aborting");
+			ROS_FATAL("Endless loop in construct path => aborting");
+			ROS_FATAL("Endless loop in construct path => aborting");
+
 			return Path();
 		}
 	}

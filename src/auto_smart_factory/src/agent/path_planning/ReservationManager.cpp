@@ -115,7 +115,16 @@ void ReservationManager::startNewAuction(int newAuctionId, double newAuctionStar
 	msg.robotId = agentId;
 	msg.auctionId = currentAuctionId;
 	msg.isReservationMessage = static_cast<unsigned char>(false);
-	
+
+	if(isBidingForReservation) {
+		// Recalculate path to match timing
+		pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
+
+		if(!pathToReserve.isValid()) {
+			ROS_ERROR("[ReservationManager %d] Tried to re-generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+		}
+	}
+
 	if(isBidingForReservation) {
 		//ROS_INFO("[ReservationManager %d] Starting new auction %d - bidding", agentId, newAuctionId);
 		msg.bid = static_cast<float>(pathToReserve.getDuration());
@@ -148,12 +157,7 @@ void ReservationManager::closeAuction() {
 			initializeNewDelayedAuction = true;
 			timestampToInitializeDelayedAuction = ros::Time::now().toSec() + emptyAuctionDelay;
 		}	
-	} else {
-		if(isBidingForReservation) {
-			// Recalculate path to match timing
-			pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
-		}		
-	}
+	} 
 }
 
 void ReservationManager::publishReservations(std::vector<Rectangle> reservations) {
@@ -180,7 +184,7 @@ void ReservationManager::publishReservations(std::vector<Rectangle> reservations
 	publisher->publish(msg);
 }
 
-void ReservationManager::bidForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint) {
+void ReservationManager::startBiddingForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint) {
 	// Use Radiant here	
 	this->startPoint = startPoint;
 	this->endPoint = endPoint;	
