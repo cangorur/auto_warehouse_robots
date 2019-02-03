@@ -289,14 +289,14 @@ visualization_msgs::Marker Map::getObstacleVisualization() {
 	return msg;
 }
 
-visualization_msgs::Marker Map::getReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type color) {
+visualization_msgs::Marker Map::getInactiveReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type baseColor) {
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";
 	msg.header.stamp = ros::Time::now();
 	msg.ns = "Reservations";
 	msg.action = visualization_msgs::Marker::ADD;
 	msg.pose.orientation.w = 1.0;
-	msg.lifetime = ros::Duration(0.5f);
+	msg.lifetime = ros::Duration(0.24f);
 
 	msg.id = Map::visualisationId++;
 	msg.type = visualization_msgs::Marker::TRIANGLE_LIST;
@@ -304,18 +304,92 @@ visualization_msgs::Marker Map::getReservationVisualization(int ownerId, visuali
 	msg.scale.x = 1.f;
 	msg.scale.y = 1.f;
 	msg.scale.z = 1.f;
-
-	msg.color = color;
-	msg.color.a = 0.4;
+	
+	msg.color = baseColor;
+	msg.color.a = 0.2f;
 
 	geometry_msgs::Point p;
 	p.z = 0.f;
-	// Obstacles
+
+	double now = ros::Time::now().toSec();
 	for(const Rectangle& reservation : reservations) {
 		if(reservation.getOwnerId() != ownerId) {
 			continue;
 		}
 		
+		if(now >= reservation.getStartTime() && now <= reservation.getEndTime()) {
+			continue;
+		}
+		
+		const Point* points = reservation.getPointsInflated();
+		// First triangle
+		p.x = points[0].x;
+		p.y = points[0].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		p.x = points[1].x;
+		p.y = points[1].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		p.x = points[2].x;
+		p.y = points[2].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		// Second triangle
+		p.x = points[2].x;
+		p.y = points[2].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		p.x = points[3].x;
+		p.y = points[3].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		p.x = points[0].x;
+		p.y = points[0].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+	}
+
+	return msg;
+}
+
+visualization_msgs::Marker Map::getActiveReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type baseColor) {
+	visualization_msgs::Marker msg;
+	msg.header.frame_id = "map";
+	msg.header.stamp = ros::Time::now();
+	msg.ns = "Reservations";
+	msg.action = visualization_msgs::Marker::ADD;
+	msg.pose.orientation.w = 1.0;
+	msg.lifetime = ros::Duration(0.24f);
+
+	msg.id = Map::visualisationId++;
+	msg.type = visualization_msgs::Marker::TRIANGLE_LIST;
+
+	msg.scale.x = 1.f;
+	msg.scale.y = 1.f;
+	msg.scale.z = 1.f;
+	
+	msg.color = baseColor;
+	msg.color.a = 0.7f;
+
+	geometry_msgs::Point p;
+	p.z = 0.f;
+
+	double now = ros::Time::now().toSec();
+	for(const Rectangle& reservation : reservations) {
+		if(reservation.getOwnerId() != ownerId) {
+			continue;
+		}
+
+		if(!(now >= reservation.getStartTime() && now <= reservation.getEndTime())) {
+			continue;
+		}
+
 		const Point* points = reservation.getPointsInflated();
 		// First triangle
 		p.x = points[0].x;

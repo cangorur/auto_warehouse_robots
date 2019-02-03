@@ -22,7 +22,7 @@ public:
 	
 	// Getter
 	Path getReservedPath();
-	bool getIsBidingForReservation() const;
+	bool isBidingForReservation() const;
 	bool getHasReservedPath() const;
 	
 private:
@@ -39,7 +39,7 @@ private:
 	ReservationBid currentAuctionHighestBid;
 	
 	// Path bidding
-	bool isBidingForReservation;
+	bool bidingForReservation;
 	bool hasReservedPath;
 	Path pathToReserve;
 	OrientedPoint startPoint;

@@ -12,6 +12,7 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 }
 
 // TODO  ensure that new infinite reservations dont intersect with existing ones (permanent and time-limited)
+// Todo reserve approach routine space
 
 Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, double startingTime) {
 	// Convert to degree

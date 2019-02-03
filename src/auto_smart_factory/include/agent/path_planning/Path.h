@@ -9,8 +9,8 @@
 
 class Path {
 public:
-	double maxReservationLength = 8;
-	double reservationMargin = 1.5f;
+	double maxReservationLength = 3;
+	double reservationTimeMargin = 1.5f;
 	
 private:
 	double startTimeOffset = 0;
@@ -47,7 +47,6 @@ public:
 	const std::vector<Rectangle> generateReservations(int ownerId) const;
 	
 	// ROS visualisation
-	visualization_msgs::Marker getVisualizationMsgPoints();
 	visualization_msgs::Marker getVisualizationMsgLines();
 
 	OrientedPoint getStart();

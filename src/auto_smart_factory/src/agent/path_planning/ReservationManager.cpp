@@ -12,7 +12,7 @@ ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int 
 	currentAuctionHighestBid(-1.f, -1)
 {
 	hasReservedPath = false;
-	isBidingForReservation = false;
+	bidingForReservation = false;
 
 	if(agentId == agentCount) {
 		initializeNewDelayedAuction = true;
@@ -116,7 +116,7 @@ void ReservationManager::startNewAuction(int newAuctionId, double newAuctionStar
 	msg.auctionId = currentAuctionId;
 	msg.isReservationMessage = static_cast<unsigned char>(false);
 
-	if(isBidingForReservation) {
+	if(bidingForReservation) {
 		// Recalculate path to match timing
 		pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
 
@@ -125,7 +125,7 @@ void ReservationManager::startNewAuction(int newAuctionId, double newAuctionStar
 		}
 	}
 
-	if(isBidingForReservation) {
+	if(bidingForReservation) {
 		//ROS_INFO("[ReservationManager %d] Starting new auction %d - bidding", agentId, newAuctionId);
 		msg.bid = static_cast<float>(pathToReserve.getDuration());
 	} else {
@@ -140,9 +140,9 @@ void ReservationManager::startNewAuction(int newAuctionId, double newAuctionStar
 
 void ReservationManager::closeAuction() {
 	if(currentAuctionHighestBid.agentId == agentId) {
-		if(isBidingForReservation) {
+		if(bidingForReservation) {
 			ROS_INFO("[ReservationManager %d] Won auction %d for path with duration %f", agentId, currentAuctionId, pathToReserve.getDuration());
-			isBidingForReservation = false;
+			bidingForReservation = false;
 			hasReservedPath = true;
 
 			std::vector<Rectangle> reservations = pathToReserve.generateReservations(agentId);
@@ -191,7 +191,7 @@ void ReservationManager::startBiddingForPathReservation(OrientedPoint startPoint
 	
 	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
 	if(pathToReserve.isValid()) {
-		isBidingForReservation = true;
+		bidingForReservation = true;
 		hasReservedPath = false;
 
 	} else {
@@ -199,8 +199,8 @@ void ReservationManager::startBiddingForPathReservation(OrientedPoint startPoint
 	}	
 }
 
-bool ReservationManager::getIsBidingForReservation() const {
-	return isBidingForReservation;
+bool ReservationManager::isBidingForReservation() const {
+	return bidingForReservation;
 }
 
 bool ReservationManager::getHasReservedPath() const {

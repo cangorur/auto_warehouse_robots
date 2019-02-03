@@ -91,7 +91,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 
 		// Waiting time
 		if(waitTimes.at(i) > 0) {
-			reservations.emplace_back(nodes[i], Point(reservationSize, reservationSize), currentRotation, currentTime - reservationMargin, currentTime + waitTimes[i] + reservationMargin, ownerId);
+			reservations.emplace_back(nodes[i], Point(reservationSize, reservationSize), currentRotation, currentTime - reservationTimeMargin, currentTime + waitTimes[i] + reservationTimeMargin, ownerId);
 			currentTime += waitTimes[i];
 		}
 
@@ -100,12 +100,14 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		float segmentLength = currentDistance / static_cast<float>(segmentCount);
 
 		for(unsigned int segment = 0; segment < segmentCount; segment++) {
-			Point startPos = nodes[i] + (segment * segmentLength * currentDir);
-			Point endPos = nodes[i] + ((segment + 1) * segmentLength * currentDir);
+			float segmentFloat = static_cast<float>(segment);
+			
+			Point startPos = nodes[i] + (segmentFloat * segmentLength * currentDir);
+			Point endPos = nodes[i] + ((segmentFloat + 1.f) * segmentLength * currentDir);
 
 			Point pos = (startPos + endPos) / 2.f;
-			double startTime = currentTime - reservationMargin + hardwareProfile->getDrivingDuration(segment * segmentLength);
-			double endTime = currentTime + reservationMargin + hardwareProfile->getDrivingDuration((segment + 1) * segmentLength);
+			double startTime = currentTime - reservationTimeMargin + hardwareProfile->getDrivingDuration(segmentFloat * segmentLength);
+			double endTime = currentTime + reservationTimeMargin + hardwareProfile->getDrivingDuration((segmentFloat + 1.f) * segmentLength);
 
 			reservations.emplace_back(pos, Point(segmentLength + reservationSize, reservationSize), currentRotation, startTime, endTime, ownerId);
 		}
@@ -115,7 +117,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	
 	// Todo check if this reservations does not conflict with any existing reservation
 	// Todo make this reservation rectangular
-	reservations.emplace_back(nodes.back(), Point(ROBOT_RADIUS * 2.f, ROBOT_RADIUS * 2.f), 0, currentTime - reservationMargin, Map::infiniteReservationTime, ownerId);
+	reservations.emplace_back(nodes.back(), Point(ROBOT_RADIUS * 2.f, ROBOT_RADIUS * 2.f), 0, currentTime - reservationTimeMargin, Map::infiniteReservationTime, ownerId);
 
 	return reservations;
 }
@@ -150,35 +152,6 @@ float Path::getBatteryConsumption() const {
 	return batteryConsumption;
 }
 
-visualization_msgs::Marker Path::getVisualizationMsgPoints() {
-	ROS_ASSERT(isValidPath);
-	visualization_msgs::Marker msg;
-	msg.header.frame_id = "map";
-	msg.header.stamp = ros::Time::now();
-	msg.ns = "PathPoints";
-	msg.action = visualization_msgs::Marker::ADD;
-	msg.pose.orientation.w = 1.0;
-
-	msg.id = 0;
-	msg.type = visualization_msgs::Marker::POINTS;
-	msg.scale.x = 0.1;
-	msg.scale.y = 0.1;
-
-	msg.color.g = 1.0f;
-	msg.color.r = 0.5f;
-	msg.color.a = 1.0;
-
-	for(const Point& point : nodes) {
-		geometry_msgs::Point p;
-		p.x = point.x;
-		p.y = point.y;
-		p.z = 0.f;
-		msg.points.push_back(p);
-	}
-	
-	return msg;
-}
-
 visualization_msgs::Marker Path::getVisualizationMsgLines() {
 	ROS_ASSERT(isValidPath);
 	visualization_msgs::Marker msg;
@@ -199,15 +172,14 @@ visualization_msgs::Marker Path::getVisualizationMsgLines() {
 	double color_b;
 	if(!nh.getParam("color_r", color_r)) {
 		color_r = 30;
-	}
-	
+	}	
 	if(!nh.getParam("color_g", color_g)) {
 		color_g = 200;
 	}
-
 	if(!nh.getParam("color_b", color_b)) {
 		color_b = 40;
 	}
+	
 	msg.color.a = 0.6f;
 	msg.color.r = color_r / 255;
 	msg.color.g = color_g / 255;
