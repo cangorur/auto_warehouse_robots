@@ -19,6 +19,8 @@ ChargingManagement::ChargingManagement(Agent* a, auto_smart_factory::WarehouseCo
 
 
 	ROS_INFO("[ChargingManagement] Started, agent ID: [%s], agent Batt: [%f] ", agentID.c_str(), agent->getAgentBattery());
+	ROS_INFO("[ChargingManagement] Charging Rate: [%f], Discharging Rate: [%f] ", chargingRate, dischargingRate);
+
 	getAllChargingStations();
 }
 
@@ -69,7 +71,7 @@ double ChargingManagement::getScoreMultiplierForBatteryLevel(double batteryLevel
 }
 
 double ChargingManagement::getChargingTime(double consumptionTillCS){
-	return (agent->getAgentBattery() - consumptionTillCS) /chargingRate ;
+	return ((agent->getAgentBattery() - consumptionTillCS) /chargingRate) ;
 }
 
 bool ChargingManagement::isChargingAppropriate() {

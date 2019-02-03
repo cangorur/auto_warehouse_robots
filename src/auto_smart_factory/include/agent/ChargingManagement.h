@@ -5,9 +5,13 @@
 #include <string>
 #include <vector>
 #include <auto_smart_factory/WarehouseConfiguration.h>
+#include <auto_smart_factory/RobotConfiguration.h>
+
 #include <auto_smart_factory/RobotHeartbeat.h>
 #include "auto_smart_factory/Tray.h"
 #include "agent/path_planning/Map.h"
+#include "std_msgs/Float32.h"
+
 
 class Agent;
 /**
@@ -81,10 +85,10 @@ private:
 	auto_smart_factory::RobotConfiguration robotConfig;
 
 	//Discharging Rate
-	float32 dischargingRate
+	float dischargingRate;
 
 	//Charging rate
-	float32 chargingRate
+	float chargingRate;
 
 
 	// Max energy level of the agent to participate in charging
