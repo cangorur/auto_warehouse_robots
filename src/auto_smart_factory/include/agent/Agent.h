@@ -273,10 +273,10 @@ protected:
 	geometry_msgs::Quaternion orientation;
 
 	// heartbeat related timestamp - time in seconds
-	unsigned long lastTimestamp = 0;
+	unsigned long lastHeartbeat = 0;
 
 	// duration until the next heartbeat publishing - time in seconds
-	unsigned long breakDuration = 1;
+	unsigned long heartbeatPeriod = 0;
 
 	// current battery level
 	float batteryLevel = 100.0;

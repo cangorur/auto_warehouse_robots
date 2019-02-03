@@ -163,7 +163,7 @@ void Agent::setIdle(bool idle) {
 bool Agent::isTimeForHeartbeat() {
 	timeval time;
 	gettimeofday(&time, 0);
-	return lastTimestamp == 0 || time.tv_sec - lastTimestamp >= breakDuration;
+	return lastHeartbeat == 0 || time.tv_sec - lastHeartbeat >= heartbeatPeriod;
 }
 
 void Agent::sendHeartbeat() {
@@ -188,7 +188,7 @@ void Agent::sendHeartbeat() {
 void Agent::updateTimer() {
 	timeval time;
 	gettimeofday(&time, 0);
-	lastTimestamp = time.tv_sec;
+	lastHeartbeat = time.tv_sec;
 }
 
 void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& msg) {
