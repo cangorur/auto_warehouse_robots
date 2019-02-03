@@ -300,11 +300,12 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 }
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
-	std::vector<TrayScore*> scores;
 	double queuedDuration = taskHandler->getDuration();
 	double estimatedBatteryAfterQueuedTasks = taskHandler->getEstimatedBatteryLevelAfterQueuedTasks();
 	Task* lastTask = taskHandler->getLastTask();
 	
+	TrayScore* best = nullptr;
+
 	for(uint32_t it_id : taskAnnouncement.start_ids){
 		for(uint32_t st_id : taskAnnouncement.end_ids){
 			// get Path
@@ -322,8 +323,13 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 				startTime = ros::Time::now().toSec();
 				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, startTime);
 			}
-			
+			if(!sourcePath.isValid()){
+				continue;
+			}
 			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, startTime + sourcePath.getDuration());
+			if(!targetPath.isValid()){
+				continue;
+			}
 			double estimatedNewConsumption = sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
 
 			// Check if task can be completed
@@ -334,25 +340,21 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 				
 				// add score to list
 				double durationOfThisTask = sourcePath.getDuration() + targetPath.getDuration();
-				scores.push_back(new TrayScore(it_id, st_id, score, durationOfThisTask));
+				// scores.push_back(new TrayScore(it_id, st_id, score, durationOfThisTask));
+				if(best == nullptr || score < best->score){
+					if(best != nullptr){
+						delete best;
+					}
+					best = new TrayScore(it_id, st_id, score, durationOfThisTask);
+				}
 			}
 		}
 	}
 	
-	if(!scores.empty()) {
-		std::sort(scores.begin(), scores.end(),
-			[](TrayScore* first, TrayScore* second) 
-				{return first->score < second->score;}
-			);
-		
-		TrayScore* best = scores.front();
+	if(best != nullptr) {
 		// publish score
 		this->taskHandler->publishScore(taskAnnouncement.request_id, best->score, best->sourceTray, best->targetTray, best->estimatedDuration);
-		// clean list
-		for(TrayScore* s : scores){
-			delete s;
-		}
-		scores.clear();
+		delete best;
 	} else {
 		// reject task
 		this->taskHandler->rejectTask(taskAnnouncement.request_id);
