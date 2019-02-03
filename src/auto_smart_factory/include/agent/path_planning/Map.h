@@ -14,10 +14,13 @@
 #include "agent/path_planning/TimedLineOfSightResult.h"
 
 class Map {
+public:
+	static double infiniteReservationTime;
+	
+private:
 	// For visualisation messages
 	static int visualisationId;
 	
-private:
 	float width;
 	float height;
 	float margin;
@@ -27,14 +30,17 @@ private:
 	std::vector<Rectangle> reservations;
 	ThetaStarMap thetaStarMap;
 	RobotHardwareProfile* hardwareProfile;
+	
+	int ownerId;
 
 public:
-	Map() = default;
-	Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle> &obstacles, RobotHardwareProfile* hardwareProfile);
+	Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle> &obstacles, RobotHardwareProfile* hardwareProfile, int ownerId);
+	~Map() = default;
 
 	// Visualisation
 	visualization_msgs::Marker getObstacleVisualization();
-	visualization_msgs::Marker getReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type color);
+	visualization_msgs::Marker getInactiveReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type baseColor);
+	visualization_msgs::Marker getActiveReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type baseColor);
 
 	// Line of sight checks
 	bool isInsideAnyInflatedObstacle(const Point& point) const;	
@@ -57,10 +63,15 @@ public:
 	Path getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime);
 	Path getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime);
 	
+	bool isPointTargetOfAnotherRobot(OrientedPoint pos);
+	bool isPointTargetOfAnotherRobot(const auto_smart_factory::Tray& tray);
+	
 	// Getter
 	float getWidth() const;
 	float getHeight() const;
 	float getMargin() const;
+	
+	void listAllReservationsIn(Point p);
 
 private:
 

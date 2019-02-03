@@ -16,29 +16,21 @@ TaskPlanner::TaskPlanner() {
 	ROS_INFO("Task planner created...");
 }
 
-TaskPlanner::~TaskPlanner() {
-}
-
-bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
-                             InitTaskPlannerResponse& res) {
+bool TaskPlanner::initialize(InitTaskPlannerRequest& req, InitTaskPlannerResponse& res) {
 	ros::NodeHandle n;
 	ros::NodeHandle pn("~");
 
 	// build package config map
 	for(auto config : req.package_configurations) {
-		if(!pkgConfigs.insert(
-				std::pair<unsigned int, PackageConfiguration>(config.id,
-				                                              config)).second) {
+		if(!pkgConfigs.insert(std::pair<unsigned int, PackageConfiguration>(config.id, config)).second) {
 			ROS_FATAL("Package configuration IDs are not unique!");
 			return false;
 		}
 	}
 
 	// build tray config map
-
 	for(auto config : req.warehouse_configuration.trays) {
-		if(!trayConfigs.insert(
-				std::pair<unsigned int, Tray>(config.id, config)).second) {
+		if(!trayConfigs.insert(std::pair<unsigned int, Tray>(config.id, config)).second) {
 			ROS_FATAL("Tray configuration IDs are not unique!");
 			return false;
 		}
@@ -46,38 +38,24 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 
 	// build robot config map
 	for(auto config : req.robot_configurations) {
-		if(!robotConfigs.insert(
-				std::pair<std::string, RobotConfiguration>(config.type_name,
-				                                           config)).second) {
+		if(!robotConfigs.insert(std::pair<std::string, RobotConfiguration>(config.type_name, config)).second) {
 			ROS_FATAL("Robot configuration IDs are not unique!");
 			return false;
 		}
 	}
 
 	// subscribe to the storage update topic
-	storageUpdateSub = n.subscribe("/storage_management/storage_update", 1000,
-	                               &TaskPlanner::receiveStorageUpdate, this);
+	storageUpdateSub = n.subscribe("/storage_management/storage_update", 1000, &TaskPlanner::receiveStorageUpdate, this);
+	robotHeartbeatSub = n.subscribe("/robot_heartbeats", 1000, &TaskPlanner::receiveRobotHeartbeat, this);
 
-	robotHeartbeatSub = n.subscribe("/robot_heartbeats", 1000,
-	                                &TaskPlanner::receiveRobotHeartbeat, this);
-
-	newInputTaskServer = pn.advertiseService("new_input_task",
-	                                         &TaskPlanner::newInputRequest, this);
-	newOutputTaskServer = pn.advertiseService("new_output_task",
-	                                          &TaskPlanner::newOutputRequest, this);
-	registerAgentServer = pn.advertiseService("register_agent",
-	                                          &TaskPlanner::registerAgent, this);
-
-	statusUpdatePub = pn.advertise<TaskPlannerState>("status", 1);
+	newInputTaskServer = pn.advertiseService("new_input_task", &TaskPlanner::newInputRequest, this);
+	newOutputTaskServer = pn.advertiseService("new_output_task", &TaskPlanner::newOutputRequest, this);
+	registerAgentServer = pn.advertiseService("register_agent", &TaskPlanner::registerAgent, this);
 	
-	rescheduleTimer = n.createTimer(ros::Duration(10.0),
-	                                &TaskPlanner::rescheduleEvent, this);
-	statusUpdateTimer = n.createTimer(ros::Duration(2.0),
-	                                  &TaskPlanner::taskStateUpdateEvent, this);
-
-	taskResponseSub = n.subscribe("/task_response", 1000, 
-									&TaskPlanner::receiveTaskResponse, this);
-
+	statusUpdatePub = pn.advertise<TaskPlannerState>("status", 1);
+	rescheduleTimer = n.createTimer(ros::Duration(10.0), &TaskPlanner::rescheduleEvent, this);
+	statusUpdateTimer = n.createTimer(ros::Duration(2.0), &TaskPlanner::taskStateUpdateEvent, this);
+	taskResponseSub = n.subscribe("/task_response", 1000, &TaskPlanner::receiveTaskResponse, this);
 	taskAnnouncerPub = pn.advertise<TaskAnnouncement>("task_broadcast", 1);
 
 	ROS_INFO("Task planner initialized.");
@@ -86,8 +64,7 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req,
 	return true;
 }
 
-const PackageConfiguration& TaskPlanner::getPkgConfig(
-		unsigned int typeId) const {
+const PackageConfiguration& TaskPlanner::getPkgConfig(unsigned int typeId) const {
 	return pkgConfigs.at(typeId);
 }
 
@@ -220,8 +197,7 @@ const std::map<std::string, std::pair<RobotConfiguration, bool> >& TaskPlanner::
 	return registeredRobots;
 }
 
-bool TaskPlanner::registerAgent(RegisterAgentRequest& req,
-                                RegisterAgentResponse& res) {
+bool TaskPlanner::registerAgent(RegisterAgentRequest& req, RegisterAgentResponse& res) {
 	if(registeredRobots.count(req.agent_id) == 0) {
 		// add new registered robot
 		registeredRobots[req.agent_id].first = req.robot_configuration;
@@ -242,6 +218,9 @@ void TaskPlanner::rescheduleEvent(const ros::TimerEvent& e) {
 }
 
 void TaskPlanner::resourceChangeEvent() {
+	// DONT REPLANN TODO Florian fix
+	return;
+	
 	ROS_INFO("[task planner] Resource change event!");
 
 	if(!idleRobotAvailable()) {
@@ -250,9 +229,8 @@ void TaskPlanner::resourceChangeEvent() {
 		return;
 	}
 	// first, check if any output request can be started
-	for(std::vector<RequestPtr>::iterator outputRequest = outputRequests.begin();
-	    outputRequest != outputRequests.end();) {
-
+	std::vector<RequestPtr>::iterator outputRequest = outputRequests.begin();
+	while(outputRequest != outputRequests.end()) {
 		ROS_INFO("[task planner] Checking output request %d.", (*outputRequest)->getId());
 
 		try {
@@ -260,8 +238,7 @@ void TaskPlanner::resourceChangeEvent() {
 			TaskData taskData = (*outputRequest)->allocateResources();
 
 			// allocation was successful, create task
-			TaskPtr outputTask = std::make_shared<Task>((*outputRequest)->getId(),
-			                                            taskData);
+			TaskPtr outputTask = std::make_shared<Task>((*outputRequest)->getId(), taskData);
 
 			// remove request from queue
 			outputRequest = outputRequests.erase(outputRequest);
@@ -269,18 +246,14 @@ void TaskPlanner::resourceChangeEvent() {
 			// start execution of task
 			startTask(outputTask);
 		} catch(std::runtime_error& e) {
-			ROS_DEBUG(
-					"[request %d] Resource allocation of output request failed: %s",
-					(*outputRequest)->getId(), e.what());
-
-			++outputRequest;
+			ROS_DEBUG("[request %d] Resource allocation of output request failed: %s", (*outputRequest)->getId(), e.what());
+			outputRequest++;
 		}
 	}
 
 	// then, check if any input request can be started
-	for(std::vector<RequestPtr>::iterator inputRequest = inputRequests.begin();
-	    inputRequest != inputRequests.end();) {
-
+	std::vector<RequestPtr>::iterator inputRequest = inputRequests.begin();
+	while(inputRequest != inputRequests.end()) {
 		ROS_INFO("[task planner] Checking input request %d.", (*inputRequest)->getId());
 
 		// remove input request if it is not pending anymore
@@ -289,7 +262,6 @@ void TaskPlanner::resourceChangeEvent() {
 
 			// remove request from queue
 			inputRequest = inputRequests.erase(inputRequest);
-
 			continue;
 		}
 
@@ -300,31 +272,24 @@ void TaskPlanner::resourceChangeEvent() {
 			TaskData taskData = (*inputRequest)->allocateResources();
 
 			// allocation was successful, create task
-			TaskPtr inputTask = std::make_shared<Task>((*inputRequest)->getId(),
-			                                           taskData);
+			TaskPtr inputTask = std::make_shared<Task>((*inputRequest)->getId(), taskData);
 			// remove request from queue
 			inputRequest = inputRequests.erase(inputRequest);
 			// start execution of task
 			startTask(inputTask);
 
 		} catch(std::runtime_error& e) {
-			ROS_DEBUG(
-					"[request %d] Resource allocation of input request failed: %s",
-					(*inputRequest)->getId(), e.what());
-
-			++inputRequest;
+			ROS_DEBUG("[request %d] Resource allocation of input request failed: %s", (*inputRequest)->getId(), e.what());
+			inputRequest++;
 		}
 	}
 }
 
 void TaskPlanner::startTask(TaskPtr task) {
 	// insert task into list of running tasks
-	auto res = runningTasks.insert(
-			std::pair<unsigned int, TaskPtr>(task->getId(), task));
-	ROS_WARN("in TaskPlanner::startTask");
+	auto res = runningTasks.insert(std::pair<unsigned int, TaskPtr>(task->getId(), task));
 	if(!res.second) {
-		ROS_FATAL(
-				"Starting new task failed because task with same id is already running!");
+		ROS_FATAL("Starting new task failed because task with same id is already running!");
 		return;
 	}
 
@@ -383,25 +348,22 @@ bool TaskPlanner::idleRobotAvailable() const {
 
 void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 	// go through requests and get the one for which the response is intended:
-	ROS_INFO("Receiving score for Request %d; Reject is %d", tr.request_id, tr.reject);
-	for(RequestPtr& r : inputRequests){
-		if(r->getId() == tr.request_id){
+	for(RequestPtr& r : inputRequests) {
+		if(r->getId() == tr.request_id) {
 			r->receiveTaskResponse(tr);
 			return;
 		}
 	}
-	for(RequestPtr& r : outputRequests){
-		if(r->getId() == tr.request_id){
+	for(RequestPtr& r : outputRequests) {
+		if(r->getId() == tr.request_id) {
 			r->receiveTaskResponse(tr);
 			return;
 		}
 	}
-	ROS_INFO("No request with id %d found", tr.request_id);
+	ROS_WARN("Got answer for request %d but request isnt valid anymore. Answer was from %s", tr.request_id, tr.robot_id.c_str());
 }
 
-void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
-                	 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, 
-					 uint32_t requestId){
+void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates, const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, uint32_t requestId) {
 	TaskAnnouncement tsa;
 	tsa.request_id = requestId;
 	extractData(sourceTrayCandidates, targetTrayCandidates, &tsa);
@@ -411,19 +373,9 @@ void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourc
 
 void TaskPlanner::extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa){
 	for(Tray t : sourceTrays){
-		geometry_msgs::Point p;
-		p.x = t.x;
-		p.y = t.y;
-		p.z = 0.0;
-		tsa->start_points.push_back(p);
 		tsa->start_ids.push_back(t.id);
 	}
 	for(Tray t : targetTrays){
-		geometry_msgs::Point p;
-		p.x = t.x;
-		p.y = t.y;
-		p.z = 0.0;
-		tsa->end_points.push_back(p);
 		tsa->end_ids.push_back(t.id);
 	}
 }

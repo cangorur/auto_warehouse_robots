@@ -9,18 +9,13 @@
 #include "agent/path_planning/ThetaStarGridNodeInformation.h"
 #include "RobotHardwareProfile.h"
 
-// TODO fix starting in reservation -> no path found (crash)
-// TODO ignore own reservations during theta star!!!!!!!
-
-
 class ThetaStarPathPlanner {
 public:
 	explicit ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile);
-
 	Path findPath(OrientedPoint start, OrientedPoint target, double startingTime);
 
 private:
-	double initialTime = std::numeric_limits<double>::max() - 10000;
+	double initialTime = std::numeric_limits<double>::max() - 100000;
 
 	typedef std::pair<double, ThetaStarGridNodeInformation*> GridInformationPair;
 	struct GridInformationPairComparator {
@@ -37,7 +32,7 @@ private:
 	double getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const;
 	double getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
 
-	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation) const;
+	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double initialWaitTime) const;
 	
 	OrientedPoint startPoint;
 	OrientedPoint endPoint;

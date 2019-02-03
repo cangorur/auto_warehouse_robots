@@ -15,16 +15,14 @@ public:
 	~ReservationManager() = default;
 
 	void update();
-	
-	// TODO add timeout
 	void reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg);
 
 	// Path reservations
-	void bidForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint);
+	void startBiddingForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint);
 	
 	// Getter
 	Path getReservedPath();
-	bool getIsBidingForReservation() const;
+	bool isBidingForReservation() const;
 	bool getHasReservedPath() const;
 	
 private:
@@ -41,11 +39,12 @@ private:
 	ReservationBid currentAuctionHighestBid;
 	
 	// Path bidding
-	bool isBidingForReservation;
+	bool bidingForReservation;
 	bool hasReservedPath;
 	Path pathToReserve;
 	OrientedPoint startPoint;
 	OrientedPoint endPoint;
+	int pathRetrievedCount;
 	
 	// Delayed auction start
 	bool initializeNewDelayedAuction;
@@ -55,6 +54,7 @@ private:
 	
 	const double emptyAuctionDelay = 0.2f;
 	const double pathReservationStartingTimeOffset = 0.2f;
+	const double auctionTimeout = 6.0f;
 	
 	void addReservations(const auto_smart_factory::ReservationCoordination& msg);
 	void publishReservations(std::vector<Rectangle> reservations);

@@ -93,10 +93,8 @@ protected:
 	 * @param robot_configuration: information about the robot role this agent has */
 	bool initialize(auto_smart_factory::WarehouseConfiguration warehouse_configuration, auto_smart_factory::RobotConfiguration robot_configuration);
 
-	/* Extracts the idle position of this agent from the warehouse config.
-	 * @return True if idle postion extracted successfully. */
-	bool setupIdlePosition();
-
+	bool isInitializedCompletely();
+	
 	/* Calls a service to register the agent at the task planner, so this agent is able to receive
 	 * requests to calculate and fullfill warehouse tasks.
 	 * @return True if this agent has been registered successfully at the task planner. */
@@ -182,12 +180,6 @@ protected:
 
 	// information about the role of this agent
 	auto_smart_factory::RobotConfiguration robotConfig;
-
-	// the idle position of this agent on the current map
-	geometry_msgs::Point idlePosition;
-
-	// the point the agent should look to if it is on idle position
-	geometry_msgs::Point idleOrientationPoint;
 
 	// Flag that shows whether this agent has been initialized already
 	bool initialized = false;
@@ -281,10 +273,10 @@ protected:
 	geometry_msgs::Quaternion orientation;
 
 	// heartbeat related timestamp - time in seconds
-	unsigned long lastTimestamp = 0;
+	unsigned long lastHeartbeat = 0;
 
 	// duration until the next heartbeat publishing - time in seconds
-	unsigned long breakDuration = 0.5;
+	unsigned long heartbeatPeriod = 0;
 
 	// current battery level
 	float batteryLevel = 100.0;

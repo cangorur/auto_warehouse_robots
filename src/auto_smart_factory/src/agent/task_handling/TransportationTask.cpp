@@ -1,16 +1,14 @@
 #include "agent/task_handling/TransportationTask.h"
 
-TransportationTask::TransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, 
-		Path sourcePath, Path targetPath, double startTime) : 
+TransportationTask::TransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, Path sourcePath, Path targetPath, double startTime) : 
 	Task(targetID, targetPath, Type::TRANSPORTATION, startTime),
 	id(id), 
-	sourceId(sourceID) {
+	sourceId(sourceID)
+{
 		sourceDuration = sourcePath.getDuration();
 		sourceBatCons = sourcePath.getBatteryConsumption();
-		sourcePosition = OrientedPoint(sourcePath.getNodes().back().x, sourcePath.getNodes().back().y, 0.0f);
+		sourcePosition = sourcePath.getEnd();
 }
-
-TransportationTask::~TransportationTask() = default;
 
 unsigned int TransportationTask::getId(){
 	return id;

@@ -6,6 +6,6 @@ TimedLineOfSightResult::TimedLineOfSightResult() {
 	freeAfter = 0;
 
 	hasUpcomingObstacle = false;
-	lastValidEntryTime = 999999;
+	lastValidEntryTime = 1000000000000;
 	freeAfterUpcomingObstacle = 0;
 }

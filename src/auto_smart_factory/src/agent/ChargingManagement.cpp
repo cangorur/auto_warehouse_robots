@@ -1,124 +1,83 @@
 #include <agent/ChargingManagement.h>
+#include <include/agent/ChargingManagement.h>
+
 #include "agent/Agent.h"
 
+bool sortByDuration(const std::pair<Path, uint32_t> &lhs, const std::pair<Path, uint32_t> &rhs) {
+	return lhs.first.getDuration() < rhs.first.getDuration();
+}
 
-ChargingManagement::ChargingManagement(Agent* a, auto_smart_factory::WarehouseConfiguration warehouse_configuration) {
-
+ChargingManagement::ChargingManagement(Agent* a, auto_smart_factory::WarehouseConfiguration warehouse_configuration, Map* m) {
 	agent = a;
+	map = m;
 	agentID = agent->getAgentID();
-	agentBatt = agent->getAgentBattery();
 	warehouseConfig = warehouse_configuration;
-	ROS_INFO("[ChargingManagement] Started, agent ID: [%s], agent Batt: [%f] ", agentID.c_str(), agentBatt);
+	ROS_INFO("[ChargingManagement] Started, agent ID: [%s], agent Batt: [%f] ", agentID.c_str(), agent->getAgentBattery());
 	getAllChargingStations();
 }
 
-ChargingManagement::~ChargingManagement() {
-}
-
-
-bool ChargingManagement::isEnergyAvailable(double energy){
-
-	agentBatt = agent->getAgentBattery();
-	energyAfterTask =  agentBatt - energy;
-	if (energyAfterTask > criticalMinimum ){
-        return true;
-    }
-    return false;
-}
-
-
 void ChargingManagement::getAllChargingStations(){
-
 	//Iterate through all the trays and separate out charging trays
-	for(int i = 0; i < warehouseConfig.trays.size(); i++) {
-		if(warehouseConfig.trays[i].type.compare("charging station")) {
-			charging_trays.push_back(warehouseConfig.trays[i]);
+	for(auto& tray : warehouseConfig.trays) {
+		if(tray.type == "charging station") {
+			charging_trays.push_back(tray);
 		}
 	}
 
-	//Fill charging stations vector
-
-//	for(int i= 0; i<charging_trays.size(); i++){
-
-		//ID of charging station, same as iterator for now
-//		charging_stations[i].id = i;
-
-		//Tray corresponding to charging station
-//		charging_stations[i].Tray = charging_trays[i];
-
-		//All stations unoccupied
-//		charging_stations[i].occupancy = false;
-
-//		charging_stations[i].robot = {};
-
-//		charging_stations[i].rate = 0;
-
-
-//	}
+	ROS_INFO("[Charging Management]:Found (%d) Charging Stations !",(unsigned int) charging_trays.size());
 }
 
-
-bool ChargingManagement :: isChargingStationAvailable(uint8_t searchid){
-
-	for(int i= 0; i<charging_stations.size(); i++){
-		if(charging_stations[i].id == searchid){
-			return charging_stations[i].occupancy;
-		}
-		else {
-			ROS_ERROR("[Charging Management]: Searched for Non Existent Charging Station (%d) !",searchid);
-			return false;
+std::pair<Path, uint32_t> ChargingManagement::getPathToNearestChargingStation(OrientedPoint start, double startingTime) {
+	u_int32_t nearestStationId = 0;
+	Path shortestPath;
+	double nearestStationDuration = std::numeric_limits<double>::max();
+	
+	//Find paths for all possible charging stations
+	for(auto& charging_tray : charging_trays) {
+		if(map->isPointTargetOfAnotherRobot(charging_tray)) {
+			ROS_INFO("Skipping charging station because it is occupied");
+			continue;
+		}		
+		
+		Path path = map->getThetaStarPath(start, charging_tray, startingTime);
+		if(path.isValid() && path.getDuration() < nearestStationDuration) {
+			nearestStationDuration = path.getDuration();
+			
+			shortestPath = path;
+			nearestStationId = charging_tray.id;
 		}
 	}
+	
+    return std::make_pair(shortestPath, nearestStationId);
 }
 
-bool ChargingManagement :: reserveChargingStation(uint8_t reserveid, auto_smart_factory::Robot associated_robot){
-
-	for(int i= 0; i<charging_stations.size(); i++){
-		if(charging_stations[i].id == reserveid){
-			charging_stations[i].occupancy = true;
-			charging_stations[i].robot = associated_robot;
-			return true;
-		}
-		else {
-			ROS_ERROR("[Charging Management]: Tried to reserve a Non Existent Charging Station (%d) !",reserveid);
-			return false;
-		}
-	}
-}
-
-
-bool ChargingManagement :: unreserveChargingStation(uint8_t reserveid){
-
-	for(int i= 0; i<charging_stations.size(); i++){
-		if(charging_stations[i].id == reserveid){
-			charging_stations[i].occupancy = false;
-			charging_stations[i].robot = {};
-			return true;
-		}
-		else {
-			ROS_ERROR("[Charging Management]: Tried to unreserve a Non Existent Charging Station (%d) !",reserveid);
-			return false;
-		}
-	}
-}
-
-
-float ChargingManagement::getScoreMultiplier(float cumulatedEnergyConsumption){
-
-	agentBatt = agent->getAgentBattery();
-	energyAfterTask =  agentBatt - cumulatedEnergyConsumption; 	//Expected energy in agent after all the tasks
-
-	if(energyAfterTask > upperThreshold){
+double ChargingManagement::getScoreMultiplierForBatteryLevel(double batteryLevel) {
+	if(batteryLevel >= upperThreshold) {
 	    return 1;
-	}
-
-	else if (energyAfterTask > lowerThreshold){
+	} else if (batteryLevel > lowerThreshold) {
 		//Calculate factor using the quadratic function : y = (-0.01)x^2+2 * (lowerThreshold/100)* x- lowerThreshold
-
-		float quadraticFraction =  (2 + 0.01*lowerThreshold) * energyAfterTask - pow(energyAfterTask,2) * 0.01 - lowerThreshold;
-		return quadraticFraction/100;
+		double quadraticFraction =  (2 + 0.01f * lowerThreshold) * batteryLevel - pow(batteryLevel, 2) * 0.01f - lowerThreshold;
+		return quadraticFraction / 100.f;
 	}
-	return energyAfterTask/100;
+	return batteryLevel / 100.f;
 }
 
+bool ChargingManagement::isChargingAppropriate() {
+	return (agent->getAgentBattery() <= upperThreshold);
+}
 
+bool ChargingManagement::isCharged() {
+	return agent->getAgentBattery() >= 99.5f;
+}
+
+double ChargingManagement::getCurrentBattery() {
+	return agent->getAgentBattery();
+}
+
+bool ChargingManagement::isConsumptionPossible(double consumption) {
+	return agent->getAgentBattery() - consumption - estimatedBatteryConsumptionToNearestChargingStation > criticalMinimum;
+}
+
+bool ChargingManagement::isConsumptionPossible(double agentBatteryLevel, double consumption) {
+	return agentBatteryLevel - consumption - estimatedBatteryConsumptionToNearestChargingStation > criticalMinimum;
+}

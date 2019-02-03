@@ -7,7 +7,8 @@
 
 Agent::Agent(std::string agent_id) {
 	agentID = agent_id;
-	agentIdInt = std::stoi(agentID.substr(6, 1));
+	std::string idStr = agentID.substr(agentID.find('_') + 1);
+	agentIdInt = std::stoi(idStr);
 	position.z = -1;
 	map = nullptr;
 
@@ -28,7 +29,7 @@ Agent::~Agent() {
 }
 
 void Agent::update() {
-	if(initialized) {
+	if(isInitializedCompletely()) {
 		// Register at task planner if not already done
 		if(!registered && registerAgent()) {
 			setupTaskHandling();
@@ -68,9 +69,6 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	hardwareProfile = new RobotHardwareProfile(robot_configuration.max_linear_vel, maxTurningSpeedInDegree, robot_configuration.discharging_rate, 0.f);
 	//ROS_INFO("[%s]: MaxSpeed: %f m/s | MaxTurningSpeed: %f deg/s", agentID.c_str(), robot_configuration.max_linear_vel,maxTurningSpeedInDegree);
 
-	if(!setupIdlePosition()) {
-		return false;
-	}
 	this->pose_sub = n.subscribe(agentID + "/pose", 1, &Agent::poseCallback, this);
 	this->battery_sub = n.subscribe(agentID + "/battery", 1, &Agent::batteryCallback, this);
 	this->hokuyo_sub = n.subscribe(agentID + "/laser_scanner", 1, &Agent::laserCallback, this);
@@ -84,7 +82,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	// this->collision_alert_sub = n.subscribe("/collisionAlert", 1, &Agent::collisionAlertCallback, this);
 
 	visualisationPublisher = pn.advertise<visualization_msgs::Marker>("visualization_" + agentID, 100, true);
-	vizPublicationTimer = pn.createTimer(ros::Duration(0.5f), &Agent::publishVisualisation, this); // in seconds
+	vizPublicationTimer = pn.createTimer(ros::Duration(0.25f), &Agent::publishVisualisation, this); // in seconds
 	
 	reservationCoordination_pub = pn.advertise<auto_smart_factory::ReservationCoordination>("/reservation_coordination", 100, true);
 	reservationCoordination_sub = pn.subscribe("/reservation_coordination", 100, &Agent::reservationCoordinationCallback, this);
@@ -102,10 +100,10 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		for(auto o : warehouseConfig.map_configuration.obstacles) {
 			obstacles.emplace_back(Point(o.posX, o.posY), Point(o.sizeX, o.sizeY), o.rotation);
 		}
-		this->map = new Map(warehouseConfig, obstacles, hardwareProfile);
+		this->map = new Map(warehouseConfig, obstacles, hardwareProfile, agentIdInt);
 
 		// Charging Management
-		this->chargingManagement = new ChargingManagement(this,this->warehouseConfig);
+		this->chargingManagement = new ChargingManagement(this,this->warehouseConfig, this->map);
 
 		// Reservation Manager
 		reservationManager = new ReservationManager(&reservationCoordination_pub, map, agentIdInt, static_cast<int>(warehouse_configuration.robots.size()));
@@ -119,21 +117,6 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		ROS_ERROR("[%s]: Exception occured!", agentID.c_str());
 		return false;
 	}
-}
-
-bool Agent::setupIdlePosition() {
-	for(auto& idle_position : warehouseConfig.idle_positions)
-		if(idle_position.id == agentID) {
-
-			idlePosition.x = idle_position.pose.x;
-			idlePosition.y = idle_position.pose.y;
-			double rad = idle_position.pose.theta / 180.0 * PI;
-			idleOrientationPoint.x = idlePosition.x + cos(rad) * 1.0;
-			idleOrientationPoint.y = idlePosition.y + sin(rad) * 1.0;
-			return true;
-		}
-	ROS_ERROR("[%s]: Failed to setup idle position!", agentID.c_str());
-	return false;
 }
 
 bool Agent::registerAgent() {
@@ -180,7 +163,7 @@ void Agent::setIdle(bool idle) {
 bool Agent::isTimeForHeartbeat() {
 	timeval time;
 	gettimeofday(&time, 0);
-	return lastTimestamp == 0 || time.tv_sec - lastTimestamp >= breakDuration;
+	return lastHeartbeat == 0 || time.tv_sec - lastHeartbeat >= heartbeatPeriod;
 }
 
 void Agent::sendHeartbeat() {
@@ -205,7 +188,7 @@ void Agent::sendHeartbeat() {
 void Agent::updateTimer() {
 	timeval time;
 	gettimeofday(&time, 0);
-	lastTimestamp = time.tv_sec;
+	lastHeartbeat = time.tv_sec;
 }
 
 void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& msg) {
@@ -228,14 +211,14 @@ void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& ms
 bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_factory::AssignTask::Response& res) {
 	try {
 		if(isIdle) {
-			ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
+			// ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
 
 			int task_id = req.task_id;
 			auto_smart_factory::Tray input_tray = getTray(req.input_tray);
 			auto_smart_factory::Tray storage_tray = getTray(req.storage_tray);
 
-			ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
-			ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
+			// ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
+			// ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
 
 			// create Task and add it to task handler
 			Path sourcePath;
@@ -245,36 +228,53 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 			if(lastTask != nullptr){
 				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, lastTask->getEndTime());
 				targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration());
-				taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
+				
+				if(sourcePath.isValid() && targetPath.isValid()) {
+					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
+					initialTimeOfCurrentTask = ros::Time::now().toSec();
+					res.success = true;
+				} else {
+					ROS_WARN("[%s] task %d can not be assigned, as source or target path is invalid", agentID.c_str(), task_id);
+					res.success = false;
+				}
+				
 			} else {
 				// take the current position
 				double now = ros::Time::now().toSec();
 				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, now);
 				targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration());
-				taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
-			}			
 
-			initialTimeOfCurrentTask = ros::Time::now().toSec();
-			ROS_INFO("[%d]: Task %i successfully assigned at %.2f! Queue size is %i", agentIdInt, req.task_id, ros::Time::now().toSec(), taskHandler->numberQueuedTasks());
-			res.success = true;
+				if(sourcePath.isValid() && targetPath.isValid()) {
+					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
+					initialTimeOfCurrentTask = ros::Time::now().toSec();
+					res.success = true;
+				} else {
+					ROS_WARN("[%s] task %d can not be assigned, as source or target path is invalid", agentID.c_str(), task_id);
+					res.success = false;
+				}
+			}			
+			
 		} else {
-			ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);
+			// ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);
 			res.success = false;
 		}
 	} catch(std::out_of_range& e) {
 		// task does not exist
-		ROS_ERROR("[%d]: Attempted to assign inexistent task (specified id: %d)", agentIdInt, req.task_id);
+		ROS_FATAL("[%d]: Attempted to assign inexistent task (specified id: %d)", agentIdInt, req.task_id);
 		res.success = false;
 	}
+	
 	return res.success;
 }
 
 auto_smart_factory::Tray Agent::getTray(unsigned int tray_id) {
-	for(auto& tray : warehouseConfig.trays)
+	for(auto& tray : warehouseConfig.trays) {
 		if(tray_id == tray.id) {
 			return tray;
 		}
-	ROS_ERROR("[%s]: Tray with id %u inexistent!", agentID.c_str(), tray_id);
+	}
+	ROS_FATAL("[%s]: Tray with id %u inexistent!", agentID.c_str(), tray_id);
+	throw std::invalid_argument("Tray id was not found");
 }
 
 void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
@@ -288,8 +288,7 @@ void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 }
 
 void Agent::laserCallback(const sensor_msgs::LaserScan& msg) {
-	ROS_DEBUG("[%s]: Laser callback: angle_min=%f, angle_max=%f, ranges_size=%lu",
-	          agentID.c_str(), msg.angle_min, msg.angle_max, msg.ranges.size());
+	ROS_DEBUG("[%s]: Laser callback: angle_min=%f, angle_max=%f, ranges_size=%lu", agentID.c_str(), msg.angle_min, msg.angle_max, msg.ranges.size());
 	if(this->obstacleDetection->isEnabled()) {
 		this->obstacleDetection->update(position, asin(orientation.z), msg);
 	}
@@ -301,55 +300,76 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 }
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
-	// TODO: compute this for all 
-	std::vector< TrayScore* > scores;
 	double queuedDuration = taskHandler->getDuration();
-	double queuedBatteryConsumption = taskHandler->getBatteryConsumption();
+	double estimatedBatteryAfterQueuedTasks = taskHandler->getEstimatedBatteryLevelAfterQueuedTasks();
+	Task* lastTask = taskHandler->getLastTask();
+	
+	TrayScore* best = nullptr;
+
 	for(uint32_t it_id : taskAnnouncement.start_ids){
 		for(uint32_t st_id : taskAnnouncement.end_ids){
 			// get Path
 			auto_smart_factory::Tray input_tray = getTray(it_id);
 			auto_smart_factory::Tray storage_tray = getTray(st_id);
-			Path sourcePath = Path();
-			if(taskHandler->getLastTask() != nullptr){
+			Path sourcePath;
+			double startTime;
+			
+			if(lastTask != nullptr){
 				// take the last position of the last task
-				sourcePath = map->getThetaStarPath(taskHandler->getLastTask()->getTargetPosition(), input_tray, 0);
+				startTime = lastTask->getEndTime();
+				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, startTime);
 			} else {
 				// take the current position
-				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, 0);
+				startTime = ros::Time::now().toSec();
+				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, startTime);
 			}
-			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, 0);
-			// get Battery consumption
-			double batCons = queuedBatteryConsumption + sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
-			// check battery consumption
-			if(chargingManagement->isEnergyAvailable(batCons)){
-				// get Path duration pickup and dropoff constants are ignored as every robot has to do them
+			
+			if(!sourcePath.isValid()){
+				continue;
+			}
+			
+			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, startTime + sourcePath.getDuration());
+			
+			if(!targetPath.isValid()) {
+				continue;
+			}
+			
+			double estimatedNewConsumption = sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
+
+			// Check if task can be completed
+			if(chargingManagement->isConsumptionPossible(estimatedBatteryAfterQueuedTasks, estimatedNewConsumption)) {
 				double duration = queuedDuration + sourcePath.getDuration() + targetPath.getDuration();
-				// get score multiplier
-				double scoreFactor = chargingManagement->getScoreMultiplier(batCons);
-				// compute score
-				double score = (1/scoreFactor) * duration;
+				double scoreFactor = chargingManagement->getScoreMultiplierForBatteryLevel(estimatedBatteryAfterQueuedTasks - estimatedNewConsumption);
+				double score = (1.f / scoreFactor) * duration;
+				
 				// add score to list
-				scores.push_back(new TrayScore(it_id, st_id, score));
+				double estimatedDuration = sourcePath.getDuration() + targetPath.getDuration();
+				ROS_ASSERT_MSG(estimatedDuration > 0, "source-duration: %f | target-duration: %f", sourcePath.getDuration(), targetPath.getDuration());
+				
+				// Update best score
+				if(best == nullptr || score < best->score){
+					if(best != nullptr){
+						delete best;
+					}
+					best = new TrayScore(it_id, st_id, score, estimatedDuration);
+				}
 			}
 		}
 	}
-	if(!scores.empty()){
-		std::sort(scores.begin(), scores.end(),
-			[](TrayScore* first, TrayScore* second) 
-				{return first->score < second->score;}
-			);
-		TrayScore* best = scores.front();
+	
+	if(best != nullptr) {
 		// publish score
-		this->taskHandler->publishScore(taskAnnouncement.request_id, best->score, best->sourceTray, best->targetTray);
-		// clean list
-		for(TrayScore* s : scores){
-			delete s;
-		}
-		scores.clear();
+		this->taskHandler->publishScore(taskAnnouncement.request_id, best->score, best->sourceTray, best->targetTray, best->estimatedDuration);
+		delete best;
 	} else {
 		// reject task
 		this->taskHandler->rejectTask(taskAnnouncement.request_id);
+		if(lastTask != nullptr && !(lastTask->isCharging()) ) {
+			std::pair<Path, uint32_t> pathToCS = this->chargingManagement->getPathToNearestChargingStation(lastTask->getTargetPosition(), lastTask->getEndTime());
+			// add charging task
+			ROS_INFO("[Agent %d] Adding charging task because new task could not be taken", agentIdInt);
+			this->taskHandler->addChargingTask(pathToCS.second, pathToCS.first, lastTask->getEndTime());
+		}
 	}
 }
 
@@ -384,7 +404,12 @@ void Agent::publishVisualisation(const ros::TimerEvent& e) {
 	if(map != nullptr) {
 		visualisationPublisher.publish(map->getObstacleVisualization());
 		
-		auto reservationMsg = map->getReservationVisualization(agentIdInt, agentIdToColor(agentIdInt));
+		auto reservationMsg = map->getInactiveReservationVisualization(agentIdInt, agentIdToColor(agentIdInt));
+		if(!reservationMsg.points.empty()) {
+			visualisationPublisher.publish(reservationMsg);
+		}
+
+		reservationMsg = map->getActiveReservationVisualization(agentIdInt, agentIdToColor(agentIdInt));
 		if(!reservationMsg.points.empty()) {
 			visualisationPublisher.publish(reservationMsg);
 		}
@@ -441,4 +466,9 @@ std_msgs::ColorRGBA Agent::agentIdToColor(int agentId) {
 	}
 
 	return color;
+}
+
+bool Agent::isInitializedCompletely() {
+	//return initialized && motionPlanner->getPositionAsOrientedPoint().x != 0 && motionPlanner->getPositionAsOrientedPoint().y != 0;
+	return initialized && motionPlanner->isPositionInitialized();
 }

@@ -2,7 +2,8 @@
 
 uint32 request_id
 string robot_id
-int32 start_id
-int32 end_id
+uint32 start_id
+uint32 end_id
 bool reject
 float64 score
+float64 estimatedDuration

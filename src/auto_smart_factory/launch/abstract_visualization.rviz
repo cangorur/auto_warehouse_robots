@@ -63,6 +63,9 @@ Visualization Manager:
       Name: Robot1
       Namespaces:
         Obstacles: true
+        PathLines: true
+        PathPoints: true
+        Reservations: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -73,6 +76,7 @@ Visualization Manager:
         Obstacles: false
         PathLines: true
         PathPoints: true
+        Reservations: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -83,6 +87,7 @@ Visualization Manager:
         Obstacles: false
         PathLines: true
         PathPoints: true
+        Reservations: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -91,6 +96,9 @@ Visualization Manager:
       Name: Robot4
       Namespaces:
         Obstacles: false
+        PathLines: true
+        PathPoints: true
+        Reservations: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -99,6 +107,7 @@ Visualization Manager:
       Name: Robot5
       Namespaces:
         Obstacles: false
+        Reservations: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -107,6 +116,7 @@ Visualization Manager:
       Name: Robot6
       Namespaces:
         Obstacles: false
+        Reservations: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -115,6 +125,7 @@ Visualization Manager:
       Name: Robot7
       Namespaces:
         Obstacles: false
+        Reservations: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -123,6 +134,7 @@ Visualization Manager:
       Name: Robot8
       Namespaces:
         Obstacles: false
+        Reservations: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -159,11 +171,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Scale: 47.1438332
+      Scale: 58.8177071
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
-      X: 6.00518274
-      Y: 9.27786732
+      X: 6.94205856
+      Y: 10.0390511
     Saved: ~
 Window Geometry:
   Displays:

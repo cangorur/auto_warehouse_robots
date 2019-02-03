@@ -36,7 +36,7 @@ public:
 	 */
 	Request(TaskPlanner* tp, TaskRequirementsConstPtr taskRequirements, std::string type);
 
-	virtual ~Request();
+	virtual ~Request() = default;
 
 	/**
 	 * Tries to allocate all necessary resources to start a task.
@@ -83,16 +83,14 @@ protected:
 	 * @param sourceTrayCandidates Output vector for candidates
 	 * @return True if candidate list is non-empty
 	 */
-	bool findSourceCandidates(
-			std::vector<auto_smart_factory::Tray>& sourceTrayCandidates) const;
+	bool findSourceCandidates(std::vector<auto_smart_factory::Tray>& sourceTrayCandidates) const;
 
 	/**
 	 * Creates a list of possible target tray candidates for this request.
 	 * @param targetTrayCandidates Output vector for candidates
 	 * @return True if candidate list is non-empty
 	 */
-	bool findTargetCandidates(
-			std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
+	bool findTargetCandidates(std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
 
 	/**
 	 * Creates a list of possible robot candidates using lists of source and target tray candidates.
@@ -102,22 +100,7 @@ protected:
 	 * @param targetTrayCandidates List of output tray candidates
 	 * @return True if robot candidate list is non-empty
 	 */
-	bool getRobotCandidates(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
-	                        const std::vector<auto_smart_factory::Tray>& targetTrayCandidates);
-
-
-	/**
-	 * Sends a request to one robot using source and target tray candidates
-	 * to get an estimated duration.
-	 * @param robotId Id of the robot
-	 * @param cand Output of the robot response
-	 * @param sourceTrayCandidates Source tray candidates
-	 * @param targetTrayCandidates target tray candidates
-	 * @return
-	 */
-	bool sendRobotRequest(std::string robotId, RobotCandidate& cand,
-	                      const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
-	                      const std::vector<auto_smart_factory::Tray>& targetTrayCandidates) const;
+	bool getRobotCandidates(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates, const std::vector<auto_smart_factory::Tray>& targetTrayCandidates);
 
 	/**
 	 * Assign request/task to robot for includes the setup of the task in the robot.
@@ -125,7 +108,7 @@ protected:
 	 * @param robotId Id of the robot
 	 * @return True if assigning was successful
 	 */
-	bool allocateRobot(RobotCandidate candidate) const;
+	bool allocateRobot(const RobotCandidate& candidate) const;
 
 protected:
 	/// the request status
@@ -137,12 +120,8 @@ protected:
 	/// requirements that need to be fulfilled
 	TaskRequirementsConstPtr requirements;
 
-	/// this flag tells whether to use the robot offer with the shortest
-	/// estimated duration (true) or just random choice (false)
-	bool useBestETA;
-
 	/// vector of robot candidates
-	std::vector<RobotCandidate*> robotCandidates;
+	std::vector<RobotCandidate> robotCandidates;
 
 	/// a map of robots who answered with robot_id as key and their reject flag as value
 	std::map<std::string, bool> answeredRobots;
@@ -156,9 +135,6 @@ protected:
 
 	/// wait with a frequency until each robot has answered or a timeout occurs
 	void waitForRobotScores(ros::Duration timeout, ros::Rate frequency);
-
-	/// delete all robot candidates in the internal listing
-	void clearRobotCandidates(void);
 };
 
 typedef std::shared_ptr<Request> RequestPtr;

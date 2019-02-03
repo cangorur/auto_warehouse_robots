@@ -7,7 +7,7 @@ PidController::PidController(double targetValue, double proportionalGain, double
 	derivativeGain(derivativeGain) {
 }
 
-double PidController::updateTargetValue(double targetValue) {
+void PidController::updateTargetValue(double targetValue) {
 	this->targetValue = targetValue;
 }
 

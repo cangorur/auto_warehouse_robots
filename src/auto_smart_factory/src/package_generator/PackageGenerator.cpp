@@ -3,7 +3,7 @@
 PackageGenerator::PackageGenerator() {
 	ros::NodeHandle pn("~");
 	initSrv = pn.advertiseService("init", &PackageGenerator::init, this);
-	// this service is to generate new packages by request. It also calls itself here under this node every certain time interval. Check breakDuration variable under the header
+	// this service is to generate new packages by request. It also calls itself here under this node every certain time interval. Check heartbeatPeriod variable under the header
 	generateNewPackageServer = pn.advertiseService("new_package_generator", &PackageGenerator::generateService, this);
 }
 
@@ -232,8 +232,11 @@ bool PackageGenerator::getStorageInformation() {
 			storageState = srv.response.state;
 			hasStorageState = true;
 			ROS_INFO("[package generator] Storage information succesfully received & updated!");
-		} else
-			ROS_WARN("[package generator] Received storage information are outdated!");
+			return true;
+		} else {
+			ROS_WARN("[package generator] Received storage information is outdated!");
+			return false;
+		}
 	} else {
 		ROS_ERROR("[package generator] Failed to call service %s!", srv_name.c_str());
 		return false;

@@ -4,21 +4,43 @@
 #include "Math.h"
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
+#include <include/agent/path_planning/Path.h>
+#include <include/agent/path_planning/Map.h>
+
 #include "agent/path_planning/Path.h"
 
-Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile) :
+Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint end) :
 		startTimeOffset(startTimeOffset),
 		nodes(std::move(nodes_)),
 		waitTimes(std::move(waitTimes_)),
-		hardwareProfile(hardwareProfile)
+		hardwareProfile(hardwareProfile),
+		start(start),
+		end(end),
+		isValidPath(true)
 {
 	if(nodes.size() != waitTimes.size()) {
-		ROS_ERROR("nodes.size() != waitTimes.size()");
+		ROS_FATAL("nodes.size() != waitTimes.size()");
+		isValidPath = false;
+	}
+	if(nodes.size() < 2) {
+		ROS_FATAL("Tried to construct path with no node points");
+		isValidPath = false;
+	}
+	if(nodes.at(0) == nodes.at(1)) {
+		ROS_FATAL("Tried to construct path with identical points (point[0] == point[1]");
+		isValidPath = false;
+	}
+	
+	if(!isValidPath) {
+		return;
 	}
 
 	// Turning time is considered as part of the following line segment.
 	// Therefore, a line segment driving time = Time to turn to target Point + driving time to target point 
 
+	duration = 0;
+	batteryConsumption = 0;
+	distance = 0;
 	if(!nodes.empty()) {
 		duration += waitTimes.at(0);
 		batteryConsumption += hardwareProfile->getIdleBatteryConsumption(waitTimes.at(0));
@@ -50,98 +72,88 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 	}
 }
 
+Path::Path() : 
+	isValidPath(false)
+{
+}
+
 const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	std::vector<Rectangle> reservations;
 
-	float reservationSize = ROBOT_DIAMETER * 2.0f;
+	float reservationSize = ROBOT_RADIUS * 2.0f;
 
-	float currentTime = 0;
+	double currentTime = startTimeOffset;
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
-		float currentLength = Math::getDistance(nodes[i], nodes[i + 1]);
-		Point currentDir = (nodes[i + 1] - nodes[i]) * 1.f * (1.f/currentLength);
+		float currentDistance = Math::getDistance(nodes[i], nodes[i + 1]);
+		Point currentDir = (nodes[i + 1] - nodes[i]) * 1.f * (1.f/currentDistance);
 		float currentRotation = Math::getRotation(currentDir);
+		double currentDuration = hardwareProfile->getDrivingDuration(currentDistance);
 
 		// Waiting time
 		if(waitTimes.at(i) > 0) {
-			reservations.emplace_back(nodes[i], Point(reservationSize, reservationSize), currentRotation, currentTime, currentTime + waitTimes[i], ownerId);
+			reservations.emplace_back(nodes[i], Point(reservationSize, reservationSize), currentRotation, currentTime - reservationTimeMargin, currentTime + waitTimes[i] + reservationTimeMargin, ownerId);
 			currentTime += waitTimes[i];
 		}
 
 		// Line segment
-		auto segmentCount = static_cast<unsigned int>(std::ceil(currentLength / maxReservationLength));
-		float segmentLength = currentLength / static_cast<float>(segmentCount);
+		auto segmentCount = static_cast<unsigned int>(std::ceil(currentDistance / maxReservationLength));
+		float segmentLength = currentDistance / static_cast<float>(segmentCount);
 
 		for(unsigned int segment = 0; segment < segmentCount; segment++) {
-			Point startPos = nodes[i] + (segment * segmentLength * currentDir);
-			Point endPos = nodes[i] + ((segment + 1) * segmentLength * currentDir);
+			float segmentFloat = static_cast<float>(segment);
+			
+			Point startPos = nodes[i] + (segmentFloat * segmentLength * currentDir);
+			Point endPos = nodes[i] + ((segmentFloat + 1.f) * segmentLength * currentDir);
 
 			Point pos = (startPos + endPos) / 2.f;
-			double startTime = startTimeOffset + currentTime + (segment * segmentLength) - reservationSize / 2.f;
-			double endTime = startTimeOffset + currentTime + ((segment + 1) * segmentLength) + reservationSize / 2.f;
+			double startTime = currentTime - reservationTimeMargin + hardwareProfile->getDrivingDuration(segmentFloat * segmentLength);
+			double endTime = currentTime + reservationTimeMargin + hardwareProfile->getDrivingDuration((segmentFloat + 1.f) * segmentLength);
 
 			reservations.emplace_back(pos, Point(segmentLength + reservationSize, reservationSize), currentRotation, startTime, endTime, ownerId);
 		}
 
-		currentTime += currentLength;
+		currentTime += currentDuration;
 	}
+	
+	// Todo check if this reservations does not conflict with any existing reservation
+	// Todo make this reservation rectangular
+	reservations.emplace_back(nodes.back(), Point(ROBOT_RADIUS * 2.f, ROBOT_RADIUS * 2.f), 0, currentTime - reservationTimeMargin, Map::infiniteReservationTime, ownerId);
 
 	return reservations;
 }
 
 const std::vector<Point>& Path::getNodes() const {
+	ROS_ASSERT(isValidPath);
 	return nodes;
 }
 
 const std::vector<double>& Path::getWaitTimes() const {
+	ROS_ASSERT(isValidPath);
 	return waitTimes;
 }
 
 const std::vector<double>& Path::getDepartureTimes() const {
+	ROS_ASSERT(isValidPath);
 	return departureTimes;
 }
 
 float Path::getDistance() const {
+	ROS_ASSERT(isValidPath);
 	return distance;
 }
 
 double Path::getDuration() const {
+	ROS_ASSERT(isValidPath);
 	return duration;
 }
 
 float Path::getBatteryConsumption() const {
+	ROS_ASSERT(isValidPath);
 	return batteryConsumption;
 }
 
-visualization_msgs::Marker Path::getVisualizationMsgPoints() {
-	visualization_msgs::Marker msg;
-	msg.header.frame_id = "map";
-	msg.header.stamp = ros::Time::now();
-	msg.ns = "PathPoints";
-	msg.action = visualization_msgs::Marker::ADD;
-	msg.pose.orientation.w = 1.0;
-
-	msg.id = 0;
-	msg.type = visualization_msgs::Marker::POINTS;
-	msg.scale.x = 0.1;
-	msg.scale.y = 0.1;
-
-	msg.color.g = 1.0f;
-	msg.color.r = 0.5f;
-	msg.color.a = 1.0;
-
-	for(const Point& point : nodes) {
-		geometry_msgs::Point p;
-		p.x = point.x;
-		p.y = point.y;
-		p.z = 0.f;
-		msg.points.push_back(p);
-	}
-	
-	return msg;
-}
-
 visualization_msgs::Marker Path::getVisualizationMsgLines() {
-
+	ROS_ASSERT(isValidPath);
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";
 	msg.header.stamp = ros::Time::now();
@@ -160,15 +172,14 @@ visualization_msgs::Marker Path::getVisualizationMsgLines() {
 	double color_b;
 	if(!nh.getParam("color_r", color_r)) {
 		color_r = 30;
-	}
-	
+	}	
 	if(!nh.getParam("color_g", color_g)) {
 		color_g = 200;
 	}
-
 	if(!nh.getParam("color_b", color_b)) {
 		color_b = 40;
 	}
+	
 	msg.color.a = 0.6f;
 	msg.color.r = color_r / 255;
 	msg.color.g = color_g / 255;
@@ -187,9 +198,26 @@ visualization_msgs::Marker Path::getVisualizationMsgLines() {
 }
 
 double Path::getStartTimeOffset() const {
+	ROS_ASSERT(isValidPath);
 	return startTimeOffset;
 }
 
 RobotHardwareProfile* Path::getRobotHardwareProfile() const {
+	ROS_ASSERT(isValidPath);
 	return hardwareProfile;
 }
+
+OrientedPoint Path::getStart() {
+	ROS_ASSERT(isValidPath);
+	return start;
+}
+
+OrientedPoint Path::getEnd() {
+	ROS_ASSERT(isValidPath);
+	return end;
+}
+
+bool Path::isValid() const {
+	return isValidPath;
+}
+

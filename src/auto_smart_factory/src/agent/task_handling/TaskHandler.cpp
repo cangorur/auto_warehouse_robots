@@ -1,7 +1,6 @@
 #include "agent/task_handling/TaskHandler.h"
 
-TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm) 
-        : 
+TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm) : 
     agentId(agentId),
     scorePublisher(scorePub),
     map(map),
@@ -12,11 +11,13 @@ TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub, Map* map
 {
 }
 
-void TaskHandler::publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId) {
+void TaskHandler::publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId, double estimatedDuration) {
     auto_smart_factory::TaskRating scoreMessage;
     scoreMessage.robot_id = agentId;
     scoreMessage.request_id = requestId;
     scoreMessage.score = score;
+    ROS_ASSERT_MSG(estimatedDuration > 0, "Published Score with estimatedDuration == 0");
+    scoreMessage.estimatedDuration = estimatedDuration;
     scoreMessage.end_id = endTrayId;
     scoreMessage.start_id = startTrayId;
     scoreMessage.reject = false;
@@ -33,13 +34,27 @@ void TaskHandler::rejectTask(unsigned int requestId) {
 
 void TaskHandler::update() {
     if (!isTaskInExecution()) {
+        if (isIdle()) {
+            // check battery status,
+            if(chargingManagement->isChargingAppropriate()) {
+                double now = ros::Time::now().toSec();
+                std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(motionPlanner->getPositionAsOrientedPoint(), now);
+                // add charging task
+                if(pathToCS.first.isValid()) {
+                    ROS_WARN("[%s] Adding charging task while in idle state", agentId.c_str());
+                    addChargingTask(pathToCS.second, pathToCS.first, now);
+                } else {
+                    ROS_WARN("[%s] Could not add charging task while idling, path is invalid", agentId.c_str());
+                }
+            }
+        }
         nextTask();
     } else {
         executeTask();
     }
 }
 
-TaskHandler::~TaskHandler(){
+TaskHandler::~TaskHandler() {
     if (currentTask != nullptr) {
         delete currentTask;
     }
@@ -49,31 +64,34 @@ TaskHandler::~TaskHandler(){
     queue.clear();
 }
 
-void TaskHandler::addTransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, 
-        Path sourcePath, Path targetPath, double startTime) {
-    // create new task
-    TransportationTask* t = new TransportationTask(id, sourceID, targetID, sourcePath, targetPath, startTime);
+void TaskHandler::addTransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, Path sourcePath, Path targetPath, double startTime) {
+    if(sourcePath.isValid() && targetPath.isValid()) {
+        // create new task
+        TransportationTask* t = new TransportationTask(id, sourceID, targetID, sourcePath, targetPath, startTime);
 
-    // add task to list
-    queue.push_back(t);
+        // add task to list
+        queue.push_back(t);
+    }
 }
 
 void TaskHandler::addChargingTask(uint32_t targetID, Path targetPath, double startTime) {
-    // create new charging task
-    ChargingTask* t = new ChargingTask(targetID, targetPath, startTime);
+    if(targetPath.isValid()) {
+        // create new charging task
+        ChargingTask* t = new ChargingTask(targetID, targetPath, startTime);
 
-    // add task to list
-    queue.push_back(t);
+        // add task to list
+        queue.push_back(t);
+    }
 }
 
 void TaskHandler::executeTask() {
-    if (isIdle()) {
+    if(isIdle()) {
         return;
     }
 
     switch(currentTask->getState()) {
         case Task::State::WAITING:
-            if(reservationManager->getIsBidingForReservation()) {
+            if(reservationManager->isBidingForReservation()) {
                 break;
             }
             
@@ -89,9 +107,9 @@ void TaskHandler::executeTask() {
             } else {
                 // Start to bid for path reservations
                 if(currentTask->isTransportation()) {
-                    reservationManager->bidForPathReservation(motionPlanner->getOrientedPoint(), ((TransportationTask*) currentTask)->getSourcePosition());
+	                reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), ((TransportationTask*) currentTask)->getSourcePosition());
                 } else if(currentTask->isCharging()) {
-                    reservationManager->bidForPathReservation(motionPlanner->getOrientedPoint(), currentTask->getTargetPosition());
+	                reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition());
                 } else {
                     ROS_ERROR("Task is neither Transportation task nor charging task!");
                 }
@@ -101,8 +119,15 @@ void TaskHandler::executeTask() {
 
         case Task::State::TO_SOURCE:
             if (this->motionPlanner->isDone()) {
-                currentTask->setState(Task::State::PICKUP);
+                currentTask->setState(Task::State::APPROACH_SOURCE);
                 motionPlanner->alignTowards(((TransportationTask*) currentTask)->getSourcePosition().o);
+            }
+            break;
+
+        case Task::State::APPROACH_SOURCE:
+            if (this->motionPlanner->isDone()) {
+                currentTask->setState(Task::State::PICKUP);
+                motionPlanner->driveForward(0.3);
             }
             break;
 
@@ -110,13 +135,20 @@ void TaskHandler::executeTask() {
             if (this->motionPlanner->isDone()) {
                 gripper->loadPackage(true);
                 ros::Duration(2).sleep();
+                this->motionPlanner->driveBackward(0.3);
+                currentTask->setState(Task::State::LEAVE_SOURCE);
+            }
+            break;
+
+        case Task::State::LEAVE_SOURCE:
+            if (this->motionPlanner->isDone()) {
+	            reservationManager->startBiddingForPathReservation(this->motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition());
                 currentTask->setState(Task::State::RESERVING_TARGET);
-                reservationManager->bidForPathReservation(((TransportationTask*) currentTask)->getSourcePosition(), currentTask->getTargetPosition());
             }
             break;
 
         case Task::State::RESERVING_TARGET:
-            if(reservationManager->getIsBidingForReservation()) {
+            if(reservationManager->isBidingForReservation()) {
                 break;
             }
             if(reservationManager->getHasReservedPath()) {
@@ -127,32 +159,39 @@ void TaskHandler::executeTask() {
             break;
 
         case Task::State::TO_TARGET:
-            if (currentTask->isTransportation()) {
-                if (motionPlanner->isDone()) {
+            if (motionPlanner->isDone()) {
+                currentTask->setState(Task::State::APPROACH_TARGET);
+                motionPlanner->alignTowards(currentTask->getTargetPosition().o);
+            }
+            break;
+
+        case Task::State::APPROACH_TARGET:
+            if (this->motionPlanner->isDone()) {
+                if (currentTask->isTransportation()) {
                     currentTask->setState(Task::State::DROPOFF);
-                    motionPlanner->alignTowards(currentTask->getTargetPosition().o);
-                }
-            } else if (currentTask->isCharging()) {
-                if (motionPlanner->isDone()) {
+                } else if (currentTask->isCharging()) {
                     currentTask->setState(Task::State::CHARGING);
-                    motionPlanner->alignTowards(currentTask->getTargetPosition().o);
-                    // activate charging
                 }
+                motionPlanner->driveForward(0.3);
             }
             break;
 
         case Task::State::DROPOFF:
             if (motionPlanner->isDone()) {
                 gripper->loadPackage(false);
+                ros::Duration(2).sleep();
                 currentTask->setState(Task::State::FINISHED);
-                this->motionPlanner->stop();
             }
             break;
 
         case Task::State::CHARGING:
             // Check charging progress
-            // If new task in queue -> State = FINISHED
-            // if finished -> State = FINISHED
+            if (motionPlanner->isDone()) {
+                this->motionPlanner->stop();
+                if (this->chargingManagement->isCharged()){
+                    currentTask->setState(Task::State::FINISHED);
+                }
+            }
             break;
 
         default:
@@ -188,15 +227,25 @@ Task* TaskHandler::getCurrentTask() {
     return currentTask;
 }
 
-float TaskHandler::getBatteryConsumption() {
-    float batteryCons = 0.0;
-    for(Task* t : queue) {
-        batteryCons += t->getBatteryConsumption();
-    }
+double TaskHandler::getEstimatedBatteryLevelAfterQueuedTasks() {
+	double estimatedBattery = chargingManagement->getCurrentBattery();
+
     if(currentTask != nullptr) {
-        batteryCons += currentTask->getBatteryConsumption();
+        if(currentTask->isCharging()) {
+            estimatedBattery = 99.f;
+        } else {
+            estimatedBattery -= currentTask->getBatteryConsumption();
+        }
+    }	
+    for(Task* t : queue) {
+        if(t->isCharging()) {
+            estimatedBattery = 99.f;
+        } else {
+            estimatedBattery -= t->getBatteryConsumption();
+        }
     }
-    return batteryCons;
+ 
+    return estimatedBattery;
 }
 
 double TaskHandler::getDuration() {

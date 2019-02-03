@@ -14,8 +14,6 @@ private:
 	
 	int ownerId;
 	
-	// Todo add visualisation color
-	
 	// Faster physic processing
 	Point pointsInflated[4];
 	bool isAxisAligned;
@@ -37,7 +35,7 @@ public:
 	float getMinYInflated() const;
 	float getMaxYInflated() const;
 
-	bool doesOverlapTimeRange(double start, double end) const;
+	bool doesOverlapTimeRange(double start, double end, int ownerId) const;
 	double getStartTime() const;
 	double getEndTime() const;
 	double getFreeAfter() const;

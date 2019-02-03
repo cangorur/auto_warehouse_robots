@@ -91,9 +91,7 @@ void StorageManagement::initializeStates(
 		auto r = trayStates.insert(
 				std::pair<TrayId, auto_smart_factory::TrayState>(t.id, t));
 		if(!r.second) {
-			ROS_FATAL(
-					"[storage management] Input tray IDs must be unique. ID %d occurs at least twice.",
-					tray.id);
+			ROS_FATAL("[storage management] Input tray IDs must be unique. ID %d occurs at least twice.", tray.id);
 		}
 	}
 }

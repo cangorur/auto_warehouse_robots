@@ -35,8 +35,7 @@
 class TaskPlanner {
 public:
 	TaskPlanner();
-
-	virtual ~TaskPlanner();
+	virtual ~TaskPlanner() = default;
 
 	/**
 	 * Get package configuration of a given package type id.

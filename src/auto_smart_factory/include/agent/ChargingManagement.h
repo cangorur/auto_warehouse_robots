@@ -7,25 +7,7 @@
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotHeartbeat.h>
 #include "auto_smart_factory/Tray.h"
-
-class ChargingStation {
-public:
-	//ID of charging Station
-	uint8_t id;
-
-	//Corresponding Charging tray
-	auto_smart_factory::Tray Tray;
-
-	//Is occupied or not
-	bool occupancy;
-
-	//Assigned Robot
-	auto_smart_factory::Robot robot;
-
-	//Charging Rate //TODO??
-	float rate;
-
-};
+#include "agent/path_planning/Map.h"
 
 class Agent;
 /**
@@ -38,21 +20,16 @@ public:
 	 * Default constructor.
 	 * Sets up the initialize service.
 	 */
-	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration);
+	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration, Map* map);
 
-	virtual ~ChargingManagement();
-
-	/* Returns true if the agent can perform the task of given energy
-	 * @param energy: expected energy of the task
-	 */
-	bool isEnergyAvailable(double energy);
+	virtual ~ChargingManagement() = default;
 
 	/*
-	 * Score multiplier for current set of tasks +  charging
+	 * Score multiplier for current set of tasks + charging
 	 * @param Energy consumption of all the tasks to be done
 	 * @returns Score multiplier LOWER IS BETTER
 	 */
-	float getScoreMultiplier(float cumulatedEnergyConsumption);
+	double getScoreMultiplierForBatteryLevel(double batteryLevel);
 
 	/*
 	 * Get All Charging Stations
@@ -60,26 +37,27 @@ public:
 	void getAllChargingStations();
 
 	/*
-	 * Returns true if charging station is available, otherwise false
-	 * @param searchid: id of charging station
+	 * Find all possible paths to the nearest charging stations and then return the shortest one
+	 * @param start: The point where the robo will be when it starts to drive to the nearest charging tray
+	 * @param startingTime: the time at which the robot will start to drive to the nearest charging tray
+	 * @returns a pair of the path and the id of the selected tray
 	 */
-	bool isChargingStationAvailable(uint8_t searchid);
+	std::pair<Path, uint32_t> getPathToNearestChargingStation(OrientedPoint start, double startingTime);
 
-	/*
-	 * Returns true if charging station is successfully reserved, otherwise false
-	 * @param reserveid: id of charging station
-	 * @param associated_robot: robot who is now associated with this charging station
-	 */
+	// Returns if charging should be done
+	bool isChargingAppropriate();
 
-	bool reserveChargingStation(uint8_t reserveid, auto_smart_factory::Robot associated_robot);
+	// Returns if the robot is sufficiently charged
+	bool isCharged();
 
-	/*
-	 * Returns true if charging station is successfully unreserved, otherwise false
-	 * @param reserveid: id of charging station
-	 */
+	// Returns the current battery of the agent
+	double getCurrentBattery();
 
-	bool unreserveChargingStation(uint8_t reserveid);
+	// Checks if the battery consumption is possible
+	bool isConsumptionPossible(double consumption);
 
+	// Checks if the battery consumption is possible given the theoretical battery level
+	bool isConsumptionPossible(double agentBatteryLevel, double consumption);
 
 private:
 	Agent* agent;
@@ -87,29 +65,25 @@ private:
 	//Agent ID from where the CM is called
 	std::string agentID;
 
+	//Map of the system
+	Map* map;
+
 	// information about the current warehouse map
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;
 
 	// Max energy level of the agent to participate in charging
-	float upperThreshold = 90.00;
+	float upperThreshold = 70.00;
 
 	// Energy level between upper and critical for non-linear score
 	float lowerThreshold = 35.00;
 
 	// Minimum energy level of the agent to participate in charging
 	float criticalMinimum = 10.00;
+	
+	float estimatedBatteryConsumptionToNearestChargingStation = 10.f;
 
 	//Vector of all the Charging Trays
 	std::vector <auto_smart_factory::Tray> charging_trays;
-
-	//Vector of all Charging Stations'
-	std::vector <ChargingStation> charging_stations;
-
-	//Current battery of the agent
-	double agentBatt;
-
-	//Estimated energy of the agent after task and charging
-	float energyAfterTask;
 };
 
 
