@@ -60,7 +60,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	/* Check if path is valid */
 	if (!pathObject.isValid()) {
 		publishVelocity(0.0, 0.0);
-		mode == Mode::FINISHED;
+		mode = Mode::FINISHED;
 		return;
 	}
 
