@@ -5,6 +5,7 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include <include/agent/path_planning/Path.h>
+#include <include/agent/path_planning/Map.h>
 
 #include "agent/path_planning/Path.h"
 
@@ -70,7 +71,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 
 	float reservationSize = ROBOT_DIAMETER * 2.0f;
 
-	double currentTime = 0;
+	double currentTime = startTimeOffset;
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
 		float currentDistance = Math::getDistance(nodes[i], nodes[i + 1]);
 		Point currentDir = (nodes[i + 1] - nodes[i]) * 1.f * (1.f/currentDistance);
@@ -101,7 +102,9 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		currentTime += currentDuration;
 	}
 	
-	reservations.emplace_back(nodes.back(), Point(ROBOT_DIAMETER * 2.f, ROBOT_DIAMETER * 2.f), 0, currentTime - reservationMargin, MaxReservationTime, ownerId);
+	// Todo check if this reservations does not conflict with any existing reservation
+	// Todo make this reservation rectangular
+	reservations.emplace_back(nodes.back(), Point(ROBOT_DIAMETER * 2.f, ROBOT_DIAMETER * 2.f), 0, currentTime - reservationMargin, Map::infiniteReservationTime, ownerId);
 
 	return reservations;
 }
