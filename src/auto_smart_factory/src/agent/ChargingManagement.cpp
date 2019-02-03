@@ -7,11 +7,17 @@ bool sortByDuration(const std::pair<Path, uint32_t> &lhs, const std::pair<Path, 
 	return lhs.first.getDuration() < rhs.first.getDuration();
 }
 
-ChargingManagement::ChargingManagement(Agent* a, auto_smart_factory::WarehouseConfiguration warehouse_configuration, Map* m) {
+ChargingManagement::ChargingManagement(Agent* a, auto_smart_factory::WarehouseConfiguration warehouse_configuration, auto_smart_factory::RobotConfiguration robot_configuration, Map* m) {
 	agent = a;
 	map = m;
 	agentID = agent->getAgentID();
 	warehouseConfig = warehouse_configuration;
+	robotConfig = robot_configuration;
+
+	dischargingRate = robotConfig.discharging_rate;
+	chargingRate = robotConfig.charging_rate;
+
+
 	ROS_INFO("[ChargingManagement] Started, agent ID: [%s], agent Batt: [%f] ", agentID.c_str(), agent->getAgentBattery());
 	getAllChargingStations();
 }
@@ -60,6 +66,10 @@ double ChargingManagement::getScoreMultiplierForBatteryLevel(double batteryLevel
 		return quadraticFraction / 100.f;
 	}
 	return batteryLevel / 100.f;
+}
+
+double ChargingManagement::getChargingTime(double consumptionTillCS){
+	return (agent->getAgentBattery() - consumptionTillCS) /chargingRate ;
 }
 
 bool ChargingManagement::isChargingAppropriate() {

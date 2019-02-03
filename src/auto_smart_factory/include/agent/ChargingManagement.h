@@ -20,7 +20,7 @@ public:
 	 * Default constructor.
 	 * Sets up the initialize service.
 	 */
-	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration, Map* map);
+	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration, auto_smart_factory::RobotConfiguration robot_configuration, Map* map);
 
 	virtual ~ChargingManagement() = default;
 
@@ -59,6 +59,12 @@ public:
 	// Checks if the battery consumption is possible given the theoretical battery level
 	bool isConsumptionPossible(double agentBatteryLevel, double consumption);
 
+	/*
+	 * Gets charging time
+	 * @param: Battery consumption till robot reaches charging station
+	 */
+	double getChargingTime(double consumptionTillCS);
+
 private:
 	Agent* agent;
 
@@ -70,6 +76,16 @@ private:
 
 	// information about the current warehouse map
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;
+
+	// information about the role of this agent
+	auto_smart_factory::RobotConfiguration robotConfig;
+
+	//Discharging Rate
+	float32 dischargingRate
+
+	//Charging rate
+	float32 chargingRate
+
 
 	// Max energy level of the agent to participate in charging
 	float upperThreshold = 70.00;

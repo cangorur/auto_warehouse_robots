@@ -103,7 +103,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		this->map = new Map(warehouseConfig, obstacles, hardwareProfile, agentIdInt);
 
 		// Charging Management
-		this->chargingManagement = new ChargingManagement(this,this->warehouseConfig, this->map);
+		this->chargingManagement = new ChargingManagement(this,this->warehouseConfig, this->robotConfig, this->map);
 
 		// Reservation Manager
 		reservationManager = new ReservationManager(&reservationCoordination_pub, map, agentIdInt, static_cast<int>(warehouse_configuration.robots.size()));
