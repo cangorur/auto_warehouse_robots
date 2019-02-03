@@ -98,11 +98,11 @@ void TaskHandler::executeTask() {
             if(reservationManager->getHasReservedPath() && !isNextTask) {
                 if (currentTask->isTransportation()) {
                     currentTask->setState(Task::State::TO_SOURCE);
-                    this->motionPlanner->start();
                 } else if (currentTask->isCharging()) {
                     currentTask->setState(Task::State::TO_TARGET);
                 }
                 motionPlanner->newPath(reservationManager->getReservedPath());
+                motionPlanner->start();
             } else {
                 // Start to bid for path reservations
                 if(currentTask->isTransportation()) {
@@ -179,18 +179,25 @@ void TaskHandler::executeTask() {
             if (motionPlanner->isDone()) {
                 gripper->loadPackage(false);
                 ros::Duration(2).sleep();
-                currentTask->setState(Task::State::FINISHED);
-                this->motionPlanner->stop();
+                currentTask->setState(Task::State::LEAVE_TARGET);
+                motionPlanner->driveBackward(0.3);
             }
             break;
 
         case Task::State::CHARGING:
             // Check charging progress
             if (motionPlanner->isDone()) {
-                this->motionPlanner->stop();
                 if (this->chargingManagement->isCharged()){
-                    currentTask->setState(Task::State::FINISHED);
+                    currentTask->setState(Task::State::LEAVE_TARGET);
+                    motionPlanner->driveBackward(0.3);
                 }
+            }
+            break;
+
+        case Task::State::LEAVE_TARGET:
+            if (motionPlanner->isDone()) {
+                motionPlanner->stop();
+                currentTask->setState(Task::State::FINISHED);
             }
             break;
 
