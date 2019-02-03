@@ -127,7 +127,7 @@ void TaskHandler::executeTask() {
         case Task::State::APPROACH_SOURCE:
             if (this->motionPlanner->isDone()) {
                 currentTask->setState(Task::State::PICKUP);
-                motionPlanner->driveForward(0.4);
+                motionPlanner->driveForward(0.3);
             }
             break;
 
@@ -172,7 +172,7 @@ void TaskHandler::executeTask() {
                 } else if (currentTask->isCharging()) {
                     currentTask->setState(Task::State::CHARGING);
                 }
-                motionPlanner->driveForward(0.4);
+                motionPlanner->driveForward(0.3);
             }
             break;
 

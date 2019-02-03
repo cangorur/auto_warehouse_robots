@@ -164,7 +164,6 @@ void MotionPlanner::driveBackward(double distance) {
 }
 
 void MotionPlanner::driveStraight() {
-	ROS_FATAL("[DRIVE %s] driveStartPosition (%.2f, %.2f)", agentID.c_str(), driveStartPosition.x, driveStartPosition.y);
 	if(Math::getDistance(Point(driveStartPosition.x, driveStartPosition.y), Point(pos.x, pos.y)) >= driveDistance) {
 		mode = Mode::FINISHED;
 		publishVelocity(0.0, 0.0);
