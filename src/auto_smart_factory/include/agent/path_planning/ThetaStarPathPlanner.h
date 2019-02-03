@@ -15,7 +15,7 @@ public:
 	Path findPath(OrientedPoint start, OrientedPoint target, double startingTime);
 
 private:
-	double initialTime = std::numeric_limits<double>::max() - 10000;
+	double initialTime = std::numeric_limits<double>::max() - 100000;
 
 	typedef std::pair<double, ThetaStarGridNodeInformation*> GridInformationPair;
 	struct GridInformationPairComparator {

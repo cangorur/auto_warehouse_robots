@@ -124,9 +124,11 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 						// Wait
 						if(waitBecauseUpcomingObstacle) {
 							waitingTime = result.freeAfterUpcomingObstacle - current->time;
+							ROS_ASSERT_MSG(waitingTime >= 0, "waitBecauseUpcomingObstacle waitingTime: %f", waitingTime);
 							//printf("Waiting because of upcoming obstacle: %f - Pos: %.1f/%.1f\n", waitingTime, current->node->pos.x, current->node->pos.y);
 						} else {
 							waitingTime = result.freeAfter - current->time;
+							ROS_ASSERT_MSG(waitingTime >= 0, "waitingTime: %f", waitingTime);
 							//printf("Waiting because of current obstacle: %f - Pos: %.1f/%.1f - CurrentTime: %f\n", waitingTime, current->node->pos.x, current->node->pos.y, current->time);
 						}
 
@@ -192,19 +194,16 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 	double waitTimeAtPrev = 0;
 	
 	int i = 0;
-
 	while(currentGridInformation != nullptr) {
 		pathNodes.emplace_back(currentGridInformation->node->pos);
+		ROS_ASSERT_MSG(waitTimeAtPrev >= 0, "waitTimeAtPrev: %f", waitTimeAtPrev);
 		waitTimes.push_back(waitTimeAtPrev);
 
 		waitTimeAtPrev = currentGridInformation->waitTimeAtPrev;
 		currentGridInformation = currentGridInformation->prev;
 		
 		if(i++ > 500) {
-			ROS_FATAL("Endless loop in construct path => aborting");
-			ROS_FATAL("Endless loop in construct path => aborting");
-			ROS_FATAL("Endless loop in construct path => aborting");
-
+			ROS_FATAL("Endless loop in construct path => aborting. Start: %f/%f Target: %f/%f", startPoint.x, startPoint.y, endPoint.x, endPoint.y);
 			return Path();
 		}
 	}

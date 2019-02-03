@@ -35,10 +35,6 @@ Request::Request(TaskPlanner* tp, TaskRequirementsConstPtr taskRequirements, std
 	ROS_INFO("[request %d] Use best ETA: %s", getId(), std::to_string(useBestETA).c_str());
 }
 
-Request::~Request() {
-	clearRobotCandidates();
-}
-
 unsigned int Request::getNewId() {
 	return nextId++;
 }
@@ -75,26 +71,26 @@ TaskData Request::allocateResources() {
 	// ROS_INFO("[request %d] Found %ld robot candidates.", status.id, robotCandidates.size());
 
 	// try one robot after the other until success
-	for(const RobotCandidate* cand : robotCandidates) {
-		// ROS_INFO("[request %d] Allocating robots for %s Source tray id is: %d and target tray id is %d", status.id, cand->robotId.c_str(), cand->source.id, cand->target.id);
-		TrayAllocatorPtr sourceTray = TrayAllocator::allocateTray(cand->source.id);
-		TrayAllocatorPtr targetTray = TrayAllocator::allocateTray(cand->target.id);
+	for(const RobotCandidate& candidate : robotCandidates) {
+		// ROS_INFO("[request %d] Allocating robots for %s Source tray id is: %d and target tray id is %d", status.id, candidate->robotId.c_str(), candidate->source.id, candidate->target.id);
+		TrayAllocatorPtr sourceTray = TrayAllocator::allocateTray(candidate.source.id);
+		TrayAllocatorPtr targetTray = TrayAllocator::allocateTray(candidate.target.id);
 
 		if(sourceTray->isValid() && targetTray->isValid()) {
-			// ROS_INFO("[request %d] Successfully allocated source %d and target %d.", status.id, cand->source.id, cand->target.id);
+			// ROS_INFO("[request %d] Successfully allocated source %d and target %d.", status.id, candidate->source.id, candidate->target.id);
 
 			// assure that source and target are still suitable
-			if(!requirements->checkAllocatedSourceTray(cand->source)) {
+			if(!requirements->checkAllocatedSourceTray(candidate.source)) {
 				//ROS_INFO("[request %d] Checking allocated source tray failed.", this->status.id);
 				continue;
 			}
-			if(!requirements->checkAllocatedTargetTray(cand->target)) {
+			if(!requirements->checkAllocatedTargetTray(candidate.target)) {
 				//ROS_INFO("[request %d] Checking allocated target tray failed.", this->status.id);
 				continue;
 			}
 
 			// allocate robot (try to assign task)
-			if(!allocateRobot(*cand)) {
+			if(!allocateRobot(candidate)) {
 				ROS_WARN("[request %d] robot allocation fail", this->status.id);
 				continue;
 			}
@@ -107,12 +103,12 @@ TaskData Request::allocateResources() {
 				ROS_INFO("[request %d] Successfully set package at target tray (id: %d, type: %d)!", this->status.id, pkg.id, pkg.type_id);
 			}
 
-			ROS_INFO("[request %d] Successfully allocated robot %s.", this->status.id, cand->robotId.c_str());
+			ROS_INFO("[request %d] Successfully allocated robot %s.", this->status.id, candidate.robotId.c_str());
 			//ROS_INFO("[request %d] All resources were allocated successfully! Starting execution...", this->status.id);
 
 			// successfully allocated all resources
 			this->status.status = "allocated resources";
-			return TaskData(*cand, sourceTray, targetTray, pkg, this->status.create_time);
+			return TaskData(candidate, sourceTray, targetTray, pkg, this->status.create_time);
 		}
 
 		ROS_WARN("[request %d] Allocation failed.", this->status.id);
@@ -154,22 +150,13 @@ bool Request::findTargetCandidates(std::vector<auto_smart_factory::Tray>& target
 	for(auto const& tray : taskPlanner->getTrayConfigs()) {
 		if(requirements->isLegalTargetTray(tray.second)) {
 			targetTrayCandidates.push_back(tray.second);
-			// In the early versions, below had to be done as there were no roadmaps drawn to these storages !!!
-			// The code below can still be used in directing the robots to the certain trays for testing purposes.
-			// if (tray.second.id != 13 && tray.second.id != 14 && tray.second.id != 17 && tray.second.id != 18){
-			//	targetTrayCandidates.push_back(tray.second);
-			//ROS_WARN("Pushed back candidate and size is %i", targetTrayCandidates.size());
-			// }
-			// else{
-			//ROS_WARN("TRAY ID:%d has been deleted from the candidates since has no roadmap drawn!",tray.second.id);
-			//}
 		}
 	}
 
 	return !targetTrayCandidates.empty();
 }
 
-bool Request::allocateRobot(RobotCandidate candidate) const {
+bool Request::allocateRobot(const RobotCandidate& candidate) const {
 	ros::NodeHandle n;
 	ros::ServiceClient assignTaskClient = n.serviceClient<AssignTask>("/" + candidate.robotId + "/assign_task");
 
@@ -205,20 +192,17 @@ void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr) {
 	}
 	if(!tr.reject){
 		// add robot as candidate
-		RobotCandidate* cand = new RobotCandidate();
-		cand->score = tr.score;
-		cand->robotId = tr.robot_id;
-		cand->estimatedDuration = ros::Duration(tr.estimatedDuration);
-		cand->source = taskPlanner->getTrayConfig(tr.start_id);
-		cand->target = taskPlanner->getTrayConfig(tr.end_id);		
-		robotCandidates.push_back(cand);
+		ROS_ASSERT_MSG(tr.estimatedDuration > 0, "Tried to create robot candidate with estimatedDuration == 0");
+		RobotCandidate candidate = RobotCandidate(tr.robot_id, taskPlanner->getTrayConfig(tr.start_id), taskPlanner->getTrayConfig(tr.end_id), tr.estimatedDuration, tr.score);
+		robotCandidates.push_back(candidate);
 	}
 	
+	// Use id (string) as key 
 	answeredRobots[tr.robot_id] = tr.reject;
 }
 
 bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates, const std::vector<Tray>& targetTrayCandidates) {
-	clearRobotCandidates();
+	robotCandidates.clear();
 	answeredRobots.clear();
 
 	taskPlanner->publishTask(sourceTrayCandidates, targetTrayCandidates, status.id);
@@ -226,8 +210,8 @@ bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates, 
 	waitForRobotScores(ros::Duration(1), ros::Rate(10));
 
 	std::sort(robotCandidates.begin(), robotCandidates.end(),
-		          [](RobotCandidate* first, RobotCandidate* second) {
-			          return first->score < second->score;
+		          [](const RobotCandidate& first, const RobotCandidate& second) {
+			          return first.score < second.score;
 		          });
 
 	// ROS_INFO("[Request %d] finished getting candidates!", this->status.id);
@@ -248,11 +232,4 @@ void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){
 		frequency.sleep();
 	}
 	ROS_WARN("[Request %d] Timeout while waiting for robot scores, got %d scores", status.id, (unsigned int)answeredRobots.size());
-}
-
-void Request::clearRobotCandidates(){
-	for(RobotCandidate* candidate : robotCandidates){
-		delete candidate;
-	}
-	robotCandidates.clear();
 }

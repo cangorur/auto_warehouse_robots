@@ -36,7 +36,7 @@ public:
 	 */
 	Request(TaskPlanner* tp, TaskRequirementsConstPtr taskRequirements, std::string type);
 
-	virtual ~Request();
+	virtual ~Request() = default;
 
 	/**
 	 * Tries to allocate all necessary resources to start a task.
@@ -108,7 +108,7 @@ protected:
 	 * @param robotId Id of the robot
 	 * @return True if assigning was successful
 	 */
-	bool allocateRobot(RobotCandidate candidate) const;
+	bool allocateRobot(const RobotCandidate& candidate) const;
 
 protected:
 	/// the request status
@@ -125,7 +125,7 @@ protected:
 	bool useBestETA;
 
 	/// vector of robot candidates
-	std::vector<RobotCandidate*> robotCandidates;
+	std::vector<RobotCandidate> robotCandidates;
 
 	/// a map of robots who answered with robot_id as key and their reject flag as value
 	std::map<std::string, bool> answeredRobots;
@@ -139,9 +139,6 @@ protected:
 
 	/// wait with a frequency until each robot has answered or a timeout occurs
 	void waitForRobotScores(ros::Duration timeout, ros::Rate frequency);
-
-	/// delete all robot candidates in the internal listing
-	void clearRobotCandidates();
 };
 
 typedef std::shared_ptr<Request> RequestPtr;

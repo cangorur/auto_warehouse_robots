@@ -1,7 +1,6 @@
 #include "agent/task_handling/TaskHandler.h"
 
-TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm) 
-        : 
+TaskHandler::TaskHandler(std::string agentId, ros::Publisher* scorePub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm) : 
     agentId(agentId),
     scorePublisher(scorePub),
     map(map),
@@ -17,6 +16,7 @@ void TaskHandler::publishScore(unsigned int requestId, double score, uint32_t st
     scoreMessage.robot_id = agentId;
     scoreMessage.request_id = requestId;
     scoreMessage.score = score;
+    ROS_ASSERT_MSG(estimatedDuration > 0, "Published Score with estimatedDuration == 0");
     scoreMessage.estimatedDuration = estimatedDuration;
     scoreMessage.end_id = endTrayId;
     scoreMessage.start_id = startTrayId;
