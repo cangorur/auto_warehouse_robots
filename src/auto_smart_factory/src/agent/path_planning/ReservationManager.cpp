@@ -51,9 +51,9 @@ void ReservationManager::update() {
 	// Auction timeout
 	if(now >= currentAuctionStartTime + auctionTimeout && currentAuctionId > 1) {
 		if(agentId == currentAuctionHighestBid.agentId) {
-			ROS_WARN("[ReservationManager %d]: Auction %d timed out. %d agents left", agentId, currentAuctionId, agentCount - 1);
+			ROS_ERROR("[ReservationManager %d]: Auction %d timed out. %d agents left", agentId, currentAuctionId, currentAuctionReceivedBids);
 		}
-		agentCount -= 1;
+		agentCount = currentAuctionReceivedBids;
 		startNewAuction(currentAuctionId + 1, now);
 	}	
 }
