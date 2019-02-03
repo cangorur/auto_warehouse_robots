@@ -9,7 +9,7 @@ class PidController
   public:
     PidController(double targetValue, double proportionalGain, double integralGain, double derivativeGain);
 
-    double updateTargetValue(double targetValue);
+    void updateTargetValue(double targetValue);
     double calculate(double currentValue, double currentTime);
     void reset();
 

@@ -232,8 +232,11 @@ bool PackageGenerator::getStorageInformation() {
 			storageState = srv.response.state;
 			hasStorageState = true;
 			ROS_INFO("[package generator] Storage information succesfully received & updated!");
-		} else
-			ROS_WARN("[package generator] Received storage information are outdated!");
+			return true;
+		} else {
+			ROS_WARN("[package generator] Received storage information is outdated!");
+			return false;
+		}
 	} else {
 		ROS_ERROR("[package generator] Failed to call service %s!", srv_name.c_str());
 		return false;

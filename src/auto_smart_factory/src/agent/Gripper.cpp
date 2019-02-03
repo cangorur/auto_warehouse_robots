@@ -17,7 +17,7 @@ bool Gripper::loadPackage(bool load) {
 	std::string str = load ? "load" : "unload";
 	if(str == "load") {
 		moveGripper(robot_position.x + (cos(orient) * 0.2), robot_position.y + (sin(orient) * 0.2), 0.38, package);
-		ros::ServiceClient client = n.serviceClient<std_srvs::Trigger>(agentID + "/gripper/" + str, this);
+		ros::ServiceClient client = n.serviceClient<std_srvs::Trigger>(agentID + "/gripper/" + str, true);
 		std_srvs::Trigger srv;
 		if(client.call(srv)) {
 			if(srv.response.success) {
@@ -45,7 +45,7 @@ bool Gripper::loadPackage(bool load) {
 	} else if(str == "unload") {
 		moveGripper(robot_position.x + (cos(orient) * 0.25), robot_position.y + (sin(orient) * 0.25), 0.38, package); //robot_position.y -/+ 0.25
 	}
-	ros::ServiceClient client = n.serviceClient<std_srvs::Trigger>(agentID + "/gripper/" + str, this);
+	ros::ServiceClient client = n.serviceClient<std_srvs::Trigger>(agentID + "/gripper/" + str, true);
 	std_srvs::Trigger srv;
 	if(client.call(srv)) {
 		if(srv.response.success) {

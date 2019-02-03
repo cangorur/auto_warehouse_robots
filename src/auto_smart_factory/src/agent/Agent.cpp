@@ -268,11 +268,13 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 }
 
 auto_smart_factory::Tray Agent::getTray(unsigned int tray_id) {
-	for(auto& tray : warehouseConfig.trays)
+	for(auto& tray : warehouseConfig.trays) {
 		if(tray_id == tray.id) {
 			return tray;
 		}
-	ROS_ERROR("[%s]: Tray with id %u inexistent!", agentID.c_str(), tray_id);
+	}
+	ROS_FATAL("[%s]: Tray with id %u inexistent!", agentID.c_str(), tray_id);
+	throw std::invalid_argument("Tray id was not found");
 }
 
 void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {

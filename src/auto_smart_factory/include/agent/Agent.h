@@ -276,7 +276,7 @@ protected:
 	unsigned long lastTimestamp = 0;
 
 	// duration until the next heartbeat publishing - time in seconds
-	unsigned long breakDuration = 0.5;
+	unsigned long breakDuration = 1;
 
 	// current battery level
 	float batteryLevel = 100.0;
