@@ -170,16 +170,17 @@ void MotionPlanner::driveBackward(double distance) {
 }
 
 void MotionPlanner::driveStraight() {
-	if(Math::getDistance(Point(driveStartPosition.x, driveStartPosition.y), Point(pos.x, pos.y)) >= driveDistance) {
+	double currentDistance = Math::getDistance(Point(driveStartPosition.x, driveStartPosition.y), Point(pos.x, pos.y));
+	if(currentDistance >= driveDistance) {
 		mode = Mode::FINISHED;
 		publishVelocity(0.0, 0.0);
 		return;
 	}
 
 	if(mode == Mode::FORWARD) {
-		publishVelocity(0.5, 0.0);
+		publishVelocity(Math::clamp(currentDistance, 0.1, 0.5), 0.0);
 	} else {
-		publishVelocity(-0.5, 0.0);
+		publishVelocity(-Math::clamp(currentDistance, 0.1, 0.5), 0.0);
 	}
 }
 
