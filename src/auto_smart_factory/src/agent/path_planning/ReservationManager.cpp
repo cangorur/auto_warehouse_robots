@@ -144,6 +144,7 @@ void ReservationManager::closeAuction() {
 			ROS_INFO("[ReservationManager %d] Won auction %d for path with duration %f", agentId, currentAuctionId, pathToReserve.getDuration());
 			bidingForReservation = false;
 			hasReservedPath = true;
+			pathRetrievedCount = 0;
 
 			std::vector<Rectangle> reservations = pathToReserve.generateReservations(agentId);
 			map->addReservations(reservations);
@@ -209,8 +210,11 @@ bool ReservationManager::getHasReservedPath() const {
 
 Path ReservationManager::getReservedPath() {
 	if(!hasReservedPath) {
-		ROS_ERROR("[ReservationManager %d] Tried to get path but hasNoReservedPath!", agentId);
+		ROS_FATAL("[ReservationManager %d] Tried to get path but hasNoReservedPath!", agentId);
 	}
+	pathRetrievedCount++;
+	ROS_ASSERT_MSG(pathRetrievedCount == 1, "A reserved path may only be retrieved once!!");
+	
 	return pathToReserve;
 }
 

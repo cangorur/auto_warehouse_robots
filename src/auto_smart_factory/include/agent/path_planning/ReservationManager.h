@@ -44,6 +44,7 @@ private:
 	Path pathToReserve;
 	OrientedPoint startPoint;
 	OrientedPoint endPoint;
+	int pathRetrievedCount;
 	
 	// Delayed auction start
 	bool initializeNewDelayedAuction;
