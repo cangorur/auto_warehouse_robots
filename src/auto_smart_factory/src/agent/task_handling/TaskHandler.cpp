@@ -44,7 +44,7 @@ void TaskHandler::update() {
                     ROS_WARN("[%s] Adding charging task while in idle state", agentId.c_str());
                     addChargingTask(pathToCS.second, pathToCS.first, now);
                 } else {
-                    ROS_WARN("[%s] Could not add charging task while idling, because its length is 0", agentId.c_str());
+                    ROS_WARN("[%s] Could not add charging task while idling, path is invalid", agentId.c_str());
                 }
             }
         }
