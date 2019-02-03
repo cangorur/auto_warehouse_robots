@@ -95,7 +95,7 @@ void TaskHandler::executeTask() {
                 break;
             }
             
-            if(reservationManager->getHasReservedPath()) {
+            if(reservationManager->getHasReservedPath() && !isNextTask) {
                 if (currentTask->isTransportation()) {
                     currentTask->setState(Task::State::TO_SOURCE);
                     this->motionPlanner->start();
@@ -103,7 +103,6 @@ void TaskHandler::executeTask() {
                     currentTask->setState(Task::State::TO_TARGET);
                 }
                 motionPlanner->newPath(reservationManager->getReservedPath());
-                
             } else {
                 // Start to bid for path reservations
                 if(currentTask->isTransportation()) {
@@ -111,10 +110,10 @@ void TaskHandler::executeTask() {
                 } else if(currentTask->isCharging()) {
 	                reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition());
                 } else {
-                    ROS_ERROR("Task is neither Transportation task nor charging task!");
+                    ROS_FATAL("[%s] Task is neither TransportationTask nor ChargingTask!", agentId.c_str());
                 }
-            }           
-            
+                isNextTask = false;
+            }
             break;
 
         case Task::State::TO_SOURCE:
@@ -181,6 +180,7 @@ void TaskHandler::executeTask() {
                 gripper->loadPackage(false);
                 ros::Duration(2).sleep();
                 currentTask->setState(Task::State::FINISHED);
+                this->motionPlanner->stop();
             }
             break;
 
@@ -192,6 +192,11 @@ void TaskHandler::executeTask() {
                     currentTask->setState(Task::State::FINISHED);
                 }
             }
+            break;
+
+        case Task::State::FINISHED:
+            /* Wait for next task */
+            ROS_WARN("[STATE %s] Task FINISHED and should not be scheduled!", agentId.c_str());
             break;
 
         default:
@@ -206,6 +211,7 @@ void TaskHandler::nextTask() {
 	if(!queue.empty()){
 		currentTask = queue.front();
 		queue.pop_front();
+        isNextTask = true;
 	} else {
         currentTask = nullptr;
     }
