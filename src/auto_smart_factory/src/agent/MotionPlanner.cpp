@@ -72,7 +72,6 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 			mode = Mode::FINISHED;
 			publishVelocity(0.0, 0.0);
 			
-			agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgPoints());
 			agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
 			return;
 		}
@@ -192,7 +191,6 @@ void MotionPlanner::newPath(Path path) {
 		currentTarget = pathObject.getNodes().front();
 		currentTargetIndex = 0;
 		mode = Mode::READY;
-		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgPoints());
 		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
 	} else {
 		ROS_ERROR("[MotionPlanner - %s]: Got invalid path", agentID.c_str());
@@ -265,10 +263,6 @@ OrientedPoint MotionPlanner::getPositionAsOrientedPoint() {
 
 bool MotionPlanner::isPositionInitialized()  {
 	return positionInitialized;
-}
-
-visualization_msgs::Marker MotionPlanner::getVisualizationMsgPoints() {
-	return pathObject.getVisualizationMsgPoints();
 }
 
 visualization_msgs::Marker MotionPlanner::getVisualizationMsgLines() {

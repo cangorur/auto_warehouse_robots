@@ -3,22 +3,22 @@
 
 class RobotHardwareProfile {
 private:
-	float maxDrivingSpeed; // Length-Unit / Time-Unit
-	float maxTurningSpeed; // Angle / Time-Unit
-	float idleBatteryConsumption;
-	float drivingBatteryConsumption;
+	double maxDrivingSpeed; // Length-Unit / Time-Unit
+	double maxTurningSpeed; // Angle / Time-Unit
+	double idleBatteryConsumption;
+	double drivingBatteryConsumption;
 
 	// Used to get average estimates from max speed values 
-	const float averageDrivingEfficiency = 0.75f;
-	const float averageTurningEfficiency = 0.45f;
+	const double averageDrivingEfficiency = 0.75f;
+	const double averageTurningEfficiency = 0.45f;
 
 public:
-	RobotHardwareProfile(float maxDrivingSpeed, float maxTurningSpeed, float idleBatteryConsumption, float drivingBatteryConsumption);
+	RobotHardwareProfile(double maxDrivingSpeed, double maxTurningSpeed, double idleBatteryConsumption, double drivingBatteryConsumption);
 
-	float getIdleBatteryConsumption(double time) const;
-	float getDrivingBatteryConsumption(double time) const;
-	double getDrivingDuration(float distance) const;
-	double getTurningDuration(float angle) const;
+	double getIdleBatteryConsumption(double time) const;
+	double getDrivingBatteryConsumption(double time) const;
+	double getDrivingDuration(double distance) const;
+	double getTurningDuration(double angle) const;
 };
 
 

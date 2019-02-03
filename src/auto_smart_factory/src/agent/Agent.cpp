@@ -82,7 +82,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	// this->collision_alert_sub = n.subscribe("/collisionAlert", 1, &Agent::collisionAlertCallback, this);
 
 	visualisationPublisher = pn.advertise<visualization_msgs::Marker>("visualization_" + agentID, 100, true);
-	vizPublicationTimer = pn.createTimer(ros::Duration(0.5f), &Agent::publishVisualisation, this); // in seconds
+	vizPublicationTimer = pn.createTimer(ros::Duration(0.25f), &Agent::publishVisualisation, this); // in seconds
 	
 	reservationCoordination_pub = pn.advertise<auto_smart_factory::ReservationCoordination>("/reservation_coordination", 100, true);
 	reservationCoordination_sub = pn.subscribe("/reservation_coordination", 100, &Agent::reservationCoordinationCallback, this);
@@ -404,7 +404,12 @@ void Agent::publishVisualisation(const ros::TimerEvent& e) {
 	if(map != nullptr) {
 		visualisationPublisher.publish(map->getObstacleVisualization());
 		
-		auto reservationMsg = map->getReservationVisualization(agentIdInt, agentIdToColor(agentIdInt));
+		auto reservationMsg = map->getInactiveReservationVisualization(agentIdInt, agentIdToColor(agentIdInt));
+		if(!reservationMsg.points.empty()) {
+			visualisationPublisher.publish(reservationMsg);
+		}
+
+		reservationMsg = map->getActiveReservationVisualization(agentIdInt, agentIdToColor(agentIdInt));
 		if(!reservationMsg.points.empty()) {
 			visualisationPublisher.publish(reservationMsg);
 		}

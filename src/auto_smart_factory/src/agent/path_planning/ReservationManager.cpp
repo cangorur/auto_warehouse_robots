@@ -12,7 +12,7 @@ ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int 
 	currentAuctionHighestBid(-1.f, -1)
 {
 	hasReservedPath = false;
-	isBidingForReservation = false;
+	bidingForReservation = false;
 
 	if(agentId == agentCount) {
 		initializeNewDelayedAuction = true;
@@ -51,9 +51,9 @@ void ReservationManager::update() {
 	// Auction timeout
 	if(now >= currentAuctionStartTime + auctionTimeout && currentAuctionId > 1) {
 		if(agentId == currentAuctionHighestBid.agentId) {
-			ROS_WARN("[ReservationManager %d]: Auction %d timed out. %d agents left", agentId, currentAuctionId, agentCount - 1);
+			ROS_ERROR("[ReservationManager %d]: Auction %d timed out. %d agents left", agentId, currentAuctionId, currentAuctionReceivedBids);
 		}
-		agentCount -= 1;
+		agentCount = currentAuctionReceivedBids;
 		startNewAuction(currentAuctionId + 1, now);
 	}	
 }
@@ -116,7 +116,7 @@ void ReservationManager::startNewAuction(int newAuctionId, double newAuctionStar
 	msg.auctionId = currentAuctionId;
 	msg.isReservationMessage = static_cast<unsigned char>(false);
 
-	if(isBidingForReservation) {
+	if(bidingForReservation) {
 		// Recalculate path to match timing
 		pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
 
@@ -125,7 +125,7 @@ void ReservationManager::startNewAuction(int newAuctionId, double newAuctionStar
 		}
 	}
 
-	if(isBidingForReservation) {
+	if(bidingForReservation) {
 		//ROS_INFO("[ReservationManager %d] Starting new auction %d - bidding", agentId, newAuctionId);
 		msg.bid = static_cast<float>(pathToReserve.getDuration());
 	} else {
@@ -140,10 +140,11 @@ void ReservationManager::startNewAuction(int newAuctionId, double newAuctionStar
 
 void ReservationManager::closeAuction() {
 	if(currentAuctionHighestBid.agentId == agentId) {
-		if(isBidingForReservation) {
+		if(bidingForReservation) {
 			ROS_INFO("[ReservationManager %d] Won auction %d for path with duration %f", agentId, currentAuctionId, pathToReserve.getDuration());
-			isBidingForReservation = false;
+			bidingForReservation = false;
 			hasReservedPath = true;
+			pathRetrievedCount = 0;
 
 			std::vector<Rectangle> reservations = pathToReserve.generateReservations(agentId);
 			map->addReservations(reservations);
@@ -191,7 +192,7 @@ void ReservationManager::startBiddingForPathReservation(OrientedPoint startPoint
 	
 	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
 	if(pathToReserve.isValid()) {
-		isBidingForReservation = true;
+		bidingForReservation = true;
 		hasReservedPath = false;
 
 	} else {
@@ -199,8 +200,8 @@ void ReservationManager::startBiddingForPathReservation(OrientedPoint startPoint
 	}	
 }
 
-bool ReservationManager::getIsBidingForReservation() const {
-	return isBidingForReservation;
+bool ReservationManager::isBidingForReservation() const {
+	return bidingForReservation;
 }
 
 bool ReservationManager::getHasReservedPath() const {
@@ -209,8 +210,11 @@ bool ReservationManager::getHasReservedPath() const {
 
 Path ReservationManager::getReservedPath() {
 	if(!hasReservedPath) {
-		ROS_ERROR("[ReservationManager %d] Tried to get path but hasNoReservedPath!", agentId);
+		ROS_FATAL("[ReservationManager %d] Tried to get path but hasNoReservedPath!", agentId);
 	}
+	pathRetrievedCount++;
+	ROS_ASSERT_MSG(pathRetrievedCount == 1, "A reserved path may only be retrieved once!!");
+	
 	return pathToReserve;
 }
 

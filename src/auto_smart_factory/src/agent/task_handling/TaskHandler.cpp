@@ -91,7 +91,7 @@ void TaskHandler::executeTask() {
 
     switch(currentTask->getState()) {
         case Task::State::WAITING:
-            if(reservationManager->getIsBidingForReservation()) {
+            if(reservationManager->isBidingForReservation()) {
                 break;
             }
             
@@ -147,7 +147,7 @@ void TaskHandler::executeTask() {
             break;
 
         case Task::State::RESERVING_TARGET:
-            if(reservationManager->getIsBidingForReservation()) {
+            if(reservationManager->isBidingForReservation()) {
                 break;
             }
             if(reservationManager->getHasReservedPath()) {

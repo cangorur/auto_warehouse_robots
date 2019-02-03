@@ -63,7 +63,6 @@ public:
 	bool hasPath();
 	bool isDrivingBackwards();
 
-	visualization_msgs::Marker getVisualizationMsgPoints();
 	visualization_msgs::Marker getVisualizationMsgLines();
 	
 	OrientedPoint getPositionAsOrientedPoint();
