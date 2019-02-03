@@ -26,10 +26,21 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		ROS_FATAL("Tried to construct path with no node points");
 		isValidPath = false;
 	}
+	if(nodes.at(0) == nodes.at(1)) {
+		ROS_FATAL("Tried to construct path with identical points (point[0] == point[1]");
+		isValidPath = false;
+	}
+	
+	if(!isValidPath) {
+		return;
+	}
 
 	// Turning time is considered as part of the following line segment.
 	// Therefore, a line segment driving time = Time to turn to target Point + driving time to target point 
 
+	duration = 0;
+	batteryConsumption = 0;
+	distance = 0;
 	if(!nodes.empty()) {
 		duration += waitTimes.at(0);
 		batteryConsumption += hardwareProfile->getIdleBatteryConsumption(waitTimes.at(0));
@@ -69,7 +80,7 @@ Path::Path() :
 const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	std::vector<Rectangle> reservations;
 
-	float reservationSize = ROBOT_DIAMETER * 2.0f;
+	float reservationSize = ROBOT_RADIUS * 2.0f;
 
 	double currentTime = startTimeOffset;
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
@@ -93,8 +104,8 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 			Point endPos = nodes[i] + ((segment + 1) * segmentLength * currentDir);
 
 			Point pos = (startPos + endPos) / 2.f;
-			double startTime = startTimeOffset + currentTime - reservationMargin + hardwareProfile->getDrivingDuration(segment * segmentLength);
-			double endTime = startTimeOffset + currentTime + reservationMargin + hardwareProfile->getDrivingDuration((segment + 1) * segmentLength);
+			double startTime = currentTime - reservationMargin + hardwareProfile->getDrivingDuration(segment * segmentLength);
+			double endTime = currentTime + reservationMargin + hardwareProfile->getDrivingDuration((segment + 1) * segmentLength);
 
 			reservations.emplace_back(pos, Point(segmentLength + reservationSize, reservationSize), currentRotation, startTime, endTime, ownerId);
 		}
@@ -104,36 +115,43 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	
 	// Todo check if this reservations does not conflict with any existing reservation
 	// Todo make this reservation rectangular
-	reservations.emplace_back(nodes.back(), Point(ROBOT_DIAMETER * 2.f, ROBOT_DIAMETER * 2.f), 0, currentTime - reservationMargin, Map::infiniteReservationTime, ownerId);
+	reservations.emplace_back(nodes.back(), Point(ROBOT_RADIUS * 2.f, ROBOT_RADIUS * 2.f), 0, currentTime - reservationMargin, Map::infiniteReservationTime, ownerId);
 
 	return reservations;
 }
 
 const std::vector<Point>& Path::getNodes() const {
+	ROS_ASSERT(isValidPath);
 	return nodes;
 }
 
 const std::vector<double>& Path::getWaitTimes() const {
+	ROS_ASSERT(isValidPath);
 	return waitTimes;
 }
 
 const std::vector<double>& Path::getDepartureTimes() const {
+	ROS_ASSERT(isValidPath);
 	return departureTimes;
 }
 
 float Path::getDistance() const {
+	ROS_ASSERT(isValidPath);
 	return distance;
 }
 
 double Path::getDuration() const {
+	ROS_ASSERT(isValidPath);
 	return duration;
 }
 
 float Path::getBatteryConsumption() const {
+	ROS_ASSERT(isValidPath);
 	return batteryConsumption;
 }
 
 visualization_msgs::Marker Path::getVisualizationMsgPoints() {
+	ROS_ASSERT(isValidPath);
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";
 	msg.header.stamp = ros::Time::now();
@@ -162,7 +180,7 @@ visualization_msgs::Marker Path::getVisualizationMsgPoints() {
 }
 
 visualization_msgs::Marker Path::getVisualizationMsgLines() {
-
+	ROS_ASSERT(isValidPath);
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";
 	msg.header.stamp = ros::Time::now();
@@ -208,18 +226,22 @@ visualization_msgs::Marker Path::getVisualizationMsgLines() {
 }
 
 double Path::getStartTimeOffset() const {
+	ROS_ASSERT(isValidPath);
 	return startTimeOffset;
 }
 
 RobotHardwareProfile* Path::getRobotHardwareProfile() const {
+	ROS_ASSERT(isValidPath);
 	return hardwareProfile;
 }
 
 OrientedPoint Path::getStart() {
+	ROS_ASSERT(isValidPath);
 	return start;
 }
 
 OrientedPoint Path::getEnd() {
+	ROS_ASSERT(isValidPath);
 	return end;
 }
 

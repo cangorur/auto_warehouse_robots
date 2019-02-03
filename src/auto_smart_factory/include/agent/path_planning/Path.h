@@ -24,9 +24,9 @@ private:
 
 	// Computed internally for motion planner
 	std::vector<double> departureTimes;
-	float distance = 0;
-	float duration = 0;
-	float batteryConsumption = 0;
+	float distance;
+	float duration;
+	float batteryConsumption;
 
 public:
 	explicit Path();

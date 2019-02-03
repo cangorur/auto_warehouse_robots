@@ -39,14 +39,13 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 	reservations.clear();
 	
 	// Add idle reservations
+	double infiniteReservationStartTime = ros::Time::now().toSec() - 1000;
 	for(const auto& idlePosition : warehouseConfig.idle_positions) {
 		std::string idStr = idlePosition.id.substr(idlePosition.id.find('_') + 1);
 		int id = std::stoi(idStr);
 		Point pos = Point(static_cast<float>(idlePosition.pose.x), static_cast<float>(idlePosition.pose.y));
 		
-		//if(id != ownerId) {
-			reservations.emplace_back(pos, Point(ROBOT_DIAMETER * 2.f, ROBOT_DIAMETER * 2.f), 0, 0, infiniteReservationTime, id);
-		//}		
+		reservations.emplace_back(pos, Point(ROBOT_RADIUS * 2.f, ROBOT_RADIUS * 2.f), 0, infiniteReservationStartTime, infiniteReservationTime, id);
 	}
 }
 
@@ -104,8 +103,8 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 		// Upcoming obstacles			
 		if(Math::isPointInRectangle(pos2, reservation) && reservation.getStartTime() > endTime && reservation.getOwnerId() != ownerId) {
 			result.hasUpcomingObstacle = true;
-			// Todo make adaptive
-			double minTimeToLeave = 15;
+			// Todo make adaptive - for now assume that every reservation can be left in x seconds
+			double minTimeToLeave = 8;
 
 			double lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
 			if(lastValidEntryTime < result.lastValidEntryTime) {
@@ -113,6 +112,12 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 				result.freeAfterUpcomingObstacle = reservation.getEndTime();
 			}
 		}
+	}
+	
+	double maxTime = endTime + 10000.f;
+	if((result.blockedByTimed && result.freeAfter > maxTime) ||
+	   (result.hasUpcomingObstacle && (result.lastValidEntryTime > maxTime || result.freeAfterUpcomingObstacle > maxTime))) {
+		result.blockedByStatic = true;
 	}
 
 	return result;
@@ -209,9 +214,7 @@ void Map::deleteExpiredReservations(double time) {
 
 void Map::addReservations(std::vector<Rectangle> newReservations) {
 	for(const auto& r : newReservations) {
-		//if(r.getOwnerId() != ownerId) {
-			reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime(), r.getOwnerId());
-		//}
+		reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime(), r.getOwnerId());
 	}
 }
 
@@ -219,10 +222,13 @@ OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 	OrientedPoint p;
 
 	// Assume tray.orientation is in degree
+	float trayRadius = 0.51f;
+	float approachRoutineLength = 0.3f;
+	
 	double inputDx = std::cos(tray.orientation * PI / 180);
 	double inputDy = std::sin(tray.orientation * PI / 180);
-	p.x = static_cast<float>(tray.x + (0.81f + ROBOT_DIAMETER) * inputDx);
-	p.y = static_cast<float>(tray.y + (0.81f + ROBOT_DIAMETER) * inputDy);
+	p.x = static_cast<float>(tray.x + (trayRadius + approachRoutineLength + ROBOT_RADIUS) * inputDx);
+	p.y = static_cast<float>(tray.y + (trayRadius + approachRoutineLength + ROBOT_RADIUS) * inputDy);
 	p.o = static_cast<float>(Math::normalizeRad(Math::toRad(tray.orientation + 180.f)));
 	
 	return p;
