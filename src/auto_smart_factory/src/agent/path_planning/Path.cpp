@@ -80,7 +80,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	std::vector<Rectangle> reservations;
 
 	double reservationSize = ROBOT_RADIUS * 2.0f;
-	Point waitingReservationSize = Point(reservationSize, reservationSize) * 1.25f;
+	Point waitingReservationSize = Point(reservationSize, reservationSize) * 0.99f;
 
 	double currentTime = startTimeOffset;
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
@@ -91,7 +91,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 
 		// Waiting time - always for first node
 		if(waitTimes.at(i) > 0 || i == 0) {
-			reservations.emplace_back(nodes[i], waitingReservationSize, currentRotation, currentTime - reservationTimeMargin, currentTime + waitTimes[i] + reservationTimeMargin, ownerId);
+			reservations.emplace_back(nodes[i], waitingReservationSize, 0, currentTime - reservationTimeMargin, currentTime + waitTimes[i] + reservationTimeMargin, ownerId);
 			currentTime += waitTimes[i];
 		}
 
@@ -116,15 +116,22 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	}
 	
 	// path computation is responsible for checking that this area is free for the specified time
-	if(targetReservationTime > 0) {
+	if(targetReservationTime > 0) {		
+		// Block approach space		
 		double offset = 0.3f;
-		double lengthMargin = 0.08f;
-		double widthMargin = 0.35f;
-		Point pos = nodes.back() + Math::getVectorFromOrientation(end.o) * offset;
-		
+		double lengthMargin = 0.25f;
+		double widthMargin = 0.f;
+		Point pos = nodes.back() + Math::getVectorFromOrientation(end.o) * offset;		
 		double length = (ROBOT_RADIUS + offset + lengthMargin) * 2.f;
 		double width = (ROBOT_RADIUS + widthMargin) * 2.f;
+		reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), currentTime - reservationTimeMargin, currentTime + targetReservationTime + reservationTimeMargin, ownerId);
 
+		// Block neighbour trays space
+		offset = 0.3f;
+		widthMargin = 0.2f; // Cover neighbouring trays too
+		pos = nodes.back() + Math::getVectorFromOrientation(end.o) * offset;
+		length = (ROBOT_RADIUS) * 2.f;
+		width = (ROBOT_RADIUS + widthMargin) * 2.f;
 		reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), currentTime - reservationTimeMargin, currentTime + targetReservationTime + reservationTimeMargin, ownerId);
 	}
 
@@ -161,7 +168,7 @@ float Path::getBatteryConsumption() const {
 	return batteryConsumption;
 }
 
-visualization_msgs::Marker Path::getVisualizationMsgLines() {
+visualization_msgs::Marker Path::getVisualizationMsgLines(std_msgs::ColorRGBA color) {
 	ROS_ASSERT(isValidPath);
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";
@@ -174,27 +181,9 @@ visualization_msgs::Marker Path::getVisualizationMsgLines() {
 	msg.type = visualization_msgs::Marker::LINE_STRIP;
 	msg.scale.x = 0.1;
 
-	// Set colors
-	ros::NodeHandle nh("~");
-	double color_r;
-	double color_g;
-	double color_b;
-	if(!nh.getParam("color_r", color_r)) {
-		color_r = 30;
-	}	
-	if(!nh.getParam("color_g", color_g)) {
-		color_g = 200;
-	}
-	if(!nh.getParam("color_b", color_b)) {
-		color_b = 40;
-	}
-	
+	msg.color = color;
 	msg.color.a = 0.6f;
-	msg.color.r = color_r / 255;
-	msg.color.g = color_g / 255;
-	msg.color.b = color_b / 255;
-
-
+	
 	for(const Point& point : nodes) {
 		geometry_msgs::Point p;
 		p.x = point.x;

@@ -49,7 +49,7 @@ public:
 	const std::vector<Rectangle> generateReservations(int ownerId) const;
 	
 	// ROS visualisation
-	visualization_msgs::Marker getVisualizationMsgLines();
+	visualization_msgs::Marker getVisualizationMsgLines(std_msgs::ColorRGBA color);
 
 	OrientedPoint getStart();
 	OrientedPoint getEnd();

@@ -133,18 +133,17 @@ void TaskHandler::executeTask() {
         case Task::State::PICKUP:
             if (motionPlanner->isDone()) {
                 gripper->loadPackage(true);
-                //ros::Duration(0.1f).sleep();
                 motionPlanner->driveBackward(0.3f);
                 currentTask->setState(Task::State::RESERVING_TARGET);
-				reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
+				// reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
             }
             break;
 
         case Task::State::RESERVING_TARGET:
-            if(reservationManager->isBidingForReservation()) {
+			if(reservationManager->isBidingForReservation()) {
                 break;
             }
-			if(reservationManager->getHasReservedPath()){
+			if(reservationManager->getHasReservedPath() && hasTriedToReservePathToTarget){
 				if (motionPlanner->isDone()) {
 					currentTask->setState(Task::State::TO_TARGET);
                 	motionPlanner->newPath(reservationManager->getReservedPath());
@@ -153,6 +152,7 @@ void TaskHandler::executeTask() {
 			} else {
 				// bid for a reservation if reservation failed
 				reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
+				hasTriedToReservePathToTarget = true;
 			}
             break;
 
@@ -178,7 +178,6 @@ void TaskHandler::executeTask() {
         case Task::State::DROPOFF:
             if (motionPlanner->isDone()) {
                 gripper->loadPackage(false);
-                //ros::Duration(2).sleep();
                 currentTask->setState(Task::State::LEAVE_TARGET);
                 motionPlanner->driveBackward(0.3f);
             }
@@ -220,6 +219,7 @@ void TaskHandler::nextTask() {
 		currentTask = queue.front();
 		queue.pop_front();
         isNextTask = true;
+		hasTriedToReservePathToTarget = false;
 	} else {
         currentTask = nullptr;
     }

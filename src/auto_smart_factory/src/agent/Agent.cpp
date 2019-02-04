@@ -19,13 +19,13 @@ Agent::Agent(std::string agent_id) {
 }
 
 Agent::~Agent() {
-	this->motionPlanner->~MotionPlanner();
-	this->gripper->~Gripper();
-	this->obstacleDetection->~ObstacleDetection();
-	this->map->~Map();
-	this->chargingManagement->~ChargingManagement();
-	this->taskHandler->~TaskHandler();
-	this->reservationManager->~ReservationManager();
+	motionPlanner->~MotionPlanner();
+	gripper->~Gripper();
+	obstacleDetection->~ObstacleDetection();
+	map->~Map();
+	chargingManagement->~ChargingManagement();
+	taskHandler->~TaskHandler();
+	reservationManager->~ReservationManager();
 }
 
 void Agent::update() {
@@ -42,7 +42,7 @@ void Agent::update() {
 		reservationManager->update();
 				
 		/* Task Execution */
-		this->taskHandler->update();				
+		taskHandler->update();				
 	}
 }
 
@@ -69,16 +69,16 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	hardwareProfile = new RobotHardwareProfile(robot_configuration.max_linear_vel, maxTurningSpeedInDegree, robot_configuration.discharging_rate, 0.f);
 	//ROS_INFO("[%s]: MaxSpeed: %f m/s | MaxTurningSpeed: %f deg/s", agentID.c_str(), robot_configuration.max_linear_vel,maxTurningSpeedInDegree);
 
-	this->pose_sub = n.subscribe(agentID + "/pose", 1, &Agent::poseCallback, this);
-	this->battery_sub = n.subscribe(agentID + "/battery", 1, &Agent::batteryCallback, this);
-	this->hokuyo_sub = n.subscribe(agentID + "/laser_scanner", 1, &Agent::laserCallback, this);
-	this->motion_pub = pn.advertise<geometry_msgs::Twist>("motion", 1);
-	this->heartbeat_pub = n.advertise<auto_smart_factory::RobotHeartbeat>("robot_heartbeats", 1);
-	this->gripper_state_pub = pn.advertise<auto_smart_factory::GripperState>("gripper_state", 1);
-	this->task_announce_sub = n.subscribe("/task_planner/task_broadcast", 1, &Agent::announcementCallback, this);
-	this->taskrating_pub = pn.advertise<auto_smart_factory::TaskRating>("/task_response", 1);
+	pose_sub = n.subscribe(agentID + "/pose", 1, &Agent::poseCallback, this);
+	battery_sub = n.subscribe(agentID + "/battery", 1, &Agent::batteryCallback, this);
+	hokuyo_sub = n.subscribe(agentID + "/laser_scanner", 1, &Agent::laserCallback, this);
+	motion_pub = pn.advertise<geometry_msgs::Twist>("motion", 1);
+	heartbeat_pub = n.advertise<auto_smart_factory::RobotHeartbeat>("robot_heartbeats", 1);
+	gripper_state_pub = pn.advertise<auto_smart_factory::GripperState>("gripper_state", 1);
+	task_announce_sub = n.subscribe("/task_planner/task_broadcast", 1, &Agent::announcementCallback, this);
+	taskrating_pub = pn.advertise<auto_smart_factory::TaskRating>("/task_response", 1);
 	// TODO: Below topic can give some hints (example information an agent may need). They are not published in any of the nodes
-	// this->collision_alert_sub = n.subscribe("/collisionAlert", 1, &Agent::collisionAlertCallback, this);
+	// collision_alert_sub = n.subscribe("/collisionAlert", 1, &Agent::collisionAlertCallback, this);
 
 	visualisationPublisher = pn.advertise<visualization_msgs::Marker>("visualization_" + agentID, 100, true);
 	vizPublicationTimer = pn.createTimer(ros::Duration(0.25f), &Agent::publishVisualisation, this); // in seconds
@@ -87,29 +87,41 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	reservationCoordination_sub = pn.subscribe("/reservation_coordination", 100, &Agent::reservationCoordinationCallback, this);
 
 	try {
-		this->motionPlanner = new MotionPlanner(this, this->robotConfig, &(this->motion_pub));
-		this->gripper = new Gripper(this, &(this->gripper_state_pub));
+		motionPlanner = new MotionPlanner(this, robotConfig, &(motion_pub));
+		gripper = new Gripper(this, &(gripper_state_pub));
 
 		// Disable to prevent crash because obstacleDetections was not initialized properly because no occupancy map is available
-		this->obstacleDetection = new ObstacleDetection(agentID, *motionPlanner, robotConfig, warehouseConfig);
-		this->obstacleDetection->enable(false);
+		obstacleDetection = new ObstacleDetection(agentID, *motionPlanner, robotConfig, warehouseConfig);
+		obstacleDetection->enable(false);
 
 		// Generate map
 		std::vector<Rectangle> obstacles;
 		for(auto o : warehouseConfig.map_configuration.obstacles) {
 			obstacles.emplace_back(Point(o.posX, o.posY), Point(o.sizeX, o.sizeY), o.rotation);
 		}
-		this->map = new Map(warehouseConfig, obstacles, hardwareProfile, agentIdInt);
+		map = new Map(warehouseConfig, obstacles, hardwareProfile, agentIdInt);
 
 		// Charging Management
-		this->chargingManagement = new ChargingManagement(this,this->warehouseConfig, this->map);
+		chargingManagement = new ChargingManagement(this, warehouseConfig, map);
 
 		// Reservation Manager
 		reservationManager = new ReservationManager(&reservationCoordination_pub, map, agentIdInt, static_cast<int>(warehouse_configuration.robots.size()));
 		
 		// Task Handler
-		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub), this->map, this->motionPlanner, this->gripper, this->chargingManagement, reservationManager);
+		taskHandler = new TaskHandler(agentID, &(taskrating_pub), map, motionPlanner, gripper, chargingManagement, reservationManager);
 		
+		// Agent color
+		double color_r = 200;
+		double color_g = 200;
+		double color_b = 200;
+		pn.getParam("color_r", color_r);
+		pn.getParam("color_g", color_g);
+		pn.getParam("color_b", color_b);
+		agentColor.a = 1.0f;
+		agentColor.r = static_cast<float>(color_r / 255.f);
+		agentColor.g = static_cast<float>(color_g / 255.f);
+		agentColor.b = static_cast<float>(color_b / 255.f);
+						
 		ROS_WARN("Finished Initialize [%s]", agentID.c_str());
 		return true;
 	} catch(...) {
@@ -149,7 +161,7 @@ bool Agent::registerAgent() {
 void Agent::setupTaskHandling() {
 	ros::NodeHandle pn("~");
 	pn.setParam(agentID, "~assign_task");
-	this->assign_task_srv = pn.advertiseService("assign_task", &Agent::assignTask, this);
+	assign_task_srv = pn.advertiseService("assign_task", &Agent::assignTask, this);
 }
 
 bool Agent::isTimeForHeartbeat() {
@@ -172,7 +184,7 @@ void Agent::sendHeartbeat() {
 		heartbeat.orientation = tf::getYaw(q);
 	}
 	heartbeat.battery_level = batteryLevel;
-	this->heartbeat_pub.publish(heartbeat);
+	heartbeat_pub.publish(heartbeat);
 	updateTimer();
 	ROS_DEBUG("[%s]: Heartbeat: idle=%s!", agentID.c_str(), isIdle ? "true" : "false");
 }
@@ -190,12 +202,12 @@ void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& ms
 	// It can be updated to take another strategies to avoid further collisions.
 	if(msg.RobotId == agentID) {
 		ROS_WARN("Got collision alert [%s] of length %.2f with halt %i", agentID.c_str(), msg.time_to_halt, msg.halt);
-		this->obstacleDetection->enable(false);
-		this->motionPlanner->stop();
+		obstacleDetection->enable(false);
+		motionPlanner->stop();
 		if(msg.halt) {
 			ros::Duration(1 * msg.time_to_halt).sleep();
-			this->motionPlanner->start();
-			this->obstacleDetection->enable(true);
+			motionPlanner->start();
+			obstacleDetection->enable(true);
 		}
 	}
 }
@@ -274,16 +286,16 @@ void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 	position = msg.pose.position;
 	orientation = msg.pose.orientation;
 
-	// this->obstacleDetection->enable(true);
+	// obstacleDetection->enable(true);
 	tf::Quaternion q;
 	tf::quaternionMsgToTF(orientation, q);
-	this->motionPlanner->update(position, tf::getYaw(q));
+	motionPlanner->update(position, tf::getYaw(q));
 }
 
 void Agent::laserCallback(const sensor_msgs::LaserScan& msg) {
 	ROS_DEBUG("[%s]: Laser callback: angle_min=%f, angle_max=%f, ranges_size=%lu", agentID.c_str(), msg.angle_min, msg.angle_max, msg.ranges.size());
-	if(this->obstacleDetection->isEnabled()) {
-		this->obstacleDetection->update(position, asin(orientation.z), msg);
+	if(obstacleDetection->isEnabled()) {
+		obstacleDetection->update(position, asin(orientation.z), msg);
 	}
 }
 
@@ -352,16 +364,16 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 	
 	if(best != nullptr) {
 		// publish score
-		this->taskHandler->publishScore(taskAnnouncement.request_id, best->score, best->sourceTray, best->targetTray, best->estimatedDuration);
+		taskHandler->publishScore(taskAnnouncement.request_id, best->score, best->sourceTray, best->targetTray, best->estimatedDuration);
 		delete best;
 	} else {
 		// reject task
-		this->taskHandler->rejectTask(taskAnnouncement.request_id);
+		taskHandler->rejectTask(taskAnnouncement.request_id);
 		if(lastTask != nullptr && !(lastTask->isCharging()) ) {
 			std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(lastTask->getTargetPosition(), lastTask->getEndTime());
 			// add charging task
 			ROS_INFO("[Agent %d] Adding charging task because new task could not be taken", agentIdInt);
-			this->taskHandler->addChargingTask(pathToCS.second, pathToCS.first, lastTask->getEndTime());
+			taskHandler->addChargingTask(pathToCS.second, pathToCS.first, lastTask->getEndTime());
 		}
 	}
 }
@@ -397,12 +409,12 @@ void Agent::publishVisualisation(const ros::TimerEvent& e) {
 	if(map != nullptr) {
 		visualisationPublisher.publish(map->getObstacleVisualization());
 		
-		auto reservationMsg = map->getInactiveReservationVisualization(agentIdInt, agentIdToColor(agentIdInt));
+		auto reservationMsg = map->getInactiveReservationVisualization(agentIdInt, getAgentColor());
 		if(!reservationMsg.points.empty()) {
 			visualisationPublisher.publish(reservationMsg);
 		}
 
-		reservationMsg = map->getActiveReservationVisualization(agentIdInt, agentIdToColor(agentIdInt));
+		reservationMsg = map->getActiveReservationVisualization(agentIdInt, getAgentColor());
 		if(!reservationMsg.points.empty()) {
 			visualisationPublisher.publish(reservationMsg);
 		}
@@ -417,50 +429,10 @@ void Agent::reservationCoordinationCallback(const auto_smart_factory::Reservatio
 	reservationManager->reservationCoordinationCallback(msg);
 }
 
-std_msgs::ColorRGBA Agent::agentIdToColor(int agentId) {
-	std_msgs::ColorRGBA color;
-	color.a = 1.f;
-	color.r = 0.f;
-	color.g = 0.f;
-	color.b = 0.f;
-
-	switch(agentId) {
-		case 1:
-			color.r = 1.f;
-			break;
-		case 2:
-			color.g = 1.f;
-			break;
-		case 3:
-			color.b = 1.f;
-			break;
-		case 4:
-			color.r = 1.f;
-			color.g = 0.5f;
-			break;
-		case 5:
-			color.r = 1.f;
-			color.b = 1.f;
-			break;
-		case 6:
-			color.g = 1.f;
-			color.b = 1.f;
-			break;
-		case 7:
-			color.r = 0.5f;
-			color.b = 1.f;
-			break;
-		case 8:
-			color.r = 0.5f;
-			color.g = 1.f;
-			break;
-
-		default:break;
-	}
-
-	return color;
-}
-
 bool Agent::isInitializedCompletely() {
 	return initialized && motionPlanner->isPositionInitialized();
+}
+
+std_msgs::ColorRGBA Agent::getAgentColor() {
+	return agentColor;
 }

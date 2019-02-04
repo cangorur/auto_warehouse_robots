@@ -74,6 +74,9 @@ class TaskHandler
 
 		// the task was changed to the next one in queue
 		bool isNextTask = false;
+
+		// the current task has tried to reserve a path to target
+		bool hasTriedToReservePathToTarget = false;
 };
 
 #endif /* AGENT_TASKHANDLER_H_ */
