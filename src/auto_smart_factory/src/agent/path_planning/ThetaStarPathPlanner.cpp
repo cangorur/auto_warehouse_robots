@@ -139,7 +139,7 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 			if(makeConnection && (newPrev->time + drivingTime + waitingTime) < neighbour->time) {
 				// Check for if connection is valid for upcoming obstacles
 
-				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime) || current->prev == nullptr) {
+				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime)) {
 					double heuristic = getHeuristic(neighbour, targetNode->pos);
 
 					neighbour->time = newPrev->time + drivingTime + waitingTime;
