@@ -319,7 +319,7 @@ visualization_msgs::Marker Map::getInactiveReservationVisualization(int ownerId,
 	msg.scale.z = 1.f;
 	
 	msg.color = baseColor;
-	msg.color.a = 0.2f;
+	msg.color.a = 0.225f;
 
 	geometry_msgs::Point p;
 	p.z = 0.f;
@@ -388,7 +388,7 @@ visualization_msgs::Marker Map::getActiveReservationVisualization(int ownerId, v
 	msg.scale.z = 1.f;
 	
 	msg.color = baseColor;
-	msg.color.a = 0.7f;
+	msg.color.a = 0.55f;
 
 	geometry_msgs::Point p;
 	p.z = 0.f;
