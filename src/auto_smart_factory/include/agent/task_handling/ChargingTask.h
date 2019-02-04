@@ -14,9 +14,11 @@ public:
 	double getBatteryConsumption() override;
 	double getDuration() override;
 	void setState(Task::State state) override;
+	
+	static double getChargingTime();
 
 protected:
-	float chargingTime = 0;
+	static double chargingTime;
 };
 
 #endif /* AGENT_CHARGINGTASK_H_ */

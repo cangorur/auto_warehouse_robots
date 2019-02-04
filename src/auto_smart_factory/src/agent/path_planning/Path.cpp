@@ -7,11 +7,12 @@
 #include "agent/path_planning/Path.h"
 #include "agent/path_planning/Map.h"
 
-Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint end) :
+Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile, double targetReservationTime, OrientedPoint start, OrientedPoint end) :
 		startTimeOffset(startTimeOffset),
 		nodes(std::move(nodes_)),
 		waitTimes(std::move(waitTimes_)),
 		hardwareProfile(hardwareProfile),
+		targetReservationTime(targetReservationTime),
 		start(start),
 		end(end),
 		isValidPath(true)
@@ -46,10 +47,10 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 
 		if(nodes.size() > 1) {
 			for(unsigned long i = 1; i < nodes.size(); i++) { // last waitTime is not used
-				float currentDistance = Math::getDistance(nodes.at(i - 1), nodes.at(i));
+				double currentDistance = Math::getDistance(nodes.at(i - 1), nodes.at(i));
 
 				// Don't compute angle difference for last node
-				float angleDifference = 0;
+				double angleDifference = 0;
 				if(i < nodes.size() - 1) {
 					angleDifference = Math::getAngleDifferenceInDegree(Math::getRotationInDeg(nodes[i] - nodes[i - 1]), Math::getRotationInDeg(nodes[i + 1] - nodes[i]));
 				}
@@ -78,34 +79,34 @@ Path::Path() :
 const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	std::vector<Rectangle> reservations;
 
-	float reservationSize = ROBOT_RADIUS * 2.0f;
+	double reservationSize = ROBOT_RADIUS * 2.0f;
 
 	double currentTime = startTimeOffset;
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
-		float currentDistance = Math::getDistance(nodes[i], nodes[i + 1]);
+		double currentDistance = Math::getDistance(nodes[i], nodes[i + 1]);
 		Point currentDir = (nodes[i + 1] - nodes[i]) * 1.f * (1.f/currentDistance);
-		float currentRotation = Math::getRotationInDeg(currentDir);
+		double currentRotation = Math::getRotationInDeg(currentDir);
 		double currentDuration = hardwareProfile->getDrivingDuration(currentDistance);
 
-		// Waiting time
-		if(waitTimes.at(i) > 0) {
+		// Waiting time - always for first node
+		if(waitTimes.at(i) > 0 || i == 0) {
 			reservations.emplace_back(nodes[i], Point(reservationSize, reservationSize), currentRotation, currentTime - reservationTimeMargin, currentTime + waitTimes[i] + reservationTimeMargin, ownerId);
 			currentTime += waitTimes[i];
 		}
 
 		// Line segment
 		auto segmentCount = static_cast<unsigned int>(std::ceil(currentDistance / maxReservationLength));
-		float segmentLength = currentDistance / static_cast<float>(segmentCount);
+		double segmentLength = currentDistance / static_cast<float>(segmentCount);
 
 		for(unsigned int segment = 0; segment < segmentCount; segment++) {
-			float segmentFloat = static_cast<float>(segment);
+			auto segmentDouble = static_cast<double>(segment);
 			
-			Point startPos = nodes[i] + (segmentFloat * segmentLength * currentDir);
-			Point endPos = nodes[i] + ((segmentFloat + 1.f) * segmentLength * currentDir);
+			Point startPos = nodes[i] + (segmentDouble * segmentLength * currentDir);
+			Point endPos = nodes[i] + ((segmentDouble + 1.f) * segmentLength * currentDir);
 
 			Point pos = (startPos + endPos) / 2.f;
-			double startTime = currentTime - reservationTimeMargin + hardwareProfile->getDrivingDuration(segmentFloat * segmentLength);
-			double endTime = currentTime + reservationTimeMargin + hardwareProfile->getDrivingDuration((segmentFloat + 1.f) * segmentLength);
+			double startTime = currentTime - reservationTimeMargin + hardwareProfile->getDrivingDuration(segmentDouble * segmentLength);
+			double endTime = currentTime + reservationTimeMargin + hardwareProfile->getDrivingDuration((segmentDouble + 1.f) * segmentLength);
 
 			reservations.emplace_back(pos, Point(segmentLength + reservationSize, reservationSize), currentRotation, startTime, endTime, ownerId);
 		}
@@ -113,9 +114,18 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		currentTime += currentDuration;
 	}
 	
-	// Todo check if this reservations does not conflict with any existing reservation
-	// Todo make this reservation rectangular
-	reservations.emplace_back(nodes.back(), Point(ROBOT_RADIUS * 2.f, ROBOT_RADIUS * 2.f), 0, currentTime - reservationTimeMargin, Map::infiniteReservationTime, ownerId);
+	// path computation is responsible for checking that this area is free for the specified time
+	if(targetReservationTime > 0) {
+		double offset = 0.3f;
+		double lengthMargin = 0.08f;
+		double widthMargin = 0.2f;
+		Point pos = nodes.back() + Math::getVectorFromOrientation(end.o) * offset;
+		
+		double length = (ROBOT_RADIUS + offset + lengthMargin) * 2.f;
+		double width = (ROBOT_RADIUS + widthMargin) * 2.f;
+
+		reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), currentTime - reservationTimeMargin, currentTime + targetReservationTime + reservationTimeMargin, ownerId);
+	}
 
 	return reservations;
 }

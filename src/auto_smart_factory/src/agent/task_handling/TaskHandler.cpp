@@ -106,9 +106,9 @@ void TaskHandler::executeTask() {
             } else {
                 // Start to bid for path reservations
                 if(currentTask->isTransportation()) {
-	                reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), ((TransportationTask*) currentTask)->getSourcePosition());
+	                reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), ((TransportationTask*) currentTask)->getSourcePosition(), TransportationTask::getPickUpTime());
                 } else if(currentTask->isCharging()) {
-	                reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition());
+	                reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), ChargingTask::getChargingTime());
                 } else {
                     ROS_FATAL("[%s] Task is neither TransportationTask nor ChargingTask!", agentId.c_str());
                 }
@@ -126,7 +126,7 @@ void TaskHandler::executeTask() {
         case Task::State::APPROACH_SOURCE:
             if (this->motionPlanner->isDone()) {
                 currentTask->setState(Task::State::PICKUP);
-                motionPlanner->driveForward(0.3);
+                motionPlanner->driveForward(0.3f);
             }
             break;
 
@@ -141,7 +141,7 @@ void TaskHandler::executeTask() {
 
         case Task::State::LEAVE_SOURCE:
             if (this->motionPlanner->isDone()) {
-	            reservationManager->startBiddingForPathReservation(this->motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition());
+	            reservationManager->startBiddingForPathReservation(this->motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
                 currentTask->setState(Task::State::RESERVING_TARGET);
             }
             break;

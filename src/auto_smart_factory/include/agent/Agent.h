@@ -83,7 +83,7 @@ public:
 	ros::Publisher* getVisualisationPublisher();
 	
 	static std_msgs::ColorRGBA agentIdToColor(int agentId);
-
+	
 protected:
 
 	bool init(auto_smart_factory::InitAgent::Request& req, auto_smart_factory::InitAgent::Response& res);
@@ -271,7 +271,7 @@ protected:
 
 	// current orientation of this agent
 	geometry_msgs::Quaternion orientation;
-
+	
 	// heartbeat related timestamp - time in seconds
 	unsigned long lastHeartbeat = 0;
 

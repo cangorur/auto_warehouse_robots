@@ -18,6 +18,8 @@ private:
 	std::vector<double> waitTimes;
 	RobotHardwareProfile* hardwareProfile;
 	
+	double targetReservationTime;
+	
 	OrientedPoint start;
 	OrientedPoint end;
 	bool isValidPath;
@@ -30,7 +32,7 @@ private:
 
 public:
 	explicit Path();
-	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint end);
+	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, double targetReservationTime, OrientedPoint start, OrientedPoint end);
 	
 	virtual ~Path() = default;
 

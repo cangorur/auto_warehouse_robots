@@ -33,7 +33,7 @@ std::pair<Path, uint32_t> ChargingManagement::getPathToNearestChargingStation(Or
 			continue;
 		}		
 		
-		Path path = map->getThetaStarPath(start, charging_tray, startingTime);
+		Path path = map->getThetaStarPath(start, charging_tray, startingTime, ChargingTask::getChargingTime());
 		if(path.isValid() && path.getDuration() < nearestStationDuration) {
 			nearestStationDuration = path.getDuration();
 			

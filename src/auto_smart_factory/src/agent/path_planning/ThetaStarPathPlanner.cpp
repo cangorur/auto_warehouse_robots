@@ -14,7 +14,7 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 // TODO  ensure that new infinite reservations dont intersect with existing ones (permanent and time-limited)
 // Todo reserve approach routine space
 
-Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, double startingTime) {
+Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, double startingTime, double targetReservationTime) {
 	// Convert to degree
 	startPoint = OrientedPoint(start.x, start.y, Math::toDeg(start.o));
 	endPoint = OrientedPoint(target.x, target.y, Math::toDeg(target.o));
@@ -156,7 +156,7 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 	}
 
 	if(targetFound) {
-		return constructPath(startingTime, targetInformation, initialWaitTime);
+		return constructPath(startingTime, targetInformation, initialWaitTime, targetReservationTime);
 	} else {
 		ROS_WARN("[Agent %d] No path found from node %f/%f to node %f/%f!", map->getOwnerId(), startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
 		map->listAllReservationsIn(targetNode->pos);
@@ -188,7 +188,7 @@ double ThetaStarPathPlanner::getDrivingTime(ThetaStarGridNodeInformation* curren
 
 // Todo add estimated turning times to path reservation generation
 
-Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double initialWaitTime) const {
+Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double initialWaitTime, double targetReservationTime) const {
 	std::vector<Point> pathNodes;
 	std::vector<double> waitTimes;
 	ThetaStarGridNodeInformation* currentGridInformation = targetInformation;
@@ -203,7 +203,7 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 		waitTimeAtPrev = currentGridInformation->waitTimeAtPrev;
 		currentGridInformation = currentGridInformation->prev;
 		
-		if(i++ > 500) {
+		if(i++ > 150) {
 			ROS_FATAL("[Agent %d] Endless loop in construct path => aborting. Start: %f/%f Target: %f/%f", map->getOwnerId(), startPoint.x, startPoint.y, endPoint.x, endPoint.y);
 			return Path();
 		}
@@ -219,6 +219,6 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 	OrientedPoint endOrientation = endPoint;
 	endOrientation.o = Math::toRad(endOrientation.o);
 	
-	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, startOrientation, endOrientation);
+	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, targetReservationTime, startOrientation, endOrientation);
 }
 

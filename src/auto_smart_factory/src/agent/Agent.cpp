@@ -1,3 +1,6 @@
+
+#include <include/agent/Agent.h>
+
 #include "agent/Agent.h"
 
 #include "warehouse_management/WarehouseManagement.h"
@@ -210,7 +213,7 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 		if(isIdle) {
 			// ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
 
-			int task_id = req.task_id;
+			unsigned int task_id = req.task_id;
 			auto_smart_factory::Tray input_tray = getTray(req.input_tray);
 			auto_smart_factory::Tray storage_tray = getTray(req.storage_tray);
 
@@ -220,37 +223,40 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 			// create Task and add it to task handler
 			Path sourcePath;
 			Path targetPath;
+			bool success = false;
 
+			double now = ros::Time::now().toSec();
 			Task* lastTask = taskHandler->getLastTask();
 			if(lastTask != nullptr){
-				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, lastTask->getEndTime());
-				targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration());
+				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, lastTask->getEndTime(), TransportationTask::getPickUpTime());
 				
-				if(sourcePath.isValid() && targetPath.isValid()) {
-					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
-					initialTimeOfCurrentTask = ros::Time::now().toSec();
-					res.success = true;
-				} else {
-					ROS_WARN("[%s] task %d can not be assigned, as source or target path is invalid", agentID.c_str(), task_id);
-					res.success = false;
+				if(sourcePath.isValid()) {
+					targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration() + TransportationTask::getPickUpTime(), TransportationTask::getDropOffTime());
+					
+					if(targetPath.isValid()) {
+						taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
+						initialTimeOfCurrentTask = ros::Time::now().toSec();
+						success = true;
+					}
 				}
-				
 			} else {
-				// take the current position
-				double now = ros::Time::now().toSec();
-				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, now);
-				targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration());
-
-				if(sourcePath.isValid() && targetPath.isValid()) {
-					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
-					initialTimeOfCurrentTask = ros::Time::now().toSec();
-					res.success = true;
-				} else {
-					ROS_WARN("[%s] task %d can not be assigned, as source or target path is invalid", agentID.c_str(), task_id);
-					res.success = false;
+				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, now, TransportationTask::getPickUpTime());
+				
+				if(sourcePath.isValid()) {
+					targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration() + TransportationTask::getPickUpTime(), TransportationTask::getDropOffTime());
+					
+					if(targetPath.isValid()) {
+						taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
+						initialTimeOfCurrentTask = ros::Time::now().toSec();
+						success = true;
+					}
 				}
-			}			
-			
+			}
+
+			res.success = success;
+			if(!success) {
+				ROS_WARN("[%s] task %d can not be assigned, as source or target path is invalid", agentID.c_str(), task_id);		
+			}		
 		} else {
 			// ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);
 			res.success = false;
@@ -314,18 +320,18 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 			if(lastTask != nullptr){
 				// take the last position of the last task
 				startTime = lastTask->getEndTime();
-				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, startTime);
+				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, startTime, TransportationTask::getPickUpTime());
 			} else {
 				// take the current position
 				startTime = ros::Time::now().toSec();
-				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, startTime);
+				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, startTime, TransportationTask::getPickUpTime());
 			}
 			
 			if(!sourcePath.isValid()){
 				continue;
 			}
 			
-			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, startTime + sourcePath.getDuration());
+			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, startTime + sourcePath.getDuration() + TransportationTask::getPickUpTime(), TransportationTask::getDropOffTime());
 			
 			if(!targetPath.isValid()) {
 				continue;
@@ -362,7 +368,7 @@ void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& tas
 		// reject task
 		this->taskHandler->rejectTask(taskAnnouncement.request_id);
 		if(lastTask != nullptr && !(lastTask->isCharging()) ) {
-			std::pair<Path, uint32_t> pathToCS = this->chargingManagement->getPathToNearestChargingStation(lastTask->getTargetPosition(), lastTask->getEndTime());
+			std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(lastTask->getTargetPosition(), lastTask->getEndTime());
 			// add charging task
 			ROS_INFO("[Agent %d] Adding charging task because new task could not be taken", agentIdInt);
 			this->taskHandler->addChargingTask(pathToCS.second, pathToCS.first, lastTask->getEndTime());
@@ -466,6 +472,5 @@ std_msgs::ColorRGBA Agent::agentIdToColor(int agentId) {
 }
 
 bool Agent::isInitializedCompletely() {
-	//return initialized && motionPlanner->getPositionAsOrientedPoint().x != 0 && motionPlanner->getPositionAsOrientedPoint().y != 0;
 	return initialized && motionPlanner->isPositionInitialized();
 }
