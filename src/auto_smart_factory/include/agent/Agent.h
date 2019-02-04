@@ -42,9 +42,6 @@
 #include "agent/path_planning/RobotHardwareProfile.h"
 
 
-// defines the task id type
-typedef uint32_t TaskId;
-
 /* The agent component manages all robot related stuff and holds a motion planner, obstacle detection &
  * gripper instance. Furthermore it subscribes to robots sensor topics like pose, laser & battery sensor
  * and aggregates and analyses those data to be able to react to certain circumstances realized by
@@ -81,8 +78,8 @@ public:
 	void update();
 
 	ros::Publisher* getVisualisationPublisher();
-	
-	static std_msgs::ColorRGBA agentIdToColor(int agentId);
+
+	std_msgs::ColorRGBA getAgentColor();
 	
 protected:
 
@@ -267,6 +264,8 @@ protected:
 
 	// current battery level
 	float batteryLevel = 100.0;
+
+	std_msgs::ColorRGBA agentColor;
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_AGENT_H_ */

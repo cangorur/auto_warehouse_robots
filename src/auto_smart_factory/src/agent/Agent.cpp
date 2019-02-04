@@ -110,6 +110,18 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		// Task Handler
 		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub), this->map, this->motionPlanner, this->gripper, this->chargingManagement, reservationManager);
 		
+		// Agent color
+		double color_r = 200;
+		double color_g = 200;
+		double color_b = 200;
+		pn.getParam("color_r", color_r);
+		pn.getParam("color_g", color_g);
+		pn.getParam("color_b", color_b);
+		agentColor.a = 1.0f;
+		agentColor.r = color_r / 255.f;
+		agentColor.g = color_g / 255.f;
+		agentColor.b = color_b / 255.f;
+						
 		ROS_WARN("Finished Initialize [%s]", agentID.c_str());
 		return true;
 	} catch(...) {
@@ -397,12 +409,12 @@ void Agent::publishVisualisation(const ros::TimerEvent& e) {
 	if(map != nullptr) {
 		visualisationPublisher.publish(map->getObstacleVisualization());
 		
-		auto reservationMsg = map->getInactiveReservationVisualization(agentIdInt, agentIdToColor(agentIdInt));
+		auto reservationMsg = map->getInactiveReservationVisualization(agentIdInt, getAgentColor());
 		if(!reservationMsg.points.empty()) {
 			visualisationPublisher.publish(reservationMsg);
 		}
 
-		reservationMsg = map->getActiveReservationVisualization(agentIdInt, agentIdToColor(agentIdInt));
+		reservationMsg = map->getActiveReservationVisualization(agentIdInt, getAgentColor());
 		if(!reservationMsg.points.empty()) {
 			visualisationPublisher.publish(reservationMsg);
 		}
@@ -417,50 +429,10 @@ void Agent::reservationCoordinationCallback(const auto_smart_factory::Reservatio
 	reservationManager->reservationCoordinationCallback(msg);
 }
 
-std_msgs::ColorRGBA Agent::agentIdToColor(int agentId) {
-	std_msgs::ColorRGBA color;
-	color.a = 1.f;
-	color.r = 0.f;
-	color.g = 0.f;
-	color.b = 0.f;
-
-	switch(agentId) {
-		case 1:
-			color.r = 1.f;
-			break;
-		case 2:
-			color.g = 1.f;
-			break;
-		case 3:
-			color.b = 1.f;
-			break;
-		case 4:
-			color.r = 1.f;
-			color.g = 0.5f;
-			break;
-		case 5:
-			color.r = 1.f;
-			color.b = 1.f;
-			break;
-		case 6:
-			color.g = 1.f;
-			color.b = 1.f;
-			break;
-		case 7:
-			color.r = 0.5f;
-			color.b = 1.f;
-			break;
-		case 8:
-			color.r = 0.5f;
-			color.g = 1.f;
-			break;
-
-		default:break;
-	}
-
-	return color;
-}
-
 bool Agent::isInitializedCompletely() {
 	return initialized && motionPlanner->isPositionInitialized();
+}
+
+std_msgs::ColorRGBA Agent::getAgentColor() {
+	return agentColor;
 }

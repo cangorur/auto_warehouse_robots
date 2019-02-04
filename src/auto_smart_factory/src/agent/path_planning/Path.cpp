@@ -161,7 +161,7 @@ float Path::getBatteryConsumption() const {
 	return batteryConsumption;
 }
 
-visualization_msgs::Marker Path::getVisualizationMsgLines() {
+visualization_msgs::Marker Path::getVisualizationMsgLines(std_msgs::ColorRGBA color) {
 	ROS_ASSERT(isValidPath);
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";
@@ -174,27 +174,9 @@ visualization_msgs::Marker Path::getVisualizationMsgLines() {
 	msg.type = visualization_msgs::Marker::LINE_STRIP;
 	msg.scale.x = 0.1;
 
-	// Set colors
-	ros::NodeHandle nh("~");
-	double color_r;
-	double color_g;
-	double color_b;
-	if(!nh.getParam("color_r", color_r)) {
-		color_r = 30;
-	}	
-	if(!nh.getParam("color_g", color_g)) {
-		color_g = 200;
-	}
-	if(!nh.getParam("color_b", color_b)) {
-		color_b = 40;
-	}
-	
+	msg.color = color;
 	msg.color.a = 0.6f;
-	msg.color.r = color_r / 255;
-	msg.color.g = color_g / 255;
-	msg.color.b = color_b / 255;
-
-
+	
 	for(const Point& point : nodes) {
 		geometry_msgs::Point p;
 		p.x = point.x;

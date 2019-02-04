@@ -133,7 +133,6 @@ void TaskHandler::executeTask() {
         case Task::State::PICKUP:
             if (motionPlanner->isDone()) {
                 gripper->loadPackage(true);
-                //ros::Duration(0.1f).sleep();
                 motionPlanner->driveBackward(0.3f);
                 currentTask->setState(Task::State::LEAVE_SOURCE);
             }
@@ -180,7 +179,6 @@ void TaskHandler::executeTask() {
         case Task::State::DROPOFF:
             if (motionPlanner->isDone()) {
                 gripper->loadPackage(false);
-                //ros::Duration(2).sleep();
                 currentTask->setState(Task::State::LEAVE_TARGET);
                 motionPlanner->driveBackward(0.3f);
             }

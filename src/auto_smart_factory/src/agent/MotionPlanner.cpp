@@ -191,7 +191,7 @@ void MotionPlanner::newPath(Path path) {
 		currentTarget = pathObject.getNodes().front();
 		currentTargetIndex = 0;
 		mode = Mode::READY;
-		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
+		agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines(agent->getAgentColor()));
 	} else {
 		ROS_ERROR("[MotionPlanner - %s]: Got invalid path", agentID.c_str());
 		mode = Mode::FINISHED;
