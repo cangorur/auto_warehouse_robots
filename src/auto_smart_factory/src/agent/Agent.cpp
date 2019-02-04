@@ -65,7 +65,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	warehouseConfig = warehouse_configuration;
 	robotConfig = robot_configuration;
 	
-	float maxTurningSpeedInDegree = Math::toDeg(robot_configuration.max_angular_vel);
+	double maxTurningSpeedInDegree = Math::toDeg(robot_configuration.max_angular_vel);
 	hardwareProfile = new RobotHardwareProfile(robot_configuration.max_linear_vel, maxTurningSpeedInDegree, robot_configuration.discharging_rate, 0.f);
 	//ROS_INFO("[%s]: MaxSpeed: %f m/s | MaxTurningSpeed: %f deg/s", agentID.c_str(), robot_configuration.max_linear_vel,maxTurningSpeedInDegree);
 
@@ -75,7 +75,6 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	this->motion_pub = pn.advertise<geometry_msgs::Twist>("motion", 1);
 	this->heartbeat_pub = n.advertise<auto_smart_factory::RobotHeartbeat>("robot_heartbeats", 1);
 	this->gripper_state_pub = pn.advertise<auto_smart_factory::GripperState>("gripper_state", 1);
-	this->additional_time_pub = pn.advertise<auto_smart_factory::AdditionalTime>("additional_time", 1);
 	this->task_announce_sub = n.subscribe("/task_planner/task_broadcast", 1, &Agent::announcementCallback, this);
 	this->taskrating_pub = pn.advertise<auto_smart_factory::TaskRating>("/task_response", 1);
 	// TODO: Below topic can give some hints (example information an agent may need). They are not published in any of the nodes
@@ -153,13 +152,6 @@ void Agent::setupTaskHandling() {
 	this->assign_task_srv = pn.advertiseService("assign_task", &Agent::assignTask, this);
 }
 
-void Agent::setIdle(bool idle) {
-	if((isIdle && !idle) || (!isIdle && idle)) {
-		isIdle = idle;
-		sendHeartbeat();
-	}
-}
-
 bool Agent::isTimeForHeartbeat() {
 	timeval time;
 	gettimeofday(&time, 0);
@@ -235,7 +227,6 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 					
 					if(targetPath.isValid()) {
 						taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
-						initialTimeOfCurrentTask = ros::Time::now().toSec();
 						success = true;
 					}
 				}
@@ -247,7 +238,6 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 					
 					if(targetPath.isValid()) {
 						taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
-						initialTimeOfCurrentTask = ros::Time::now().toSec();
 						success = true;
 					}
 				}

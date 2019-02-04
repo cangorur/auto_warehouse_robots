@@ -103,10 +103,6 @@ protected:
 	/* Sets up the services to be able to receive task related requests by the task planner. */
 	void setupTaskHandling();
 
-	/* Sets if this agent is idle or not and if the state has been changed it sends a heartbeat.
-	 * @param idle: whether to set to idle state */
-	void setIdle(bool idle);
-
 	/* Returns whether it's time for next heartbeat to send.
 	 * @return True if next heartbeat should be sended */
 	bool isTimeForHeartbeat();
@@ -187,12 +183,6 @@ protected:
 	// Flag that shows whether this agent has already been registered at the task planner
 	bool registered = false;
 
-	// Flag that shows whether this agent has already been registered at the task planner
-	bool registeredCharging = false;
-
-	// Flag indicated whether to insert charging or using other approaches
-	bool insertCharging = true;
-
 	// Flag that shows if the robot is currently in idle state or not
 	bool isIdle = true;
 
@@ -245,9 +235,6 @@ protected:
 	// Publisher for gripper state topic
 	ros::Publisher gripper_state_pub;
 
-	// Publisher for additional time topic - sent if some task is delayed because of charging
-	ros::Publisher additional_time_pub;
-
 	// Publisher for heartbeat topic
 	ros::Publisher heartbeat_pub;
 
@@ -280,39 +267,6 @@ protected:
 
 	// current battery level
 	float batteryLevel = 100.0;
-
-	// when battery level is lower than threshold it's necessary to take care of charging
-	float batteryThreshold = 20.0;
-
-	// Flag that shows if the agent is waiting for a charging response
-	bool waitingForChargingRequest = false;
-
-	// indicates whether the agent has ever moved
-	bool hasDriven;
-
-	// Indicates whether to generate a charging plan or not
-	bool generateChargingPlan = false;
-
-	// ID of the Charging station assigned to the agent
-	unsigned int chargingStationId;
-
-	// counter to indicate how long an agent stuck in one place (used for local collision handling for static/dynamic obstacles)
-	int stuck_Counter = 0;
-
-	// charging task id
-	int chargeTaskID = 99999;
-
-	// interval since last time of check local collision
-	int poseSampleInterval = 0;
-
-	// current position of this agent (sampled in local collisition check)
-	geometry_msgs::Point sample_position;
-
-	// current orientation of this agent (sampled in local collision check)
-	geometry_msgs::Quaternion sample_orientation;
-
-	// Stores the time when the current task was assigned to the agent
-	double initialTimeOfCurrentTask = -1.0;
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_AGENT_H_ */
