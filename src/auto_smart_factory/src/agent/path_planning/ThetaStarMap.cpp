@@ -1,4 +1,6 @@
 
+#include <include/agent/path_planning/ThetaStarMap.h>
+
 #include "agent/path_planning/ThetaStarMap.h"
 
 #include "ros/ros.h"
@@ -110,4 +112,8 @@ void ThetaStarMap::addAdditionalNode(Point pos) {
 	} else {
 		delete newGridNode;
 	}
+}
+
+int ThetaStarMap::getOwnerId() const {
+	return map->getOwnerId();
 }

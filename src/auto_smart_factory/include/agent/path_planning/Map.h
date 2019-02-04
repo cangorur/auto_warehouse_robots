@@ -70,6 +70,7 @@ public:
 	float getWidth() const;
 	float getHeight() const;
 	float getMargin() const;
+	int getOwnerId() const;
 	
 	void listAllReservationsIn(Point p);
 

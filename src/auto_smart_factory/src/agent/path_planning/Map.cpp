@@ -1,5 +1,7 @@
 #include <utility>
 #include <iostream>
+#include <include/agent/path_planning/Map.h>
+
 #include "agent/path_planning/Map.h"
 
 #include "ros/ros.h"
@@ -444,4 +446,8 @@ bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 
 bool Map::isPointTargetOfAnotherRobot(const auto_smart_factory::Tray& tray) {
 	return isPointTargetOfAnotherRobot(getPointInFrontOfTray(tray));
+}
+
+int Map::getOwnerId() const {
+	return ownerId;
 }
