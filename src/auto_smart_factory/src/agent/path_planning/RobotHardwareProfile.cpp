@@ -23,6 +23,11 @@ double RobotHardwareProfile::getDrivingDuration(double distance) const {
 }
 
 double RobotHardwareProfile::getTurningDuration(double angle) const {
-	return std::abs(angle) / (maxTurningSpeed * averageTurningEfficiency);
+	angle = std::abs(angle);
+	if(angle < onSpotTurningAngle) {
+		return angle / (drivingTurningEfficiency * maxTurningSpeed);
+	} else {
+		return angle / (onSpotTurningEfficiency * maxTurningSpeed);	
+	}
 }
 

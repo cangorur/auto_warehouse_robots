@@ -1,5 +1,5 @@
-#include <agent/Gripper.h>
-#include <agent/Agent.h>
+#include "agent/Gripper.h"
+#include "agent/Agent.h"
 
 Gripper::Gripper(Agent* _agent, ros::Publisher* gripper_state_pub) {
 	agent = _agent;
@@ -16,7 +16,7 @@ bool Gripper::loadPackage(bool load) {
 	float orient = tf::getYaw(q);
 	std::string str = load ? "load" : "unload";
 	if(str == "load") {
-		moveGripper(robot_position.x + (cos(orient) * 0.2), robot_position.y + (sin(orient) * 0.2), 0.38, package);
+		moveGripper(robot_position.x + (cos(orient) * 0.25), robot_position.y + (sin(orient) * 0.25), 0.38, package);
 		ros::ServiceClient client = n.serviceClient<std_srvs::Trigger>(agentID + "/gripper/" + str, true);
 		std_srvs::Trigger srv;
 		if(client.call(srv)) {
@@ -32,7 +32,7 @@ bool Gripper::loadPackage(bool load) {
 				gripper_state.loaded = load;
 				gripper_state.package = package;
 				gripperStatePub->publish(gripper_state);
-				moveGripper(robot_position.x - (cos(orient) * 0.25), robot_position.y - (sin(orient) * 0.25), 0.35, package);
+				moveGripper(robot_position.x - (cos(orient) * 0.25), robot_position.y - (sin(orient) * 0.25), 0.38, package);
 				return true;
 			} else {
 				ROS_ERROR("[%s]: Failed to %s package! %s", agentID.c_str(), str.c_str(), srv.response.message.c_str());
@@ -45,6 +45,7 @@ bool Gripper::loadPackage(bool load) {
 	} else if(str == "unload") {
 		moveGripper(robot_position.x + (cos(orient) * 0.25), robot_position.y + (sin(orient) * 0.25), 0.38, package); //robot_position.y -/+ 0.25
 	}
+	
 	ros::ServiceClient client = n.serviceClient<std_srvs::Trigger>(agentID + "/gripper/" + str, true);
 	std_srvs::Trigger srv;
 	if(client.call(srv)) {
@@ -60,7 +61,7 @@ bool Gripper::loadPackage(bool load) {
 			gripper_state.loaded = false;
 			gripper_state.package = package;
 			gripperStatePub->publish(gripper_state);
-			moveGripper(robot_position.x - (cos(orient) * 0.2), robot_position.y - (sin(orient) * 0.2), 0.38, package);
+			moveGripper(robot_position.x - (cos(orient) * 0.25), robot_position.y - (sin(orient) * 0.25), 0.38, package);
 			return true;
 		} else {
 			ROS_ERROR("[%s]: Failed to %s package! %s", agentID.c_str(), str.c_str(), srv.response.message.c_str());

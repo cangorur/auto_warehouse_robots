@@ -5,8 +5,8 @@
  *      Author: jacob
  */
 
-#include <ros/ros.h>
-#include <task_planner/TaskPlanner.h>
+#include "ros/ros.h"
+#include "task_planner/TaskPlanner.h"
 
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "task_planner");

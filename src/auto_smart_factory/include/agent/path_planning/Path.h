@@ -2,7 +2,7 @@
 #define AGENT_PATH_H_
 
 #include <vector>
-#include <visualization_msgs/Marker.h>
+#include "visualization_msgs/Marker.h"
 #include "agent/path_planning/Point.h"
 #include "agent/path_planning/Rectangle.h"
 #include "RobotHardwareProfile.h"
@@ -18,6 +18,8 @@ private:
 	std::vector<double> waitTimes;
 	RobotHardwareProfile* hardwareProfile;
 	
+	double targetReservationTime;
+	
 	OrientedPoint start;
 	OrientedPoint end;
 	bool isValidPath;
@@ -30,7 +32,7 @@ private:
 
 public:
 	explicit Path();
-	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint end);
+	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, double targetReservationTime, OrientedPoint start, OrientedPoint end);
 	
 	virtual ~Path() = default;
 
@@ -47,7 +49,7 @@ public:
 	const std::vector<Rectangle> generateReservations(int ownerId) const;
 	
 	// ROS visualisation
-	visualization_msgs::Marker getVisualizationMsgLines();
+	visualization_msgs::Marker getVisualizationMsgLines(std_msgs::ColorRGBA color);
 
 	OrientedPoint getStart();
 	OrientedPoint getEnd();

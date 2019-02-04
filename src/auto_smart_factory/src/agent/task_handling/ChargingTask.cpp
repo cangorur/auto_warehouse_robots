@@ -1,4 +1,9 @@
+
+#include <include/agent/task_handling/ChargingTask.h>
+
 #include "agent/task_handling/ChargingTask.h"
+
+double ChargingTask::chargingTime = 40.f;
 
 ChargingTask::ChargingTask(uint32_t targetID, Path targetPath, double startTime) : 
 	Task(targetID, targetPath, Type::CHARGING, startTime)
@@ -27,4 +32,8 @@ void ChargingTask::setState(Task::State state) {
 		return;
 	}
 	this->state = state;
+}
+
+double ChargingTask::getChargingTime() {
+	return chargingTime;
 }

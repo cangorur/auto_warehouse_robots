@@ -1,3 +1,6 @@
+
+#include <include/agent/task_handling/Task.h>
+
 #include "agent/task_handling/Task.h"
 
 Task::Task(uint32_t targetId, Path pathToTarget, Type type, double startTime) : 

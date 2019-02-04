@@ -106,9 +106,9 @@ void TaskHandler::executeTask() {
             } else {
                 // Start to bid for path reservations
                 if(currentTask->isTransportation()) {
-	                reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), ((TransportationTask*) currentTask)->getSourcePosition());
+	                reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), ((TransportationTask*) currentTask)->getSourcePosition(), TransportationTask::getPickUpTime());
                 } else if(currentTask->isCharging()) {
-	                reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition());
+	                reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), ChargingTask::getChargingTime());
                 } else {
                     ROS_FATAL("[%s] Task is neither TransportationTask nor ChargingTask!", agentId.c_str());
                 }
@@ -117,31 +117,31 @@ void TaskHandler::executeTask() {
             break;
 
         case Task::State::TO_SOURCE:
-            if (this->motionPlanner->isDone()) {
+            if (motionPlanner->isDone()) {
                 currentTask->setState(Task::State::APPROACH_SOURCE);
                 motionPlanner->alignTowards(((TransportationTask*) currentTask)->getSourcePosition().o);
             }
             break;
 
         case Task::State::APPROACH_SOURCE:
-            if (this->motionPlanner->isDone()) {
+            if (motionPlanner->isDone()) {
                 currentTask->setState(Task::State::PICKUP);
-                motionPlanner->driveForward(0.3);
+                motionPlanner->driveForward(0.3f);
             }
             break;
 
         case Task::State::PICKUP:
-            if (this->motionPlanner->isDone()) {
+            if (motionPlanner->isDone()) {
                 gripper->loadPackage(true);
-                ros::Duration(2).sleep();
-                this->motionPlanner->driveBackward(0.3);
+                motionPlanner->driveBackward(0.3f);
                 currentTask->setState(Task::State::LEAVE_SOURCE);
             }
             break;
 
         case Task::State::LEAVE_SOURCE:
-            if (this->motionPlanner->isDone()) {
-	            reservationManager->startBiddingForPathReservation(this->motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition());
+            if (motionPlanner->isDone()) {
+                // TODO Error if no path found -> check of path can be found if not -> drive away anyway
+	            reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
                 currentTask->setState(Task::State::RESERVING_TARGET);
             }
             break;
@@ -153,7 +153,7 @@ void TaskHandler::executeTask() {
             if(reservationManager->getHasReservedPath()) {
                 currentTask->setState(Task::State::TO_TARGET);
                 motionPlanner->newPath(reservationManager->getReservedPath());
-                this->motionPlanner->start();   
+                motionPlanner->start();   
             }
             break;
 
@@ -165,31 +165,32 @@ void TaskHandler::executeTask() {
             break;
 
         case Task::State::APPROACH_TARGET:
-            if (this->motionPlanner->isDone()) {
+            if (motionPlanner->isDone()) {
                 if (currentTask->isTransportation()) {
                     currentTask->setState(Task::State::DROPOFF);
                 } else if (currentTask->isCharging()) {
                     currentTask->setState(Task::State::CHARGING);
+                    ROS_INFO("[%s] Starting charging", agentId.c_str());
                 }
-                motionPlanner->driveForward(0.3);
+                motionPlanner->driveForward(0.3f);
             }
             break;
 
         case Task::State::DROPOFF:
             if (motionPlanner->isDone()) {
                 gripper->loadPackage(false);
-                ros::Duration(2).sleep();
                 currentTask->setState(Task::State::LEAVE_TARGET);
-                motionPlanner->driveBackward(0.3);
+                motionPlanner->driveBackward(0.3f);
             }
             break;
 
         case Task::State::CHARGING:
             // Check charging progress
             if (motionPlanner->isDone()) {
-                if (this->chargingManagement->isCharged()){
+                if (this->chargingManagement->isCharged()) {
+                    ROS_INFO("[%s] Finished charging", agentId.c_str());
                     currentTask->setState(Task::State::LEAVE_TARGET);
-                    motionPlanner->driveBackward(0.3);
+                    motionPlanner->driveBackward(0.3f);
                 }
             }
             break;

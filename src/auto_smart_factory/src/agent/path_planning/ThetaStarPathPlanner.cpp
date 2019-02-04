@@ -1,5 +1,5 @@
 #include <queue>
-#include <include/agent/path_planning/TimedLineOfSightResult.h>
+#include "agent/path_planning/TimedLineOfSightResult.h"
 
 #include "ros/ros.h"
 #include "Math.h"
@@ -14,7 +14,7 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 // TODO  ensure that new infinite reservations dont intersect with existing ones (permanent and time-limited)
 // Todo reserve approach routine space
 
-Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, double startingTime) {
+Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, double startingTime, double targetReservationTime) {
 	// Convert to degree
 	startPoint = OrientedPoint(start.x, start.y, Math::toDeg(start.o));
 	endPoint = OrientedPoint(target.x, target.y, Math::toDeg(target.o));
@@ -27,35 +27,31 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 	
 	if(startNode == nullptr || targetNode == nullptr) {
 		if(startNode == nullptr) {
-			ROS_FATAL("StartPoint %f/%f is no in theta* map!", start.x, start.y);
+			ROS_FATAL("[Agent %d] StartPoint %f/%f is not in theta* map!", map->getOwnerId(), start.x, start.y);
 		}
 		if(targetNode == nullptr) {
-			ROS_FATAL("TargetPoint %f/%f is no in theta* map!", target.x, target.y);
+			ROS_FATAL("[Agent %d] TargetPoint %f/%f is not in theta* map!", map->getOwnerId(), target.x, target.y);
 		}
-		exit(1);
 		return Path();
 	}
 	
 	double initialWaitTime = 0;
-	TimedLineOfSightResult initialCheckResult = map->whenIsTimedLineOfSightFree(Point(start.x, start.y), startingTime, startNode->pos, startingTime + 0.5f);
+	TimedLineOfSightResult initialCheckResult = map->whenIsTimedLineOfSightFree(Point(start.x, start.y), startingTime, startNode->pos, startingTime + 0.1f);
 	if(initialCheckResult.blockedByTimed) {
-		initialWaitTime = initialCheckResult.freeAfter - startingTime + 0.5f;
+		initialWaitTime = initialCheckResult.freeAfter - (startingTime + 0.1f);
 		
 		if(initialWaitTime > 1000) {
-			ROS_FATAL("Initial wait time > 1000 -> standing in infinite reservation, no valid path possible");
-			
+			ROS_FATAL("[Agent %d] Initial wait time > 1000 -> standing in infinite reservation, no valid path possible", map->getOwnerId());
 			ROS_WARN("Reservations for start:");
-			map->listAllReservationsIn(Point(start.x, start.y));
-
-			ROS_WARN("Reservations for startNode:");
-			map->listAllReservationsIn(startNode->pos);			
+			map->listAllReservationsIn(Point(start.x, start.y));	
 			
 			return Path();
 		} else {
-			ROS_WARN("Path needed initial wait time of %f", initialWaitTime);
+			ROS_WARN("[Agent %d] Path needed initial wait time of %f", map->getOwnerId(), initialWaitTime);
 			map->listAllReservationsIn(Point(start.x, start.y));
 		}
 	}
+	initialWaitTime = 0;
 
 	GridInformationMap exploredSet;
 	GridInformationPairQueue queue;
@@ -150,17 +146,25 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 					neighbour->prev = newPrev;
 					neighbour->waitTimeAtPrev = waitingTime;
 					queue.push(std::make_pair(neighbour->time + heuristic, neighbour));
+					
+					if(current->prev == nullptr && !map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime)) {
+						ROS_WARN("[Agent %d] Only taking connection because at start node", map->getOwnerId());
+					}
 				}
 			}
 		}
 	}
 
 	if(targetFound) {
-		return constructPath(startingTime, targetInformation, initialWaitTime);
+		return constructPath(startingTime, targetInformation, initialWaitTime, targetReservationTime);
 	} else {
-		ROS_WARN("[PP robot_?] No path found from node %f/%f to node %f/%f!", startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
+		ROS_WARN("[Agent %d] No path found from node %f/%f to node %f/%f!", map->getOwnerId(), startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
+		ROS_WARN("Reservations for start:");
+		map->listAllReservationsIn(startNode->pos);
+
+		ROS_WARN("Reservations for target:");
 		map->listAllReservationsIn(targetNode->pos);
-		
+
 		return Path();
 	}
 }
@@ -188,7 +192,7 @@ double ThetaStarPathPlanner::getDrivingTime(ThetaStarGridNodeInformation* curren
 
 // Todo add estimated turning times to path reservation generation
 
-Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double initialWaitTime) const {
+Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double initialWaitTime, double targetReservationTime) const {
 	std::vector<Point> pathNodes;
 	std::vector<double> waitTimes;
 	ThetaStarGridNodeInformation* currentGridInformation = targetInformation;
@@ -203,8 +207,8 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 		waitTimeAtPrev = currentGridInformation->waitTimeAtPrev;
 		currentGridInformation = currentGridInformation->prev;
 		
-		if(i++ > 500) {
-			ROS_FATAL("Endless loop in construct path => aborting. Start: %f/%f Target: %f/%f", startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+		if(i++ > 150) {
+			ROS_FATAL("[Agent %d] Endless loop in construct path => aborting. Start: %f/%f Target: %f/%f", map->getOwnerId(), startPoint.x, startPoint.y, endPoint.x, endPoint.y);
 			return Path();
 		}
 	}
@@ -219,6 +223,6 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 	OrientedPoint endOrientation = endPoint;
 	endOrientation.o = Math::toRad(endOrientation.o);
 	
-	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, startOrientation, endOrientation);
+	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, targetReservationTime, startOrientation, endOrientation);
 }
 

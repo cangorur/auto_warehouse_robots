@@ -12,7 +12,7 @@
 class ThetaStarPathPlanner {
 public:
 	explicit ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile);
-	Path findPath(OrientedPoint start, OrientedPoint target, double startingTime);
+	Path findPath(OrientedPoint start, OrientedPoint target, double startingTime, double targetReservationTime);
 
 private:
 	double initialTime = std::numeric_limits<double>::max() - 100000;
@@ -32,7 +32,7 @@ private:
 	double getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const;
 	double getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
 
-	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double initialWaitTime) const;
+	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double initialWaitTime, double targetReservationTime) const;
 	
 	OrientedPoint startPoint;
 	OrientedPoint endPoint;

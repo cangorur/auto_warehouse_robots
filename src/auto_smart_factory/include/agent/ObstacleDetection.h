@@ -10,8 +10,8 @@
 #include <time.h>
 #include <stdlib.h>
 #include "sensor_msgs/LaserScan.h"
-#include <auto_smart_factory/RobotConfiguration.h>
-#include <auto_smart_factory/WarehouseConfiguration.h>
+#include "auto_smart_factory/RobotConfiguration.h"
+#include "auto_smart_factory/WarehouseConfiguration.h"
 
 /**
  * The obstacle detection component analyzes the laser data provided by the laser sensor,

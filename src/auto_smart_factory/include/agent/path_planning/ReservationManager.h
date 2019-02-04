@@ -1,8 +1,8 @@
 #ifndef PROJECT_RESERVATIONMANAGER_H
 #define PROJECT_RESERVATIONMANAGER_H
 
-#include <ros/publisher.h>
-#include <auto_smart_factory/ReservationCoordination.h>
+#include "ros/publisher.h"
+#include "auto_smart_factory/ReservationCoordination.h"
 #include "agent/path_planning/OrientedPoint.h"
 #include "Map.h"
 #include "ReservationBid.h"
@@ -18,7 +18,7 @@ public:
 	void reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg);
 
 	// Path reservations
-	void startBiddingForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint);
+	void startBiddingForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint, double targetReservationDuration);
 	
 	// Getter
 	Path getReservedPath();
@@ -44,6 +44,7 @@ private:
 	Path pathToReserve;
 	OrientedPoint startPoint;
 	OrientedPoint endPoint;
+	double targetReservationDuration;
 	int pathRetrievedCount;
 	
 	// Delayed auction start
@@ -53,7 +54,7 @@ private:
 	std::vector<std::pair<int, ReservationBid>> reservationBidQueue;
 	
 	const double emptyAuctionDelay = 0.2f;
-	const double pathReservationStartingTimeOffset = 0.2f;
+	const double pathReservationStartingTimeOffset = 0.5f;
 	const double auctionTimeout = 6.0f;
 	
 	void addReservations(const auto_smart_factory::ReservationCoordination& msg);

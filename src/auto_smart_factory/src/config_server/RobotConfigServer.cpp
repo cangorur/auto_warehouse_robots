@@ -5,7 +5,7 @@
  *      Author: jacob
  */
 
-#include <config_server/RobotConfigServer.h>
+#include "config_server/RobotConfigServer.h"
 #include <boost/property_tree/json_parser.hpp>
 
 using namespace boost::property_tree;

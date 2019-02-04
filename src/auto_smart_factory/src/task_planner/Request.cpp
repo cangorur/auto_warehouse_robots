@@ -5,13 +5,11 @@
  *      Author: jacob
  */
 
-#include <task_planner/Request.h>
-#include <task_planner/TaskPlanner.h>
-#include <auto_smart_factory/GetTrayState.h>
-#include <auto_smart_factory/StorePackage.h>
-#include <auto_smart_factory/RetrievePackage.h>
-
-#include <algorithm>
+#include "task_planner/Request.h"
+#include "task_planner/TaskPlanner.h"
+#include "auto_smart_factory/GetTrayState.h"
+#include "auto_smart_factory/StorePackage.h"
+#include "auto_smart_factory/RetrievePackage.h"
 
 using namespace auto_smart_factory;
 

@@ -8,9 +8,9 @@
 #ifndef AUTO_SMART_FACTORY_SRC_TASK_PLANNER_ROBOTCANDIDATE_H_
 #define AUTO_SMART_FACTORY_SRC_TASK_PLANNER_ROBOTCANDIDATE_H_
 
-#include <ros/ros.h>
+#include "ros/ros.h"
 #include <string>
-#include <auto_smart_factory/Tray.h>
+#include "auto_smart_factory/Tray.h"
 
 /**
  * This class encapsulates the response of a robot to a task request.

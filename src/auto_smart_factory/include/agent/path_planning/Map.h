@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "auto_smart_factory/Tray.h"
-#include <auto_smart_factory/WarehouseConfiguration.h>
+#include "auto_smart_factory/WarehouseConfiguration.h"
 #include "agent/path_planning/Rectangle.h"
 #include "agent/path_planning/GridNode.h"
 #include "agent/path_planning/ThetaStarMap.h"
@@ -54,14 +54,15 @@ public:
 	OrientedPoint getPointInFrontOfTray(const auto_smart_factory::Tray& tray);
 
 	// Reservations
-	void deleteExpiredReservations(double time);
 	void addReservations(std::vector<Rectangle> newReservations);
+	void deleteExpiredReservations(double time);
+	void deleteReservationsFromAgent(int agentId);
 		
 	// Path queries
-	Path getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime);
-	Path getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime);
-	Path getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime);
-	Path getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime);
+	Path getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime, double targetReservationTime);
+	Path getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime, double targetReservationTime);
+	Path getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime, double targetReservationTime);
+	Path getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime, double targetReservationTime);
 	
 	bool isPointTargetOfAnotherRobot(OrientedPoint pos);
 	bool isPointTargetOfAnotherRobot(const auto_smart_factory::Tray& tray);
@@ -70,6 +71,7 @@ public:
 	float getWidth() const;
 	float getHeight() const;
 	float getMargin() const;
+	int getOwnerId() const;
 	
 	void listAllReservationsIn(Point p);
 

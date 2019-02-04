@@ -8,9 +8,9 @@
 #ifndef AUTO_SMART_FACTORY_SRC_ROBOTCONFIGSERVER_H_
 #define AUTO_SMART_FACTORY_SRC_ROBOTCONFIGSERVER_H_
 
-#include <ros/ros.h>
-#include <auto_smart_factory/RobotConfiguration.h>
-#include <auto_smart_factory/GetRobotConfigurations.h>
+#include "ros/ros.h"
+#include "auto_smart_factory/RobotConfiguration.h"
+#include "auto_smart_factory/GetRobotConfigurations.h"
 
 /**
  * This class reads the robot configuration file and provides a service to deliver the robot

@@ -1,6 +1,4 @@
 
-#include <include/agent/path_planning/ReservationManager.h>
-
 #include "agent/path_planning/ReservationManager.h"
 
 ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int agentId, int agentCount) :
@@ -74,6 +72,7 @@ void ReservationManager::reservationCoordinationCallback(const auto_smart_factor
 	}
 	
 	if(msg.isReservationMessage) {
+		map->deleteReservationsFromAgent(msg.robotId);
 		addReservations(msg);
 		startNewAuction(msg.auctionId + 1, msg.timestamp);
 	} else {
@@ -118,7 +117,7 @@ void ReservationManager::startNewAuction(int newAuctionId, double newAuctionStar
 
 	if(bidingForReservation) {
 		// Recalculate path to match timing
-		pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
+		pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset, targetReservationDuration);
 
 		if(!pathToReserve.isValid()) {
 			ROS_ERROR("[ReservationManager %d] Tried to re-generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
@@ -146,6 +145,8 @@ void ReservationManager::closeAuction() {
 			hasReservedPath = true;
 			pathRetrievedCount = 0;
 
+			// Delete old reservations and add new
+			map->deleteReservationsFromAgent(agentId);
 			std::vector<Rectangle> reservations = pathToReserve.generateReservations(agentId);
 			map->addReservations(reservations);
 
@@ -185,19 +186,19 @@ void ReservationManager::publishReservations(std::vector<Rectangle> reservations
 	publisher->publish(msg);
 }
 
-void ReservationManager::startBiddingForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint) {
+void ReservationManager::startBiddingForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint, double targetReservationDuration) {
 	// Use Radiant here	
 	this->startPoint = startPoint;
 	this->endPoint = endPoint;	
+	this->targetReservationDuration = targetReservationDuration;
 	
-	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset);
+	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset, targetReservationDuration);
+	hasReservedPath = false;
+	
 	if(pathToReserve.isValid()) {
 		bidingForReservation = true;
-		hasReservedPath = false;
-
 	} else {
 		ROS_ERROR("[ReservationManager %d] Tried to generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-		hasReservedPath = false;
 	}	
 }
 

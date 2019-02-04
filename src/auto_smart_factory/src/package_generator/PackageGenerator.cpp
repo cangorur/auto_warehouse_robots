@@ -1,4 +1,4 @@
-#include <package_generator/PackageGenerator.h>
+#include "package_generator/PackageGenerator.h"
 
 PackageGenerator::PackageGenerator() {
 	ros::NodeHandle pn("~");

@@ -5,8 +5,8 @@
  *      Author: Orhan Can Görür
  */
 
-#include <ros/ros.h>
-#include <factory_gateway/FactoryGateway.h>
+#include "ros/ros.h"
+#include "factory_gateway/FactoryGateway.h"
 
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "factory_gateway");

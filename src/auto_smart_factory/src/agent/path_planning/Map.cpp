@@ -2,11 +2,9 @@
 #include <iostream>
 #include <include/agent/path_planning/Map.h>
 
-#include "ros/ros.h"
-#include "Math.h"
-#include "agent/path_planning/Rectangle.h"
 #include "agent/path_planning/Map.h"
-#include "agent/path_planning/Point.h"
+
+#include "ros/ros.h"
 #include "agent/path_planning/ThetaStarPathPlanner.h"
 
 int Map::visualisationId = 0;
@@ -169,31 +167,34 @@ float Map::getMargin() const {
 	return margin;
 }
 
-Path Map::getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime) {
+Path Map::getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime, double targetReservationTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
-	return thetaStarPathPlanner.findPath(start, end, startingTime);
+	return thetaStarPathPlanner.findPath(start, end, startingTime, targetReservationTime);
 }
 
-Path Map::getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime) {
+Path Map::getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime, double targetReservationTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	const OrientedPoint endPoint = getPointInFrontOfTray(end);
+	
 	//ROS_INFO("Computing path from (%f/%f) to tray of type %s (%f/%f)", start.x, start.y, end.type.c_str(), getPointInFrontOfTray(end).x, getPointInFrontOfTray(end).y);
-	return thetaStarPathPlanner.findPath(start, endPoint, startingTime);
+	return thetaStarPathPlanner.findPath(start, endPoint, startingTime, targetReservationTime);
 }
 
-Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime) {
+Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime, double targetReservationTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	const OrientedPoint startPoint = getPointInFrontOfTray(start);
+	
 	//ROS_INFO("Computing path from tray of type %s (%f/%f) to (%f/%f)", start.type.c_str(), getPointInFrontOfTray(start).x, getPointInFrontOfTray(start).y, end.x, end.y);
-	return thetaStarPathPlanner.findPath(startPoint, end, startingTime);
+	return thetaStarPathPlanner.findPath(startPoint, end, startingTime, targetReservationTime);
 }
 
-Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime) {
+Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime, double targetReservationTime) {
 	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	const OrientedPoint startPoint = getPointInFrontOfTray(start);
 	const OrientedPoint endPoint = getPointInFrontOfTray(end);
+	
 	//ROS_INFO("Computing path from tray of type %s (%f/%f) to tray of type %s (%f/%f)", start.type.c_str(), getPointInFrontOfTray(start).x, getPointInFrontOfTray(start).y, end.type.c_str(), getPointInFrontOfTray(end).x, getPointInFrontOfTray(end).y);
-	return thetaStarPathPlanner.findPath(startPoint, endPoint, startingTime);
+	return thetaStarPathPlanner.findPath(startPoint, endPoint, startingTime, targetReservationTime);
 }
 
 bool Map::isPointInMap(const Point& pos) const {
@@ -205,6 +206,18 @@ void Map::deleteExpiredReservations(double time) {
 
 	while(iter != reservations.end()) {
 		if((*iter).getEndTime() < time) {
+			iter = reservations.erase(iter);
+		} else {
+			iter++;
+		}
+	}
+}
+
+void Map::deleteReservationsFromAgent(int agentId) {
+	auto iter = reservations.begin();
+
+	while(iter != reservations.end()) {
+		if((*iter).getOwnerId() == agentId) {
 			iter = reservations.erase(iter);
 		} else {
 			iter++;
@@ -306,7 +319,7 @@ visualization_msgs::Marker Map::getInactiveReservationVisualization(int ownerId,
 	msg.scale.z = 1.f;
 	
 	msg.color = baseColor;
-	msg.color.a = 0.2f;
+	msg.color.a = 0.225f;
 
 	geometry_msgs::Point p;
 	p.z = 0.f;
@@ -375,7 +388,7 @@ visualization_msgs::Marker Map::getActiveReservationVisualization(int ownerId, v
 	msg.scale.z = 1.f;
 	
 	msg.color = baseColor;
-	msg.color.a = 0.7f;
+	msg.color.a = 0.55f;
 
 	geometry_msgs::Point p;
 	p.z = 0.f;
@@ -438,7 +451,7 @@ void Map::listAllReservationsIn(Point p) {
 
 bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 	for(const auto& r : reservations) {
-		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId && std::abs(r.getEndTime() - infiniteReservationTime) < 1000) {
+		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId && r.getEndTime() - r.getStartTime() > 15.f) {
 			return true;
 		}		
 	}
@@ -448,4 +461,8 @@ bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 
 bool Map::isPointTargetOfAnotherRobot(const auto_smart_factory::Tray& tray) {
 	return isPointTargetOfAnotherRobot(getPointInFrontOfTray(tray));
+}
+
+int Map::getOwnerId() const {
+	return ownerId;
 }

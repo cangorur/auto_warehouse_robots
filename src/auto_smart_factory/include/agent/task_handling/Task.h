@@ -32,7 +32,7 @@ public:
 
 	// returns the estimated end time of this task
 	double getEndTime();
-
+	
 protected:	
 	Task::Type type;
 	Task::State state;
