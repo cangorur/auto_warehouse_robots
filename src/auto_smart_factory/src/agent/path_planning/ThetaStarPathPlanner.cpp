@@ -43,12 +43,8 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 		
 		if(initialWaitTime > 1000) {
 			ROS_FATAL("[Agent %d] Initial wait time > 1000 -> standing in infinite reservation, no valid path possible", map->getOwnerId());
-			
 			ROS_WARN("Reservations for start:");
-			map->listAllReservationsIn(Point(start.x, start.y));
-
-			ROS_WARN("Reservations for startNode:");
-			map->listAllReservationsIn(startNode->pos);			
+			map->listAllReservationsIn(Point(start.x, start.y));	
 			
 			return Path();
 		} else {
@@ -159,8 +155,12 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 		return constructPath(startingTime, targetInformation, initialWaitTime, targetReservationTime);
 	} else {
 		ROS_WARN("[Agent %d] No path found from node %f/%f to node %f/%f!", map->getOwnerId(), startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
+		ROS_WARN("Reservations for start:");
+		map->listAllReservationsIn(startNode->pos);
+
+		ROS_WARN("Reservations for target:");
 		map->listAllReservationsIn(targetNode->pos);
-		
+
 		return Path();
 	}
 }
