@@ -117,31 +117,32 @@ void TaskHandler::executeTask() {
             break;
 
         case Task::State::TO_SOURCE:
-            if (this->motionPlanner->isDone()) {
+            if (motionPlanner->isDone()) {
                 currentTask->setState(Task::State::APPROACH_SOURCE);
                 motionPlanner->alignTowards(((TransportationTask*) currentTask)->getSourcePosition().o);
             }
             break;
 
         case Task::State::APPROACH_SOURCE:
-            if (this->motionPlanner->isDone()) {
+            if (motionPlanner->isDone()) {
                 currentTask->setState(Task::State::PICKUP);
                 motionPlanner->driveForward(0.3f);
             }
             break;
 
         case Task::State::PICKUP:
-            if (this->motionPlanner->isDone()) {
+            if (motionPlanner->isDone()) {
                 gripper->loadPackage(true);
                 ros::Duration(2).sleep();
-                this->motionPlanner->driveBackward(0.3);
+                motionPlanner->driveBackward(0.3f);
                 currentTask->setState(Task::State::LEAVE_SOURCE);
             }
             break;
 
         case Task::State::LEAVE_SOURCE:
-            if (this->motionPlanner->isDone()) {
-	            reservationManager->startBiddingForPathReservation(this->motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
+            if (motionPlanner->isDone()) {
+                // TODO Error if no path found -> check of path can be found if not -> drive away anyway
+	            reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
                 currentTask->setState(Task::State::RESERVING_TARGET);
             }
             break;
@@ -153,7 +154,7 @@ void TaskHandler::executeTask() {
             if(reservationManager->getHasReservedPath()) {
                 currentTask->setState(Task::State::TO_TARGET);
                 motionPlanner->newPath(reservationManager->getReservedPath());
-                this->motionPlanner->start();   
+                motionPlanner->start();   
             }
             break;
 
@@ -165,7 +166,7 @@ void TaskHandler::executeTask() {
             break;
 
         case Task::State::APPROACH_TARGET:
-            if (this->motionPlanner->isDone()) {
+            if (motionPlanner->isDone()) {
                 if (currentTask->isTransportation()) {
                     currentTask->setState(Task::State::DROPOFF);
                 } else if (currentTask->isCharging()) {
