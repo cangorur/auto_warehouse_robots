@@ -135,15 +135,8 @@ void TaskHandler::executeTask() {
                 gripper->loadPackage(true);
                 //ros::Duration(0.1f).sleep();
                 motionPlanner->driveBackward(0.3f);
-                currentTask->setState(Task::State::LEAVE_SOURCE);
-            }
-            break;
-
-        case Task::State::LEAVE_SOURCE:
-            if (motionPlanner->isDone()) {
-                // TODO Error if no path found -> check of path can be found if not -> drive away anyway
-	            reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
                 currentTask->setState(Task::State::RESERVING_TARGET);
+				reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
             }
             break;
 
@@ -151,11 +144,16 @@ void TaskHandler::executeTask() {
             if(reservationManager->isBidingForReservation()) {
                 break;
             }
-            if(reservationManager->getHasReservedPath()) {
-                currentTask->setState(Task::State::TO_TARGET);
-                motionPlanner->newPath(reservationManager->getReservedPath());
-                motionPlanner->start();   
-            }
+			if(reservationManager->getHasReservedPath()){
+				if (motionPlanner->isDone()) {
+					currentTask->setState(Task::State::TO_TARGET);
+                	motionPlanner->newPath(reservationManager->getReservedPath());
+                	motionPlanner->start();
+				}
+			} else {
+				// bid for a reservation if reservation failed
+				reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
+			}
             break;
 
         case Task::State::TO_TARGET:
