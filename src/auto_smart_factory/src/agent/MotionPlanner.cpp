@@ -1,4 +1,6 @@
 #include <utility>
+#include <include/agent/MotionPlanner.h>
+
 #include "ros/ros.h"
 
 #include "agent/Agent.h"
@@ -67,8 +69,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		} else {
 			mode = Mode::FINISHED;
 			publishVelocity(0.0, 0.0);
-			
-			agent->getVisualisationPublisher()->publish(pathObject.getVisualizationMsgLines());
+			publishEmptyVisualisationPath();
 			return;
 		}
 	}
@@ -103,13 +104,13 @@ void MotionPlanner::followPath() {
 	double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
 	angularVelocity = std::min(std::max(angularVelocity, (double) -maxTurningSpeed), (double) maxTurningSpeed);
 
-	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed-minDrivingSpeed);
+	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed - minDrivingSpeed);
 
 	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.4f) {
-		linearVelocity = std::max(0.1, (double) Math::getDistance(Point(pos.x, pos.y), currentTarget));
+		linearVelocity = std::max(0.1, Math::getDistance(Point(pos.x, pos.y), currentTarget));
 	}
 	if ((currentTargetIndex == pathObject.getNodes().size() - 1) && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.5f) {
-		linearVelocity = std::max(0.1, (double) Math::getDistance(Point(pos.x, pos.y), currentTarget));
+		linearVelocity = std::max(0.1, Math::getDistance(Point(pos.x, pos.y), currentTarget));
 	}
 
 	publishVelocity(linearVelocity, angularVelocity);
@@ -131,7 +132,7 @@ void MotionPlanner::turnTowards(Point target) {
 }
 
 void MotionPlanner::turnTowards(double direction) {
-	double rotation = static_cast<double>(Math::getAngleDifferenceInRad(pos.o, direction));
+	double rotation = Math::getAngleDifferenceInRad(pos.o, direction);
 	if(std::abs(rotation) <= 0.1f) {
 		/* If in align mode, the task is finished after rotation. If not, the robot should continue driving afterwards */
 		if(mode == Mode::ALIGN) {
@@ -222,7 +223,7 @@ void MotionPlanner::stop() {
 }
 
 bool MotionPlanner::isDone() {
-	return (mode == Mode::FINISHED);
+	return mode == Mode::FINISHED;
 }
 
 bool MotionPlanner::hasPath() {
@@ -253,7 +254,7 @@ void MotionPlanner::publishVelocity(double speed, double angle) {
 double MotionPlanner::getRotationToTarget(Position currentPosition, Point targetPosition) {
 	double direction = std::atan2(targetPosition.y - currentPosition.y, targetPosition.x - currentPosition.x);
 
-	return static_cast<double>(Math::getAngleDifferenceInRad(currentPosition.o, direction));
+	return Math::getAngleDifferenceInRad(currentPosition.o, direction);
 }
 
 OrientedPoint MotionPlanner::getPositionAsOrientedPoint() {
@@ -264,6 +265,12 @@ bool MotionPlanner::isPositionInitialized()  {
 	return positionInitialized;
 }
 
-visualization_msgs::Marker MotionPlanner::getVisualizationMsgLines() {
-	return pathObject.getVisualizationMsgLines();
+void MotionPlanner::publishEmptyVisualisationPath() {
+	visualization_msgs::Marker msg;
+	msg.header.frame_id = "map";
+	msg.header.stamp = ros::Time::now();
+	msg.ns = "PathLines";
+	msg.action = visualization_msgs::Marker::ADD;
+	msg.id = 1;
+	agent->getVisualisationPublisher()->publish(msg);
 }

@@ -52,7 +52,6 @@ public:
 	void driveForward(double distance);
 	void driveBackward(double distance);
 
-	void newPath(Path* path);
 	void newPath(Path path);
 
 	Mode getMode();
@@ -63,8 +62,6 @@ public:
 	bool hasPath();
 	bool isDrivingBackwards();
 
-	visualization_msgs::Marker getVisualizationMsgLines();
-	
 	OrientedPoint getPositionAsOrientedPoint();
 
 	bool isPositionInitialized();
@@ -91,6 +88,8 @@ private:
 
 	/* Helper function to publish the velocity on the robots motion topic */
 	void publishVelocity(double speed, double angle);
+	
+	void publishEmptyVisualisationPath();
 
 	/// information about the current role of the agent
 	auto_smart_factory::RobotConfiguration robotConfig;
@@ -123,7 +122,7 @@ private:
 	double driveDistance = 0.0;
 
 	/// Threshold when robot should stop and turn on spot instead of pid controlled
-	double turnThreshold = Math::toRad(65);
+	double turnThreshold = Math::toRad(65.f);
 	
 	/// Turning and Driving Speed Limitations from robots config file
 	float maxTurningSpeed;
