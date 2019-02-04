@@ -140,20 +140,20 @@ void TaskHandler::executeTask() {
             break;
 
         case Task::State::RESERVING_TARGET:
-			if(reservationManager->isBidingForReservation()) {
-                break;
+            if (motionPlanner->isDone()) {
+                if(reservationManager->isBidingForReservation()) {
+                    break;
+                }
+                if(reservationManager->getHasReservedPath() && hasTriedToReservePathToTarget){
+                    currentTask->setState(Task::State::TO_TARGET);
+                    motionPlanner->newPath(reservationManager->getReservedPath());
+                    motionPlanner->start();
+                } else {
+                    // bid for a reservation if reservation failed
+                    reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
+                    hasTriedToReservePathToTarget = true;
+                }
             }
-			if(reservationManager->getHasReservedPath() && hasTriedToReservePathToTarget){
-				if (motionPlanner->isDone()) {
-					currentTask->setState(Task::State::TO_TARGET);
-                	motionPlanner->newPath(reservationManager->getReservedPath());
-                	motionPlanner->start();
-				}
-			} else {
-				// bid for a reservation if reservation failed
-				reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
-				hasTriedToReservePathToTarget = true;
-			}
             break;
 
         case Task::State::TO_TARGET:
