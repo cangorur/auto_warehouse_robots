@@ -133,7 +133,7 @@ void TaskHandler::executeTask() {
         case Task::State::PICKUP:
             if (motionPlanner->isDone()) {
                 gripper->loadPackage(true);
-                ros::Duration(2).sleep();
+                //ros::Duration(0.1f).sleep();
                 motionPlanner->driveBackward(0.3f);
                 currentTask->setState(Task::State::LEAVE_SOURCE);
             }
@@ -171,26 +171,28 @@ void TaskHandler::executeTask() {
                     currentTask->setState(Task::State::DROPOFF);
                 } else if (currentTask->isCharging()) {
                     currentTask->setState(Task::State::CHARGING);
+                    ROS_INFO("[%s] Starting charging", agentId.c_str());
                 }
-                motionPlanner->driveForward(0.3);
+                motionPlanner->driveForward(0.3f);
             }
             break;
 
         case Task::State::DROPOFF:
             if (motionPlanner->isDone()) {
                 gripper->loadPackage(false);
-                ros::Duration(2).sleep();
+                //ros::Duration(2).sleep();
                 currentTask->setState(Task::State::LEAVE_TARGET);
-                motionPlanner->driveBackward(0.3);
+                motionPlanner->driveBackward(0.3f);
             }
             break;
 
         case Task::State::CHARGING:
             // Check charging progress
             if (motionPlanner->isDone()) {
-                if (this->chargingManagement->isCharged()){
+                if (this->chargingManagement->isCharged()) {
+                    ROS_INFO("[%s] Finished charging", agentId.c_str());
                     currentTask->setState(Task::State::LEAVE_TARGET);
-                    motionPlanner->driveBackward(0.3);
+                    motionPlanner->driveBackward(0.3f);
                 }
             }
             break;
