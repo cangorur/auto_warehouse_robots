@@ -118,9 +118,9 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		pn.getParam("color_g", color_g);
 		pn.getParam("color_b", color_b);
 		agentColor.a = 1.0f;
-		agentColor.r = color_r / 255.f;
-		agentColor.g = color_g / 255.f;
-		agentColor.b = color_b / 255.f;
+		agentColor.r = static_cast<float>(color_r / 255.f);
+		agentColor.g = static_cast<float>(color_g / 255.f);
+		agentColor.b = static_cast<float>(color_b / 255.f);
 						
 		ROS_WARN("Finished Initialize [%s]", agentID.c_str());
 		return true;
