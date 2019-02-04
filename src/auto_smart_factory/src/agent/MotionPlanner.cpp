@@ -22,7 +22,7 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	ros::NodeHandle n;
 	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-	steerPid = new PidController(0.0, 1.8, 0.0, 4.0);
+	steerPid = new PidController(0.0, 1.6, 0.0, 5.0);
 }
 
 MotionPlanner::~MotionPlanner() {
@@ -106,11 +106,11 @@ void MotionPlanner::followPath() {
 
 	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed - minDrivingSpeed);
 
-	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.4f) {
-		linearVelocity = std::max(0.1, Math::getDistance(Point(pos.x, pos.y), currentTarget));
+	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.6f) {
+		linearVelocity = std::max(0.2, Math::getDistance(Point(pos.x, pos.y), currentTarget));
 	}
-	if ((currentTargetIndex == pathObject.getNodes().size() - 1) && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.5f) {
-		linearVelocity = std::max(0.1, Math::getDistance(Point(pos.x, pos.y), currentTarget));
+	if ((currentTargetIndex == pathObject.getNodes().size() - 1) && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.6f) {
+		linearVelocity = std::max(0.2, Math::getDistance(Point(pos.x, pos.y), currentTarget));
 	}
 
 	publishVelocity(linearVelocity, angularVelocity);
@@ -128,7 +128,7 @@ void MotionPlanner::turnTowards(Point target) {
 		}
 		return;
 	}
-	publishVelocity(0, Math::clamp(std::abs(rotation), 0, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+	publishVelocity(0, Math::clamp(std::abs(rotation), 0.3, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
 }
 
 void MotionPlanner::turnTowards(double direction) {
