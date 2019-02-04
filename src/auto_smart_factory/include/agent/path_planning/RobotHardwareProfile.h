@@ -10,7 +10,10 @@ private:
 
 	// Used to get average estimates from max speed values 
 	const double averageDrivingEfficiency = 0.75f;
-	const double averageTurningEfficiency = 0.45f;
+
+	const double onSpotTurningAngle = 60.f;
+	const double drivingTurningEfficiency = 0.5f;
+	const double onSpotTurningEfficiency = 0.3f;
 
 public:
 	RobotHardwareProfile(double maxDrivingSpeed, double maxTurningSpeed, double idleBatteryConsumption, double drivingBatteryConsumption);
