@@ -27,19 +27,18 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 	
 	if(startNode == nullptr || targetNode == nullptr) {
 		if(startNode == nullptr) {
-			ROS_FATAL("[Agent %d] StartPoint %f/%f is no in theta* map!", map->getOwnerId(), start.x, start.y);
+			ROS_FATAL("[Agent %d] StartPoint %f/%f is not in theta* map!", map->getOwnerId(), start.x, start.y);
 		}
 		if(targetNode == nullptr) {
-			ROS_FATAL("[Agent %d] TargetPoint %f/%f is no in theta* map!", map->getOwnerId(), target.x, target.y);
+			ROS_FATAL("[Agent %d] TargetPoint %f/%f is not in theta* map!", map->getOwnerId(), target.x, target.y);
 		}
-		exit(1);
 		return Path();
 	}
 	
 	double initialWaitTime = 0;
-	TimedLineOfSightResult initialCheckResult = map->whenIsTimedLineOfSightFree(Point(start.x, start.y), startingTime, startNode->pos, startingTime + 0.5f);
+	TimedLineOfSightResult initialCheckResult = map->whenIsTimedLineOfSightFree(Point(start.x, start.y), startingTime, startNode->pos, startingTime + 0.1f);
 	if(initialCheckResult.blockedByTimed) {
-		initialWaitTime = initialCheckResult.freeAfter - startingTime + 0.5f;
+		initialWaitTime = initialCheckResult.freeAfter - (startingTime + 0.1f);
 		
 		if(initialWaitTime > 1000) {
 			ROS_FATAL("[Agent %d] Initial wait time > 1000 -> standing in infinite reservation, no valid path possible", map->getOwnerId());
@@ -52,6 +51,7 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 			map->listAllReservationsIn(Point(start.x, start.y));
 		}
 	}
+	initialWaitTime = 0;
 
 	GridInformationMap exploredSet;
 	GridInformationPairQueue queue;
@@ -139,13 +139,17 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 			if(makeConnection && (newPrev->time + drivingTime + waitingTime) < neighbour->time) {
 				// Check for if connection is valid for upcoming obstacles
 
-				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime)) {
+				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime) || current->prev == nullptr) {
 					double heuristic = getHeuristic(neighbour, targetNode->pos);
 
 					neighbour->time = newPrev->time + drivingTime + waitingTime;
 					neighbour->prev = newPrev;
 					neighbour->waitTimeAtPrev = waitingTime;
 					queue.push(std::make_pair(neighbour->time + heuristic, neighbour));
+					
+					if(current->prev == nullptr && !map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime)) {
+						ROS_WARN("[Agent %d] Only taking connection because at start node", map->getOwnerId());
+					}
 				}
 			}
 		}

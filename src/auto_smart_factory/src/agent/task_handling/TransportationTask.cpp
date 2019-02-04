@@ -3,8 +3,8 @@
 
 #include "agent/task_handling/TransportationTask.h"
 
-double TransportationTask::pickUpTime = 18.f;
-double TransportationTask::dropOffTime = 18.f;
+double TransportationTask::pickUpTime = 22.f;
+double TransportationTask::dropOffTime = 22.f;
 
 TransportationTask::TransportationTask(unsigned int id, uint32_t sourceID, uint32_t targetID, Path sourcePath, Path targetPath, double startTime) : 
 	Task(targetID, targetPath, Type::TRANSPORTATION, startTime),
