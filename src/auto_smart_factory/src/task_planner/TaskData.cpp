@@ -5,7 +5,7 @@
  *      Author: jacob
  */
 
-#include <task_planner/TaskData.h>
+#include "task_planner/TaskData.h"
 
 TaskData::TaskData(const RobotCandidate& candidate, TrayAllocatorPtr allocatedSource, TrayAllocatorPtr allocatedTarget, auto_smart_factory::Package pkg, ros::Time createTime) :
 		robotOffer(candidate),

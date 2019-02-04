@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "auto_smart_factory/Tray.h"
-#include <auto_smart_factory/WarehouseConfiguration.h>
+#include "auto_smart_factory/WarehouseConfiguration.h"
 #include "agent/path_planning/Rectangle.h"
 #include "agent/path_planning/GridNode.h"
 #include "agent/path_planning/ThetaStarMap.h"

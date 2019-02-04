@@ -8,7 +8,7 @@
 #include <cmath>
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Twist.h"
-#include <auto_smart_factory/RobotConfiguration.h>
+#include "auto_smart_factory/RobotConfiguration.h"
 #include "agent/path_planning/Path.h"
 #include "agent/path_planning/Point.h"
 #include "agent/Position.h"

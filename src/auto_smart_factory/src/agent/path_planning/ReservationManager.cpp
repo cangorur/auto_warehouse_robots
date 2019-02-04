@@ -1,6 +1,4 @@
 
-#include <include/agent/path_planning/ReservationManager.h>
-
 #include "agent/path_planning/ReservationManager.h"
 
 ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int agentId, int agentCount) :

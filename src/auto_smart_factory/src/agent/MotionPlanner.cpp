@@ -2,10 +2,6 @@
 #include "ros/ros.h"
 
 #include "agent/Agent.h"
-#include <visualization_msgs/Marker.h>
-
-#include "agent/MotionPlanner.h"
-#include <cmath>
 
 
 MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration robot_config, ros::Publisher* motion_pub) :

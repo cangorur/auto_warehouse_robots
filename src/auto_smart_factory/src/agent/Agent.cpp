@@ -1,8 +1,5 @@
 #include "agent/Agent.h"
-#include "Math.h"
 
-#include <tf/transform_datatypes.h>
-#include <include/agent/Agent.h>
 #include "warehouse_management/WarehouseManagement.h"
 
 Agent::Agent(std::string agent_id) {

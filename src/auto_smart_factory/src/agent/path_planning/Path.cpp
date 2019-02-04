@@ -2,12 +2,10 @@
 #include <cmath>
 
 #include "Math.h"
-#include <ros/ros.h>
-#include <visualization_msgs/Marker.h>
-#include <include/agent/path_planning/Path.h>
-#include <include/agent/path_planning/Map.h>
-
+#include "ros/ros.h"
+#include "visualization_msgs/Marker.h"
 #include "agent/path_planning/Path.h"
+#include "agent/path_planning/Map.h"
 
 Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint end) :
 		startTimeOffset(startTimeOffset),

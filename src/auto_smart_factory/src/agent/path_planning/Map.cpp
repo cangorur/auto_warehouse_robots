@@ -1,12 +1,8 @@
 #include <utility>
 #include <iostream>
-#include <include/agent/path_planning/Map.h>
+#include "agent/path_planning/Map.h"
 
 #include "ros/ros.h"
-#include "Math.h"
-#include "agent/path_planning/Rectangle.h"
-#include "agent/path_planning/Map.h"
-#include "agent/path_planning/Point.h"
 #include "agent/path_planning/ThetaStarPathPlanner.h"
 
 int Map::visualisationId = 0;

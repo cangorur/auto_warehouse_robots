@@ -1,5 +1,5 @@
-#include <agent/Gripper.h>
-#include <agent/Agent.h>
+#include "agent/Gripper.h"
+#include "agent/Agent.h"
 
 Gripper::Gripper(Agent* _agent, ros::Publisher* gripper_state_pub) {
 	agent = _agent;

@@ -7,8 +7,7 @@
  *      Author: jacob
  */
 
-#include <task_planner/RobotCandidate.h>
-#include <include/task_planner/RobotCandidate.h>
+#include "task_planner/RobotCandidate.h"
 
 RobotCandidate::RobotCandidate(std::string robotId, auto_smart_factory::Tray source, auto_smart_factory::Tray target, double estimatedDuration, double score) :
 	robotId(std::move(robotId)),

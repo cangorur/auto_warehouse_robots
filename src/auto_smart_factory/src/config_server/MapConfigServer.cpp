@@ -6,9 +6,7 @@
  */
 
 #include <boost/property_tree/json_parser.hpp>
-#include <config_server/MapConfigServer.h>
-
-#include <auto_smart_factory/Robot.h>
+#include "config_server/MapConfigServer.h"
 
 using namespace boost::property_tree;
 

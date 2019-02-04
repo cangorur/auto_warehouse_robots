@@ -1,11 +1,5 @@
-#include <agent/ChargingManagement.h>
-#include <include/agent/ChargingManagement.h>
-
+#include "agent/ChargingManagement.h"
 #include "agent/Agent.h"
-
-bool sortByDuration(const std::pair<Path, uint32_t> &lhs, const std::pair<Path, uint32_t> &rhs) {
-	return lhs.first.getDuration() < rhs.first.getDuration();
-}
 
 ChargingManagement::ChargingManagement(Agent* a, auto_smart_factory::WarehouseConfiguration warehouse_configuration, Map* m) {
 	agent = a;

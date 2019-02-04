@@ -1,4 +1,4 @@
-#include <package_generator/PackageGenerator.h>
+#include "package_generator/PackageGenerator.h"
 
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "package_generator");

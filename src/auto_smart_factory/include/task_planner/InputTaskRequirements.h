@@ -8,7 +8,7 @@
 #ifndef AUTO_SMART_FACTORY_SRC_TASK_PLANNER_INPUTTASKREQUIREMENTS_H_
 #define AUTO_SMART_FACTORY_SRC_TASK_PLANNER_INPUTTASKREQUIREMENTS_H_
 
-#include <task_planner/TaskRequirements.h>
+#include "task_planner/TaskRequirements.h"
 
 /**
  * This class encapsulates the requirements to resources that an input request has.

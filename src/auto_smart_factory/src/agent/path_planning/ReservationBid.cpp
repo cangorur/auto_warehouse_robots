@@ -1,6 +1,4 @@
 
-#include <include/agent/path_planning/ReservationBid.h>
-
 #include "agent/path_planning/ReservationBid.h"
 
 ReservationBid::ReservationBid(float bid, int agentId) :

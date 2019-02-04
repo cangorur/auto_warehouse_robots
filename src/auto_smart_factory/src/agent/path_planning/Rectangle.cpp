@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <include/agent/path_planning/Rectangle.h>
 #include "agent/path_planning/Rectangle.h"
 #include "Math.h"
 

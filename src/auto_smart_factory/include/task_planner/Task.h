@@ -10,19 +10,19 @@
 
 #include <thread>
 
-#include <auto_smart_factory/TaskState.h>
-#include <auto_smart_factory/GetStorageState.h>
-#include <auto_smart_factory/AssignTask.h>
-#include <auto_smart_factory/RobotConfiguration.h>
-#include <auto_smart_factory/StorageUpdate.h>
-#include <auto_smart_factory/GripperState.h>
-#include <auto_smart_factory/ReserveStorageTray.h>
-#include <task_planner/RobotCandidate.h>
+#include "auto_smart_factory/TaskState.h"
+#include "auto_smart_factory/GetStorageState.h"
+#include "auto_smart_factory/AssignTask.h"
+#include "auto_smart_factory/RobotConfiguration.h"
+#include "auto_smart_factory/StorageUpdate.h"
+#include "auto_smart_factory/GripperState.h"
+#include "auto_smart_factory/ReserveStorageTray.h"
+#include "task_planner/RobotCandidate.h"
 
-#include <task_planner/TaskRequirements.h>
-#include <task_planner/TaskData.h>
-#include <task_planner/InputTaskRequirements.h>
-#include <task_planner/OutputTaskRequirements.h>
+#include "task_planner/TaskRequirements.h"
+#include "task_planner/TaskData.h"
+#include "task_planner/InputTaskRequirements.h"
+#include "task_planner/OutputTaskRequirements.h"
 
 class TaskPlanner;
 

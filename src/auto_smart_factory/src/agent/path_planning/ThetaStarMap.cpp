@@ -1,12 +1,7 @@
 
-#include <include/agent/path_planning/ThetaStarMap.h>
-
-#include "Math.h"
+#include "agent/path_planning/ThetaStarMap.h"
 
 #include "ros/ros.h"
-#include "agent/path_planning/ThetaStarMap.h"
-#include "agent/path_planning/Point.h"
-#include "agent/path_planning/GridNode.h"
 #include "agent/path_planning/Map.h"
 
 ThetaStarMap::ThetaStarMap(Map* map, float resolution) :

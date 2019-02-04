@@ -8,7 +8,7 @@
 #ifndef AUTO_SMART_FACTORY_SRC_TASK_PLANNER_OUTPUTTASKREQUIREMENTS_H_
 #define AUTO_SMART_FACTORY_SRC_TASK_PLANNER_OUTPUTTASKREQUIREMENTS_H_
 
-#include <task_planner/TaskRequirements.h>
+#include "task_planner/TaskRequirements.h"
 
 /**
  * This class encapsulates the requirements to resources that an output request has.

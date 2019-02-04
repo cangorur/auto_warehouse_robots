@@ -1,6 +1,4 @@
-#include <agent/path_planning/Point.h>
-#include <include/agent/path_planning/Point.h>
-#include <iostream>
+#include "agent/path_planning/Point.h"
 
 
 Point::Point(double x, double y) :
