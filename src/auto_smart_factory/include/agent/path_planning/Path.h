@@ -9,8 +9,9 @@
 
 class Path {
 public:
-	double maxReservationLength = 3;
-	double reservationTimeMargin = 1.5f;
+	double maxReservationLength = 4;
+	double reservationTimeMarginAhead = 0.f;
+	double reservationTimeMarginBehind = 0.f;
 	
 private:
 	double startTimeOffset = 0;
