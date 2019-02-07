@@ -170,7 +170,7 @@ bool Agent::isTimeForHeartbeat() {
 void Agent::sendHeartbeat() {
 	auto_smart_factory::RobotHeartbeat heartbeat;
 	heartbeat.id = agentID;
-	heartbeat.idle = isIdle;
+	heartbeat.idle = taskHandler->isIdle();
 	// TODO: An ETA or a buffer indicating the current workload (needs to be associated in a quantitative way)
 	// Task planner will directly receive this to decide on which agent is the most available.
 	// heartbeat.eta = Agent::getETA();
@@ -183,7 +183,7 @@ void Agent::sendHeartbeat() {
 	heartbeat.battery_level = batteryLevel;
 	heartbeat_pub.publish(heartbeat);
 	updateTimer();
-	ROS_DEBUG("[%s]: Heartbeat: idle=%s!", agentID.c_str(), isIdle ? "true" : "false");
+	ROS_DEBUG("[%s]: Heartbeat: idle=%s!", agentID.c_str(), taskHandler->isIdle() ? "true" : "false");
 }
 
 void Agent::updateTimer() {
@@ -211,55 +211,50 @@ void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& ms
 
 bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_factory::AssignTask::Response& res) {
 	try {
-		if(isIdle) {
-			// ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
+		// ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
 
-			unsigned int task_id = req.task_id;
-			auto_smart_factory::Tray input_tray = getTray(req.input_tray);
-			auto_smart_factory::Tray storage_tray = getTray(req.storage_tray);
+		unsigned int task_id = req.task_id;
+		auto_smart_factory::Tray input_tray = getTray(req.input_tray);
+		auto_smart_factory::Tray storage_tray = getTray(req.storage_tray);
 
-			// ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
-			// ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
+		// ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
+		// ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
 
-			// create Task and add it to task handler
-			Path sourcePath;
-			Path targetPath;
-			bool success = false;
+		// create Task and add it to task handler
+		Path sourcePath;
+		Path targetPath;
+		bool success = false;
 
-			double now = ros::Time::now().toSec();
-			Task* lastTask = taskHandler->getLastTask();
-			if(lastTask != nullptr){
-				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, lastTask->getEndTime(), TransportationTask::getPickUpTime());
+		double now = ros::Time::now().toSec();
+		Task* lastTask = taskHandler->getLastTask();
+		if(lastTask != nullptr){
+			sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, lastTask->getEndTime(), TransportationTask::getPickUpTime());
+			
+			if(sourcePath.isValid()) {
+				targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration() + TransportationTask::getPickUpTime(), TransportationTask::getDropOffTime());
 				
-				if(sourcePath.isValid()) {
-					targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration() + TransportationTask::getPickUpTime(), TransportationTask::getDropOffTime());
-					
-					if(targetPath.isValid()) {
-						taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
-						success = true;
-					}
-				}
-			} else {
-				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, now, TransportationTask::getPickUpTime());
-				
-				if(sourcePath.isValid()) {
-					targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration() + TransportationTask::getPickUpTime(), TransportationTask::getDropOffTime());
-					
-					if(targetPath.isValid()) {
-						taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
-						success = true;
-					}
+				if(targetPath.isValid()) {
+					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
+					success = true;
 				}
 			}
-
-			res.success = success;
-			if(!success) {
-				ROS_WARN("[%s] task %d can not be assigned, as source or target path is invalid", agentID.c_str(), task_id);		
-			}		
 		} else {
-			// ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);
-			res.success = false;
+			sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, now, TransportationTask::getPickUpTime());
+			
+			if(sourcePath.isValid()) {
+				targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration() + TransportationTask::getPickUpTime(), TransportationTask::getDropOffTime());
+				
+				if(targetPath.isValid()) {
+					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
+					success = true;
+				}
+			}
 		}
+
+		res.success = success;
+		if(!success) {
+			ROS_WARN("[%s] task %d can not be assigned, as source or target path is invalid", agentID.c_str(), task_id);		
+		}		
 	} catch(std::out_of_range& e) {
 		// task does not exist
 		ROS_FATAL("[%d]: Attempted to assign inexistent task (specified id: %d)", agentIdInt, req.task_id);

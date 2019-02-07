@@ -182,9 +182,6 @@ protected:
 	// Flag that shows whether this agent has already been registered at the task planner
 	bool registered = false;
 
-	// Flag that shows if the robot is currently in idle state or not
-	bool isIdle = true;
-
 	// Publisher/Subscriber for ReservationCoordination
 	ReservationManager* reservationManager;
 	
