@@ -64,6 +64,14 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req, InitTaskPlannerRespons
 	return true;
 }
 
+void TaskPlanner::update() {
+	if(resourcesChanged) {
+		ROS_INFO("[Task Planner]: updating");
+		resourceChangeEvent();
+		resourcesChanged = false;
+	}
+}
+
 const PackageConfiguration& TaskPlanner::getPkgConfig(unsigned int typeId) const {
 	return pkgConfigs.at(typeId);
 }
@@ -99,8 +107,8 @@ void TaskPlanner::receiveStorageUpdate(const StorageUpdate& update) {
 	if(update.action != StorageUpdate::DERESERVATION) {
 		return;
 	}
-
-	resourceChangeEvent();
+	resourcesChanged = true;
+	// resourceChangeEvent();
 }
 
 void TaskPlanner::receiveRobotHeartbeat(const auto_smart_factory::RobotHeartbeat& hb) {
@@ -112,7 +120,8 @@ void TaskPlanner::receiveRobotHeartbeat(const auto_smart_factory::RobotHeartbeat
 
 	if(hb.idle != currentIdleStatus) {
 		// robot status changed
-		resourceChangeEvent();
+		// resourceChangeEvent();
+		resourcesChanged = true;
 	}
 }
 
@@ -214,13 +223,11 @@ bool TaskPlanner::registerAgent(RegisterAgentRequest& req, RegisterAgentResponse
 }
 
 void TaskPlanner::rescheduleEvent(const ros::TimerEvent& e) {
-	resourceChangeEvent();
+	// resourceChangeEvent();
+	resourcesChanged = true;
 }
 
 void TaskPlanner::resourceChangeEvent() {
-	// DONT REPLANN TODO Florian fix
-	return;
-	
 	ROS_INFO("[task planner] Resource change event!");
 
 	if(!idleRobotAvailable()) {
