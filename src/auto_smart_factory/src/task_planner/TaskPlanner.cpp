@@ -226,11 +226,6 @@ void TaskPlanner::rescheduleEvent(const ros::TimerEvent& e) {
 void TaskPlanner::resourceChangeEvent() {
 	ROS_INFO("[task planner] Resource change event!");
 
-	if(!idleRobotAvailable()) {
-		// there is no idle robot, so nothing can be started
-		ROS_INFO("[task planner] No idle robot available. No check is performed.");
-		return;
-	}
 	// first, check if any output request can be started
 	std::vector<RequestPtr>::iterator outputRequest = outputRequests.begin();
 	while(outputRequest != outputRequests.end()) {
