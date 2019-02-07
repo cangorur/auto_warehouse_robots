@@ -13,6 +13,8 @@
 
 using namespace auto_smart_factory;
 
+const ros::Duration Request::timeoutDuration = ros::Duration(1);
+
 unsigned int Request::nextId = 0;
 
 Request::Request(TaskPlanner* tp, TaskRequirementsConstPtr taskRequirements, std::string type) :
@@ -202,16 +204,19 @@ bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates, 
 
 	taskPlanner->publishTask(sourceTrayCandidates, targetTrayCandidates, status.id);
 	
-	waitForRobotScores(ros::Duration(1), ros::Rate(10));
+	waitForRobotScores(Request::timeoutDuration, ros::Rate(10));
 
-	std::sort(robotCandidates.begin(), robotCandidates.end(),
-		          [](const RobotCandidate& first, const RobotCandidate& second) {
-			          return first.score < second.score;
-		          });
+	if(!robotCandidates.empty()){
+		std::sort(robotCandidates.begin(), robotCandidates.end(),
+			          [](const RobotCandidate& first, const RobotCandidate& second) {
+				          return first.score < second.score;
+			          });
+		return true;
+	}
 
 	// ROS_INFO("[Request %d] finished getting candidates!", this->status.id);
 
-	return !robotCandidates.empty();
+	return false;
 }
 
 void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){

@@ -77,6 +77,9 @@ public:
 	*/
 	void receiveTaskResponse(const auto_smart_factory::TaskRating& tr);
 
+	/// the time the robots have to answer the request
+	static const ros::Duration timeoutDuration;
+
 protected:
 	/**
 	 * Creates a list of possible source tray candidates for this request.

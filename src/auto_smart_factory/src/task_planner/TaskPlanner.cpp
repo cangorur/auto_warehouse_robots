@@ -220,7 +220,6 @@ bool TaskPlanner::registerAgent(RegisterAgentRequest& req, RegisterAgentResponse
 }
 
 void TaskPlanner::rescheduleEvent(const ros::TimerEvent& e) {
-	// resourceChangeEvent();
 	resourcesChanged = true;
 }
 
@@ -370,6 +369,7 @@ void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates, const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, uint32_t requestId) {
 	TaskAnnouncement tsa;
 	tsa.request_id = requestId;
+	tsa.timeout = (ros::Time::now() + Request::timeoutDuration);
 	extractData(sourceTrayCandidates, targetTrayCandidates, &tsa);
 	ROS_WARN("[Task Planner]: Publishing Request %d with %d start Trays and %d end Trays", tsa.request_id, (unsigned int)tsa.start_ids.size(), (unsigned int)tsa.end_ids.size());
 	taskAnnouncerPub.publish(tsa);
