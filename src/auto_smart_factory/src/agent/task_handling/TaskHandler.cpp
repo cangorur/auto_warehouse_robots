@@ -217,10 +217,22 @@ void TaskHandler::nextTask() {
 		delete currentTask;
 	}
 	if(!queue.empty()){
+		if (queue.front()->isCharging()) {
+			double now = ros::Time::now().toSec();
+			std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(motionPlanner->getPositionAsOrientedPoint(), now);
+			if(pathToCS.first.isValid()) {
+				((ChargingTask*) queue.front())->adjustChargingStation(pathToCS.second, pathToCS.first, now);
+			} else {
+				ROS_FATAL("[Task Handler %d] could not find a valid path to any charging Station when trying to start charging task", agent->getAgentIdInt());
+				return;
+			}
+		}
 		currentTask = queue.front();
 		queue.pop_front();
 		isNextTask = true;
 		hasTriedToReservePathToTarget = false;
+		
+		
 	} else {
 		currentTask = nullptr;
 	}

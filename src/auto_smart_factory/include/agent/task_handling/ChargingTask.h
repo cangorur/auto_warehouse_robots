@@ -17,6 +17,8 @@ public:
 	
 	static double getChargingTime();
 
+	void adjustChargingStation(uint32_t targetID, Path targetPath, double startTime);
+
 protected:
 	static double chargingTime;
 };
