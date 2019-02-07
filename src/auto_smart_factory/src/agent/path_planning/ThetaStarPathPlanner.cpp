@@ -5,60 +5,60 @@
 #include "Math.h"
 #include "agent/path_planning/ThetaStarPathPlanner.h"
 
-ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile) :
+ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint target, double startingTime, double targetReservationTime) :
 	map(thetaStarMap),
-	hardwareProfile(hardwareProfile) 
-{	
-}
-
-// TODO  ensure that new infinite reservations dont intersect with existing ones (permanent and time-limited)
-// Todo reserve approach routine space
-
-Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, double startingTime, double targetReservationTime) {
-	// Convert to degree
-	startPoint = OrientedPoint(start.x, start.y, Math::toDeg(start.o));
-	endPoint = OrientedPoint(target.x, target.y, Math::toDeg(target.o));
-
+	hardwareProfile(hardwareProfile),
+	start(OrientedPoint(start.x, start.y, Math::toDeg(start.o))),
+	target(OrientedPoint(target.x, target.y, Math::toDeg(target.o))),
+	startingTime(startingTime),
+	targetReservationTime(targetReservationTime)	
+{
+	isValidPathQuerry = true;
+	
 	map->addAdditionalNode(Point(start.x, target.y));
 	map->addAdditionalNode(Point(target.x, target.y));
+
+	startNode = map->getNodeClosestTo(Point(start));
+	targetNode = map->getNodeClosestTo(Point(target));
 	
-	const GridNode* startNode = map->getNodeClosestTo(Point(start));
-	const GridNode* targetNode = map->getNodeClosestTo(Point(target));
-	
-	if(startNode == nullptr || targetNode == nullptr) {
-		if(startNode == nullptr) {
-			ROS_FATAL("[Agent %d] StartPoint %f/%f is not in theta* map!", map->getOwnerId(), start.x, start.y);
-		}
-		if(targetNode == nullptr) {
-			ROS_FATAL("[Agent %d] TargetPoint %f/%f is not in theta* map!", map->getOwnerId(), target.x, target.y);
-		}
-		return Path();
+	if(startNode == nullptr) {
+		ROS_FATAL("[Agent %d] StartPoint %f/%f is not in theta* map!", map->getOwnerId(), start.x, start.y);
+		isValidPathQuerry = false;
 	}
-	
+	if(targetNode == nullptr) {
+		ROS_FATAL("[Agent %d] TargetPoint %f/%f is not in theta* map!", map->getOwnerId(), target.x, target.y);
+		isValidPathQuerry = false;
+	}	
+
 	double initialWaitTime = 0;
 	TimedLineOfSightResult initialCheckResult = map->whenIsTimedLineOfSightFree(Point(start.x, start.y), startingTime, startNode->pos, startingTime + 0.1f);
 	if(initialCheckResult.blockedByTimed) {
 		initialWaitTime = initialCheckResult.freeAfter - (startingTime + 0.1f);
-		
+
 		if(initialWaitTime > 1000) {
 			ROS_FATAL("[Agent %d] Initial wait time > 1000 -> standing in infinite reservation, no valid path possible", map->getOwnerId());
 			ROS_WARN("Reservations for start:");
-			map->listAllReservationsIn(Point(start.x, start.y));	
-			
-			return Path();
+			map->listAllReservationsIn(Point(start.x, start.y));
+
+			isValidPathQuerry = false;
 		} else {
 			ROS_WARN("[Agent %d] Path needed initial wait time of %f", map->getOwnerId(), initialWaitTime);
 			map->listAllReservationsIn(Point(start.x, start.y));
 		}
 	}
-	initialWaitTime = 0;
+}
 
+Path ThetaStarPathPlanner::findPath() {
+	if(!isValidPathQuerry) {
+		return Path();
+	}
+	
 	GridInformationMap exploredSet;
 	GridInformationPairQueue queue;
 
 	// Push start node
-	exploredSet.insert(std::make_pair(startNode->pos, ThetaStarGridNodeInformation(startNode, nullptr, startingTime + initialWaitTime)));
-	queue.push(std::make_pair(startingTime + initialWaitTime, &exploredSet.at(startNode->pos)));
+	exploredSet.insert(std::make_pair(startNode->pos, ThetaStarGridNodeInformation(startNode, nullptr, startingTime)));
+	queue.push(std::make_pair(startingTime, &exploredSet.at(startNode->pos)));
 
 	bool targetFound = false;
 	ThetaStarGridNodeInformation* targetInformation = nullptr;
@@ -156,7 +156,7 @@ Path ThetaStarPathPlanner::findPath(OrientedPoint start, OrientedPoint target, d
 	}
 
 	if(targetFound) {
-		return constructPath(startingTime, targetInformation, initialWaitTime, targetReservationTime);
+		return constructPath(startingTime, targetInformation, targetReservationTime);
 	} else {
 		ROS_WARN("[Agent %d] No path found from node %f/%f to node %f/%f!", map->getOwnerId(), startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
 		ROS_WARN("Reservations for start:");
@@ -181,7 +181,7 @@ double ThetaStarPathPlanner::getDrivingTime(ThetaStarGridNodeInformation* curren
 	if(current->prev != nullptr) {
 		prevLineSegmentRotation = Math::getRotationInDeg(current->node->pos - current->prev->node->pos);		
 	} else {
-		prevLineSegmentRotation = startPoint.o;
+		prevLineSegmentRotation = start.o;
 	}
 
 	double currLineSegmentRotation = Math::getRotationInDeg(target->node->pos - current->node->pos);
@@ -190,9 +190,7 @@ double ThetaStarPathPlanner::getDrivingTime(ThetaStarGridNodeInformation* curren
 	return hardwareProfile->getDrivingDuration(Math::getDistance(current->node->pos, target->node->pos)) + turningTime;
 }
 
-// Todo add estimated turning times to path reservation generation
-
-Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double initialWaitTime, double targetReservationTime) const {
+Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double targetReservationTime) const {
 	std::vector<Point> pathNodes;
 	std::vector<double> waitTimes;
 	ThetaStarGridNodeInformation* currentGridInformation = targetInformation;
@@ -208,7 +206,7 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 		currentGridInformation = currentGridInformation->prev;
 		
 		if(i++ > 150) {
-			ROS_FATAL("[Agent %d] Endless loop in construct path => aborting. Start: %f/%f Target: %f/%f", map->getOwnerId(), startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+			ROS_FATAL("[Agent %d] Endless loop in construct path => aborting. Start: %f/%f Target: %f/%f", map->getOwnerId(), start.x, start.y, target.x, target.y);
 			return Path();
 		}
 	}
@@ -216,13 +214,7 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 	std::reverse(pathNodes.begin(), pathNodes.end());
 	std::reverse(waitTimes.begin(), waitTimes.end());
 
-	// Convert start/end orientation to rad
-	OrientedPoint startOrientation = startPoint;
-	startOrientation.o = Math::toRad(startOrientation.o);
-
-	OrientedPoint endOrientation = endPoint;
-	endOrientation.o = Math::toRad(endOrientation.o);
-	
-	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, targetReservationTime, startOrientation, endOrientation);
+	// Convert orientation to rad
+	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, targetReservationTime, OrientedPoint(start.x, start.y, Math::toDeg(start.o)), OrientedPoint(target.x, target.y, Math::toDeg(target.o)));
 }
 
