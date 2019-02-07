@@ -1,6 +1,3 @@
-
-#include <include/agent/Agent.h>
-
 #include "agent/Agent.h"
 
 #include "warehouse_management/WarehouseManagement.h"
@@ -108,7 +105,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		reservationManager = new ReservationManager(&reservationCoordination_pub, map, agentIdInt, static_cast<int>(warehouse_configuration.robots.size()));
 		
 		// Task Handler
-		taskHandler = new TaskHandler(agentID, &(taskrating_pub), map, motionPlanner, gripper, chargingManagement, reservationManager);
+		taskHandler = new TaskHandler(this, &(taskrating_pub), map, motionPlanner, gripper, chargingManagement, reservationManager);
 		
 		// Agent color
 		double color_r = 200;
@@ -305,77 +302,7 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 }
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
-	double queuedDuration = taskHandler->getDuration();
-	double estimatedBatteryAfterQueuedTasks = taskHandler->getEstimatedBatteryLevelAfterQueuedTasks();
-	Task* lastTask = taskHandler->getLastTask();
-	
-	TrayScore* best = nullptr;
-
-	for(uint32_t it_id : taskAnnouncement.start_ids){
-		for(uint32_t st_id : taskAnnouncement.end_ids){
-			// get Path
-			auto_smart_factory::Tray input_tray = getTray(it_id);
-			auto_smart_factory::Tray storage_tray = getTray(st_id);
-			Path sourcePath;
-			double startTime;
-			
-			if(lastTask != nullptr){
-				// take the last position of the last task
-				startTime = lastTask->getEndTime();
-				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, startTime, TransportationTask::getPickUpTime());
-			} else {
-				// take the current position
-				startTime = ros::Time::now().toSec();
-				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, startTime, TransportationTask::getPickUpTime());
-			}
-			
-			if(!sourcePath.isValid()){
-				continue;
-			}
-			
-			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, startTime + sourcePath.getDuration() + TransportationTask::getPickUpTime(), TransportationTask::getDropOffTime());
-			
-			if(!targetPath.isValid()) {
-				continue;
-			}
-			
-			double estimatedNewConsumption = sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
-
-			// Check if task can be completed
-			if(chargingManagement->isConsumptionPossible(estimatedBatteryAfterQueuedTasks, estimatedNewConsumption)) {
-				double duration = queuedDuration + sourcePath.getDuration() + targetPath.getDuration();
-				double scoreFactor = chargingManagement->getScoreMultiplierForBatteryLevel(estimatedBatteryAfterQueuedTasks - estimatedNewConsumption);
-				double score = (1.f / scoreFactor) * duration;
-				
-				// add score to list
-				double estimatedDuration = sourcePath.getDuration() + targetPath.getDuration();
-				ROS_ASSERT_MSG(estimatedDuration > 0, "source-duration: %f | target-duration: %f", sourcePath.getDuration(), targetPath.getDuration());
-				
-				// Update best score
-				if(best == nullptr || score < best->score){
-					if(best != nullptr){
-						delete best;
-					}
-					best = new TrayScore(it_id, st_id, score, estimatedDuration);
-				}
-			}
-		}
-	}
-	
-	if(best != nullptr) {
-		// publish score
-		taskHandler->publishScore(taskAnnouncement.request_id, best->score, best->sourceTray, best->targetTray, best->estimatedDuration);
-		delete best;
-	} else {
-		// reject task
-		taskHandler->rejectTask(taskAnnouncement.request_id);
-		if(lastTask != nullptr && !(lastTask->isCharging()) ) {
-			std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(lastTask->getTargetPosition(), lastTask->getEndTime());
-			// add charging task
-			ROS_INFO("[Agent %d] Adding charging task because new task could not be taken", agentIdInt);
-			taskHandler->addChargingTask(pathToCS.second, pathToCS.first, lastTask->getEndTime());
-		}
-	}
+	taskHandler->announcementCallback(taskAnnouncement);
 }
 
 std::string Agent::getAgentID() {
