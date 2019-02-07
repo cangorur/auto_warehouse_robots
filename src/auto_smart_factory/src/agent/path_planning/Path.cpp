@@ -91,7 +91,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 
 		// Waiting time - always for first node
 		if(waitTimes.at(i) > 0 || i == 0) {
-			reservations.emplace_back(nodes[i], waitingReservationSize, 0, currentTime - reservationTimeMargin, currentTime + waitTimes[i] + reservationTimeMargin, ownerId);
+			reservations.emplace_back(nodes[i], waitingReservationSize, 0, currentTime - reservationTimeMarginBehind, currentTime + waitTimes[i] + reservationTimeMarginAhead, ownerId);
 			currentTime += waitTimes[i];
 		}
 
@@ -106,8 +106,8 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 			Point endPos = nodes[i] + ((segmentDouble + 1.f) * segmentLength * currentDir);
 
 			Point pos = (startPos + endPos) / 2.f;
-			double startTime = currentTime - reservationTimeMargin + hardwareProfile->getDrivingDuration(segmentDouble * segmentLength);
-			double endTime = currentTime + reservationTimeMargin + hardwareProfile->getDrivingDuration((segmentDouble + 1.f) * segmentLength);
+			double startTime = currentTime - reservationTimeMarginBehind + hardwareProfile->getDrivingDuration(segmentDouble * segmentLength);
+			double endTime = currentTime + reservationTimeMarginAhead + hardwareProfile->getDrivingDuration((segmentDouble + 1.f) * segmentLength);
 
 			reservations.emplace_back(pos, Point(segmentLength + reservationSize, reservationSize), currentRotation, startTime, endTime, ownerId);
 		}
@@ -124,7 +124,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		Point pos = nodes.back() + Math::getVectorFromOrientation(end.o) * offset;		
 		double length = (ROBOT_RADIUS + offset + lengthMargin) * 2.f;
 		double width = (ROBOT_RADIUS + widthMargin) * 2.f;
-		reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), currentTime - reservationTimeMargin, currentTime + targetReservationTime + reservationTimeMargin, ownerId);
+		reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), currentTime - reservationTimeMarginBehind, currentTime + targetReservationTime + reservationTimeMarginAhead, ownerId);
 
 		// Block neighbour trays space
 		offset = 0.3f;
@@ -132,7 +132,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		pos = nodes.back() + Math::getVectorFromOrientation(end.o) * offset;
 		length = (ROBOT_RADIUS) * 2.f;
 		width = (ROBOT_RADIUS + widthMargin) * 2.f;
-		reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), currentTime - reservationTimeMargin, currentTime + targetReservationTime + reservationTimeMargin, ownerId);
+		reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), currentTime - reservationTimeMarginBehind, currentTime + targetReservationTime + reservationTimeMarginAhead, ownerId);
 	}
 
 	return reservations;

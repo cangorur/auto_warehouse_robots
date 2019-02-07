@@ -118,7 +118,7 @@ void MotionPlanner::followPath() {
 
 void MotionPlanner::turnTowards(Point target) {
 	double rotation = getRotationToTarget(pos, target);
-	if(std::abs(rotation) <= 0.1f) {
+	if(std::abs(rotation) <= 0.03f) {
 		/* If in align mode, the task is finished after rotation. If not, the robot should continue driving afterwards */
 		if(mode == Mode::ALIGN) {
 			mode = Mode::FINISHED;
@@ -133,7 +133,7 @@ void MotionPlanner::turnTowards(Point target) {
 
 void MotionPlanner::turnTowards(double direction) {
 	double rotation = Math::getAngleDifferenceInRad(pos.o, direction);
-	if(std::abs(rotation) <= 0.1f) {
+	if(std::abs(rotation) <= 0.03f) {
 		/* If in align mode, the task is finished after rotation. If not, the robot should continue driving afterwards */
 		if(mode == Mode::ALIGN) {
 			mode = Mode::FINISHED;

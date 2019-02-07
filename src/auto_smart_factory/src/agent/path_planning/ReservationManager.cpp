@@ -47,12 +47,15 @@ void ReservationManager::update() {
 	}
 	
 	// Auction timeout
+	now = ros::Time::now().toSec();
 	if(now >= currentAuctionStartTime + auctionTimeout && currentAuctionId > 1) {
 		if(agentId == currentAuctionHighestBid.agentId) {
-			ROS_ERROR("[ReservationManager %d]: Auction %d timed out. %d agents left", agentId, currentAuctionId, currentAuctionReceivedBids);
+			//ROS_ERROR("[ReservationManager %d]: Auction %d timed out. %d agents left", agentId, currentAuctionId, currentAuctionReceivedBids);
+			ROS_ERROR("[ReservationManager %d]: Auction %d timed out. %d agents answered", agentId, currentAuctionId, currentAuctionReceivedBids);
 		}
-		agentCount = currentAuctionReceivedBids;
-		startNewAuction(currentAuctionId + 1, now);
+		//agentCount = currentAuctionReceivedBids;
+		closeAuction();
+		//startNewAuction(currentAuctionId + 1, now);
 	}	
 }
 
@@ -153,7 +156,7 @@ void ReservationManager::closeAuction() {
 			publishReservations(reservations);
 			startNewAuction(currentAuctionId + 1, ros::Time::now().toSec());	
 		} else {
-			//ROS_INFO("[ReservationManager %d] Won empty auction %d initializing new auction", agentId, currentAuctionId);
+			ROS_INFO("[ReservationManager %d] Won empty auction %d initializing new delayed auction", agentId, currentAuctionId);
 
 			// Agent with highest id starts new auction but delayed to avoid overhead
 			initializeNewDelayedAuction = true;
