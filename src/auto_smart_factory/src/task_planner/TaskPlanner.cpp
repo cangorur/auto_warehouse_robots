@@ -66,7 +66,6 @@ bool TaskPlanner::initialize(InitTaskPlannerRequest& req, InitTaskPlannerRespons
 
 void TaskPlanner::update() {
 	if(resourcesChanged) {
-		ROS_INFO("[Task Planner]: updating");
 		resourceChangeEvent();
 		resourcesChanged = false;
 	}
@@ -108,7 +107,6 @@ void TaskPlanner::receiveStorageUpdate(const StorageUpdate& update) {
 		return;
 	}
 	resourcesChanged = true;
-	// resourceChangeEvent();
 }
 
 void TaskPlanner::receiveRobotHeartbeat(const auto_smart_factory::RobotHeartbeat& hb) {
@@ -120,7 +118,6 @@ void TaskPlanner::receiveRobotHeartbeat(const auto_smart_factory::RobotHeartbeat
 
 	if(hb.idle != currentIdleStatus) {
 		// robot status changed
-		// resourceChangeEvent();
 		resourcesChanged = true;
 	}
 }
