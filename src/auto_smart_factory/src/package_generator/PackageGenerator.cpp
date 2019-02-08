@@ -98,8 +98,7 @@ bool PackageGenerator::generateService(auto_smart_factory::NewPackageGenerator::
 	}
 
 	auto_smart_factory::Tray tray;
-	tray = getTray(
-			req.tray.id); // TODO: here will be updated to get the trays not only through their inputs but also their types !
+	tray = getTray(req.tray.id); // TODO: here will be updated to get the trays not only through their inputs but also their types !
 	if((tray.package_type != 0) && (tray.package_type != req.package.type_id)) {
 		res.success = false;
 		ROS_INFO("[package generator] The requested tray: %d does not support package type: %d", tray.id, req.package.type_id);
@@ -243,11 +242,13 @@ bool PackageGenerator::getStorageInformation() {
 	}
 }
 
-void PackageGenerator::updateTrayState(
-		const auto_smart_factory::StorageUpdate& msg) {
-	if(msg.action == auto_smart_factory::StorageUpdate::DERESERVATION &&
-	   msg.state.occupied && getTray(msg.state.id).type == "output") {
+void PackageGenerator::updateTrayState(const auto_smart_factory::StorageUpdate& msg) {
+	if(msg.action == auto_smart_factory::StorageUpdate::DERESERVATION && msg.state.occupied && getTray(msg.state.id).type == "output") {
 		clearOutput(msg.state);
+	}
+	
+	if(msg.action == auto_smart_factory::StorageUpdate::OCCUPATION  && msg.state.occupied && getTray(msg.state.id).type == "storage") {
+		adjustStoragePackage(msg.state);
 	}
 
 	for(int i = 0; i < storageState.tray_states.size(); i++)
@@ -333,8 +334,8 @@ bool PackageGenerator::newPackageInputOnConveyor(auto_smart_factory::Tray tray, 
 	// move package
 	// Drop height: Tray height (input tray) = 0.3 m + Half package height = 0.25 / 2 = 0.125 m
 	std::cout << "tray IDs that the pkgs are inputted:  " << tray.id << std::endl;
-	if(!movePackage(4 - 0.15, 0.80, 1,
-	                package)) { //TODO: currently the locations are hard coded to move the pkg on conveyor which runs and makes it fall to input tray-01 !! this will be fixed according to the trays !
+	//TODO: currently the locations are hard coded to move the pkg on conveyor which runs and makes it fall to input tray-01 !! this will be fixed according to the trays !
+	if(!movePackage(4.f - 0.15f, 0.80f, 1.f, package)) { 
 		//if (!movePackage(tray.x + 0.50 , tray.y - 4.85, 1 , package)) {
 		ROS_WARN("[package generator] Moving package failed.");
 		return false;
@@ -406,9 +407,9 @@ bool PackageGenerator::newPackageInput(auto_smart_factory::Tray tray, auto_smart
 	}
 
 	// move package
-	// Drop height: Tray height (input tray) = 0.3 m + Half package height = 0.25 / 2 = 0.125 m
+	// Drop height: 0.3 (tray height) + package half height = 0.125 + 0.025 margin so they dont collide initially
 	std::cout << "tray IDs that the pkgs are inputted:  " << tray.id << std::endl;
-	if(!movePackage(tray.x, tray.y, 0.4, package)) {
+	if(!movePackageOntoTray(tray, package)) {
 		ROS_WARN("[package generator] Moving package failed.");
 		return false;
 	}
@@ -486,7 +487,7 @@ void PackageGenerator::clearOutput(auto_smart_factory::TrayState tray_state) {
 	ros::Duration(1.0).sleep();
 
 	//move packages to fix position
-	if(movePackage(0.0, 0.0, -1.0, tray_state.package)) {
+	if(movePackage(0.0, 0.0, -1.0f, tray_state.package)) {
 		ROS_INFO("[package generator] Output %i cleared successfully!", tray_state.id);
 
 		// wait for package to actually be moved
@@ -505,12 +506,18 @@ void PackageGenerator::clearOutput(auto_smart_factory::TrayState tray_state) {
 		ROS_INFO("[package generator] Failed to clear Output %i!", tray_state.id);
 }
 
+void PackageGenerator::adjustStoragePackage(auto_smart_factory::TrayState tray_state) {
+	auto_smart_factory::Tray tray = getTray(tray_state.id);
+	if(!movePackageOntoTray(tray, tray_state.package)) {
+		ROS_WARN("[package generator] Moving package failed.");
+	}
+}
+
 bool PackageGenerator::movePackage(float x, float y, float z, auto_smart_factory::Package package) {
 	std::string srv_name = "package_manipulator/move_package";
 	ros::ServiceClient client = n.serviceClient<auto_smart_factory::MovePackage>(srv_name.c_str());
 	auto_smart_factory::MovePackage srv;
-	std::string id = "pkg" + std::to_string(package.type_id) + "_"
-	                 + std::to_string(package.id);
+	std::string id = "pkg" + std::to_string(package.type_id) + "_" + std::to_string(package.id);
 	srv.request.package_id = id;
 	srv.request.x = x;
 	srv.request.y = y;
@@ -529,13 +536,13 @@ bool PackageGenerator::movePackage(float x, float y, float z, auto_smart_factory
 }
 
 void PackageGenerator::putBackPackage(auto_smart_factory::Package package) {
-	for(int i = 0; i < packageConfigs.size(); i++)
+	for(int i = 0; i < packageConfigs.size(); i++) {
 		if(packageConfigs[i].id == package.type_id) {
 			externalPackages[i].push_back(package.id);
 			return;
 		}
-	std::string id = "pkg" + std::to_string(package.type_id) + "_"
-	                 + std::to_string(package.id);
+	}
+	std::string id = "pkg" + std::to_string(package.type_id) + "_" + std::to_string(package.id);
 	ROS_ERROR("[package generator] Failed to put back package %s!", id.c_str());
 }
 
@@ -565,4 +572,11 @@ auto_smart_factory::TrayState PackageGenerator::getTrayState(unsigned int tray_i
 		auto_smart_factory::TrayState s;
 		return s;
 	}
+}
+
+bool PackageGenerator::movePackageOntoTray(auto_smart_factory::Tray tray, auto_smart_factory::Package package) {
+	float height = 0.425f + 0.025f; // Tray height + package half height + drop off height
+	float toRad = 0.0174533f;
+	float offset = 0.04f;
+	return movePackage(tray.x + std::cos(tray.orientation * toRad) * offset, tray.y + std::sin(tray.orientation * toRad) * offset, height, package);
 }

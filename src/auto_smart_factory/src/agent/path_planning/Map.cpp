@@ -238,13 +238,17 @@ OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 	OrientedPoint p;
 
 	// Assume tray.orientation is in degree
-	float trayRadius = 0.51f;
-	float approachRoutineLength = 0.3f;
+	float trayRadius = 0.25f;
+	float approachRoutineLength = APPROACH_DISTANCE;
+	float distanceWhenApproached = 0.1f;
+	float robotRadius = 0.25f; // Real radius, not including margin for reservations
+	
+	float offset = trayRadius + approachRoutineLength + distanceWhenApproached + robotRadius;
 	
 	double inputDx = std::cos(tray.orientation * PI / 180);
 	double inputDy = std::sin(tray.orientation * PI / 180);
-	p.x = static_cast<float>(tray.x + (trayRadius + approachRoutineLength + ROBOT_RADIUS) * inputDx);
-	p.y = static_cast<float>(tray.y + (trayRadius + approachRoutineLength + ROBOT_RADIUS) * inputDy);
+	p.x = static_cast<float>(tray.x + offset * inputDx);
+	p.y = static_cast<float>(tray.y + offset * inputDy);
 	p.o = static_cast<float>(Math::normalizeRad(Math::toRad(tray.orientation + 180.f)));
 	
 	return p;

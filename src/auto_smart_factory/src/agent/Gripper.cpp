@@ -8,6 +8,13 @@ Gripper::Gripper(Agent* _agent, ros::Publisher* gripper_state_pub) {
 }
 
 bool Gripper::loadPackage(bool load) {
+	float trayHeight = 0.4f;
+	float robotHeight = 0.35f;
+	
+	float trayOffset = 0.2f;
+	float robotOffsetLoaded = -0.25f;
+	float robotOffsetUnloaded = 0.f;	
+	
 	// get the postion from the agent
 	geometry_msgs::Point robot_position = agent->getCurrentPosition();
 	geometry_msgs::Quaternion robot_orientation = agent->getCurrentOrientation();
@@ -16,7 +23,7 @@ bool Gripper::loadPackage(bool load) {
 	float orient = tf::getYaw(q);
 	std::string str = load ? "load" : "unload";
 	if(str == "load") {
-		moveGripper(robot_position.x + (cos(orient) * 0.25), robot_position.y + (sin(orient) * 0.25), 0.38, package);
+		moveGripper(robot_position.x + (cos(orient) * trayOffset), robot_position.y + (sin(orient) * trayOffset), trayHeight, package);
 		ros::ServiceClient client = n.serviceClient<std_srvs::Trigger>(agentID + "/gripper/" + str, true);
 		std_srvs::Trigger srv;
 		if(client.call(srv)) {
@@ -32,7 +39,7 @@ bool Gripper::loadPackage(bool load) {
 				gripper_state.loaded = load;
 				gripper_state.package = package;
 				gripperStatePub->publish(gripper_state);
-				moveGripper(robot_position.x - (cos(orient) * 0.25), robot_position.y - (sin(orient) * 0.25), 0.38, package);
+				moveGripper(robot_position.x + (cos(orient) * robotOffsetLoaded), robot_position.y + (sin(orient) * robotOffsetLoaded), robotHeight, package);
 				return true;
 			} else {
 				ROS_ERROR("[%s]: Failed to %s package! %s", agentID.c_str(), str.c_str(), srv.response.message.c_str());
@@ -43,7 +50,7 @@ bool Gripper::loadPackage(bool load) {
 
 		return false;
 	} else if(str == "unload") {
-		moveGripper(robot_position.x + (cos(orient) * 0.25), robot_position.y + (sin(orient) * 0.25), 0.38, package); //robot_position.y -/+ 0.25
+		moveGripper(robot_position.x + (cos(orient) * trayOffset), robot_position.y + (sin(orient) * trayOffset), trayHeight, package); //robot_position.y -/+ 0.25
 	}
 	
 	ros::ServiceClient client = n.serviceClient<std_srvs::Trigger>(agentID + "/gripper/" + str, true);
@@ -61,7 +68,7 @@ bool Gripper::loadPackage(bool load) {
 			gripper_state.loaded = false;
 			gripper_state.package = package;
 			gripperStatePub->publish(gripper_state);
-			moveGripper(robot_position.x - (cos(orient) * 0.25), robot_position.y - (sin(orient) * 0.25), 0.38, package);
+			moveGripper(robot_position.x + (cos(orient) * robotOffsetUnloaded), robot_position.y + (sin(orient) * robotOffsetUnloaded), robotHeight, package);
 			return true;
 		} else {
 			ROS_ERROR("[%s]: Failed to %s package! %s", agentID.c_str(), str.c_str(), srv.response.message.c_str());

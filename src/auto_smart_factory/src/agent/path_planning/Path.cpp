@@ -118,7 +118,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	// path computation is responsible for checking that this area is free for the specified time
 	if(targetReservationTime > 0) {		
 		// Block approach space		
-		double offset = 0.3f;
+		double offset = APPROACH_DISTANCE + 0.1f; // + distanceWhenApproached
 		double lengthMargin = 0.25f;
 		double widthMargin = 0.f;
 		Point pos = nodes.back() + Math::getVectorFromOrientation(end.o) * offset;		
@@ -127,8 +127,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), currentTime - reservationTimeMarginBehind, currentTime + targetReservationTime + reservationTimeMarginAhead, ownerId);
 
 		// Block neighbour trays space
-		offset = 0.3f;
-		widthMargin = 0.2f; // Cover neighbouring trays too
+		widthMargin = 0.24f; // Cover neighbouring trays too
 		pos = nodes.back() + Math::getVectorFromOrientation(end.o) * offset;
 		length = (ROBOT_RADIUS) * 2.f;
 		width = (ROBOT_RADIUS + widthMargin) * 2.f;

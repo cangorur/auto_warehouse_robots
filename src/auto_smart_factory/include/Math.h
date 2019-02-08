@@ -14,6 +14,7 @@
 
 // Defined as 0.25 + error margin
 #define ROBOT_RADIUS 0.27f
+#define APPROACH_DISTANCE 0.2f
 
 // Rotation  0  = >
 // Rotation 90  = v
