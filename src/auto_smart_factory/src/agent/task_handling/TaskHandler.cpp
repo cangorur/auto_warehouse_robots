@@ -127,14 +127,14 @@ void TaskHandler::executeTask() {
 		case Task::State::APPROACH_SOURCE:
 			if (motionPlanner->isDone()) {
 				currentTask->setState(Task::State::PICKUP);
-				motionPlanner->driveForward(0.6f);
+				motionPlanner->driveForward(0.5f);
 			}
 			break;
 
 		case Task::State::PICKUP:
 			if (motionPlanner->isDone()) {
 				gripper->loadPackage(true);
-				motionPlanner->driveBackward(0.6f);
+				motionPlanner->driveBackward(0.5f);
 				currentTask->setState(Task::State::RESERVING_TARGET);
 				// reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
 			}
