@@ -127,14 +127,14 @@ void TaskHandler::executeTask() {
 		case Task::State::APPROACH_SOURCE:
 			if (motionPlanner->isDone()) {
 				currentTask->setState(Task::State::PICKUP);
-				motionPlanner->driveForward(0.3f);
+				motionPlanner->driveForward(0.6f);
 			}
 			break;
 
 		case Task::State::PICKUP:
 			if (motionPlanner->isDone()) {
 				gripper->loadPackage(true);
-				motionPlanner->driveBackward(0.3f);
+				motionPlanner->driveBackward(0.6f);
 				currentTask->setState(Task::State::RESERVING_TARGET);
 				// reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
 			}
@@ -172,7 +172,7 @@ void TaskHandler::executeTask() {
 					currentTask->setState(Task::State::CHARGING);
 					ROS_INFO("[%s] Starting charging", agent->getAgentID().c_str());
 				}
-				motionPlanner->driveForward(0.3f);
+				motionPlanner->driveForward(0.5f);
 			}
 			break;
 
@@ -180,7 +180,7 @@ void TaskHandler::executeTask() {
 			if (motionPlanner->isDone()) {
 				gripper->loadPackage(false);
 				currentTask->setState(Task::State::LEAVE_TARGET);
-				motionPlanner->driveBackward(0.3f);
+				motionPlanner->driveBackward(0.5f);
 			}
 			break;
 
@@ -190,7 +190,7 @@ void TaskHandler::executeTask() {
 				if (this->chargingManagement->isCharged()) {
 					ROS_INFO("[%s] Finished charging", agent->getAgentID().c_str());
 					currentTask->setState(Task::State::LEAVE_TARGET);
-					motionPlanner->driveBackward(0.3f);
+					motionPlanner->driveBackward(0.5f);
 				}
 			}
 			break;
