@@ -45,7 +45,6 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		} else {
 			turnTowards(alignDirection);
 		}
-
 		return;
 	}
 
@@ -102,15 +101,15 @@ void MotionPlanner::followPath() {
 	
 	double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(pos.x, pos.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(pos.x, pos.y));
 	double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
-	angularVelocity = std::min(std::max(angularVelocity, (double) -maxTurningSpeed), (double) maxTurningSpeed);
+	angularVelocity = Math::clamp(angularVelocity, (double) -maxTurningSpeed, (double) maxTurningSpeed);
 
 	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed - minDrivingSpeed);
+	linearVelocity = Math::clamp(linearVelocity, minDrivingSpeed, maxDrivingSpeed);
 
-	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.6f) {
-		linearVelocity = std::max(0.2, Math::getDistance(Point(pos.x, pos.y), currentTarget));
-	}
-	if ((currentTargetIndex == pathObject.getNodes().size() - 1) && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.6f) {
-		linearVelocity = std::max(0.2, Math::getDistance(Point(pos.x, pos.y), currentTarget));
+	// Limit speed if approaching final point
+	double distToTarget = Math::getDistance(Point(pos.x, pos.y), currentTarget);
+	if (isCurrentPointLastPoint() && distToTarget <= distToSlowDown) {
+		linearVelocity = Math::clamp(distToTarget * 1.5f, minPrecisionSpeed, maxDrivingSpeed);
 	}
 
 	publishVelocity(linearVelocity, angularVelocity);
@@ -118,32 +117,32 @@ void MotionPlanner::followPath() {
 
 void MotionPlanner::turnTowards(Point target) {
 	double rotation = getRotationToTarget(pos, target);
-	if(std::abs(rotation) <= 0.03f) {
+	if(std::abs(rotation) <= 0.02f) {
 		/* If in align mode, the task is finished after rotation. If not, the robot should continue driving afterwards */
+		publishVelocity(0, 0);
 		if(mode == Mode::ALIGN) {
 			mode = Mode::FINISHED;
-			publishVelocity(0, 0);
 		} else {
 			mode = Mode::READY;
 		}
 		return;
 	}
-	publishVelocity(0, Math::clamp(std::abs(rotation), 0.3, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+	publishVelocity(0, Math::clamp(std::abs(rotation) * 2.f, 0.2f, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
 }
 
 void MotionPlanner::turnTowards(double direction) {
 	double rotation = Math::getAngleDifferenceInRad(pos.o, direction);
-	if(std::abs(rotation) <= 0.03f) {
+	if(std::abs(rotation) <= 0.02f) {
 		/* If in align mode, the task is finished after rotation. If not, the robot should continue driving afterwards */
+		publishVelocity(0, 0);
 		if(mode == Mode::ALIGN) {
 			mode = Mode::FINISHED;
-			publishVelocity(0, 0);
 		} else {
 			mode = Mode::READY;
 		}
 		return;
 	}
-	publishVelocity(0, Math::clamp(std::abs(rotation), 0.3, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+	publishVelocity(0, Math::clamp(std::abs(rotation) * 2.f, 0.2f, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
 }
 
 void MotionPlanner::alignTowards(Point target) {
@@ -171,16 +170,16 @@ void MotionPlanner::driveBackward(double distance) {
 
 void MotionPlanner::driveStraight() {
 	double currentDistance = Math::getDistance(Point(driveStartPosition.x, driveStartPosition.y), Point(pos.x, pos.y));
-	if(currentDistance >= driveDistance) {
+	if(currentDistance >= driveDistance - 0.015f) {
 		mode = Mode::FINISHED;
 		publishVelocity(0.0, 0.0);
 		return;
 	}
 
 	if(mode == Mode::FORWARD) {
-		publishVelocity(Math::clamp(currentDistance, 0.1, 0.5), 0.0);
+		publishVelocity(Math::clamp(currentDistance * 1.5f, minPrecisionSpeed, maxDrivingSpeed), 0.0);
 	} else {
-		publishVelocity(-Math::clamp(currentDistance, 0.1, 0.5), 0.0);
+		publishVelocity(-Math::clamp(currentDistance * 1.5f, minPrecisionSpeed, maxDrivingSpeed), 0.0);
 	}
 }
 
