@@ -160,6 +160,8 @@ protected:
 	void clearOutput(auto_smart_factory::TrayState tray_state);
 	
 	void adjustStoragePackage(auto_smart_factory::TrayState tray_state);
+	
+	bool movePackageOntoTray(auto_smart_factory::Tray tray, auto_smart_factory::Package package);
 
 	/**
 	 * Requests package manipulator component to move the given package to the given position 

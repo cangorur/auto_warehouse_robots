@@ -90,6 +90,10 @@ class TaskHandler
 
 		// the list of unanswered rask announcements
 		std::list<auto_smart_factory::TaskAnnouncement> announcements;
+		
+		double getApproachDistance(OrientedPoint robotPos, OrientedPoint pathTargetPos) const;
+		
+		double lastApproachDistance;
 };
 
 #endif /* AGENT_TASKHANDLER_H_ */

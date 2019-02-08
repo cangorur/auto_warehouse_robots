@@ -409,7 +409,7 @@ bool PackageGenerator::newPackageInput(auto_smart_factory::Tray tray, auto_smart
 	// move package
 	// Drop height: 0.3 (tray height) + package half height = 0.125 + 0.025 margin so they dont collide initially
 	std::cout << "tray IDs that the pkgs are inputted:  " << tray.id << std::endl;
-	if(!movePackage(tray.x, tray.y, 0.425f + 0.025f, package)) {
+	if(!movePackageOntoTray(tray, package)) {
 		ROS_WARN("[package generator] Moving package failed.");
 		return false;
 	}
@@ -487,7 +487,7 @@ void PackageGenerator::clearOutput(auto_smart_factory::TrayState tray_state) {
 	ros::Duration(1.0).sleep();
 
 	//move packages to fix position
-	if(movePackage(0.0, 0.0, -1.0, tray_state.package)) {
+	if(movePackage(0.0, 0.0, -1.0f, tray_state.package)) {
 		ROS_INFO("[package generator] Output %i cleared successfully!", tray_state.id);
 
 		// wait for package to actually be moved
@@ -511,7 +511,7 @@ void PackageGenerator::adjustStoragePackage(auto_smart_factory::TrayState tray_s
 
 	auto_smart_factory::Tray tray = getTray(tray_state.id);
 
-	if(!movePackage(tray.x, tray.y, 0.425f + 0.025f, tray_state.package)) {
+	if(movePackageOntoTray(tray, tray_state.package)) {
 		ROS_WARN("[package generator] Moving package failed.");
 	}
 }
@@ -575,4 +575,11 @@ auto_smart_factory::TrayState PackageGenerator::getTrayState(unsigned int tray_i
 		auto_smart_factory::TrayState s;
 		return s;
 	}
+}
+
+bool PackageGenerator::movePackageOntoTray(auto_smart_factory::Tray tray, auto_smart_factory::Package package) {
+	float height = 0.425f + 0.025f; // Tray height + package half height + drop off height
+	float toRad = 0.0174533f;
+	float offset = 0.04f;
+	return movePackage(tray.x + std::cos(tray.orientation * toRad) * offset, tray.y + std::sin(tray.orientation * toRad) * offset, height, package);
 }
