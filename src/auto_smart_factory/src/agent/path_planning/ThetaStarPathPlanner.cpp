@@ -146,10 +146,6 @@ Path ThetaStarPathPlanner::findPath() {
 					neighbour->prev = newPrev;
 					neighbour->waitTimeAtPrev = waitingTime;
 					queue.push(std::make_pair(neighbour->time + heuristic, neighbour));
-					
-					if(current->prev == nullptr && !map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime)) {
-						ROS_WARN("[Agent %d] Only taking connection because at start node", map->getOwnerId());
-					}
 				}
 			}
 		}
@@ -205,7 +201,7 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 		waitTimeAtPrev = currentGridInformation->waitTimeAtPrev;
 		currentGridInformation = currentGridInformation->prev;
 		
-		if(i++ > 150) {
+		if(i++ > 100) {
 			ROS_FATAL("[Agent %d] Endless loop in construct path => aborting. Start: %f/%f Target: %f/%f", map->getOwnerId(), start.x, start.y, target.x, target.y);
 			return Path();
 		}
