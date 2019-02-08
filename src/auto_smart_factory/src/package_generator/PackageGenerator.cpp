@@ -98,8 +98,7 @@ bool PackageGenerator::generateService(auto_smart_factory::NewPackageGenerator::
 	}
 
 	auto_smart_factory::Tray tray;
-	tray = getTray(
-			req.tray.id); // TODO: here will be updated to get the trays not only through their inputs but also their types !
+	tray = getTray(req.tray.id); // TODO: here will be updated to get the trays not only through their inputs but also their types !
 	if((tray.package_type != 0) && (tray.package_type != req.package.type_id)) {
 		res.success = false;
 		ROS_INFO("[package generator] The requested tray: %d does not support package type: %d", tray.id, req.package.type_id);
@@ -243,11 +242,13 @@ bool PackageGenerator::getStorageInformation() {
 	}
 }
 
-void PackageGenerator::updateTrayState(
-		const auto_smart_factory::StorageUpdate& msg) {
-	if(msg.action == auto_smart_factory::StorageUpdate::DERESERVATION &&
-	   msg.state.occupied && getTray(msg.state.id).type == "output") {
+void PackageGenerator::updateTrayState(const auto_smart_factory::StorageUpdate& msg) {
+	if(msg.action == auto_smart_factory::StorageUpdate::DERESERVATION && msg.state.occupied && getTray(msg.state.id).type == "output") {
 		clearOutput(msg.state);
+	}
+	
+	if(msg.action == auto_smart_factory::StorageUpdate::OCCUPATION  && msg.state.occupied && getTray(msg.state.id).type == "storage") {
+		adjustStoragePackage(msg.state);
 	}
 
 	for(int i = 0; i < storageState.tray_states.size(); i++)
@@ -503,6 +504,16 @@ void PackageGenerator::clearOutput(auto_smart_factory::TrayState tray_state) {
 		putBackPackage(tray_state.package);
 	} else
 		ROS_INFO("[package generator] Failed to clear Output %i!", tray_state.id);
+}
+
+void PackageGenerator::adjustStoragePackage(auto_smart_factory::TrayState tray_state) {
+	ROS_ERROR("[package generator] Adjusting package in tray %d", tray_state.id);
+
+	auto_smart_factory::Tray tray = getTray(tray_state.id);
+
+	if(!movePackage(tray.x, tray.y, 0.425f + 0.025f, tray_state.package)) {
+		ROS_WARN("[package generator] Moving package failed.");
+	}
 }
 
 bool PackageGenerator::movePackage(float x, float y, float z, auto_smart_factory::Package package) {

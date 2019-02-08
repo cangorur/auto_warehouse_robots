@@ -158,6 +158,8 @@ protected:
 	 * @param tray_state: state of the tray that could be cleared
 	 */
 	void clearOutput(auto_smart_factory::TrayState tray_state);
+	
+	void adjustStoragePackage(auto_smart_factory::TrayState tray_state);
 
 	/**
 	 * Requests package manipulator component to move the given package to the given position 
