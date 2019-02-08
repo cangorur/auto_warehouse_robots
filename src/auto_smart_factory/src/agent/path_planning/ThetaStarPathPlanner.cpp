@@ -211,6 +211,6 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 	std::reverse(waitTimes.begin(), waitTimes.end());
 
 	// Convert orientation to rad
-	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, targetReservationTime, OrientedPoint(start.x, start.y, Math::toDeg(start.o)), OrientedPoint(target.x, target.y, Math::toDeg(target.o)));
+	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, targetReservationTime, OrientedPoint(start.x, start.y, Math::toRad(start.o)), OrientedPoint(target.x, target.y, Math::toRad(target.o)));
 }
 
