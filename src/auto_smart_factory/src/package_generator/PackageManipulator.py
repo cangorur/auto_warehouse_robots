@@ -24,7 +24,7 @@ def handleMovePackage(req):
     success = True
     try:
         with pymorse.Morse() as sim:
-            sim.rpc('simulation', 'set_object_position', req.package_id, [req.x, req.y, req.z])
+            sim.rpc('simulation', 'set_object_position', req.package_id, [req.x, req.y, req.z], [0, 0, 0])
     except:
         success = False
     rospy.logdebug("[package manipulator]: MovePackage {} success: {}!".format(req.package_id, success))

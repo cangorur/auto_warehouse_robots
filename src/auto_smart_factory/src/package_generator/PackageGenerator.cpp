@@ -333,8 +333,8 @@ bool PackageGenerator::newPackageInputOnConveyor(auto_smart_factory::Tray tray, 
 	// move package
 	// Drop height: Tray height (input tray) = 0.3 m + Half package height = 0.25 / 2 = 0.125 m
 	std::cout << "tray IDs that the pkgs are inputted:  " << tray.id << std::endl;
-	if(!movePackage(4 - 0.15, 0.80, 1,
-	                package)) { //TODO: currently the locations are hard coded to move the pkg on conveyor which runs and makes it fall to input tray-01 !! this will be fixed according to the trays !
+	//TODO: currently the locations are hard coded to move the pkg on conveyor which runs and makes it fall to input tray-01 !! this will be fixed according to the trays !
+	if(!movePackage(4.f - 0.15f, 0.80f, 1.f, package)) { 
 		//if (!movePackage(tray.x + 0.50 , tray.y - 4.85, 1 , package)) {
 		ROS_WARN("[package generator] Moving package failed.");
 		return false;
@@ -406,9 +406,9 @@ bool PackageGenerator::newPackageInput(auto_smart_factory::Tray tray, auto_smart
 	}
 
 	// move package
-	// Drop height: Tray height (input tray) = 0.3 m + Half package height = 0.25 / 2 = 0.125 m
+	// Drop height: 0.3 (tray height) + package half height = 0.125 + 0.025 margin so they dont collide initially
 	std::cout << "tray IDs that the pkgs are inputted:  " << tray.id << std::endl;
-	if(!movePackage(tray.x, tray.y, 0.4, package)) {
+	if(!movePackage(tray.x, tray.y, 0.425f + 0.025f, package)) {
 		ROS_WARN("[package generator] Moving package failed.");
 		return false;
 	}
@@ -509,8 +509,7 @@ bool PackageGenerator::movePackage(float x, float y, float z, auto_smart_factory
 	std::string srv_name = "package_manipulator/move_package";
 	ros::ServiceClient client = n.serviceClient<auto_smart_factory::MovePackage>(srv_name.c_str());
 	auto_smart_factory::MovePackage srv;
-	std::string id = "pkg" + std::to_string(package.type_id) + "_"
-	                 + std::to_string(package.id);
+	std::string id = "pkg" + std::to_string(package.type_id) + "_" + std::to_string(package.id);
 	srv.request.package_id = id;
 	srv.request.x = x;
 	srv.request.y = y;
@@ -529,13 +528,13 @@ bool PackageGenerator::movePackage(float x, float y, float z, auto_smart_factory
 }
 
 void PackageGenerator::putBackPackage(auto_smart_factory::Package package) {
-	for(int i = 0; i < packageConfigs.size(); i++)
+	for(int i = 0; i < packageConfigs.size(); i++) {
 		if(packageConfigs[i].id == package.type_id) {
 			externalPackages[i].push_back(package.id);
 			return;
 		}
-	std::string id = "pkg" + std::to_string(package.type_id) + "_"
-	                 + std::to_string(package.id);
+	}
+	std::string id = "pkg" + std::to_string(package.type_id) + "_" + std::to_string(package.id);
 	ROS_ERROR("[package generator] Failed to put back package %s!", id.c_str());
 }
 
