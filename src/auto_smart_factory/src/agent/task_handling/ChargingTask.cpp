@@ -37,3 +37,11 @@ void ChargingTask::setState(Task::State state) {
 double ChargingTask::getChargingTime() {
 	return chargingTime;
 }
+
+void ChargingTask::adjustChargingStation(uint32_t targetID, Path targetPath, double startTime){
+	this->targetId = targetID;
+	this->startTime = startTime;
+	this->targetDuration = targetPath.getDuration();
+	this->targetBatCons = targetPath.getBatteryConsumption();
+	this->targetPosition = targetPath.getEnd();
+}

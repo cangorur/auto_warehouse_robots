@@ -15,5 +15,10 @@ int main(int argc, char** argv) {
 	TaskPlanner taskPlanner;
 	ROS_INFO("Task planner ready!");
 
-	ros::spin();
+	ros::Rate r(20);
+	while(ros::ok()) {
+		taskPlanner.update();
+		ros::spinOnce();
+		r.sleep();
+	}
 }

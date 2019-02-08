@@ -5,7 +5,6 @@
 #include "agent/Gripper.h"
 #include "agent/ObstacleDetection.h"
 #include "agent/task_handling/TaskHandler.h"
-#include "agent/task_handling/TrayScore.h"
 #include "agent/ChargingManagement.h"
 
 #include <random>
@@ -37,10 +36,13 @@
 #include "auto_smart_factory/RobotConfiguration.h"
 #include "auto_smart_factory/CollisionAction.h"
 #include "auto_smart_factory/ReservationCoordination.h"
+#include "auto_smart_factory/TaskAnnouncement.h"
 #include "agent/path_planning/ReservationManager.h"
 #include "agent/path_planning/Map.h"
 #include "agent/path_planning/RobotHardwareProfile.h"
 
+// forward declaration of TaskHandler class
+class TaskHandler;
 
 /* The agent component manages all robot related stuff and holds a motion planner, obstacle detection &
  * gripper instance. Furthermore it subscribes to robots sensor topics like pose, laser & battery sensor
@@ -76,6 +78,11 @@ public:
 	 * keep this agent doing what it is supposed to. E.g. publish the heartbeat at every step.
 	 * That is why it is called every tick (see AgentNode.cpp). */
 	void update();
+
+	/* Returns the tray with the given tray id.
+	 * @param tray_id: id of the specified tray
+	 * @return tray with the specified id */
+	auto_smart_factory::Tray getTray(unsigned int tray_id);
 
 	ros::Publisher* getVisualisationPublisher();
 
@@ -123,11 +130,6 @@ protected:
 	 * @param res Request object
 	 * @return True if the task has successfully been assigned */
 	bool assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_factory::AssignTask::Response& res);
-
-	/* Returns the tray with the given tray id.
-	 * @param tray_id: id of the specified tray
-	 * @return tray with the specified id */
-	auto_smart_factory::Tray getTray(unsigned int tray_id);
 
 	/* Pose sensor callback handler. Calls the update function of the motion planner.
 	 * @param msg: information about the position & orientation of the robot on the map */
@@ -179,9 +181,6 @@ protected:
 
 	// Flag that shows whether this agent has already been registered at the task planner
 	bool registered = false;
-
-	// Flag that shows if the robot is currently in idle state or not
-	bool isIdle = true;
 
 	// Publisher/Subscriber for ReservationCoordination
 	ReservationManager* reservationManager;
@@ -265,6 +264,7 @@ protected:
 	// current battery level
 	float batteryLevel = 100.0;
 
+	// the color of the agent
 	std_msgs::ColorRGBA agentColor;
 };
 

@@ -75,6 +75,11 @@ public:
                 	 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, 
 					 uint32_t requestId);
 
+	/* 
+	 * Function checking if something has changed and if so tries to assign not yet assigned tasks
+	 */
+	void update();
+
 private:
 	/**
 	 * Initialize service handler.
@@ -170,6 +175,15 @@ private:
 
 
 private:
+	/// flag indicating that something has changed and that the task planner should try to assign tasks
+	bool resourcesChanged = false;
+
+	// frequency with which the task planner checks if it can assign previously unassigned tasks
+	ros::Duration updateFrequency;
+
+	/// the thread in which the task planner update function is working
+	std::thread updateExecutionThread;
+
 	/// all registered robots: mapping their id to their configuration and their state (idle/busy with idle = true)
 	std::map<std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> > registeredRobots;
 
