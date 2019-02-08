@@ -507,11 +507,8 @@ void PackageGenerator::clearOutput(auto_smart_factory::TrayState tray_state) {
 }
 
 void PackageGenerator::adjustStoragePackage(auto_smart_factory::TrayState tray_state) {
-	ROS_ERROR("[package generator] Adjusting package in tray %d", tray_state.id);
-
 	auto_smart_factory::Tray tray = getTray(tray_state.id);
-
-	if(movePackageOntoTray(tray, tray_state.package)) {
+	if(!movePackageOntoTray(tray, tray_state.package)) {
 		ROS_WARN("[package generator] Moving package failed.");
 	}
 }

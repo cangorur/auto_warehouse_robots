@@ -393,6 +393,5 @@ void TaskHandler::answerAnnouncement(auto_smart_factory::TaskAnnouncement& taskA
 
 double TaskHandler::getApproachDistance(OrientedPoint robotPos, OrientedPoint pathTargetPos) const {
 	Point pointInFrontOfTray = Point(pathTargetPos.x, pathTargetPos.y) + Math::getVectorFromOrientation(pathTargetPos.o) * APPROACH_DISTANCE;
-	ROS_WARN("Approaching with distance %f", Math::getDistance(Point(robotPos.x, robotPos.y), pointInFrontOfTray));
 	return Math::getDistance(Point(robotPos.x, robotPos.y), pointInFrontOfTray);
 }
