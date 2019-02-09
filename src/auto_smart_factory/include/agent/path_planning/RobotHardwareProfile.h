@@ -11,7 +11,7 @@ private:
 	// Used to get average estimates from max speed values 
 	const double averageDrivingEfficiency = 0.75f;
 
-	const double onSpotTurningAngle = 60.f;
+	const double onSpotTurningAngle = 55.f;
 	const double drivingTurningEfficiency = 0.5f;
 	const double onSpotTurningEfficiency = 0.3f;
 
