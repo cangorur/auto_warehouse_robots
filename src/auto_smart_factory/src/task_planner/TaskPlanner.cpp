@@ -358,7 +358,7 @@ void TaskPlanner::receiveTaskResponse(const auto_smart_factory::TaskRating& tr){
 			return;
 		}
 	}
-	ROS_WARN("Got answer for request %d but request isnt valid anymore. Answer was from %s", tr.request_id, tr.robot_id.c_str());
+	//ROS_WARN("Got answer for request %d but request isnt valid anymore. Answer was from %s", tr.request_id, tr.robot_id.c_str());
 }
 
 void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates, const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, uint32_t requestId) {

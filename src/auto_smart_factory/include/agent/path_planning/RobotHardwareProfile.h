@@ -15,6 +15,9 @@ private:
 	const double drivingTurningEfficiency = 0.5f;
 	const double onSpotTurningEfficiency = 0.3f;
 
+	// For reservations
+	const double timeUncertaintyPercentage = 0.3f;
+
 public:
 	RobotHardwareProfile(double maxDrivingSpeed, double maxTurningSpeed, double idleBatteryConsumption, double drivingBatteryConsumption);
 
@@ -22,6 +25,8 @@ public:
 	double getDrivingBatteryConsumption(double time) const;
 	double getDrivingDuration(double distance) const;
 	double getTurningDuration(double angle) const;
+	
+	double getTimeUncertaintyPercentage() const;
 };
 
 

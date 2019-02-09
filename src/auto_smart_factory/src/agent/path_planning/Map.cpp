@@ -102,7 +102,7 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 		if(Math::isPointInRectangle(pos2, reservation) && reservation.getStartTime() > endTime && reservation.getOwnerId() != ownerId) {
 			result.hasUpcomingObstacle = true;
 			// Todo make adaptive - for now assume that every reservation can be left in x seconds
-			double minTimeToLeave = 8;
+			double minTimeToLeave = 5;
 
 			double lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
 			if(lastValidEntryTime < result.lastValidEntryTime) {
@@ -134,7 +134,7 @@ bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double sta
 		}
 
 		// Check if the driving part is free
-		if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.001f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+		if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
 			//printf("Connection dropped due to driving: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
 			return false;
 		}

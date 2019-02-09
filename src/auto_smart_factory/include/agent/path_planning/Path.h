@@ -54,9 +54,10 @@ public:
 
 	OrientedPoint getStart();
 	OrientedPoint getEnd();
-	
 	bool isValid() const;
 
+private:
+	double getTimeUncertainty(double time) const;
 };
 
 #endif /* AGENT_PATH_H_ */

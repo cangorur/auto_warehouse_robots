@@ -1,5 +1,7 @@
 #include <utility>
 #include <cmath>
+#include <include/agent/path_planning/Path.h>
+
 
 #include "Math.h"
 #include "ros/ros.h"
@@ -91,7 +93,10 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 
 		// Waiting time - always for first node
 		if(waitTimes.at(i) > 0 || i == 0) {
-			reservations.emplace_back(nodes[i], waitingReservationSize, 0, currentTime - reservationTimeMarginBehind, currentTime + waitTimes[i] + reservationTimeMarginAhead, ownerId);
+			double startTime = currentTime - getTimeUncertainty(currentTime) - reservationTimeMarginBehind;
+			double endTime = currentTime + waitTimes[i] + getTimeUncertainty(currentTime + waitTimes[i]) + reservationTimeMarginAhead;
+			
+			reservations.emplace_back(nodes[i], waitingReservationSize, 0, startTime, endTime, ownerId);
 			currentTime += waitTimes[i];
 		}
 
@@ -106,8 +111,10 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 			Point endPos = nodes[i] + ((segmentDouble + 1.f) * segmentLength * currentDir);
 
 			Point pos = (startPos + endPos) / 2.f;
-			double startTime = currentTime - reservationTimeMarginBehind + hardwareProfile->getDrivingDuration(segmentDouble * segmentLength);
-			double endTime = currentTime + reservationTimeMarginAhead + hardwareProfile->getDrivingDuration((segmentDouble + 1.f) * segmentLength);
+			double startTime = currentTime + hardwareProfile->getDrivingDuration(segmentDouble * segmentLength);
+			startTime -= (getTimeUncertainty(startTime) + reservationTimeMarginBehind);
+			double endTime = currentTime + hardwareProfile->getDrivingDuration((segmentDouble + 1.f) * segmentLength);
+			endTime += (getTimeUncertainty(endTime) + reservationTimeMarginAhead);
 
 			reservations.emplace_back(pos, Point(segmentLength + reservationSize, reservationSize), currentRotation, startTime, endTime, ownerId);
 		}
@@ -216,4 +223,12 @@ OrientedPoint Path::getEnd() {
 
 bool Path::isValid() const {
 	return isValidPath;
+}
+
+double Path::getTimeUncertainty(double time) const {
+	double timeSinceStart = time - startTimeOffset;
+	if(timeSinceStart <= 0) {
+		return 0;
+	}
+	return timeSinceStart * hardwareProfile->getTimeUncertaintyPercentage();
 }
