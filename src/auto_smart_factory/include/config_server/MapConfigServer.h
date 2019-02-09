@@ -12,6 +12,7 @@
 #include "auto_smart_factory/WarehouseConfiguration.h"
 #include "auto_smart_factory/GetWarehouseConfig.h"
 #include <boost/property_tree/ptree.hpp>
+#include "agent/path_planning/Rectangle.h"
 
 /**
  * This class reads the warehouse configuration file and provides a service to deliver this
@@ -47,7 +48,7 @@ protected:
 	 * @param height Height of the obstacle (in y direction) [meters]
 	 * @param grid The occupancy grid used to set the occupied cells
 	 */
-	void setRectangularObstacle(float x, float y, float width, float height, float rotation);
+	void setRectangularObstacle(std::vector<Rectangle>& rectangles, float x, float y, float width, float height, float rotation);
 
 	/**  Adds the static obstacles defined in the map configuration to the occupancy map.
 	 * This comprises trays and charging stations. */
@@ -59,6 +60,8 @@ protected:
 	// Create a new unique tray id.
 	static unsigned int getUniqueTrayId();
 	static unsigned int trayIdCounter;
+	
+	bool mergeObstacles = false;
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_MAPSERVER_H_ */
