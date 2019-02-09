@@ -16,7 +16,7 @@ private:
 	const double onSpotTurningEfficiency = 0.3f;
 
 	// For reservations
-	const double timeUncertaintyPercentage = 0.3f;
+	const double timeUncertaintyPercentage = 0.25f;
 
 public:
 	RobotHardwareProfile(double maxDrivingSpeed, double maxTurningSpeed, double idleBatteryConsumption, double drivingBatteryConsumption);

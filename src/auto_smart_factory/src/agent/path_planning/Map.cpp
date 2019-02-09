@@ -240,7 +240,7 @@ OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 	// Assume tray.orientation is in degree
 	float trayRadius = 0.25f;
 	float approachRoutineLength = APPROACH_DISTANCE;
-	float distanceWhenApproached = 0.1f;
+	float distanceWhenApproached = 0.08f;
 	float robotRadius = 0.25f; // Real radius, not including margin for reservations
 	
 	float offset = trayRadius + approachRoutineLength + distanceWhenApproached + robotRadius;
