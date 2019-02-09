@@ -4,10 +4,13 @@
 #include "ros/ros.h"
 #include <string>
 #include <vector>
-#include "auto_smart_factory/WarehouseConfiguration.h"
-#include "auto_smart_factory/RobotHeartbeat.h"
+#include <auto_smart_factory/WarehouseConfiguration.h>
+#include <auto_smart_factory/RobotConfiguration.h>
+#include <auto_smart_factory/RobotHeartbeat.h>
 #include "auto_smart_factory/Tray.h"
 #include "agent/path_planning/Map.h"
+#include "std_msgs/Float32.h"
+
 
 class Agent;
 /**
@@ -20,7 +23,7 @@ public:
 	 * Default constructor.
 	 * Sets up the initialize service.
 	 */
-	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration, Map* map);
+	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration, auto_smart_factory::RobotConfiguration robot_configuration, Map* map);
 
 	virtual ~ChargingManagement() = default;
 
@@ -59,6 +62,28 @@ public:
 	// Checks if the battery consumption is possible given the theoretical battery level
 	bool isConsumptionPossible(double agentBatteryLevel, double consumption);
 
+	/*
+	 * Gets charging time
+	 * @param: Battery consumption till robot reaches charging station
+	 */
+	double getChargingTime(double consumptionTillCS);
+
+	/*
+	 * Get battery consumption by the robot
+	 * @param: Time robot spent idling
+	 * @param: Distance traveled by the robot
+	 */
+
+	double getBatteryConsumption(double idleTime);
+
+	double getBatteryConsumption(double idleTime, double drivingDistance);
+
+
+	/*
+	 * Check Battery for errors
+	 */
+	void checkBattery();
+
 private:
 	Agent* agent;
 
@@ -70,6 +95,18 @@ private:
 
 	// information about the current warehouse map
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;
+
+	// information about the role of this agent
+	auto_smart_factory::RobotConfiguration robotConfig;
+
+	//Discharging Rate
+	float dischargingRate;
+
+	//Charging rate
+	float chargingRate;
+
+	//Motor Draining rate
+	float motorDrainingRate;
 
 	// Max energy level of the agent to participate in charging
 	float upperThreshold = 70.00;
