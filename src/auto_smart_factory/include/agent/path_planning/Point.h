@@ -24,6 +24,7 @@ Point operator *(double factor, const Point& left);
 Point operator *(const Point& left, double factor);
 Point operator /(const Point& left, double factor);
 bool operator ==(const Point& left, const Point& right);
+bool operator !=(const Point& left, const Point& right);
 
 Point& operator -=(const Point& left, const Point& right);
 Point& operator +=(const Point& left, const Point& right);

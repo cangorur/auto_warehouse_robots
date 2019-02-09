@@ -49,11 +49,11 @@ void ThetaStarMap::linkToNode(GridNode* node, Point targetPos) {
 }
 
 const GridNode* ThetaStarMap::getNodeClosestTo(const Point& pos) const {
-	float shortestDistance = std::numeric_limits<float>::max();
+	double shortestDistance = std::numeric_limits<float>::max();
 	const GridNode* nearestNode = nullptr;
 	
 	for(const auto& element : nodes) {
-		float distance = Math::getDistanceSquared(element.first, pos);
+		double distance = Math::getDistanceSquared(element.first, pos);
 
 		if(distance < shortestDistance) {
 			shortestDistance = distance;
@@ -99,10 +99,10 @@ void ThetaStarMap::addAdditionalNode(Point pos) {
 
 	// If node was newly added
 	if(emplaceResult.second) {
-		float maxDistance = resolution * resolution;
+		double maxDistance = resolution * resolution;
 
 		for(std::pair<Point, GridNode*> neighbour : nodes) {
-			float distance = Math::getDistanceSquared(neighbour.first, pos);
+			double distance = Math::getDistanceSquared(neighbour.first, pos);
 
 			if(distance <= maxDistance && map->isStaticLineOfSightFree(pos, neighbour.first))  {
 				newGridNode->neighbours.push_back(neighbour.second);

@@ -84,6 +84,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	Point waitingReservationSize = Point(reservationSize, reservationSize) * 0.98f;
 
 	double currentTime = startTimeOffset;
+	bool skippedLastSegment = false;
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
 		double currentDistance = Math::getDistance(nodes[i], nodes[i + 1]);
 		Point currentDir = (nodes[i + 1] - nodes[i]) * 1.f * (1.f/currentDistance);
@@ -99,6 +100,18 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 			currentTime += waitTimes[i];
 		}
 
+		if(!skippedLastSegment && waitTimes.at(i) == 0 && waitTimes.at(i + 1) == 0 && currentDistance < 0.15f) {
+			skippedLastSegment = true;
+			continue;
+		}
+
+		int currentNode = i;
+		if(skippedLastSegment) {
+			skippedLastSegment = false;
+			currentNode -= 1;
+			currentDistance = Math::getDistance(nodes[i - 1], nodes[i + 1]);
+		}
+
 		// Line segment
 		auto segmentCount = static_cast<unsigned int>(std::ceil(currentDistance / maxReservationLength));
 		double segmentLength = currentDistance / static_cast<float>(segmentCount);
@@ -106,8 +119,8 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		for(unsigned int segment = 0; segment < segmentCount; segment++) {
 			auto segmentDouble = static_cast<double>(segment);
 			
-			Point startPos = nodes[i] + (segmentDouble * segmentLength * currentDir);
-			Point endPos = nodes[i] + ((segmentDouble + 1.f) * segmentLength * currentDir);
+			Point startPos = nodes[currentNode] + (segmentDouble * segmentLength * currentDir);
+			Point endPos = nodes[currentNode] + ((segmentDouble + 1.f) * segmentLength * currentDir);
 
 			Point pos = (startPos + endPos) / 2.f;
 			double startTime = currentTime + hardwareProfile->getDrivingDuration(segmentDouble * segmentLength);
