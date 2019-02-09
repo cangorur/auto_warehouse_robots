@@ -5,9 +5,11 @@
 #include <string>
 
 #include "ros/ros.h"
+#include "agent/Agent.h"
 #include "agent/task_handling/Task.h"
 #include "agent/task_handling/TransportationTask.h"
 #include "agent/task_handling/ChargingTask.h"
+#include "agent/task_handling/TrayScore.h"
 #include "agent/path_planning/ReservationManager.h"
 #include "auto_smart_factory/TaskAnnouncement.h"
 #include "auto_smart_factory/TaskRating.h"
@@ -16,10 +18,12 @@
 #include "agent/Gripper.h"
 #include "agent/ChargingManagement.h"
 
+class Agent;
+
 class TaskHandler
 {
 	public:
-    	explicit TaskHandler(std::string agentId, ros::Publisher* scorePublish, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm);
+    	explicit TaskHandler(Agent* agent, ros::Publisher* scorePublish, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm);
 
     	void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId, double estimatedDuration);
 		void rejectTask(unsigned int requestId);
@@ -50,7 +54,13 @@ class TaskHandler
 
 		Task* getLastTask();
 
+		void announcementCallback(const auto_smart_factory::TaskAnnouncement& tA);
+
 	private:
+		void answerAnnouncements();
+
+		void answerAnnouncement(auto_smart_factory::TaskAnnouncement& taskAnnouncement);
+		
 		// the current task
     	Task* currentTask = nullptr;
 
@@ -66,11 +76,24 @@ class TaskHandler
 		ChargingManagement* chargingManagement;
 		ReservationManager* reservationManager;
 
-		// the id of the agent to which this taskHandler belongs
-	    std::string agentId;
+		// a pointer to the agent to which this taskHandler belongs
+	    Agent* agent;
 
 		// a pointer to the publisher for the score
     	ros::Publisher* scorePublisher;
+
+		// the task was changed to the next one in queue
+		bool isNextTask = false;
+
+		// the current task has tried to reserve a path to target
+		bool hasTriedToReservePathToTarget = false;
+
+		// the list of unanswered rask announcements
+		std::list<auto_smart_factory::TaskAnnouncement> announcements;
+		
+		double getApproachDistance(OrientedPoint robotPos, OrientedPoint pathTargetPos) const;
+		
+		double lastApproachDistance;
 };
 
 #endif /* AGENT_TASKHANDLER_H_ */

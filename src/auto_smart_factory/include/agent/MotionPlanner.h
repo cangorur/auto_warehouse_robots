@@ -8,7 +8,7 @@
 #include <cmath>
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Twist.h"
-#include <auto_smart_factory/RobotConfiguration.h>
+#include "auto_smart_factory/RobotConfiguration.h"
 #include "agent/path_planning/Path.h"
 #include "agent/path_planning/Point.h"
 #include "agent/Position.h"
@@ -52,7 +52,6 @@ public:
 	void driveForward(double distance);
 	void driveBackward(double distance);
 
-	void newPath(Path* path);
 	void newPath(Path path);
 
 	Mode getMode();
@@ -63,9 +62,6 @@ public:
 	bool hasPath();
 	bool isDrivingBackwards();
 
-	visualization_msgs::Marker getVisualizationMsgPoints();
-	visualization_msgs::Marker getVisualizationMsgLines();
-	
 	OrientedPoint getPositionAsOrientedPoint();
 
 	bool isPositionInitialized();
@@ -92,6 +88,8 @@ private:
 
 	/* Helper function to publish the velocity on the robots motion topic */
 	void publishVelocity(double speed, double angle);
+	
+	void publishEmptyVisualisationPath();
 
 	/// information about the current role of the agent
 	auto_smart_factory::RobotConfiguration robotConfig;
@@ -124,7 +122,7 @@ private:
 	double driveDistance = 0.0;
 
 	/// Threshold when robot should stop and turn on spot instead of pid controlled
-	double turnThreshold = Math::toRad(65);
+	double turnThreshold = Math::toRad(65.f);
 	
 	/// Turning and Driving Speed Limitations from robots config file
 	float maxTurningSpeed;
@@ -134,7 +132,8 @@ private:
 	/// Precision configuration to reach points
 	float distToReachPoint = 0.3f;
 	float distToReachFinalPoint = 0.1f;
-	float distToSlowDown = 0.9f;
+	float distToSlowDown = 0.7f;
+	float minPrecisionDrivingSpeed = 0.08f;
 
 	/// Will be true when position is updated the first time
 	bool positionInitialized = false;
@@ -146,10 +145,6 @@ protected:
 	PidController* steerPid;
 
 	Position pos;
-
-	double currentSpeed;
-	double currentRotation;
-
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_ */

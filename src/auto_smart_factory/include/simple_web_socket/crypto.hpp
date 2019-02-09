@@ -9,10 +9,10 @@
 #include <vector>
 
 //Moving these to a seperate namespace for minimal global namespace cluttering does not work with clang++
-#include <openssl/evp.h>
-#include <openssl/buffer.h>
-#include <openssl/sha.h>
-#include <openssl/md5.h>
+#include "openssl/evp.h"
+#include "openssl/buffer.h"
+#include "openssl/sha.h"
+#include "openssl/md5.h"
 
 namespace SimpleWeb {
 	//TODO 2017: remove workaround for MSVS 2012

@@ -3,22 +3,22 @@
 
 #include "ros/ros.h"
 #include <string>
-#include <sys/time.h>
+#include "sys/time.h"
 #include <stdlib.h>
 #include <time.h>
 #include <deque>
 #include "auto_smart_factory/InitPackageGenerator.h"
-#include <auto_smart_factory/GetStorageState.h>
-#include <auto_smart_factory/GetTrayState.h>
-#include <auto_smart_factory/NewPackageGenerator.h>
-#include <auto_smart_factory/NewPackageInput.h>
-#include <auto_smart_factory/NewPackageOutput.h>
-#include <auto_smart_factory/MovePackage.h>
-#include <auto_smart_factory/WarehouseConfiguration.h>
-#include <auto_smart_factory/PackageConfiguration.h>
-#include <auto_smart_factory/StorageUpdate.h>
-#include <auto_smart_factory/Package.h>
-#include <storage_management/TrayAllocator.h>
+#include "auto_smart_factory/GetStorageState.h"
+#include "auto_smart_factory/GetTrayState.h"
+#include "auto_smart_factory/NewPackageGenerator.h"
+#include "auto_smart_factory/NewPackageInput.h"
+#include "auto_smart_factory/NewPackageOutput.h"
+#include "auto_smart_factory/MovePackage.h"
+#include "auto_smart_factory/WarehouseConfiguration.h"
+#include "auto_smart_factory/PackageConfiguration.h"
+#include "auto_smart_factory/StorageUpdate.h"
+#include "auto_smart_factory/Package.h"
+#include "storage_management/TrayAllocator.h"
 
 /**
  * The package generator component simulates package sources that lead to incoming packages at input trays
@@ -158,6 +158,10 @@ protected:
 	 * @param tray_state: state of the tray that could be cleared
 	 */
 	void clearOutput(auto_smart_factory::TrayState tray_state);
+	
+	void adjustStoragePackage(auto_smart_factory::TrayState tray_state);
+	
+	bool movePackageOntoTray(auto_smart_factory::Tray tray, auto_smart_factory::Package package);
 
 	/**
 	 * Requests package manipulator component to move the given package to the given position 

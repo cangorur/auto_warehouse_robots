@@ -1,8 +1,6 @@
+#include <auto_smart_factory/ReservationBroadcast.h>
+#include <auto_smart_factory/ReservationRequest.h>
 #include "agent/Agent.h"
-#include "Math.h"
-
-#include <tf/transform_datatypes.h>
-#include <include/agent/Agent.h>
 #include "warehouse_management/WarehouseManagement.h"
 
 Agent::Agent(std::string agent_id) {
@@ -19,13 +17,13 @@ Agent::Agent(std::string agent_id) {
 }
 
 Agent::~Agent() {
-	this->motionPlanner->~MotionPlanner();
-	this->gripper->~Gripper();
-	this->obstacleDetection->~ObstacleDetection();
-	this->map->~Map();
-	this->chargingManagement->~ChargingManagement();
-	this->taskHandler->~TaskHandler();
-	this->reservationManager->~ReservationManager();
+	motionPlanner->~MotionPlanner();
+	gripper->~Gripper();
+	obstacleDetection->~ObstacleDetection();
+	map->~Map();
+	chargingManagement->~ChargingManagement();
+	taskHandler->~TaskHandler();
+	reservationManager->~ReservationManager();
 }
 
 void Agent::update() {
@@ -42,7 +40,7 @@ void Agent::update() {
 		reservationManager->update();
 				
 		/* Task Execution */
-		this->taskHandler->update();				
+		taskHandler->update();				
 	}
 }
 
@@ -65,52 +63,63 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	warehouseConfig = warehouse_configuration;
 	robotConfig = robot_configuration;
 	
-	float maxTurningSpeedInDegree = Math::toDeg(robot_configuration.max_angular_vel);
+	double maxTurningSpeedInDegree = Math::toDeg(robot_configuration.max_angular_vel);
 	hardwareProfile = new RobotHardwareProfile(robot_configuration.max_linear_vel, maxTurningSpeedInDegree, robot_configuration.discharging_rate, 0.f);
 	//ROS_INFO("[%s]: MaxSpeed: %f m/s | MaxTurningSpeed: %f deg/s", agentID.c_str(), robot_configuration.max_linear_vel,maxTurningSpeedInDegree);
 
-	this->pose_sub = n.subscribe(agentID + "/pose", 1, &Agent::poseCallback, this);
-	this->battery_sub = n.subscribe(agentID + "/battery", 1, &Agent::batteryCallback, this);
-	this->hokuyo_sub = n.subscribe(agentID + "/laser_scanner", 1, &Agent::laserCallback, this);
-	this->motion_pub = pn.advertise<geometry_msgs::Twist>("motion", 1);
-	this->heartbeat_pub = n.advertise<auto_smart_factory::RobotHeartbeat>("robot_heartbeats", 1);
-	this->gripper_state_pub = pn.advertise<auto_smart_factory::GripperState>("gripper_state", 1);
-	this->additional_time_pub = pn.advertise<auto_smart_factory::AdditionalTime>("additional_time", 1);
-	this->task_announce_sub = n.subscribe("/task_planner/task_broadcast", 1, &Agent::announcementCallback, this);
-	this->taskrating_pub = pn.advertise<auto_smart_factory::TaskRating>("/task_response", 1);
+	pose_sub = n.subscribe(agentID + "/pose", 1, &Agent::poseCallback, this);
+	battery_sub = n.subscribe(agentID + "/battery", 1, &Agent::batteryCallback, this);
+	hokuyo_sub = n.subscribe(agentID + "/laser_scanner", 1, &Agent::laserCallback, this);
+	motion_pub = pn.advertise<geometry_msgs::Twist>("motion", 1);
+	heartbeat_pub = n.advertise<auto_smart_factory::RobotHeartbeat>("robot_heartbeats", 1);
+	gripper_state_pub = pn.advertise<auto_smart_factory::GripperState>("gripper_state", 1);
+	task_announce_sub = n.subscribe("/task_planner/task_broadcast", 1, &Agent::announcementCallback, this);
+	taskrating_pub = pn.advertise<auto_smart_factory::TaskRating>("/task_response", 1);
 	// TODO: Below topic can give some hints (example information an agent may need). They are not published in any of the nodes
-	// this->collision_alert_sub = n.subscribe("/collisionAlert", 1, &Agent::collisionAlertCallback, this);
+	// collision_alert_sub = n.subscribe("/collisionAlert", 1, &Agent::collisionAlertCallback, this);
 
 	visualisationPublisher = pn.advertise<visualization_msgs::Marker>("visualization_" + agentID, 100, true);
-	vizPublicationTimer = pn.createTimer(ros::Duration(0.5f), &Agent::publishVisualisation, this); // in seconds
+	vizPublicationTimer = pn.createTimer(ros::Duration(0.25f), &Agent::publishVisualisation, this); // in seconds
 	
-	reservationCoordination_pub = pn.advertise<auto_smart_factory::ReservationCoordination>("/reservation_coordination", 100, true);
-	reservationCoordination_sub = pn.subscribe("/reservation_coordination", 100, &Agent::reservationCoordinationCallback, this);
+	reservationRequest_pub = pn.advertise<auto_smart_factory::ReservationRequest>("/reservation_request", 100, true);
+	reservationBroadcast_sub = pn.subscribe("/reservation_broadcast", 100, &Agent::reservationBroadcastCallback, this);
 
 	try {
-		this->motionPlanner = new MotionPlanner(this, this->robotConfig, &(this->motion_pub));
-		this->gripper = new Gripper(this, &(this->gripper_state_pub));
+		motionPlanner = new MotionPlanner(this, robotConfig, &(motion_pub));
+		gripper = new Gripper(this, &(gripper_state_pub));
 
 		// Disable to prevent crash because obstacleDetections was not initialized properly because no occupancy map is available
-		this->obstacleDetection = new ObstacleDetection(agentID, *motionPlanner, robotConfig, warehouseConfig);
-		this->obstacleDetection->enable(false);
+		obstacleDetection = new ObstacleDetection(agentID, *motionPlanner, robotConfig, warehouseConfig);
+		obstacleDetection->enable(false);
 
 		// Generate map
 		std::vector<Rectangle> obstacles;
 		for(auto o : warehouseConfig.map_configuration.obstacles) {
 			obstacles.emplace_back(Point(o.posX, o.posY), Point(o.sizeX, o.sizeY), o.rotation);
 		}
-		this->map = new Map(warehouseConfig, obstacles, hardwareProfile, agentIdInt);
+		map = new Map(warehouseConfig, obstacles, hardwareProfile, agentIdInt);
 
 		// Charging Management
 		this->chargingManagement = new ChargingManagement(this,this->warehouseConfig, this->robotConfig, this->map);
 
 		// Reservation Manager
-		reservationManager = new ReservationManager(&reservationCoordination_pub, map, agentIdInt, static_cast<int>(warehouse_configuration.robots.size()));
+		reservationManager = new ReservationManager(&reservationRequest_pub, map, agentIdInt);
 		
 		// Task Handler
-		this->taskHandler = new TaskHandler(agentID, &(this->taskrating_pub), this->map, this->motionPlanner, this->gripper, this->chargingManagement, reservationManager);
+		taskHandler = new TaskHandler(this, &(taskrating_pub), map, motionPlanner, gripper, chargingManagement, reservationManager);
 		
+		// Agent color
+		double color_r = 200;
+		double color_g = 200;
+		double color_b = 200;
+		pn.getParam("color_r", color_r);
+		pn.getParam("color_g", color_g);
+		pn.getParam("color_b", color_b);
+		agentColor.a = 1.0f;
+		agentColor.r = static_cast<float>(color_r / 255.f);
+		agentColor.g = static_cast<float>(color_g / 255.f);
+		agentColor.b = static_cast<float>(color_b / 255.f);
+						
 		ROS_WARN("Finished Initialize [%s]", agentID.c_str());
 		return true;
 	} catch(...) {
@@ -150,26 +159,19 @@ bool Agent::registerAgent() {
 void Agent::setupTaskHandling() {
 	ros::NodeHandle pn("~");
 	pn.setParam(agentID, "~assign_task");
-	this->assign_task_srv = pn.advertiseService("assign_task", &Agent::assignTask, this);
-}
-
-void Agent::setIdle(bool idle) {
-	if((isIdle && !idle) || (!isIdle && idle)) {
-		isIdle = idle;
-		sendHeartbeat();
-	}
+	assign_task_srv = pn.advertiseService("assign_task", &Agent::assignTask, this);
 }
 
 bool Agent::isTimeForHeartbeat() {
 	timeval time;
 	gettimeofday(&time, 0);
-	return lastTimestamp == 0 || time.tv_sec - lastTimestamp >= breakDuration;
+	return lastHeartbeat == 0 || time.tv_sec - lastHeartbeat >= heartbeatPeriod;
 }
 
 void Agent::sendHeartbeat() {
 	auto_smart_factory::RobotHeartbeat heartbeat;
 	heartbeat.id = agentID;
-	heartbeat.idle = isIdle;
+	heartbeat.idle = taskHandler->isIdle();
 	// TODO: An ETA or a buffer indicating the current workload (needs to be associated in a quantitative way)
 	// Task planner will directly receive this to decide on which agent is the most available.
 	// heartbeat.eta = Agent::getETA();
@@ -180,15 +182,15 @@ void Agent::sendHeartbeat() {
 		heartbeat.orientation = tf::getYaw(q);
 	}
 	heartbeat.battery_level = batteryLevel;
-	this->heartbeat_pub.publish(heartbeat);
+	heartbeat_pub.publish(heartbeat);
 	updateTimer();
-	ROS_DEBUG("[%s]: Heartbeat: idle=%s!", agentID.c_str(), isIdle ? "true" : "false");
+	ROS_DEBUG("[%s]: Heartbeat: idle=%s!", agentID.c_str(), taskHandler->isIdle() ? "true" : "false");
 }
 
 void Agent::updateTimer() {
 	timeval time;
 	gettimeofday(&time, 0);
-	lastTimestamp = time.tv_sec;
+	lastHeartbeat = time.tv_sec;
 }
 
 void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& msg) {
@@ -198,66 +200,62 @@ void Agent::collisionAlertCallback(const auto_smart_factory::CollisionAction& ms
 	// It can be updated to take another strategies to avoid further collisions.
 	if(msg.RobotId == agentID) {
 		ROS_WARN("Got collision alert [%s] of length %.2f with halt %i", agentID.c_str(), msg.time_to_halt, msg.halt);
-		this->obstacleDetection->enable(false);
-		this->motionPlanner->stop();
+		obstacleDetection->enable(false);
+		motionPlanner->stop();
 		if(msg.halt) {
 			ros::Duration(1 * msg.time_to_halt).sleep();
-			this->motionPlanner->start();
-			this->obstacleDetection->enable(true);
+			motionPlanner->start();
+			obstacleDetection->enable(true);
 		}
 	}
 }
 
 bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_factory::AssignTask::Response& res) {
 	try {
-		if(isIdle) {
-			// ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
+		// ROS_INFO("[%s]: IN Agent::assignTask, number of tasks in queue: %i", agentID.c_str(), taskHandler->numberQueuedTasks());
 
-			int task_id = req.task_id;
-			auto_smart_factory::Tray input_tray = getTray(req.input_tray);
-			auto_smart_factory::Tray storage_tray = getTray(req.storage_tray);
+		unsigned int task_id = req.task_id;
+		auto_smart_factory::Tray input_tray = getTray(req.input_tray);
+		auto_smart_factory::Tray storage_tray = getTray(req.storage_tray);
 
-			// ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
-			// ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
+		// ROS_INFO("[%s]: AssignTask --> inputTray (x=%f, y=%f)", agentID.c_str(), input_tray.x, input_tray.y);
+		// ROS_INFO("[%s]: AssignTask --> storageTray (x=%f, y=%f)", agentID.c_str(), storage_tray.x, storage_tray.y);
 
-			// create Task and add it to task handler
-			Path sourcePath;
-			Path targetPath;
+		// create Task and add it to task handler
+		Path sourcePath;
+		Path targetPath;
+		bool success = false;
 
-			Task* lastTask = taskHandler->getLastTask();
-			if(lastTask != nullptr){
-				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, lastTask->getEndTime());
-				targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration());
-				
-				if(sourcePath.isValid() && targetPath.isValid()) {
-					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
-					initialTimeOfCurrentTask = ros::Time::now().toSec();
-					res.success = true;
-				} else {
-					ROS_WARN("[%s] task %d can not be assigned, as source or target path is invalid", agentID.c_str(), task_id);
-					res.success = false;
-				}
-				
-			} else {
-				// take the current position
-				double now = ros::Time::now().toSec();
-				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, now);
-				targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration());
-
-				if(sourcePath.isValid() && targetPath.isValid()) {
-					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
-					initialTimeOfCurrentTask = ros::Time::now().toSec();
-					res.success = true;
-				} else {
-					ROS_WARN("[%s] task %d can not be assigned, as source or target path is invalid", agentID.c_str(), task_id);
-					res.success = false;
-				}
-			}			
+		double now = ros::Time::now().toSec();
+		Task* lastTask = taskHandler->getLastTask();
+		if(lastTask != nullptr){
+			sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, lastTask->getEndTime(), TransportationTask::getPickUpTime());
 			
+			if(sourcePath.isValid()) {
+				targetPath = map->getThetaStarPath(input_tray, storage_tray, lastTask->getEndTime() + sourcePath.getDuration() + TransportationTask::getPickUpTime(), TransportationTask::getDropOffTime());
+				
+				if(targetPath.isValid()) {
+					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, lastTask->getEndTime());
+					success = true;
+				}
+			}
 		} else {
-			// ROS_WARN("[%d]: Is busy! - Task %i has not been assigned!", agentIdInt, req.task_id);
-			res.success = false;
+			sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, now, TransportationTask::getPickUpTime());
+			
+			if(sourcePath.isValid()) {
+				targetPath = map->getThetaStarPath(input_tray, storage_tray, now + sourcePath.getDuration() + TransportationTask::getPickUpTime(), TransportationTask::getDropOffTime());
+				
+				if(targetPath.isValid()) {
+					taskHandler->addTransportationTask(task_id, req.input_tray, req.storage_tray, sourcePath, targetPath, now);
+					success = true;
+				}
+			}
 		}
+
+		res.success = success;
+		if(!success) {
+			ROS_WARN("[%s] task %d can not be assigned, as source or target path is invalid", agentID.c_str(), task_id);		
+		}		
 	} catch(std::out_of_range& e) {
 		// task does not exist
 		ROS_FATAL("[%d]: Attempted to assign inexistent task (specified id: %d)", agentIdInt, req.task_id);
@@ -268,27 +266,29 @@ bool Agent::assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_
 }
 
 auto_smart_factory::Tray Agent::getTray(unsigned int tray_id) {
-	for(auto& tray : warehouseConfig.trays)
+	for(auto& tray : warehouseConfig.trays) {
 		if(tray_id == tray.id) {
 			return tray;
 		}
-	ROS_ERROR("[%s]: Tray with id %u inexistent!", agentID.c_str(), tray_id);
+	}
+	ROS_FATAL("[%s]: Tray with id %u inexistent!", agentID.c_str(), tray_id);
+	throw std::invalid_argument("Tray id was not found");
 }
 
 void Agent::poseCallback(const geometry_msgs::PoseStamped& msg) {
 	position = msg.pose.position;
 	orientation = msg.pose.orientation;
 
-	// this->obstacleDetection->enable(true);
+	// obstacleDetection->enable(true);
 	tf::Quaternion q;
 	tf::quaternionMsgToTF(orientation, q);
-	this->motionPlanner->update(position, tf::getYaw(q));
+	motionPlanner->update(position, tf::getYaw(q));
 }
 
 void Agent::laserCallback(const sensor_msgs::LaserScan& msg) {
 	ROS_DEBUG("[%s]: Laser callback: angle_min=%f, angle_max=%f, ranges_size=%lu", agentID.c_str(), msg.angle_min, msg.angle_max, msg.ranges.size());
-	if(this->obstacleDetection->isEnabled()) {
-		this->obstacleDetection->update(position, asin(orientation.z), msg);
+	if(obstacleDetection->isEnabled()) {
+		obstacleDetection->update(position, asin(orientation.z), msg);
 	}
 }
 
@@ -298,69 +298,7 @@ void Agent::batteryCallback(const std_msgs::Float32& msg) {
 }
 
 void Agent::announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement) {
-	std::vector<TrayScore*> scores;
-	double queuedDuration = taskHandler->getDuration();
-	double estimatedBatteryAfterQueuedTasks = taskHandler->getEstimatedBatteryLevelAfterQueuedTasks();
-	Task* lastTask = taskHandler->getLastTask();
-	
-	for(uint32_t it_id : taskAnnouncement.start_ids){
-		for(uint32_t st_id : taskAnnouncement.end_ids){
-			// get Path
-			auto_smart_factory::Tray input_tray = getTray(it_id);
-			auto_smart_factory::Tray storage_tray = getTray(st_id);
-			Path sourcePath;
-			double startTime;
-			
-			if(lastTask != nullptr){
-				// take the last position of the last task
-				startTime = lastTask->getEndTime();
-				sourcePath = map->getThetaStarPath(lastTask->getTargetPosition(), input_tray, startTime);
-			} else {
-				// take the current position
-				startTime = ros::Time::now().toSec();
-				sourcePath = map->getThetaStarPath(getCurrentOrientedPosition(), input_tray, startTime);
-			}
-			
-			Path targetPath = map->getThetaStarPath(input_tray, storage_tray, startTime + sourcePath.getDuration());
-			double estimatedNewConsumption = sourcePath.getBatteryConsumption() + targetPath.getBatteryConsumption();
-
-			// Check if task can be completed
-			if(chargingManagement->isConsumptionPossible(estimatedBatteryAfterQueuedTasks, estimatedNewConsumption)) {
-				double duration = queuedDuration + sourcePath.getDuration() + targetPath.getDuration();
-				double scoreFactor = chargingManagement->getScoreMultiplierForBatteryLevel(estimatedBatteryAfterQueuedTasks - estimatedNewConsumption);
-				double score = (1.f / scoreFactor) * duration;
-				
-				// add score to list
-				double durationOfThisTask = sourcePath.getDuration() + targetPath.getDuration();
-				scores.push_back(new TrayScore(it_id, st_id, score, durationOfThisTask));
-			}
-		}
-	}
-	
-	if(!scores.empty()) {
-		std::sort(scores.begin(), scores.end(),
-			[](TrayScore* first, TrayScore* second) 
-				{return first->score < second->score;}
-			);
-		
-		TrayScore* best = scores.front();
-		// publish score
-		this->taskHandler->publishScore(taskAnnouncement.request_id, best->score, best->sourceTray, best->targetTray, best->estimatedDuration);
-		// clean list
-		for(TrayScore* s : scores){
-			delete s;
-		}
-		scores.clear();
-	} else {
-		// reject task
-		this->taskHandler->rejectTask(taskAnnouncement.request_id);
-		if(lastTask != nullptr && !(lastTask->isCharging()) ) {
-			std::pair<Path, uint32_t> pathToCS = this->chargingManagement->getPathToNearestChargingStation(lastTask->getTargetPosition(), lastTask->getEndTime());
-			// add charging task
-			ROS_INFO("[Agent %d] Adding charging task because new task could not be taken", agentIdInt);
-			this->taskHandler->addChargingTask(pathToCS.second, pathToCS.first, lastTask->getEndTime());
-		}
-	}
+	taskHandler->announcementCallback(taskAnnouncement);
 }
 
 std::string Agent::getAgentID() {
@@ -394,7 +332,12 @@ void Agent::publishVisualisation(const ros::TimerEvent& e) {
 	if(map != nullptr) {
 		visualisationPublisher.publish(map->getObstacleVisualization());
 		
-		auto reservationMsg = map->getReservationVisualization(agentIdInt, agentIdToColor(agentIdInt));
+		auto reservationMsg = map->getInactiveReservationVisualization(agentIdInt, getAgentColor());
+		if(!reservationMsg.points.empty()) {
+			visualisationPublisher.publish(reservationMsg);
+		}
+
+		reservationMsg = map->getActiveReservationVisualization(agentIdInt, getAgentColor());
 		if(!reservationMsg.points.empty()) {
 			visualisationPublisher.publish(reservationMsg);
 		}
@@ -405,55 +348,14 @@ ros::Publisher* Agent::getVisualisationPublisher() {
 	return &visualisationPublisher;
 }
 
-void Agent::reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg) {
-	reservationManager->reservationCoordinationCallback(msg);
-}
-
-std_msgs::ColorRGBA Agent::agentIdToColor(int agentId) {
-	std_msgs::ColorRGBA color;
-	color.a = 1.f;
-	color.r = 0.f;
-	color.g = 0.f;
-	color.b = 0.f;
-
-	switch(agentId) {
-		case 1:
-			color.r = 1.f;
-			break;
-		case 2:
-			color.g = 1.f;
-			break;
-		case 3:
-			color.b = 1.f;
-			break;
-		case 4:
-			color.r = 1.f;
-			color.g = 0.5f;
-			break;
-		case 5:
-			color.r = 1.f;
-			color.b = 1.f;
-			break;
-		case 6:
-			color.g = 1.f;
-			color.b = 1.f;
-			break;
-		case 7:
-			color.r = 0.5f;
-			color.b = 1.f;
-			break;
-		case 8:
-			color.r = 0.5f;
-			color.g = 1.f;
-			break;
-
-		default:break;
-	}
-
-	return color;
+void Agent::reservationBroadcastCallback(const auto_smart_factory::ReservationBroadcast& msg) {
+	reservationManager->reservationBroadcastCallback(msg);
 }
 
 bool Agent::isInitializedCompletely() {
-	//return initialized && motionPlanner->getPositionAsOrientedPoint().x != 0 && motionPlanner->getPositionAsOrientedPoint().y != 0;
 	return initialized && motionPlanner->isPositionInitialized();
+}
+
+std_msgs::ColorRGBA Agent::getAgentColor() {
+	return agentColor;
 }

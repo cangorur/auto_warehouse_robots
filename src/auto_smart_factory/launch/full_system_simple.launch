@@ -15,13 +15,13 @@
 	<node pkg="auto_smart_factory" type="storage_management" name="storage_management" />
 	
 	<!-- Task Planner -->
-	<node pkg="auto_smart_factory" type="task_planner" name="task_planner" >
-		<!-- this flag tells whether to use the robot offer with the shortest estimated duration (true) or just random choice (false) -->
-		<param name="use_best_eta" value="false" />
-	</node>
+	<node pkg="auto_smart_factory" type="task_planner" name="task_planner" />
 
 	<!-- Warehouse Gateway -->
 	<!--<node pkg="auto_smart_factory" type="warehouse_gateway" name="warehouse_gateway" /> -->
+	
+	<!-- Reservation Master -->
+	<node pkg="auto_smart_factory" type="reservation_master" name="reservation_master" />
 
 	<!-- Configuration Server -->
 	<node pkg="auto_smart_factory" type="config_server" name="config_server">
@@ -47,30 +47,35 @@
 		<param name="color_g" value="0" />
 		<param name="color_b" value="255" />
 	</node>
+	<!-- grey -->
 	<node pkg="auto_smart_factory" type="agent" name="robot_4" args="robot_4">
-		<param name="color_r" value="127" />
-		<param name="color_g" value="127" />
-		<param name="color_b" value="0" />
+		<param name="color_r" value="200" />
+		<param name="color_g" value="200" />
+		<param name="color_b" value="200" />
 	</node>
+	<!-- pink -->
 	<node pkg="auto_smart_factory" type="agent" name="robot_5" args="robot_5">
-		<param name="color_r" value="127" />
+		<param name="color_r" value="255" />
 		<param name="color_g" value="0" />
-		<param name="color_b" value="127" />
+		<param name="color_b" value="255" />
 	</node>
+	<!-- Cyan -->
 	<node pkg="auto_smart_factory" type="agent" name="robot_6" args="robot_6">
 		<param name="color_r" value="0" />
-		<param name="color_g" value="127" />
-		<param name="color_b" value="127" />
+		<param name="color_g" value="220" />
+		<param name="color_b" value="220" />
 	</node>
+	<!-- purple -->
 	<node pkg="auto_smart_factory" type="agent" name="robot_7" args="robot_7">
-		<param name="color_r" value="70" />
-		<param name="color_g" value="70" />
-		<param name="color_b" value="125" />
+		<param name="color_r" value="120" />
+		<param name="color_g" value="0" />
+		<param name="color_b" value="170" />
 	</node>
+	<!-- yellow -->
 	<node pkg="auto_smart_factory" type="agent" name="robot_8" args="robot_8">
-		<param name="color_r" value="127" />
-		<param name="color_g" value="150" />
-		<param name="color_b" value="200" />
+		<param name="color_r" value="220" />
+		<param name="color_g" value="220" />
+		<param name="color_b" value="0" />
 	</node>
 
 </launch>

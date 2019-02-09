@@ -1,9 +1,9 @@
 #ifndef AUTO_SMART_FACTORY_SRC_PACKAGECONFIGSERVER_H_
 #define AUTO_SMART_FACTORY_SRC_PACKAGECONFIGSERVER_H_
 
-#include <ros/ros.h>
-#include <auto_smart_factory/PackageConfiguration.h>
-#include <auto_smart_factory/GetPackageConfigurations.h>
+#include "ros/ros.h"
+#include "auto_smart_factory/PackageConfiguration.h"
+#include "auto_smart_factory/GetPackageConfigurations.h"
 
 /**
  * This class reads the package configuration file and provides a service to deliver the package

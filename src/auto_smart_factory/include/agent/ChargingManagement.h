@@ -6,7 +6,6 @@
 #include <vector>
 #include <auto_smart_factory/WarehouseConfiguration.h>
 #include <auto_smart_factory/RobotConfiguration.h>
-
 #include <auto_smart_factory/RobotHeartbeat.h>
 #include "auto_smart_factory/Tray.h"
 #include "agent/path_planning/Map.h"
@@ -96,7 +95,7 @@ private:
 	float chargingRate;
 
 	//Motor Draining rate
-	float motorDrainingRate
+	float motorDrainingRate;
 
 	// Max energy level of the agent to participate in charging
 	float upperThreshold = 70.00;

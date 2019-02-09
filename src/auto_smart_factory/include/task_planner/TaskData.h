@@ -8,12 +8,12 @@
 #ifndef AUTO_SMART_FACTORY_INCLUDE_TASK_PLANNER_TASKDATA_H_
 #define AUTO_SMART_FACTORY_INCLUDE_TASK_PLANNER_TASKDATA_H_
 
-#include <ros/ros.h>
+#include "ros/ros.h"
 
-#include <auto_smart_factory/Tray.h>
-#include <auto_smart_factory/Package.h>
-#include <task_planner/RobotCandidate.h>
-#include <storage_management/TrayAllocator.h>
+#include "auto_smart_factory/Tray.h"
+#include "auto_smart_factory/Package.h"
+#include "task_planner/RobotCandidate.h"
+#include "storage_management/TrayAllocator.h"
 
 /**
  * This class comprises all information that needs to be passed from a
@@ -22,7 +22,7 @@
  */
 class TaskData {
 public:
-	TaskData(const RobotCandidate& cand, TrayAllocatorPtr allocatedSource, TrayAllocatorPtr allocatedTarget, auto_smart_factory::Package pkg, ros::Time createTime);
+	TaskData(const RobotCandidate& candidate, TrayAllocatorPtr allocatedSource, TrayAllocatorPtr allocatedTarget, auto_smart_factory::Package pkg, ros::Time createTime);
 
 	virtual ~TaskData() = default;
 

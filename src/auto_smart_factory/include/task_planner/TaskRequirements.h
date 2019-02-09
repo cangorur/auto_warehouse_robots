@@ -8,10 +8,10 @@
 #ifndef AUTO_SMART_FACTORY_SRC_TASK_PLANNER_TASKREQUIREMENTS_H_
 #define AUTO_SMART_FACTORY_SRC_TASK_PLANNER_TASKREQUIREMENTS_H_
 
-#include <auto_smart_factory/PackageConfiguration.h>
-#include <auto_smart_factory/RobotConfiguration.h>
-#include <auto_smart_factory/Tray.h>
-#include <auto_smart_factory/TrayState.h>
+#include "auto_smart_factory/PackageConfiguration.h"
+#include "auto_smart_factory/RobotConfiguration.h"
+#include "auto_smart_factory/Tray.h"
+#include "auto_smart_factory/TrayState.h"
 
 /**
  * This class encapsulates the requirements to resources that all types of requests have.

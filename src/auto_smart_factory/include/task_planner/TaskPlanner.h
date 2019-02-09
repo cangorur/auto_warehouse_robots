@@ -8,25 +8,25 @@
 #ifndef AUTO_SMART_FACTORY_SRC_TASK_PLANNER_TASKPLANNER_H_
 #define AUTO_SMART_FACTORY_SRC_TASK_PLANNER_TASKPLANNER_H_
 
-#include <ros/ros.h>
+#include "ros/ros.h"
 #include <memory>
 #include <thread>
 
-#include <auto_smart_factory/InitTaskPlanner.h>
-#include <auto_smart_factory/PackageConfiguration.h>
-#include <auto_smart_factory/Tray.h>
-#include <auto_smart_factory/RobotConfiguration.h>
-#include <auto_smart_factory/RobotHeartbeat.h>
-#include <auto_smart_factory/StorageUpdate.h>
-#include <auto_smart_factory/GetStorageState.h>
-#include <auto_smart_factory/NewPackageInput.h>
-#include <auto_smart_factory/NewPackageOutput.h>
-#include <auto_smart_factory/RegisterAgent.h>
-#include <auto_smart_factory/TaskPlannerState.h>
+#include "auto_smart_factory/InitTaskPlanner.h"
+#include "auto_smart_factory/PackageConfiguration.h"
+#include "auto_smart_factory/Tray.h"
+#include "auto_smart_factory/RobotConfiguration.h"
+#include "auto_smart_factory/RobotHeartbeat.h"
+#include "auto_smart_factory/StorageUpdate.h"
+#include "auto_smart_factory/GetStorageState.h"
+#include "auto_smart_factory/NewPackageInput.h"
+#include "auto_smart_factory/NewPackageOutput.h"
+#include "auto_smart_factory/RegisterAgent.h"
+#include "auto_smart_factory/TaskPlannerState.h"
 
-#include <task_planner/Task.h>
-#include <auto_smart_factory/Tray.h>
-#include <task_planner/Request.h>
+#include "task_planner/Task.h"
+#include "auto_smart_factory/Tray.h"
+#include "task_planner/Request.h"
 
 /**
  * The task planner component manages all incoming requests, checks for resources
@@ -74,6 +74,11 @@ public:
 	void publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
                 	 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, 
 					 uint32_t requestId);
+
+	/* 
+	 * Function checking if something has changed and if so tries to assign not yet assigned tasks
+	 */
+	void update();
 
 private:
 	/**
@@ -170,6 +175,15 @@ private:
 
 
 private:
+	/// flag indicating that something has changed and that the task planner should try to assign tasks
+	bool resourcesChanged = false;
+
+	// frequency with which the task planner checks if it can assign previously unassigned tasks
+	ros::Duration updateFrequency;
+
+	/// the thread in which the task planner update function is working
+	std::thread updateExecutionThread;
+
 	/// all registered robots: mapping their id to their configuration and their state (idle/busy with idle = true)
 	std::map<std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> > registeredRobots;
 

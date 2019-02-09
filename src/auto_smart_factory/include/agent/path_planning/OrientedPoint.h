@@ -4,13 +4,13 @@
 class OrientedPoint {
 public:
 	explicit OrientedPoint();
-	explicit OrientedPoint(float x, float y, float o);
+	explicit OrientedPoint(double x, double y, double o);
 
 	virtual ~OrientedPoint() = default;
 
-	float x;
-	float y;
-	float o;
+	double x;
+	double y;
+	double o;
 };
 
 #endif /* AGENT_ORIENTEDPOINT_H_ */
