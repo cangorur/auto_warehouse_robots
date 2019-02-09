@@ -25,7 +25,7 @@ public:
 	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const;
 	const GridNode* getNodeClosestTo(const Point& pos) const;
 
-	const GridNode* addAdditionalNode(Point pos);
+	bool addAdditionalNode(Point pos);
 	
 	// Debugging
 	void listAllReservationsIn(Point p);

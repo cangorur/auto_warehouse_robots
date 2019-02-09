@@ -42,13 +42,13 @@ void TaskHandler::update() {
 			// check battery status,
 			if(chargingManagement->isChargingAppropriate()) {
 				double now = ros::Time::now().toSec();
+
 				std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(motionPlanner->getPositionAsOrientedPoint(), now);
-				// add charging task
 				if(pathToCS.first.isValid()) {
 					ROS_WARN("[%s] Adding charging task while in idle state", agent->getAgentID().c_str());
 					addChargingTask(pathToCS.second, pathToCS.first, now);
 				} else {
-					ROS_WARN("[%s] Could not add charging task while idling, path is invalid", agent->getAgentID().c_str());
+					ROS_FATAL("[%s] Could not add charging task while idling, path is invalid", agent->getAgentID().c_str());
 				}
 			}
 		}
@@ -382,11 +382,17 @@ void TaskHandler::answerAnnouncement(auto_smart_factory::TaskAnnouncement& taskA
 	} else {
 		// reject task
 		rejectTask(taskAnnouncement.request_id);
-		if(lastTask != nullptr && !(lastTask->isCharging()) ) {
-			std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(lastTask->getTargetPosition(), lastTask->getEndTime());
-			// add charging task
+		
+		// Queue charging task if not already present
+		if(lastTask != nullptr && !(lastTask->isCharging())) {
 			ROS_INFO("[Agent %d] Adding charging task because new task could not be taken", agent->getAgentIdInt());
-			addChargingTask(pathToCS.second, pathToCS.first, lastTask->getEndTime());
+			std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(lastTask->getTargetPosition(), lastTask->getEndTime());
+			
+			if(pathToCS.first.isValid()) {
+				addChargingTask(pathToCS.second, pathToCS.first, lastTask->getEndTime());	
+			} else {
+				ROS_FATAL("[Agent %d] Could not find a valid path to any charging station!", agent->getAgentIdInt());	
+			}		
 		}
 	}
 }

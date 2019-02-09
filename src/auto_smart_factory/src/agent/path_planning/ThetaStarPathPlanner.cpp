@@ -16,10 +16,19 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 	targetReservationTime(targetReservationTime)	
 {
 	isValidPathQuery = true;
+	
+	if(!map->addAdditionalNode(Point(start.x, start.y))) {
+		ROS_FATAL("[Agent %d] Node at StartPoint %f/%f could not be created", map->getOwnerId(), start.x, start.y);
+		isValidPathQuery = false;
+	}
+	if(!map->addAdditionalNode(Point(target.x, target.y))) {
+		ROS_FATAL("[Agent %d] Node at TargetPoint %f/%f could not be created", map->getOwnerId(), target.x, target.y);
+		isValidPathQuery = false;
+	}
 
-	startNode = map->addAdditionalNode(Point(start.x, target.y));
-	targetNode = map->addAdditionalNode(Point(target.x, target.y));
-
+	startNode = map->getNodeClosestTo(Point(start));
+	targetNode = map->getNodeClosestTo(Point(target));
+	
 	if(startNode == nullptr) {
 		ROS_FATAL("[Agent %d] StartPoint %f/%f is not in theta* map!", map->getOwnerId(), start.x, start.y);
 		isValidPathQuery = false;
@@ -50,6 +59,11 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 Path ThetaStarPathPlanner::findPath() {
 	if(!isValidPathQuery) {
 		return Path();
+	}
+	
+	if(start.x == target.x && start.y == target.y) {
+		ROS_WARN("[Agent %d] Returning path with start == target ( %f/%f )", map->getOwnerId(), start.x, start.y);
+		return Path(startingTime, {Point(start), Point(start)}, {0.0, 0.0}, hardwareProfile, targetReservationTime, start, start);
 	}
 	
 	GridInformationMap exploredSet;
@@ -216,8 +230,8 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 	if(pathNodes.size() <= 1) {
 		ROS_FATAL("[Agent %d] PathNodesSize: %d", map->getOwnerId(), (int) pathNodes.size());
 		ROS_WARN("Start: %f/%f | Target: %f/%f", start.x, start.y, target.x, target.y);
-		for(int i = 0; i < pathNodes.size(); i++) {
-			ROS_WARN("[%d] %f/%f", i, pathNodes[i].x, pathNodes[i].y);	
+		for(int j = 0; j < pathNodes.size(); j++) {
+			ROS_WARN("[%d] %f/%f", j, pathNodes[j].x, pathNodes[j].y);	
 		}	
 		
 		ROS_ASSERT(pathNodes.size() > 1);
