@@ -122,7 +122,8 @@ private:
 	double driveDistance = 0.0;
 
 	/// Threshold when robot should stop and turn on spot instead of pid controlled
-	double turnThreshold = Math::toRad(65.f);
+	double turnThreshold = Math::toRad(55.f);
+	double turnThresholdFirstPoint = Math::toRad(12.f);
 	
 	/// Turning and Driving Speed Limitations from robots config file
 	float maxTurningSpeed;
