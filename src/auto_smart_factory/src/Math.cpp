@@ -1,7 +1,5 @@
 #include <cmath>
 #include <time.h>
-#include <include/Math.h>
-
 
 #include "Math.h"
 #include "agent/path_planning/Point.h"
@@ -14,21 +12,21 @@ void Math::initRandom(unsigned long seed) {
 	srand(static_cast<unsigned int>(seed));
 }
 
-float Math::getRandom(float min, float max) {
+double Math::getRandom(double min, double max) {
 	// Using rand instead of C++ random library is totally sufficient and faster
-	float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+	double r = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
 	return r * (max - min) + min;
 }
 
-float Math::dotProduct(const Point& v1, const Point& v2) {
+double Math::dotProduct(const Point& v1, const Point& v2) {
 	return v1.x*v2.x + v1.y*v2.y;
 }
 
-float Math::crossProduct(const Point& v1, const Point& v2) {
+double Math::crossProduct(const Point& v1, const Point& v2) {
 	return v1.x*v2.y - v1.y*v2.x;
 }
 
-Point Math::rotateVector(const Point& v, float angle) {
+Point Math::rotateVector(const Point& v, double angle) {
 	angle *= TO_RAD;
 
 	Point r;
@@ -38,32 +36,32 @@ Point Math::rotateVector(const Point& v, float angle) {
 	return r;
 }
 
-float Math::getDistance(const Point& v1, const Point& v2) {
-	return sqrtf((v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y));
+double Math::getDistance(const Point& v1, const Point& v2) {
+	return std::sqrt((v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y));
 }
 
-float Math::getLength(const Point& v) {
-	return sqrtf(v.x * v.x + v.y * v.y);
+double Math::getLength(const Point& v) {
+	return std::sqrt(v.x * v.x + v.y * v.y);
 }
 
-float Math::getDistanceSquared(const Point& v1, const Point& v2) {
+double Math::getDistanceSquared(const Point& v1, const Point& v2) {
 	return (v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y);
 }
 
 bool Math::areLineSegmentsParallel(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End) {
 	Point v1 = l1End - l1Start;
 	Point v2 = l2End - l2Start;
-	return std::fabs(v1.x*v2.y - v1.y*v2.x) < EPS;
+	return std::abs(v1.x*v2.y - v1.y*v2.x) < EPS;
 }
 
 bool Math::doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End) {
 	// See https://stackoverflow.com/a/100165
-	float s1_x = l1End.x - l1Start.x;
-	float s1_y = l1End.y - l1Start.y;
-	float s2_x = l2End.x - l2Start.x;
-	float s2_y = l2End.y - l2Start.y;
+	double s1_x = l1End.x - l1Start.x;
+	double s1_y = l1End.y - l1Start.y;
+	double s2_x = l2End.x - l2Start.x;
+	double s2_y = l2End.y - l2Start.y;
 
-	float det = -s2_x * s1_y + s1_x * s2_y;
+	double det = -s2_x * s1_y + s1_x * s2_y;
 
 	// Parallel or colinear
 	if(std::fabs(det) < EPS) {
@@ -74,16 +72,16 @@ bool Math::doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, con
 
 		Point dir = l1End - l1Start;
 
-		float dotDirDir = dotProduct(dir, dir);
-		float t1 = 0.f;
-		float t2 = 1.f;
+		double dotDirDir = dotProduct(dir, dir);
+		double t1 = 0.f;
+		double t2 = 1.f;
 		Point tol2Start = l2Start - l1Start;
 		Point tol2End = l2End - l1Start;
-		float t3 = dotProduct(tol2Start, dir) / dotDirDir;
-		float t4 = dotProduct(tol2End, dir) / dotDirDir;
+		double t3 = dotProduct(tol2Start, dir) / dotDirDir;
+		double t4 = dotProduct(tol2End, dir) / dotDirDir;
 
 		if(t4 < t3) {
-			float tmp = t3;
+			double tmp = t3;
 			t3 = t4;
 			t4 = tmp;
 		}
@@ -91,45 +89,45 @@ bool Math::doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, con
 		return (t2 - t3 >= 0 && t4 - t1 >= 0);
 	}
 
-	float s, t;
+	double s, t;
 	s = (-s1_y * (l1Start.x - l2Start.x) + s1_x * (l1Start.y - l2Start.y)) / det;
 	t = ( s2_x * (l1Start.y - l2Start.y) - s2_y * (l1Start.x - l2Start.x)) / det;
 
 	return s > 0.f && s < 1.f && t > 0.f && t < 1.f;
 }
 
-float Math::getRotation(const Point& v) {
+double Math::getRotationInDeg(const Point& v) {
 	if(v.x != 0 || v.y != 0) {
 		double d = (std::atan2(v.y, v.x) * TO_DEG);
 
 		if(d < 0) {
-			d+= 360;
+			d += 360;
 		}
-		return static_cast<float>(d);
+		return d;
 	}
 	return 0;
 }
 
-float Math::toRad(float angle) {
+double Math::toRad(double angle) {
 	return angle * TO_RAD;
 }
 
-float Math::toDeg(float angle) {
+double Math::toDeg(double angle) {
 	return angle * TO_DEG;
 }
 
-float Math::projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
+double Math::projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
 	Point line = lEnd - lStart;
 	Point startToPoint = point - lStart;
-	float lengthSquared = getDistanceSquared(lStart, lEnd);
+	double lengthSquared = getDistanceSquared(lStart, lEnd);
 	return dotProduct(line, startToPoint) / lengthSquared;
 }
 
-float Math::getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
+double Math::getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
 	Point line = lEnd - lStart;
 	Point startToPoint = point - lStart;
-	float lengthSquared = getDistanceSquared(lStart, lEnd);
-	float t = dotProduct(line, startToPoint) / lengthSquared;
+	double lengthSquared = getDistanceSquared(lStart, lEnd);
+	double t = dotProduct(line, startToPoint) / lengthSquared;
 
 	if(t <= 0) {
 		return getDistance(lStart, point);
@@ -143,7 +141,7 @@ float Math::getDistanceToLineSegment(const Point& lStart, const Point& lEnd, con
 int Math::getDirectionToLineSegment(const Point& lStart, const Point& lEnd, const Point& point) {
 	Point nEnd = lEnd - lStart;
 	Point nPoint = point - lStart;
-	float cP = crossProduct(nEnd, nPoint);
+	double cP = crossProduct(nEnd, nPoint);
 
 	if(cP > 0)
 		return 1;
@@ -154,30 +152,30 @@ int Math::getDirectionToLineSegment(const Point& lStart, const Point& lEnd, cons
 	return 0;
 }
 
-float Math::getDistanceToLine(const Point& lStart, const Point& lEnd, const Point& point) {
+double Math::getDistanceToLine(const Point& lStart, const Point& lEnd, const Point& point) {
 	Point line = lEnd - lStart;
 	Point startToPoint = point - lStart;
-	float lengthSquared = getDistanceSquared(lStart, lEnd);
-	float t = dotProduct(line, startToPoint) / lengthSquared;
+	double lengthSquared = getDistanceSquared(lStart, lEnd);
+	double t = dotProduct(line, startToPoint) / lengthSquared;
 
 
 	return getDistance(point, lStart + t * line);
 }
 
-float Math::getAngleBetweenVectors(const Point& v1, const Point& v2) {
-	return acos(dotProduct(v1, v2) / (getLength(v1)*getLength(v2)));
+double Math::getAngleBetweenVectors(const Point& v1, const Point& v2) {
+	return std::acos(dotProduct(v1, v2) / (getLength(v1) * getLength(v2)));
 }
 
-Point Math::getVectorFromOrientation(float o) {
-	return Point(cos(o), sin(o));
+Point Math::getVectorFromOrientation(double o) {
+	return Point(std::cos(o), std::sin(o));
 }
 
-float Math::getOrientationFromVector(const Point& v) {
+double Math::getOrientationFromVector(const Point& v) {
 	return std::atan2(v.y, v.x);
 }
 
-float Math::getAngleMedian(float a1, float a2) {
-	float diff = a2 - a1;
+double Math::getAngleMedian(double a1, double a2) {
+	double diff = a2 - a1;
 
 	if(diff > 180) {
 		diff = diff - 360;
@@ -188,16 +186,16 @@ float Math::getAngleMedian(float a1, float a2) {
 	return a1 + diff/2.f;
 }
 
-float Math::lerp(float start, float end, float alpha) {
+double Math::lerp(double start, double end, double alpha) {
 	return start + (end-start) * alpha;
 }
 
-float Math::clamp(float value, float min, float max) {
+double Math::clamp(double value, double min, double max) {
 	return std::max(min, std::min(max, value));
 }
 
-float Math::getAngleDifferenceInDegree(float source, float target) {
-	float angle = target - source;
+double Math::getAngleDifferenceInDegree(double source, double target) {
+	double angle = target - source;
 
 	if(angle > 180) {
 		angle = angle - 360;
@@ -208,13 +206,13 @@ float Math::getAngleDifferenceInDegree(float source, float target) {
 	return angle;
 }
 
-float Math::getAngleDifferenceInRad(float source, float target) {
-	float angle = target - source;
+double Math::getAngleDifferenceInRad(double source, double target) {
+	double angle = target - source;
 
 	if(angle > M_PI) {
-		angle = angle - 2*M_PI;
+		angle = angle - 2 * M_PI;
 	} else if(angle < -M_PI){
-		angle = angle + 2*M_PI;
+		angle = angle + 2 * M_PI;
 	}
 
 	return angle;
@@ -222,9 +220,9 @@ float Math::getAngleDifferenceInRad(float source, float target) {
 
 double Math::normalizeRad(double angle) {
 	if(angle > M_PI) {
-		angle = angle - 2*M_PI;
+		angle = angle - 2 * M_PI;
 	} else if(angle < -M_PI){
-		angle = angle + 2*M_PI;
+		angle = angle + 2 * M_PI;
 	}
 
 	return angle;
@@ -240,14 +238,10 @@ double Math::normalizeDegree(double angle) {
 	return angle;
 }
 
-double Math::mapRange(double x, double in_min, double in_max, double out_min, double out_max) {
-	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
-
 bool Math::doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle) {
 	// Find min and max X for the segment
-	float minX = lStart.x;
-	float maxX = lEnd.x;
+	double minX = lStart.x;
+	double maxX = lEnd.x;
 
 	if(lStart.x > lEnd.x) {
 		minX = lEnd.x;
@@ -268,20 +262,20 @@ bool Math::doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, con
 	}
 
 	// Find corresponding min and max Y for min and max X we found before
-	float minY = lStart.y;
-	float maxY = lEnd.y;
+	double minY = lStart.y;
+	double maxY = lEnd.y;
 
-	float dx = lEnd.x - lStart.x;
+	double dx = lEnd.x - lStart.x;
 
-	if(std::fabs(dx) > EPS) {
-		float a = (lEnd.y - lStart.y) / dx;
-		float b = lStart.y - a * lStart.x;
+	if(std::abs(dx) > EPS) {
+		double a = (lEnd.y - lStart.y) / dx;
+		double b = lStart.y - a * lStart.x;
 		minY = a * minX + b;
 		maxY = a * maxX + b;
 	}
 
 	if(minY > maxY) {
-		float tmp = maxY;
+		double tmp = maxY;
 		maxY = minY;
 		minY = tmp;
 	}

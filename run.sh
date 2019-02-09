@@ -5,6 +5,8 @@ if ! [ -x "$(command -v tmux)" ]; then
   exit 1
 fi
 
+[[ -z "$1" ]] && grep="" || grep="| grep $1"
+
 tmux kill-session -t rosc &> /dev/null
 
 tmux new -s rosc -d
@@ -17,9 +19,9 @@ tmux resize-pane -t rosc.2 -D 20
 
 tmux send-keys -t rosc.0 "morse run auto_smart_factory auto_factory_simple_fast.py" enter
 
-tmux send-keys -t rosc.1 "roslaunch --screen auto_smart_factory full_system_simple.launch" enter
+tmux send-keys -t rosc.1 "sleep 2 && roslaunch --screen auto_smart_factory full_system_simple.launch $grep" enter
 
-tmux send-keys -t rosc.2 "sleep 3 && roslaunch auto_smart_factory visualization.launch" enter
+tmux send-keys -t rosc.2 "sleep 4 && roslaunch auto_smart_factory visualization.launch" enter
 
 tmux a
 

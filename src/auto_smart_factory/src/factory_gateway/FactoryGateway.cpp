@@ -6,13 +6,9 @@
  *      Email: orhan-can.goeruer@dai-labor.de
  */
 
-#include <ros/ros.h>
-// include <package_name/service_type_name.h>
-#include <std_srvs/Trigger.h>
-
-#include <stdlib.h>                // for rand() and RAND_MAX
-#include <string.h>
-#include <iostream>
+#include "ros/ros.h"
+// include "package_name/service_type_name.h"
+#include "std_srvs/Trigger.h"
 
 #include "simple_web_socket/server_ws.hpp"
 #include "simple_web_socket/client_ws.hpp"
@@ -20,10 +16,7 @@
 typedef SimpleWeb::SocketServer<SimpleWeb::WS> WsServer;
 typedef SimpleWeb::SocketClient<SimpleWeb::WS> WsClient;
 
-#include <factory_gateway/FactoryGateway.h>
-
-#include <auto_smart_factory/Package.h>
-#include <auto_smart_factory/Tray.h>
+#include "factory_gateway/FactoryGateway.h"
 
 
 using namespace std;

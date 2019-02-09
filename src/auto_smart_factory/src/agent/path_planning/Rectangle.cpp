@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <include/agent/path_planning/Rectangle.h>
 #include "agent/path_planning/Rectangle.h"
 #include "Math.h"
 
@@ -25,8 +24,8 @@ Rectangle::Rectangle(Point pos_, Point size_, float rotation_, double startTime,
 	}
 
 	// Generate inflated points
-	Point sizeInflated = Point(size.x + ROBOT_DIAMETER * 2, size.y + ROBOT_DIAMETER * 2);
-	Point diagonalInflated = Point(size.x + ROBOT_DIAMETER * 2, size.y + ROBOT_DIAMETER * 2) * 0.5f;
+	Point sizeInflated = Point(size.x + ROBOT_RADIUS * 2, size.y + ROBOT_RADIUS * 2);
+	Point diagonalInflated = Point(size.x + ROBOT_RADIUS * 2, size.y + ROBOT_RADIUS * 2) * 0.5f;
 	Point diagonalInflatedMirrored = Point(diagonalInflated.x, -diagonalInflated.y);
 	
 	pointsInflated[0] = pos + Math::rotateVector(diagonalInflated, rotation);

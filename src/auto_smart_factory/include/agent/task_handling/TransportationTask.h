@@ -17,7 +17,10 @@ public:
 	double getBatteryConsumption() override;
 	double getDuration() override;
 	void setState(Task::State state) override;
-
+	
+	static double getPickUpTime();
+	static double getDropOffTime();
+	
 protected:
 	// the task id of the task
 	unsigned int id;
@@ -30,10 +33,8 @@ protected:
 	double sourceDuration;
 	double sourceBatCons;
 
-	// time to pick up a packet
-	const float pickUpTime = 0.0f;
-	// time to drop off a packet
-	const float dropOffTime = 0.0f;
+	static double pickUpTime;
+	static double dropOffTime;
 };
 
 #endif /* AGENT_TRANSPORTATIONTASK_H_ */

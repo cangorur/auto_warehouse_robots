@@ -96,7 +96,8 @@ add_message_files(
 		CollisionAction.msg
 		MapConfiguration.msg
 		Rectangle.msg
-		ReservationCoordination.msg
+		ReservationBroadcast.msg
+		ReservationRequest.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -107,7 +108,6 @@ add_service_files(
 		InitPathPlanner.srv
 		InitStorageManagement.srv
 		InitPackageGenerator.srv
-		#InitChargingManagement.srv
 		RegisterAgent.srv
 		StorePackage.srv
 		RetrievePackage.srv
@@ -257,7 +257,6 @@ add_executable(agent_node
 		src/agent/path_planning/RobotHardwareProfile.cpp
 		src/agent/path_planning/TimedLineOfSightResult.cpp
 		src/agent/path_planning/ReservationManager.cpp
-		src/agent/path_planning/ReservationBid.cpp
 
 		src/agent/Agent.cpp
 		src/agent/AgentNode.cpp
@@ -313,15 +312,14 @@ set_target_properties(storage_management_node PROPERTIES OUTPUT_NAME storage_man
 add_dependencies(storage_management_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(storage_management_node ${catkin_LIBRARIES})
 
-# Charging Management
-#add_executable(charging_management_node
-#		src/Agent/ChargingManagementNode.cpp
-#		src/Agent/ChargingManagement.cpp
-#		)
-#set_target_properties(charging_management_node PROPERTIES OUTPUT_NAME charging_management PREFIX "")
-#add_dependencies(charging_management_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#target_link_libraries(charging_management_node ${catkin_LIBRARIES})
-
+# Reservation Master
+add_executable(reservation_master_node
+		src/reservation_master/ReservationMasterNode.cpp
+		src/reservation_master/ReservationMaster.cpp
+		)
+set_target_properties(reservation_master_node PROPERTIES OUTPUT_NAME reservation_master PREFIX "")
+add_dependencies(reservation_master_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(reservation_master_node ${catkin_LIBRARIES})
 
 # cpptest
 #add_executable(test_service_node

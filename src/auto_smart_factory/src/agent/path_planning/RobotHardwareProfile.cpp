@@ -1,7 +1,7 @@
 #include <cmath>
 #include "agent/path_planning/RobotHardwareProfile.h"
 
-RobotHardwareProfile::RobotHardwareProfile(float maxDrivingSpeed, float maxTurningSpeed, float idleBatteryConsumption, float drivingBatteryConsumption) :
+RobotHardwareProfile::RobotHardwareProfile(double maxDrivingSpeed, double maxTurningSpeed, double idleBatteryConsumption, double drivingBatteryConsumption) :
 		maxDrivingSpeed(maxDrivingSpeed),
 		maxTurningSpeed(maxTurningSpeed),
 		idleBatteryConsumption(idleBatteryConsumption),
@@ -9,20 +9,25 @@ RobotHardwareProfile::RobotHardwareProfile(float maxDrivingSpeed, float maxTurni
 {
 }
 
-float RobotHardwareProfile::getIdleBatteryConsumption(double time) const {
-	return static_cast<float>(idleBatteryConsumption * time);
+double RobotHardwareProfile::getIdleBatteryConsumption(double time) const {
+	return idleBatteryConsumption * time;
 }
 
 // Todo include idle consumption?
-float RobotHardwareProfile::getDrivingBatteryConsumption(double time) const {
-	return static_cast<float>(drivingBatteryConsumption * time + getIdleBatteryConsumption(time));
+double RobotHardwareProfile::getDrivingBatteryConsumption(double time) const {
+	return drivingBatteryConsumption * time + getIdleBatteryConsumption(time);
 }
 
-double RobotHardwareProfile::getDrivingDuration(float distance) const {
-	return distance/(maxDrivingSpeed * averageDrivingEfficiency);
+double RobotHardwareProfile::getDrivingDuration(double distance) const {
+	return distance / (maxDrivingSpeed * averageDrivingEfficiency);
 }
 
-double RobotHardwareProfile::getTurningDuration(float angle) const {
-	return std::fabs(angle)/(maxTurningSpeed * averageTurningEfficiency);
+double RobotHardwareProfile::getTurningDuration(double angle) const {
+	angle = std::abs(angle);
+	if(angle < onSpotTurningAngle) {
+		return angle / (drivingTurningEfficiency * maxTurningSpeed);
+	} else {
+		return angle / (onSpotTurningEfficiency * maxTurningSpeed);	
+	}
 }
 

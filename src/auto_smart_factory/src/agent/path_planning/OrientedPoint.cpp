@@ -1,6 +1,6 @@
-#include <agent/path_planning/OrientedPoint.h>
+#include "agent/path_planning/OrientedPoint.h"
 
-OrientedPoint::OrientedPoint(float x, float y, float o)	:
+OrientedPoint::OrientedPoint(double x, double y, double o)	:
 		x(x),
 		y(y),
 		o(o) {

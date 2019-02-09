@@ -2,15 +2,16 @@
 #define AGENT_PATH_H_
 
 #include <vector>
-#include <visualization_msgs/Marker.h>
+#include "visualization_msgs/Marker.h"
 #include "agent/path_planning/Point.h"
 #include "agent/path_planning/Rectangle.h"
 #include "RobotHardwareProfile.h"
 
 class Path {
 public:
-	double maxReservationLength = 8;
-	double reservationMargin = 1.5f;
+	double maxReservationLength = 4;
+	double reservationTimeMarginAhead = 0.f;
+	double reservationTimeMarginBehind = 0.f;
 	
 private:
 	double startTimeOffset = 0;
@@ -18,19 +19,21 @@ private:
 	std::vector<double> waitTimes;
 	RobotHardwareProfile* hardwareProfile;
 	
+	double targetReservationTime;
+	
 	OrientedPoint start;
 	OrientedPoint end;
 	bool isValidPath;
 
 	// Computed internally for motion planner
 	std::vector<double> departureTimes;
-	float distance = 0;
-	float duration = 0;
-	float batteryConsumption = 0;
+	float distance;
+	float duration;
+	float batteryConsumption;
 
 public:
 	explicit Path();
-	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint end);
+	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, double targetReservationTime, OrientedPoint start, OrientedPoint end);
 	
 	virtual ~Path() = default;
 
@@ -47,8 +50,7 @@ public:
 	const std::vector<Rectangle> generateReservations(int ownerId) const;
 	
 	// ROS visualisation
-	visualization_msgs::Marker getVisualizationMsgPoints();
-	visualization_msgs::Marker getVisualizationMsgLines();
+	visualization_msgs::Marker getVisualizationMsgLines(std_msgs::ColorRGBA color);
 
 	OrientedPoint getStart();
 	OrientedPoint getEnd();
@@ -56,5 +58,7 @@ public:
 	bool isValid() const;
 
 };
+
+bool operator ==(const Path& p1, const Path& p2);
 
 #endif /* AGENT_PATH_H_ */

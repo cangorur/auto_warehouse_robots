@@ -2,14 +2,13 @@
 #include <iostream>
 #include <include/agent/path_planning/Map.h>
 
-#include "ros/ros.h"
-#include "Math.h"
-#include "agent/path_planning/Rectangle.h"
 #include "agent/path_planning/Map.h"
-#include "agent/path_planning/Point.h"
+
+#include "ros/ros.h"
 #include "agent/path_planning/ThetaStarPathPlanner.h"
 
 int Map::visualisationId = 0;
+double Map::infiniteReservationTime = 0;
 
 Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector<Rectangle>& obstacles, RobotHardwareProfile* hardwareProfile, int ownerId) :
 		warehouseConfig(warehouseConfig),
@@ -19,6 +18,10 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 		hardwareProfile(hardwareProfile),
 		ownerId(ownerId)
 {
+	if(infiniteReservationTime == 0) {
+		infiniteReservationTime = ros::Time::now().toSec() + 1000000.f;
+	}
+	
 	this->obstacles.clear();
 	for(const Rectangle& o : obstacles) {
 		this->obstacles.emplace_back(o.getPosition(), o.getSize(), o.getRotation());
@@ -34,12 +37,13 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 	reservations.clear();
 	
 	// Add idle reservations
+	double infiniteReservationStartTime = ros::Time::now().toSec() - 1000;
 	for(const auto& idlePosition : warehouseConfig.idle_positions) {
 		std::string idStr = idlePosition.id.substr(idlePosition.id.find('_') + 1);
 		int id = std::stoi(idStr);
 		Point pos = Point(static_cast<float>(idlePosition.pose.x), static_cast<float>(idlePosition.pose.y));
 		
-		reservations.emplace_back(pos, Point(ROBOT_DIAMETER * 2.f, ROBOT_DIAMETER * 2.f), 0, 0, MaxReservationTime, id);
+		reservations.emplace_back(pos, Point(ROBOT_RADIUS * 2.f, ROBOT_RADIUS * 2.f), 0, infiniteReservationStartTime, infiniteReservationTime, id);
 	}
 }
 
@@ -97,8 +101,8 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 		// Upcoming obstacles			
 		if(Math::isPointInRectangle(pos2, reservation) && reservation.getStartTime() > endTime && reservation.getOwnerId() != ownerId) {
 			result.hasUpcomingObstacle = true;
-			// Todo make adaptive
-			double minTimeToLeave = 15;
+			// Todo make adaptive - for now assume that every reservation can be left in x seconds
+			double minTimeToLeave = 8;
 
 			double lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
 			if(lastValidEntryTime < result.lastValidEntryTime) {
@@ -106,6 +110,12 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 				result.freeAfterUpcomingObstacle = reservation.getEndTime();
 			}
 		}
+	}
+	
+	double maxTime = endTime + 10000.f;
+	if((result.blockedByTimed && result.freeAfter > maxTime) ||
+	   (result.hasUpcomingObstacle && (result.lastValidEntryTime > maxTime || result.freeAfterUpcomingObstacle > maxTime))) {
+		result.blockedByStatic = true;
 	}
 
 	return result;
@@ -157,31 +167,37 @@ float Map::getMargin() const {
 	return margin;
 }
 
-Path Map::getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime) {
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
-	return thetaStarPathPlanner.findPath(start, end, startingTime);
+Path Map::getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime, double targetReservationTime) {
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, start, end, startingTime, targetReservationTime);
+	return thetaStarPathPlanner.findPath();
 }
 
-Path Map::getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime) {
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
+Path Map::getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime, double targetReservationTime) {
 	const OrientedPoint endPoint = getPointInFrontOfTray(end);
+	
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, start, endPoint, startingTime, targetReservationTime);
 	//ROS_INFO("Computing path from (%f/%f) to tray of type %s (%f/%f)", start.x, start.y, end.type.c_str(), getPointInFrontOfTray(end).x, getPointInFrontOfTray(end).y);
-	return thetaStarPathPlanner.findPath(start, endPoint, startingTime);
+	
+	return thetaStarPathPlanner.findPath();
 }
 
-Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime) {
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
+Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime, double targetReservationTime) {
 	const OrientedPoint startPoint = getPointInFrontOfTray(start);
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, startPoint, end, startingTime, targetReservationTime);
+	
 	//ROS_INFO("Computing path from tray of type %s (%f/%f) to (%f/%f)", start.type.c_str(), getPointInFrontOfTray(start).x, getPointInFrontOfTray(start).y, end.x, end.y);
-	return thetaStarPathPlanner.findPath(startPoint, end, startingTime);
+	
+	return thetaStarPathPlanner.findPath();
 }
 
-Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime) {
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
+Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime, double targetReservationTime) {
 	const OrientedPoint startPoint = getPointInFrontOfTray(start);
 	const OrientedPoint endPoint = getPointInFrontOfTray(end);
+
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, startPoint, endPoint, startingTime, targetReservationTime);
 	//ROS_INFO("Computing path from tray of type %s (%f/%f) to tray of type %s (%f/%f)", start.type.c_str(), getPointInFrontOfTray(start).x, getPointInFrontOfTray(start).y, end.type.c_str(), getPointInFrontOfTray(end).x, getPointInFrontOfTray(end).y);
-	return thetaStarPathPlanner.findPath(startPoint, endPoint, startingTime);
+	
+	return thetaStarPathPlanner.findPath();
 }
 
 bool Map::isPointInMap(const Point& pos) const {
@@ -200,6 +216,18 @@ void Map::deleteExpiredReservations(double time) {
 	}
 }
 
+void Map::deleteReservationsFromAgent(int agentId) {
+	auto iter = reservations.begin();
+
+	while(iter != reservations.end()) {
+		if((*iter).getOwnerId() == agentId) {
+			iter = reservations.erase(iter);
+		} else {
+			iter++;
+		}
+	}
+}
+
 void Map::addReservations(std::vector<Rectangle> newReservations) {
 	for(const auto& r : newReservations) {
 		reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime(), r.getOwnerId());
@@ -210,10 +238,17 @@ OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 	OrientedPoint p;
 
 	// Assume tray.orientation is in degree
+	float trayRadius = 0.25f;
+	float approachRoutineLength = APPROACH_DISTANCE;
+	float distanceWhenApproached = 0.1f;
+	float robotRadius = 0.25f; // Real radius, not including margin for reservations
+	
+	float offset = trayRadius + approachRoutineLength + distanceWhenApproached + robotRadius;
+	
 	double inputDx = std::cos(tray.orientation * PI / 180);
 	double inputDy = std::sin(tray.orientation * PI / 180);
-	p.x = static_cast<float>(tray.x + (0.81f + ROBOT_DIAMETER) * inputDx);
-	p.y = static_cast<float>(tray.y + (0.81f + ROBOT_DIAMETER) * inputDy);
+	p.x = static_cast<float>(tray.x + offset * inputDx);
+	p.y = static_cast<float>(tray.y + offset * inputDy);
 	p.o = static_cast<float>(Math::normalizeRad(Math::toRad(tray.orientation + 180.f)));
 	
 	return p;
@@ -274,14 +309,14 @@ visualization_msgs::Marker Map::getObstacleVisualization() {
 	return msg;
 }
 
-visualization_msgs::Marker Map::getReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type color) {
+visualization_msgs::Marker Map::getInactiveReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type baseColor) {
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";
 	msg.header.stamp = ros::Time::now();
 	msg.ns = "Reservations";
 	msg.action = visualization_msgs::Marker::ADD;
 	msg.pose.orientation.w = 1.0;
-	msg.lifetime = ros::Duration(0.5f);
+	msg.lifetime = ros::Duration(0.24f);
 
 	msg.id = Map::visualisationId++;
 	msg.type = visualization_msgs::Marker::TRIANGLE_LIST;
@@ -289,15 +324,20 @@ visualization_msgs::Marker Map::getReservationVisualization(int ownerId, visuali
 	msg.scale.x = 1.f;
 	msg.scale.y = 1.f;
 	msg.scale.z = 1.f;
-
-	msg.color = color;
-	msg.color.a = 0.4;
+	
+	msg.color = baseColor;
+	msg.color.a = 0.225f;
 
 	geometry_msgs::Point p;
 	p.z = 0.f;
-	// Obstacles
+
+	double now = ros::Time::now().toSec();
 	for(const Rectangle& reservation : reservations) {
 		if(reservation.getOwnerId() != ownerId) {
+			continue;
+		}
+		
+		if(now >= reservation.getStartTime() && now <= reservation.getEndTime()) {
 			continue;
 		}
 		
@@ -338,17 +378,87 @@ visualization_msgs::Marker Map::getReservationVisualization(int ownerId, visuali
 	return msg;
 }
 
+visualization_msgs::Marker Map::getActiveReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type baseColor) {
+	visualization_msgs::Marker msg;
+	msg.header.frame_id = "map";
+	msg.header.stamp = ros::Time::now();
+	msg.ns = "Reservations";
+	msg.action = visualization_msgs::Marker::ADD;
+	msg.pose.orientation.w = 1.0;
+	msg.lifetime = ros::Duration(0.24f);
+
+	msg.id = Map::visualisationId++;
+	msg.type = visualization_msgs::Marker::TRIANGLE_LIST;
+
+	msg.scale.x = 1.f;
+	msg.scale.y = 1.f;
+	msg.scale.z = 1.f;
+	
+	msg.color = baseColor;
+	msg.color.a = 0.55f;
+
+	geometry_msgs::Point p;
+	p.z = 0.f;
+
+	double now = ros::Time::now().toSec();
+	for(const Rectangle& reservation : reservations) {
+		if(reservation.getOwnerId() != ownerId) {
+			continue;
+		}
+
+		if(!(now >= reservation.getStartTime() && now <= reservation.getEndTime())) {
+			continue;
+		}
+
+		const Point* points = reservation.getPointsInflated();
+		// First triangle
+		p.x = points[0].x;
+		p.y = points[0].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		p.x = points[1].x;
+		p.y = points[1].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		p.x = points[2].x;
+		p.y = points[2].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		// Second triangle
+		p.x = points[2].x;
+		p.y = points[2].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		p.x = points[3].x;
+		p.y = points[3].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+
+		p.x = points[0].x;
+		p.y = points[0].y;
+		msg.points.push_back(p);
+		msg.colors.push_back(msg.color);
+	}
+
+	return msg;
+}
+
 void Map::listAllReservationsIn(Point p) {
-	ROS_INFO("Reservations for robot %d", ownerId);
+	ROS_INFO("Reservations for robot %d at point %f/%f", ownerId, p.x, p.y);
 	for(const auto& r : reservations) {
-		ROS_INFO("Reservations: At %f/%f | Size %f/%f | Rot: %f | ID: %d, from %f until %f", r.getPosition().x, r.getPosition().y, r.getSize().x, r.getSize().y, r.getRotation(), r.getOwnerId(), r.getStartTime(), r.getEndTime());
+		if(Math::isPointInRectangle(p, r)) {
+			ROS_INFO("Reservations At %f/%f | Size %f/%f | Rot: %f | ID: %d, from %f until %f", r.getPosition().x, r.getPosition().y, r.getSize().x, r.getSize().y, r.getRotation(), r.getOwnerId(), r.getStartTime(), r.getEndTime());	
+		}		
 	}
 }
 
 bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 	for(const auto& r : reservations) {
-		// TODO add check if endTime == maxReservationTime
-		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId) {
+		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId && r.getEndTime() - r.getStartTime() > 15.f) {
 			return true;
 		}		
 	}
@@ -358,4 +468,8 @@ bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 
 bool Map::isPointTargetOfAnotherRobot(const auto_smart_factory::Tray& tray) {
 	return isPointTargetOfAnotherRobot(getPointInFrontOfTray(tray));
+}
+
+int Map::getOwnerId() const {
+	return ownerId;
 }

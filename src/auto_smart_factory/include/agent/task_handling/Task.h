@@ -8,7 +8,7 @@
 class Task {
 public:
 	enum class Type {CHARGING, TRANSPORTATION};
-	enum class State {WAITING, TO_SOURCE, APPROACH_SOURCE, PICKUP, LEAVE_SOURCE, RESERVING_TARGET, TO_TARGET, APPROACH_TARGET, DROPOFF, FINISHED, CHARGING};
+	enum class State {WAITING, TO_SOURCE, APPROACH_SOURCE, PICKUP, RESERVING_TARGET, TO_TARGET, APPROACH_TARGET, DROPOFF, LEAVE_TARGET, FINISHED, CHARGING};
 
 	Task(uint32_t targetID, Path targetPath, Type type, double startTime);
 	virtual ~Task() = default;
@@ -32,7 +32,7 @@ public:
 
 	// returns the estimated end time of this task
 	double getEndTime();
-
+	
 protected:	
 	Task::Type type;
 	Task::State state;

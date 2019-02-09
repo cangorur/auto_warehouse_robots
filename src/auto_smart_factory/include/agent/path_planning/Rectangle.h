@@ -3,8 +3,6 @@
 
 #include "agent/path_planning/Point.h"
 
-#define MaxReservationTime std::numeric_limits<double>::max() - 10000
-
 class Rectangle {
 private:	
 	Point pos;

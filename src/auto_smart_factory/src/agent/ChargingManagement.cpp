@@ -1,6 +1,4 @@
-#include <agent/ChargingManagement.h>
-#include <include/agent/ChargingManagement.h>
-
+#include "agent/ChargingManagement.h"
 #include "agent/Agent.h"
 
 bool sortByDuration(const std::pair<Path, uint32_t> &lhs, const std::pair<Path, uint32_t> &rhs) {
@@ -49,7 +47,7 @@ std::pair<Path, uint32_t> ChargingManagement::getPathToNearestChargingStation(Or
 			continue;
 		}		
 		
-		Path path = map->getThetaStarPath(start, charging_tray, startingTime);
+		Path path = map->getThetaStarPath(start, charging_tray, startingTime, ChargingTask::getChargingTime());
 		if(path.isValid() && path.getDuration() < nearestStationDuration) {
 			nearestStationDuration = path.getDuration();
 			
@@ -81,6 +79,7 @@ bool ChargingManagement::isChargingAppropriate() {
 }
 
 bool ChargingManagement::isCharged() {
+	ROS_INFO("Battery: %f", agent->getAgentBattery());
 	return agent->getAgentBattery() >= 99.5f;
 }
 

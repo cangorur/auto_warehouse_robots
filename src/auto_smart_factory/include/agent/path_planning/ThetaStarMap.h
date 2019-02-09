@@ -24,10 +24,12 @@ public:
 	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
 	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const;
 	const GridNode* getNodeClosestTo(const Point& pos) const;
-
-	void listAllReservationsIn(Point p);
-
+	
 	void addAdditionalNode(Point pos);
+	
+	// Debugging
+	void listAllReservationsIn(Point p);
+	int getOwnerId() const;
 
 private:
 	void linkToNode(GridNode* node, Point targetPos);
