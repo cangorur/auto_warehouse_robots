@@ -344,12 +344,11 @@ bool PackageGenerator::newPackageInputOnConveyor(auto_smart_factory::Tray tray, 
 	while(!inputTrayState.occupied ||
 	      inputTrayState.package.type_id != package.type_id ||
 	      inputTrayState.package.id != package.id) {
-		if(!inputTrayState.occupied)
-			ROS_WARN("[package generator] Input tray %d is still not occupied", tray.id);
-		else
-			ROS_WARN("[package generator] Input tray %d has the wrong package."
-			         "Requested package type: %d and ID: %d. Received package type:%d, and ID: %d",
-			         tray.id, package.type_id, package.id, inputTrayState.package.type_id, inputTrayState.package.id);
+		if(!inputTrayState.occupied) {
+			//ROS_INFO("[package generator] Input tray %d is still not occupied", tray.id);
+		} else {
+			ROS_WARN("[package generator] Input tray %d has the wrong package. Requested package type: %d and ID: %d. Received package type:%d, and ID: %d", tray.id, package.type_id, package.id, inputTrayState.package.type_id, inputTrayState.package.id);
+		}
 		ros::Duration(0.5).sleep();
 		inputTrayState = getTrayState(tray.id);
 	}
@@ -359,8 +358,7 @@ bool PackageGenerator::newPackageInputOnConveyor(auto_smart_factory::Tray tray, 
 
 	// tell task planner
 	std::string srv_name = "task_planner/new_input_task";
-	ros::ServiceClient client = n.serviceClient<
-			auto_smart_factory::NewPackageInput>(srv_name.c_str());
+	ros::ServiceClient client = n.serviceClient<auto_smart_factory::NewPackageInput>(srv_name.c_str());
 	auto_smart_factory::NewPackageInput packageInputSrv;
 	packageInputSrv.request.input_tray_id = tray.id;
 	packageInputSrv.request.package = package;
@@ -416,7 +414,7 @@ bool PackageGenerator::newPackageInput(auto_smart_factory::Tray tray, auto_smart
 	      inputTrayState.package.type_id != package.type_id ||
 	      inputTrayState.package.id != package.id) {
 		if(!inputTrayState.occupied) {
-			ROS_WARN("[package generator] Input tray %d is still not occupied", tray.id);
+			//ROS_INFO("[package generator] Input tray %d is still not occupied", tray.id);
 		} else {
 			ROS_WARN("[package generator] Input tray %d has the wrong package. Requested package type: %d and ID: %d. Received package type:%d, and ID: %d", tray.id, package.type_id, package.id, inputTrayState.package.type_id, inputTrayState.package.id);
 		}

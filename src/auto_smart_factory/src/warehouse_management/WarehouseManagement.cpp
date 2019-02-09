@@ -401,6 +401,7 @@ std_msgs::ColorRGBA WarehouseManagement::batteryLevelToColor(double batteryLevel
 }
 
 void WarehouseManagement::receiveTaskPlannerState(auto_smart_factory::TaskPlannerState msg) {
+	return;
 	ROS_INFO("---------- Current state of the task planner: ----------");
 
 	//ROS_INFO("Pending requests:");

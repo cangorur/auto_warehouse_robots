@@ -100,7 +100,7 @@ TaskData Request::allocateResources() {
 				ROS_INFO("[request %d] Successfully set package at target tray (id: %d, type: %d)!", this->status.id, pkg.id, pkg.type_id);
 			}
 
-			ROS_INFO("[request %d] Successfully allocated robot %s.", this->status.id, candidate.robotId.c_str());
+			//ROS_INFO("[request %d] Successfully allocated robot %s.", this->status.id, candidate.robotId.c_str());
 			//ROS_INFO("[request %d] All resources were allocated successfully! Starting execution...", this->status.id);
 
 			// successfully allocated all resources
