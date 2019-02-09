@@ -95,6 +95,8 @@ private:
 	//Charging rate
 	float chargingRate;
 
+	//Motor Draining rate
+	float motorDrainingRate
 
 	// Max energy level of the agent to participate in charging
 	float upperThreshold = 70.00;

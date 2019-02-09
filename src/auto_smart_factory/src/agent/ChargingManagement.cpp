@@ -16,10 +16,12 @@ ChargingManagement::ChargingManagement(Agent* a, auto_smart_factory::WarehouseCo
 
 	dischargingRate = robotConfig.discharging_rate;
 	chargingRate = robotConfig.charging_rate;
+	motorDrainingRate = robotConfig.motor_draining_rate;
+
 
 
 	ROS_INFO("[Charging Management] Started, agent ID: [%s], agent Batt: [%f] ", agentID.c_str(), agent->getAgentBattery());
-	ROS_INFO("[Charging Management] Charging Rate: [%f], Discharging Rate: [%f] ", chargingRate, dischargingRate);
+	ROS_INFO("[Charging Management] Charging Rate: [%f], Discharging Rate: [%f], Motor Draining  Rate: [%f] ", chargingRate, dischargingRate, motorDrainingRate);
 
 	getAllChargingStations();
 }

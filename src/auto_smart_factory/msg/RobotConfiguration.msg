@@ -7,6 +7,9 @@ float32 charging_rate
 # discharging rate of the battery
 float32 discharging_rate
 
+# motor draining rate 
+float32 motor_draining_rate
+
 # minimum linear velocity in [m/s]
 float32 min_linear_vel
 
