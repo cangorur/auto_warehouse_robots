@@ -59,6 +59,4 @@ public:
 
 };
 
-bool operator ==(const Path& p1, const Path& p2);
-
 #endif /* AGENT_PATH_H_ */

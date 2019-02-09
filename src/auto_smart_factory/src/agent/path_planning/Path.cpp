@@ -217,17 +217,3 @@ OrientedPoint Path::getEnd() {
 bool Path::isValid() const {
 	return isValidPath;
 }
-
-bool operator ==(const Path& p1, const Path& p2){
-	if(p1.getNodes().size() != p2.getNodes().size()) {
-		return false;
-	}
-
-	for(unsigned int i = 0; i < p1.getNodes().size(); i++) {
-		if(!(p1.getNodes().at(i) == p2.getNodes().at(i))) {
-			return false;
-		}
-	}
-
-	return true;
-}
