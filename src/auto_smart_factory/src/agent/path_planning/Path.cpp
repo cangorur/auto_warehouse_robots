@@ -4,16 +4,26 @@
 #include "Math.h"
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
+#include <include/agent/path_planning/Path.h>
+
 #include "agent/path_planning/Path.h"
 
-Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile) :
+Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint end) :
 		startTimeOffset(startTimeOffset),
 		nodes(std::move(nodes_)),
 		waitTimes(std::move(waitTimes_)),
-		hardwareProfile(hardwareProfile)
+		hardwareProfile(hardwareProfile),
+		start(start),
+		end(end),
+		isValidPath(true)
 {
 	if(nodes.size() != waitTimes.size()) {
-		ROS_ERROR("nodes.size() != waitTimes.size()");
+		ROS_FATAL("nodes.size() != waitTimes.size()");
+		isValidPath = false;
+	}
+	if(nodes.size() < 2) {
+		ROS_FATAL("Tried to construct path with no node points");
+		isValidPath = false;
 	}
 
 	// Turning time is considered as part of the following line segment.
@@ -50,40 +60,48 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 	}
 }
 
+Path::Path() : 
+	isValidPath(false)
+{
+}
+
 const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	std::vector<Rectangle> reservations;
 
 	float reservationSize = ROBOT_DIAMETER * 2.0f;
 
-	float currentTime = 0;
+	double currentTime = 0;
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
-		float currentLength = Math::getDistance(nodes[i], nodes[i + 1]);
-		Point currentDir = (nodes[i + 1] - nodes[i]) * 1.f * (1.f/currentLength);
+		float currentDistance = Math::getDistance(nodes[i], nodes[i + 1]);
+		Point currentDir = (nodes[i + 1] - nodes[i]) * 1.f * (1.f/currentDistance);
 		float currentRotation = Math::getRotation(currentDir);
+		double currentDuration = hardwareProfile->getDrivingDuration(currentDistance);
 
 		// Waiting time
 		if(waitTimes.at(i) > 0) {
-			reservations.emplace_back(nodes[i], Point(reservationSize, reservationSize), currentRotation, currentTime, currentTime + waitTimes[i], ownerId);
+			reservations.emplace_back(nodes[i], Point(reservationSize, reservationSize), currentRotation, currentTime - reservationMargin, currentTime + waitTimes[i] + reservationMargin, ownerId);
 			currentTime += waitTimes[i];
 		}
 
 		// Line segment
-		auto segmentCount = static_cast<unsigned int>(std::ceil(currentLength / maxReservationLength));
-		float segmentLength = currentLength / static_cast<float>(segmentCount);
+		auto segmentCount = static_cast<unsigned int>(std::ceil(currentDistance / maxReservationLength));
+		float segmentLength = currentDistance / static_cast<float>(segmentCount);
 
 		for(unsigned int segment = 0; segment < segmentCount; segment++) {
 			Point startPos = nodes[i] + (segment * segmentLength * currentDir);
 			Point endPos = nodes[i] + ((segment + 1) * segmentLength * currentDir);
 
 			Point pos = (startPos + endPos) / 2.f;
-			double startTime = startTimeOffset + currentTime + (segment * segmentLength) - reservationSize / 2.f;
-			double endTime = startTimeOffset + currentTime + ((segment + 1) * segmentLength) + reservationSize / 2.f;
+			double startTime = startTimeOffset + currentTime - reservationMargin + hardwareProfile->getDrivingDuration(segment * segmentLength);
+			double endTime = startTimeOffset + currentTime + reservationMargin + hardwareProfile->getDrivingDuration((segment + 1) * segmentLength);
 
 			reservations.emplace_back(pos, Point(segmentLength + reservationSize, reservationSize), currentRotation, startTime, endTime, ownerId);
 		}
 
-		currentTime += currentLength;
+		currentTime += currentDuration;
 	}
+	
+	reservations.emplace_back(nodes.back(), Point(ROBOT_DIAMETER * 2.f, ROBOT_DIAMETER * 2.f), 0, currentTime - reservationMargin, MaxReservationTime, ownerId);
 
 	return reservations;
 }
@@ -193,3 +211,16 @@ double Path::getStartTimeOffset() const {
 RobotHardwareProfile* Path::getRobotHardwareProfile() const {
 	return hardwareProfile;
 }
+
+OrientedPoint Path::getStart() {
+	return start;
+}
+
+OrientedPoint Path::getEnd() {
+	return end;
+}
+
+bool Path::isValid() const {
+	return isValidPath;
+}
+

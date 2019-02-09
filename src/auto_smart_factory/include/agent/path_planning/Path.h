@@ -10,12 +10,17 @@
 class Path {
 public:
 	double maxReservationLength = 8;
+	double reservationMargin = 1.5f;
 	
 private:
 	double startTimeOffset = 0;
 	std::vector<Point> nodes;
 	std::vector<double> waitTimes;
 	RobotHardwareProfile* hardwareProfile;
+	
+	OrientedPoint start;
+	OrientedPoint end;
+	bool isValidPath;
 
 	// Computed internally for motion planner
 	std::vector<double> departureTimes;
@@ -24,8 +29,8 @@ private:
 	float batteryConsumption = 0;
 
 public:
-	explicit Path() = default;
-	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile);
+	explicit Path();
+	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint end);
 	
 	virtual ~Path() = default;
 
@@ -44,6 +49,11 @@ public:
 	// ROS visualisation
 	visualization_msgs::Marker getVisualizationMsgPoints();
 	visualization_msgs::Marker getVisualizationMsgLines();
+
+	OrientedPoint getStart();
+	OrientedPoint getEnd();
+	
+	bool isValid() const;
 
 };
 

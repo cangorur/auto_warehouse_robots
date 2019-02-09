@@ -7,7 +7,7 @@ Task::Task(uint32_t targetId, Path pathToTarget, Type type, double startTime) :
 {
 	targetDuration = pathToTarget.getDuration();
 	targetBatCons = pathToTarget.getBatteryConsumption();
-	targetPosition = OrientedPoint(pathToTarget.getNodes().back().x, pathToTarget.getNodes().back().y, 0.0f);
+	targetPosition = pathToTarget.getEnd();
 }
 
 uint32_t Task::getTargetTrayId() {
@@ -34,6 +34,6 @@ bool Task::isCharging() {
 	return (this->type == Task::Type::CHARGING);
 }
 
-double Task::getEndTime(void) {
+double Task::getEndTime() {
 	return startTime + this->getDuration();
 }
