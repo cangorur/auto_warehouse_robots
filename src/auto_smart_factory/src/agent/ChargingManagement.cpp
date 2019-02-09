@@ -74,6 +74,17 @@ double ChargingManagement::getChargingTime(double consumptionTillCS){
 	return ((agent->getAgentBattery() - consumptionTillCS) /chargingRate) ;
 }
 
+
+double ChargingManagement::getBatteryConsumption(double idleTime){
+	return (idleTime*dischargingRate);
+}
+
+double ChargingManagement::getBatteryConsumption(double idleTime, double drivingDistance){
+	return (idleTime*dischargingRate + drivingDistance * motorDrainingRate);
+}
+
+
+
 bool ChargingManagement::isChargingAppropriate() {
 	return (agent->getAgentBattery() <= upperThreshold);
 }

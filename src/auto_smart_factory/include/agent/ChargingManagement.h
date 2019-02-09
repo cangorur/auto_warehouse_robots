@@ -69,6 +69,17 @@ public:
 	double getChargingTime(double consumptionTillCS);
 
 	/*
+	 * Get battery consumption by the robot
+	 * @param: Time robot spent idling
+	 * @param: Distance traveled by the robot
+	 */
+
+	double getBatteryConsumption(double idleTime);
+
+	double getBatteryConsumption(double idleTime, double drivingDistance);
+
+
+	/*
 	 * Check Battery for errors
 	 */
 	void checkBattery();
