@@ -88,9 +88,9 @@ void ThetaStarMap::listAllReservationsIn(Point p) {
 	map->listAllReservationsIn(p);
 }
 
-void ThetaStarMap::addAdditionalNode(Point pos) {
+const GridNode* ThetaStarMap::addAdditionalNode(Point pos) {
 	if(!map->isPointInMap(pos) || map->isInsideAnyInflatedObstacle(pos)) {
-		return;
+		return nullptr;
 	}
 
 	// Add new node
@@ -111,7 +111,10 @@ void ThetaStarMap::addAdditionalNode(Point pos) {
 		}
 	} else {
 		delete newGridNode;
+		newGridNode = (*emplaceResult.first).second;
 	}
+	
+	return newGridNode;
 }
 
 int ThetaStarMap::getOwnerId() const {

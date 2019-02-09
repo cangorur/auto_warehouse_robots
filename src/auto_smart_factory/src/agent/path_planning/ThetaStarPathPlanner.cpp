@@ -16,13 +16,10 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 	targetReservationTime(targetReservationTime)	
 {
 	isValidPathQuery = true;
-	
-	map->addAdditionalNode(Point(start.x, target.y));
-	map->addAdditionalNode(Point(target.x, target.y));
 
-	startNode = map->getNodeClosestTo(Point(start));
-	targetNode = map->getNodeClosestTo(Point(target));
-	
+	startNode = map->addAdditionalNode(Point(start.x, target.y));
+	targetNode = map->addAdditionalNode(Point(target.x, target.y));
+
 	if(startNode == nullptr) {
 		ROS_FATAL("[Agent %d] StartPoint %f/%f is not in theta* map!", map->getOwnerId(), start.x, start.y);
 		isValidPathQuery = false;
@@ -216,8 +213,15 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 	std::reverse(pathNodes.begin(), pathNodes.end());
 	std::reverse(waitTimes.begin(), waitTimes.end());
 	
-	ROS_ASSERT(pathNodes.size() > 1);
-	ROS_ASSERT(waitTimes.size() > 1);
+	if(pathNodes.size() <= 1) {
+		ROS_FATAL("[Agent %d] PathNodesSize: %d", map->getOwnerId(), (int) pathNodes.size());
+		ROS_WARN("Start: %f/%f | Target: %f/%f", start.x, start.y, target.x, target.y);
+		for(int i = 0; i < pathNodes.size(); i++) {
+			ROS_WARN("[%d] %f/%f", i, pathNodes[i].x, pathNodes[i].y);	
+		}	
+		
+		ROS_ASSERT(pathNodes.size() > 1);
+	}
 
 	// Convert orientation to rad
 	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, targetReservationTime, OrientedPoint(start.x, start.y, Math::toRad(start.o)), OrientedPoint(target.x, target.y, Math::toRad(target.o)));
