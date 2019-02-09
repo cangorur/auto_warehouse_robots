@@ -103,13 +103,13 @@ void MotionPlanner::followPath() {
 	double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
 	angularVelocity = Math::clamp(angularVelocity, (double) -maxTurningSpeed, (double) maxTurningSpeed);
 
-	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed - minDrivingSpeed);
+	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte) - 1.0), (double) maxDrivingSpeed - minDrivingSpeed);
 	linearVelocity = Math::clamp(linearVelocity, minDrivingSpeed, maxDrivingSpeed);
 
 	// Limit speed if approaching final point
 	double distToTarget = Math::getDistance(Point(pos.x, pos.y), currentTarget);
 	if (isCurrentPointLastPoint() && distToTarget <= distToSlowDown) {
-		linearVelocity = Math::clamp(distToTarget * 1.5f, minPrecisionSpeed, maxDrivingSpeed);
+		linearVelocity = Math::clamp(distToTarget * 1.5f, minPrecisionDrivingSpeed, maxDrivingSpeed);
 	}
 
 	publishVelocity(linearVelocity, angularVelocity);
@@ -177,9 +177,9 @@ void MotionPlanner::driveStraight() {
 	}
 
 	if(mode == Mode::FORWARD) {
-		publishVelocity(Math::clamp(currentDistance * 1.5f, minPrecisionSpeed, maxDrivingSpeed), 0.0);
+		publishVelocity(Math::clamp(currentDistance * 1.5f, minPrecisionDrivingSpeed, maxDrivingSpeed), 0.0);
 	} else {
-		publishVelocity(-Math::clamp(currentDistance * 1.5f, minPrecisionSpeed, maxDrivingSpeed), 0.0);
+		publishVelocity(-Math::clamp(currentDistance * 1.5f, minPrecisionDrivingSpeed, maxDrivingSpeed), 0.0);
 	}
 }
 

@@ -34,7 +34,7 @@ bool Gripper::loadPackage(bool load) {
 					package.type_id = std::stoi(ids[0]);
 					package.id = std::stoi(ids[1]);
 				}
-				ROS_INFO("[%s]: Succesfully %sed package: pkg%u_%u", agentID.c_str(), str.c_str(), package.type_id, package.id);
+				//ROS_INFO("[%s]: Succesfully %sed package: pkg%u_%u", agentID.c_str(), str.c_str(), package.type_id, package.id);
 				auto_smart_factory::GripperState gripper_state;
 				gripper_state.loaded = load;
 				gripper_state.package = package;
@@ -63,7 +63,7 @@ bool Gripper::loadPackage(bool load) {
 				package.type_id = std::stoi(ids[0]);
 				package.id = std::stoi(ids[1]);
 			}
-			ROS_INFO("[%s]: Succesfully %sed package : pkg%u_%u", agentID.c_str(), str.c_str(), package.type_id, package.id);
+			//ROS_INFO("[%s]: Succesfully %sed package : pkg%u_%u", agentID.c_str(), str.c_str(), package.type_id, package.id);
 			auto_smart_factory::GripperState gripper_state;
 			gripper_state.loaded = false;
 			gripper_state.package = package;

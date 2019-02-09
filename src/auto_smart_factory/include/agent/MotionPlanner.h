@@ -131,9 +131,9 @@ private:
 
 	/// Precision configuration to reach points
 	float distToReachPoint = 0.3f;
-	float distToReachFinalPoint = 0.06f;
+	float distToReachFinalPoint = 0.1f;
 	float distToSlowDown = 0.7f;
-	float minPrecisionSpeed = 0.08f;
+	float minPrecisionDrivingSpeed = 0.08f;
 
 	/// Will be true when position is updated the first time
 	bool positionInitialized = false;
@@ -145,10 +145,6 @@ protected:
 	PidController* steerPid;
 
 	Position pos;
-
-	double currentSpeed;
-	double currentRotation;
-
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_MOTIONPLANNER_H_ */

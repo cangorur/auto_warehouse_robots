@@ -80,7 +80,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	std::vector<Rectangle> reservations;
 
 	double reservationSize = ROBOT_RADIUS * 2.0f;
-	Point waitingReservationSize = Point(reservationSize, reservationSize) * 0.99f;
+	Point waitingReservationSize = Point(reservationSize, reservationSize) * 0.98f;
 
 	double currentTime = startTimeOffset;
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {

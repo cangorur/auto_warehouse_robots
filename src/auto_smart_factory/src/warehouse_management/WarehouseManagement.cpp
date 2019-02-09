@@ -403,14 +403,12 @@ std_msgs::ColorRGBA WarehouseManagement::batteryLevelToColor(double batteryLevel
 void WarehouseManagement::receiveTaskPlannerState(auto_smart_factory::TaskPlannerState msg) {
 	ROS_INFO("---------- Current state of the task planner: ----------");
 
-	ROS_INFO("Pending requests:");
-
+	//ROS_INFO("Pending requests:");
 	for(const auto_smart_factory::RequestStatus& req : msg.requests) {
-		ROS_INFO("- [R %d] Type: %s    Status: %s", req.id, req.type.c_str(), req.status.c_str());
+		//ROS_INFO("- [R %d] Type: %s    Status: %s", req.id, req.type.c_str(), req.status.c_str());
 	}
 
-	ROS_INFO("Current Tasks:");
-
+	//ROS_INFO("Current Tasks:");
 	for(const auto_smart_factory::TaskState& task : msg.tasks) {
 		ROS_INFO("- [T %d] Status: %s", task.id, task.status.c_str());
 	}

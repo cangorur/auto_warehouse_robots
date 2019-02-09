@@ -311,24 +311,22 @@ bool PackageGenerator::newPackageInputOnConveyor(auto_smart_factory::Tray tray, 
 		return false;
 	}
 
-	ROS_INFO("[package generator] Successfully allocated input tray %d.", tray.id);
+	//ROS_INFO("[package generator] Successfully allocated input tray %d.", tray.id);
 
 	// check if allocated input tray is still free (not occupied)
 	auto_smart_factory::GetTrayState srv;
 	srv.request.trayId = tray.id;
 	if(!trayStateClient.call(srv) || srv.response.state.occupied) {
-		ROS_WARN("[package generator] Checking allocated input tray failed. Occupied = %d",
-		         srv.response.state.occupied);
+		//ROS_WARN("[package generator] Checking allocated input tray failed. Occupied = %d", srv.response.state.occupied);
 		return false;
 	}
 
 	// set package
 	if(!allocatedInputTray->setPackage(package)) {
-		ROS_WARN("[package generator] Setting package failed. Package type and ID was:%d_%d", package.type_id,
-		         package.id);
+		ROS_WARN("[package generator] Setting package failed. Package type and ID was:%d_%d", package.type_id, package.id);
 		return false;
 	} else {
-		ROS_INFO("[package generator] Package ID with: %d and TYPE: %d was set to TRAY_ID:%d", package.id, package.type_id, tray.id);
+		//ROS_INFO("[package generator] Package ID with: %d and TYPE: %d was set to TRAY_ID:%d", package.id, package.type_id, tray.id);
 	}
 
 	// move package
@@ -386,24 +384,22 @@ bool PackageGenerator::newPackageInput(auto_smart_factory::Tray tray, auto_smart
 		return false;
 	}
 
-	ROS_INFO("[package generator] Successfully allocated input tray %d.", tray.id);
+	//ROS_INFO("[package generator] Successfully allocated input tray %d.", tray.id);
 
 	// check if allocated input tray is still free (not occupied)
 	auto_smart_factory::GetTrayState srv;
 	srv.request.trayId = tray.id;
 	if(!trayStateClient.call(srv) || srv.response.state.occupied) {
-		ROS_WARN("[package generator] Checking allocated input tray failed. Occupied = %d",
-		         srv.response.state.occupied);
+		ROS_WARN("[package generator] Checking allocated input tray failed. Occupied = %d", srv.response.state.occupied);
 		return false;
 	}
 
 	// set package
 	if(!allocatedInputTray->setPackage(package)) {
-		ROS_WARN("[package generator] Setting package failed. Package type and ID was:%d_%d", package.type_id,
-		         package.id);
+		ROS_WARN("[package generator] Setting package failed. Package type and ID was:%d_%d", package.type_id, package.id);
 		return false;
 	} else {
-		ROS_INFO("[package generator] Package ID with: %d and TYPE: %d was set to TRAY_ID:%d", package.id, package.type_id, tray.id);
+		//ROS_INFO("[package generator] Package ID with: %d and TYPE: %d was set to TRAY_ID:%d", package.id, package.type_id, tray.id);
 	}
 
 	// move package
@@ -419,13 +415,13 @@ bool PackageGenerator::newPackageInput(auto_smart_factory::Tray tray, auto_smart
 	while(!inputTrayState.occupied ||
 	      inputTrayState.package.type_id != package.type_id ||
 	      inputTrayState.package.id != package.id) {
-		if(!inputTrayState.occupied)
+		if(!inputTrayState.occupied) {
 			ROS_WARN("[package generator] Input tray %d is still not occupied", tray.id);
-		else
-			ROS_WARN("[package generator] Input tray %d has the wrong package."
-			         "Requested package type: %d and ID: %d. Received package type:%d, and ID: %d",
-			         tray.id, package.type_id, package.id, inputTrayState.package.type_id, inputTrayState.package.id);
-		ros::Duration(0.5).sleep();
+		} else {
+			ROS_WARN("[package generator] Input tray %d has the wrong package. Requested package type: %d and ID: %d. Received package type:%d, and ID: %d", tray.id, package.type_id, package.id, inputTrayState.package.type_id, inputTrayState.package.id);
+		}
+			
+		ros::Duration(0.25).sleep();
 		inputTrayState = getTrayState(tray.id);
 	}
 
@@ -434,8 +430,7 @@ bool PackageGenerator::newPackageInput(auto_smart_factory::Tray tray, auto_smart
 
 	// tell task planner
 	std::string srv_name = "task_planner/new_input_task";
-	ros::ServiceClient client = n.serviceClient<
-			auto_smart_factory::NewPackageInput>(srv_name.c_str());
+	ros::ServiceClient client = n.serviceClient<auto_smart_factory::NewPackageInput>(srv_name.c_str());
 	auto_smart_factory::NewPackageInput packageInputSrv;
 	packageInputSrv.request.input_tray_id = tray.id;
 	packageInputSrv.request.package = package;
@@ -449,11 +444,9 @@ bool PackageGenerator::newPackageInput(auto_smart_factory::Tray tray, auto_smart
 	return true;
 }
 
-bool PackageGenerator::newPackageOutput(int output_tray_id,
-                                        auto_smart_factory::Package package) {
+bool PackageGenerator::newPackageOutput(int output_tray_id, auto_smart_factory::Package package) {
 	std::string srv_name = "task_planner/new_output_task";
-	ros::ServiceClient client = n.serviceClient<
-			auto_smart_factory::NewPackageOutput>(srv_name.c_str());
+	ros::ServiceClient client = n.serviceClient<auto_smart_factory::NewPackageOutput>(srv_name.c_str());
 	auto_smart_factory::NewPackageOutput srv;
 	srv.request.output_tray_id = output_tray_id;
 	srv.request.package = package;
@@ -463,7 +456,7 @@ bool PackageGenerator::newPackageOutput(int output_tray_id,
 			ROS_INFO("[package generator] New output request generated at tray %i!", output_tray_id);
 			return true;
 		} else {
-			ROS_INFO("[package generator] Output tray %i is not available for an output request!", output_tray_id);
+			//ROS_INFO("[package generator] Output tray %i is not available for an output request!", output_tray_id);
 			return false;
 		}
 	} else {
@@ -473,13 +466,12 @@ bool PackageGenerator::newPackageOutput(int output_tray_id,
 }
 
 void PackageGenerator::clearOutput(auto_smart_factory::TrayState tray_state) {
-	ROS_INFO("[package generator] Clear tray_id: %d, pkg%d_%d", tray_state.id, tray_state.package.type_id, tray_state.package.id);
+	//ROS_INFO("[package generator] Clear tray_id: %d, pkg%d_%d", tray_state.id, tray_state.package.type_id, tray_state.package.id);
 	// reserve output tray
 	TrayAllocator allocatedOutputTray(tray_state.id);
 
 	if(!allocatedOutputTray.isValid()) {
-		ROS_WARN("[package generator] Occupied output tray %d could not be allocated in order to remove package!",
-		         tray_state.id);
+		ROS_WARN("[package generator] Occupied output tray %d could not be allocated in order to remove package!", tray_state.id);
 		return;
 	}
 
@@ -488,12 +480,12 @@ void PackageGenerator::clearOutput(auto_smart_factory::TrayState tray_state) {
 
 	//move packages to fix position
 	if(movePackage(0.0, 0.0, -1.0f, tray_state.package)) {
-		ROS_INFO("[package generator] Output %i cleared successfully!", tray_state.id);
+		//ROS_INFO("[package generator] Output %i cleared successfully!", tray_state.id);
 
 		// wait for package to actually be moved
 		auto_smart_factory::TrayState outputTrayState = tray_state;
 		while(outputTrayState.occupied) {
-			ROS_INFO("[package generator] Output tray %d is still occupied. Wait for the package to be moved...", tray_state.id);
+			//ROS_INFO("[package generator] Output tray %d is still occupied. Wait for the package to be moved...", tray_state.id);
 			ros::Duration(0.5).sleep();
 			outputTrayState = getTrayState(tray_state.id);
 		}
@@ -525,13 +517,12 @@ bool PackageGenerator::movePackage(float x, float y, float z, auto_smart_factory
 	ros::service::waitForService(srv_name.c_str());
 	if(client.call(srv)) {
 		if(srv.response.success) {
-			ROS_INFO("[package generator] %s has been moved successfully!", id.c_str());
+			//ROS_INFO("[package generator] %s has been moved successfully!", id.c_str());
 			return true;
 		} else
 			ROS_WARN("[package generator] %s has not been moved!", id.c_str());
 	} else
-		ROS_ERROR("[package generator] Failed to call service %s %s",
-		          srv_name.c_str(), id.c_str());
+		ROS_ERROR("[package generator] Failed to call service %s %s", srv_name.c_str(), id.c_str());
 	return false;
 }
 

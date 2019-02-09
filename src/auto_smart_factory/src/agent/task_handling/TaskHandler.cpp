@@ -311,7 +311,7 @@ void TaskHandler::answerAnnouncements() {
 		if(ros::Time::now() < tA.timeout){
 			answerAnnouncement(tA);
 		} else {
-			ROS_INFO("[Task Handler %d] will not answer to Request %d as it already timeouted", agent->getAgentIdInt(), tA.request_id);
+			//ROS_INFO("[Task Handler %d] will not answer to Request %d as it already timeouted", agent->getAgentIdInt(), tA.request_id);
 		}
 		announcements.pop_front();
 	}
