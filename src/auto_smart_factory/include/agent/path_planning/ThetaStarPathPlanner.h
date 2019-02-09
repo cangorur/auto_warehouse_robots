@@ -26,13 +26,17 @@ private:
 	typedef std::priority_queue<GridInformationPair, std::vector<GridInformationPair>, GridInformationPairComparator> GridInformationPairQueue;
 	typedef std::map<Point, ThetaStarGridNodeInformation, Math::PointComparator> GridInformationMap;
 
-	ThetaStarMap* map;
-	RobotHardwareProfile* hardwareProfile;
-	
+	// Functions	
 	double getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const;
 	double getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
 
 	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double targetReservationTime) const;
+	
+	double getTimeUncertainty(double time) const;
+
+	// Query information
+	ThetaStarMap* map;
+	RobotHardwareProfile* hardwareProfile;
 	
 	OrientedPoint start;
 	OrientedPoint target;
@@ -40,8 +44,7 @@ private:
 	const GridNode* targetNode;	
 	double startingTime;
 	double targetReservationTime;
-	
-	bool isValidPathQuerry;
+	bool isValidPathQuery;
 };
 
 

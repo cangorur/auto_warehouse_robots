@@ -9,7 +9,7 @@
 
 class Path {
 public:
-	double maxReservationLength = 4;
+	double maxReservationLength = 3;
 	double reservationTimeMarginAhead = 0.f;
 	double reservationTimeMarginBehind = 0.f;
 	
@@ -54,11 +54,10 @@ public:
 
 	OrientedPoint getStart();
 	OrientedPoint getEnd();
-	
 	bool isValid() const;
 
+private:
+	double getTimeUncertainty(double time) const;
 };
-
-bool operator ==(const Path& p1, const Path& p2);
 
 #endif /* AGENT_PATH_H_ */

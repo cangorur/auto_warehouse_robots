@@ -298,6 +298,9 @@ add_executable(config_server_node
 		src/config_server/MapConfigServer.cpp
 		src/config_server/RobotConfigServer.cpp
 		src/config_server/PackageConfigServer.cpp
+		src/agent/path_planning/Point.cpp
+		src/agent/path_planning/Rectangle.cpp
+		src/Math.cpp
 		)
 set_target_properties(config_server_node PROPERTIES OUTPUT_NAME config_server PREFIX "")
 add_dependencies(config_server_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

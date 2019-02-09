@@ -17,7 +17,7 @@ private:
 	// Faster physic processing
 	Point pointsInflated[4];
 	bool isAxisAligned;
-	float minXInflated, maxXInflated, minYInflated, maxYInflated;
+	double minXInflated, maxXInflated, minYInflated, maxYInflated;
 
 public:
 	Rectangle(Point pos, Point size, float rotation);
@@ -30,10 +30,10 @@ public:
 	float getRotation() const;
 	
 	bool getIsAxisAligned() const;
-	float getMinXInflated() const;
-	float getMaxXInflated() const;
-	float getMinYInflated() const;
-	float getMaxYInflated() const;
+	double getMinXInflated() const;
+	double getMaxXInflated() const;
+	double getMinYInflated() const;
+	double getMaxYInflated() const;
 
 	bool doesOverlapTimeRange(double start, double end, int ownerId) const;
 	double getStartTime() const;

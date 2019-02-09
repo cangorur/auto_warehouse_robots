@@ -79,19 +79,19 @@ Point Rectangle::getSize() const {
 	return size;
 }
 
-float Rectangle::getMinXInflated() const {
+double Rectangle::getMinXInflated() const {
 	return minXInflated;
 }
 
-float Rectangle::getMaxXInflated() const {
+double Rectangle::getMaxXInflated() const {
 	return maxXInflated;
 }
 
-float Rectangle::getMinYInflated() const {
+double Rectangle::getMinYInflated() const {
 	return minYInflated;
 }
 
-float Rectangle::getMaxYInflated() const {
+double Rectangle::getMaxYInflated() const {
 	return maxYInflated;
 }
 

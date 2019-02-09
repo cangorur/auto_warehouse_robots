@@ -74,7 +74,8 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	}
 
 	/* Turn towards target orientation on spot when curve angle is above turnThreshold */
-	if (mode == Mode::TURN || std::abs(getRotationToTarget(pos, currentTarget)) >= turnThreshold || (std::abs(getRotationToTarget(pos, currentTarget)) >= 0.2 && currentTargetIndex < 2)) {
+	double rotationDifference = std::abs(getRotationToTarget(pos, currentTarget));
+	if (mode == Mode::TURN || rotationDifference >= turnThreshold || (rotationDifference >= turnThresholdFirstPoint && currentTargetIndex < 2)) {
 		mode = Mode::TURN;
 		turnTowards(currentTarget);
 		return;

@@ -1,4 +1,6 @@
 #include <cmath>
+#include <include/agent/path_planning/RobotHardwareProfile.h>
+
 #include "agent/path_planning/RobotHardwareProfile.h"
 
 RobotHardwareProfile::RobotHardwareProfile(double maxDrivingSpeed, double maxTurningSpeed, double idleBatteryConsumption, double drivingBatteryConsumption) :
@@ -29,5 +31,9 @@ double RobotHardwareProfile::getTurningDuration(double angle) const {
 	} else {
 		return angle / (onSpotTurningEfficiency * maxTurningSpeed);	
 	}
+}
+
+double RobotHardwareProfile::getTimeUncertaintyPercentage() const {
+	return timeUncertaintyPercentage;
 }
 

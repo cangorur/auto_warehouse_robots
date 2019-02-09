@@ -49,9 +49,9 @@
 	</node>
 	<!-- grey -->
 	<node pkg="auto_smart_factory" type="agent" name="robot_4" args="robot_4">
-		<param name="color_r" value="200" />
-		<param name="color_g" value="200" />
-		<param name="color_b" value="200" />
+		<param name="color_r" value="230" />
+		<param name="color_g" value="230" />
+		<param name="color_b" value="230" />
 	</node>
 	<!-- pink -->
 	<node pkg="auto_smart_factory" type="agent" name="robot_5" args="robot_5">
