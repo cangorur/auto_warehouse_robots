@@ -64,7 +64,8 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	robotConfig = robot_configuration;
 	
 	double maxTurningSpeedInDegree = Math::toDeg(robot_configuration.max_angular_vel);
-	hardwareProfile = new RobotHardwareProfile(robot_configuration.max_linear_vel, maxTurningSpeedInDegree, robot_configuration.discharging_rate, 0.f);
+	hardwareProfile = new RobotHardwareProfile(robot_configuration.max_linear_vel, maxTurningSpeedInDegree, robot_configuration.discharging_rate, robot_configuration.motor_draining_rate);
+	
 	//ROS_INFO("[%s]: MaxSpeed: %f m/s | MaxTurningSpeed: %f deg/s", agentID.c_str(), robot_configuration.max_linear_vel,maxTurningSpeedInDegree);
 
 	pose_sub = n.subscribe(agentID + "/pose", 1, &Agent::poseCallback, this);

@@ -1,10 +1,6 @@
 #include "agent/ChargingManagement.h"
 #include "agent/Agent.h"
 
-bool sortByDuration(const std::pair<Path, uint32_t> &lhs, const std::pair<Path, uint32_t> &rhs) {
-	return lhs.first.getDuration() < rhs.first.getDuration();
-}
-
 ChargingManagement::ChargingManagement(Agent* a, auto_smart_factory::WarehouseConfiguration warehouse_configuration, auto_smart_factory::RobotConfiguration robot_configuration, Map* m) {
 	agent = a;
 	map = m;
@@ -16,10 +12,7 @@ ChargingManagement::ChargingManagement(Agent* a, auto_smart_factory::WarehouseCo
 	chargingRate = robotConfig.charging_rate;
 	motorDrainingRate = robotConfig.motor_draining_rate;
 
-
-
-	ROS_INFO("[Charging Management] Started, agent ID: [%s], agent Batt: [%f] ", agentID.c_str(), agent->getAgentBattery());
-	ROS_INFO("[Charging Management] Charging Rate: [%f], Discharging Rate: [%f], Motor Draining  Rate: [%f] ", chargingRate, dischargingRate, motorDrainingRate);
+	ROS_INFO("[Charging Management %d] Battery: %f, Charging Rate: %f, Discharging Rate: %f, Motor Draining Rate: %f", agent->getAgentIdInt(), agent->getAgentBattery(), chargingRate, dischargingRate, motorDrainingRate);
 
 	getAllChargingStations();
 }
@@ -74,7 +67,6 @@ double ChargingManagement::getChargingTime(double consumptionTillCS){
 	return ((agent->getAgentBattery() - consumptionTillCS) /chargingRate) ;
 }
 
-
 double ChargingManagement::getBatteryConsumption(double idleTime){
 	return (idleTime*dischargingRate);
 }
@@ -82,8 +74,6 @@ double ChargingManagement::getBatteryConsumption(double idleTime){
 double ChargingManagement::getBatteryConsumption(double idleTime, double drivingDistance){
 	return (idleTime*dischargingRate + drivingDistance * motorDrainingRate);
 }
-
-
 
 bool ChargingManagement::isChargingAppropriate() {
 	return (agent->getAgentBattery() <= upperThreshold);
@@ -106,11 +96,11 @@ bool ChargingManagement::isConsumptionPossible(double agentBatteryLevel, double 
 	return agentBatteryLevel - consumption - estimatedBatteryConsumptionToNearestChargingStation > criticalMinimum;
 }
 
-void  ChargingManagement::checkBattery(){
+void  ChargingManagement::checkBattery() {
 	float batt = agent->getAgentBattery();
-	if (batt>100){
+	if (batt > 100){
 		ROS_ERROR("[Charging Management]:Agent %s battery >100! (%f)",agentID.c_str(), batt);
-	}else if(batt<0){
+	}else if(batt < 0){
 		ROS_ERROR("[Charging Management]:Agent %s battery <0! (%f)",agentID.c_str(), batt);
 	}
 

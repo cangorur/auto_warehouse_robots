@@ -22,7 +22,7 @@ public:
 	RobotHardwareProfile(double maxDrivingSpeed, double maxTurningSpeed, double idleBatteryConsumption, double drivingBatteryConsumption);
 
 	double getIdleBatteryConsumption(double time) const;
-	double getDrivingBatteryConsumption(double time) const;
+	double getDrivingBatteryConsumption(double time, double distance) const;
 	double getDrivingDuration(double distance) const;
 	double getTurningDuration(double angle) const;
 	

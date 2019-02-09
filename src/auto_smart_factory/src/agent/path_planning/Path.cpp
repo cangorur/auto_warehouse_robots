@@ -61,9 +61,8 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 				duration += hardwareProfile->getDrivingDuration(currentDistance);
 				duration += waitTimes.at(i);
 
-				batteryConsumption += hardwareProfile->getIdleBatteryConsumption(waitTimes.at(i));
-				batteryConsumption += hardwareProfile->getDrivingBatteryConsumption(hardwareProfile->getDrivingDuration(currentDistance));
-				batteryConsumption += hardwareProfile->getDrivingBatteryConsumption(hardwareProfile->getTurningDuration(angleDifference));
+				batteryConsumption += hardwareProfile->getIdleBatteryConsumption(waitTimes.at(i) + hardwareProfile->getTurningDuration(angleDifference));
+				batteryConsumption += hardwareProfile->getDrivingBatteryConsumption(hardwareProfile->getDrivingDuration(currentDistance), currentDistance);
 
 				// Departure times does not include turningTime as this is considered part of the next segment
 				departureTimes.push_back(startTimeOffset + duration);

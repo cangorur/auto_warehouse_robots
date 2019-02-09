@@ -15,9 +15,8 @@ double RobotHardwareProfile::getIdleBatteryConsumption(double time) const {
 	return idleBatteryConsumption * time;
 }
 
-// Todo include idle consumption?
-double RobotHardwareProfile::getDrivingBatteryConsumption(double time) const {
-	return drivingBatteryConsumption * time + getIdleBatteryConsumption(time);
+double RobotHardwareProfile::getDrivingBatteryConsumption(double time, double distance) const {
+	return drivingBatteryConsumption * distance + getIdleBatteryConsumption(time);
 }
 
 double RobotHardwareProfile::getDrivingDuration(double distance) const {
