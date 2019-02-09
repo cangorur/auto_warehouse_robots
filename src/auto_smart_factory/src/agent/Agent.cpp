@@ -1,5 +1,6 @@
+#include <auto_smart_factory/ReservationBroadcast.h>
+#include <auto_smart_factory/ReservationRequest.h>
 #include "agent/Agent.h"
-
 #include "warehouse_management/WarehouseManagement.h"
 
 Agent::Agent(std::string agent_id) {
@@ -80,8 +81,8 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	visualisationPublisher = pn.advertise<visualization_msgs::Marker>("visualization_" + agentID, 100, true);
 	vizPublicationTimer = pn.createTimer(ros::Duration(0.25f), &Agent::publishVisualisation, this); // in seconds
 	
-	reservationCoordination_pub = pn.advertise<auto_smart_factory::ReservationCoordination>("/reservation_coordination", 100, true);
-	reservationCoordination_sub = pn.subscribe("/reservation_coordination", 100, &Agent::reservationCoordinationCallback, this);
+	reservationRequest_pub = pn.advertise<auto_smart_factory::ReservationRequest>("/reservation_request", 100, true);
+	reservationBroadcast_sub = pn.subscribe("/reservation_broadcast", 100, &Agent::reservationBroadcastCallback, this);
 
 	try {
 		motionPlanner = new MotionPlanner(this, robotConfig, &(motion_pub));
@@ -102,7 +103,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		chargingManagement = new ChargingManagement(this, warehouseConfig, map);
 
 		// Reservation Manager
-		reservationManager = new ReservationManager(&reservationCoordination_pub, map, agentIdInt, static_cast<int>(warehouse_configuration.robots.size()));
+		reservationManager = new ReservationManager(&reservationRequest_pub, map, agentIdInt);
 		
 		// Task Handler
 		taskHandler = new TaskHandler(this, &(taskrating_pub), map, motionPlanner, gripper, chargingManagement, reservationManager);
@@ -347,8 +348,8 @@ ros::Publisher* Agent::getVisualisationPublisher() {
 	return &visualisationPublisher;
 }
 
-void Agent::reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg) {
-	reservationManager->reservationCoordinationCallback(msg);
+void Agent::reservationBroadcastCallback(const auto_smart_factory::ReservationBroadcast& msg) {
+	reservationManager->reservationBroadcastCallback(msg);
 }
 
 bool Agent::isInitializedCompletely() {

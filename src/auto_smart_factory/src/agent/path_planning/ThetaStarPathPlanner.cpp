@@ -31,7 +31,7 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 	}	
 
 	double initialWaitTime = 0;
-	TimedLineOfSightResult initialCheckResult = map->whenIsTimedLineOfSightFree(Point(start.x, start.y), startingTime, startNode->pos, startingTime + 0.1f);
+	TimedLineOfSightResult initialCheckResult = map->whenIsTimedLineOfSightFree(Point(start.x, start.y), startingTime, startNode->pos, startingTime + 1.1f);
 	if(initialCheckResult.blockedByTimed) {
 		initialWaitTime = initialCheckResult.freeAfter - (startingTime + 0.1f);
 
@@ -42,7 +42,7 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 
 			isValidPathQuerry = false;
 		} else {
-			ROS_WARN("[Agent %d] Path needed initial wait time of %f", map->getOwnerId(), initialWaitTime);
+			ROS_WARN("[Agent %d] Path would need initial wait time of %f", map->getOwnerId(), initialWaitTime);
 			map->listAllReservationsIn(Point(start.x, start.y));
 		}
 	}

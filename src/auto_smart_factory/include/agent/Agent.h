@@ -35,7 +35,6 @@
 #include "auto_smart_factory/WarehouseConfiguration.h"
 #include "auto_smart_factory/RobotConfiguration.h"
 #include "auto_smart_factory/CollisionAction.h"
-#include "auto_smart_factory/ReservationCoordination.h"
 #include "auto_smart_factory/TaskAnnouncement.h"
 #include "agent/path_planning/ReservationManager.h"
 #include "agent/path_planning/Map.h"
@@ -156,7 +155,7 @@ protected:
 	void announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement);
 	
 	// Reservation coordination
-	void reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg);
+	void reservationBroadcastCallback(const auto_smart_factory::ReservationBroadcast& msg);
 
 	// ROS Nodehandle
 	ros::NodeHandle n;
@@ -185,8 +184,8 @@ protected:
 	// Publisher/Subscriber for ReservationCoordination
 	ReservationManager* reservationManager;
 	
-	ros::Publisher reservationCoordination_pub;
-	ros::Subscriber reservationCoordination_sub;
+	ros::Publisher reservationRequest_pub;
+	ros::Subscriber reservationBroadcast_sub;
 
 	// Server for initialization request
 	ros::ServiceServer init_srv;

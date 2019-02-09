@@ -19,6 +19,9 @@
 
 	<!-- Warehouse Gateway -->
 	<!--<node pkg="auto_smart_factory" type="warehouse_gateway" name="warehouse_gateway" /> -->
+	
+	<!-- Reservation Master -->
+	<node pkg="auto_smart_factory" type="reservation_master" name="reservation_master" />
 
 	<!-- Configuration Server -->
 	<node pkg="auto_smart_factory" type="config_server" name="config_server">

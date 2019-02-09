@@ -127,7 +127,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), currentTime - reservationTimeMarginBehind, currentTime + targetReservationTime + reservationTimeMarginAhead, ownerId);
 
 		// Block neighbour trays space
-		widthMargin = 0.24f; // Cover neighbouring trays too
+		widthMargin = 0.225f; // Cover neighbouring trays too
 		pos = nodes.back() + Math::getVectorFromOrientation(end.o) * offset;
 		length = (ROBOT_RADIUS) * 2.f;
 		width = (ROBOT_RADIUS + widthMargin) * 2.f;
