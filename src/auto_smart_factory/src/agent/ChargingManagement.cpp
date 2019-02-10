@@ -54,13 +54,16 @@ std::pair<Path, uint32_t> ChargingManagement::getPathToNearestChargingStation(Or
 
 double ChargingManagement::getScoreMultiplierForBatteryLevel(double batteryLevel) {
 	if(batteryLevel >= upperThreshold) {
-	    return 1;
-	} else if (batteryLevel > lowerThreshold) {
+	    return 1.0;
+	} else if (batteryLevel >= lowerThreshold) {
 		//Calculate factor using the quadratic function : y = (-0.01)x^2+2 * (lowerThreshold/100)* x- lowerThreshold
-		double quadraticFraction =  (2 + 0.01f * lowerThreshold) * batteryLevel - pow(batteryLevel, 2) * 0.01f - lowerThreshold;
+		double quadraticFraction =  (2.f + 0.01f * lowerThreshold) * batteryLevel - pow(batteryLevel, 2) * 0.01f - lowerThreshold;
 		return quadraticFraction / 100.f;
+	} else if(batteryLevel >= criticalMinimum) {
+		// Linear function
+		return batteryLevel / 100.f;
 	}
-	return batteryLevel / 100.f;
+	return 0.0;
 }
 
 double ChargingManagement::getChargingTime(double consumptionTillCS){
@@ -68,7 +71,7 @@ double ChargingManagement::getChargingTime(double consumptionTillCS){
 }
 
 bool ChargingManagement::isChargingAppropriate() {
-	return (agent->getAgentBattery() <= upperThreshold);
+	return (agent->getAgentBattery() <= chargingAppropiateLevel);
 }
 
 bool ChargingManagement::isCharged() {

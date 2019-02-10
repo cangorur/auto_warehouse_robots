@@ -50,6 +50,8 @@ void TaskHandler::update() {
 				} else {
 					ROS_FATAL("[%s] Could not add charging task while idling, path is invalid", agent->getAgentID().c_str());
 				}
+			} else {
+				// TODO Drive to idle position
 			}
 		}
 		nextTask();

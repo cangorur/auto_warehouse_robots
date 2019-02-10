@@ -89,22 +89,19 @@ private:
 	// information about the role of this agent
 	auto_smart_factory::RobotConfiguration robotConfig;
 
-	//Discharging Rate
 	float dischargingRate;
-
-	//Charging rate
 	float chargingRate;
-
-	//Motor Draining rate
 	float motorDrainingRate;
 
-	// Max energy level of the agent to participate in charging
-	float upperThreshold = 70.00;
+	float chargingAppropiateLevel = 100.f;
+	
+	// Above this value no score penalty is applied
+	float upperThreshold = 50.00;
 
-	// Energy level between upper and critical for non-linear score
+	// greater => quadratic function, smaller => linear function
 	float lowerThreshold = 35.00;
 
-	// Minimum energy level of the agent to participate in charging
+	// Below minimum => no new tasks
 	float criticalMinimum = 10.00;
 	
 	float estimatedBatteryConsumptionToNearestChargingStation = 10.f;
