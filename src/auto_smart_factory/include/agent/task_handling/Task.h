@@ -48,6 +48,10 @@ protected:
 	uint32_t targetId;
 	// target Tray position
 	OrientedPoint targetPosition;
+
+	// Time information for post-mortem analysis
+	double startedAt;
+	double finishedAt;
 };
 
 #endif /* AGENT_TASK_H_ */

@@ -21,6 +21,9 @@ public:
 
 protected:
 	static double chargingTime;
+
+	// Time information for post-mortem analysis
+	double arrivedAt;
 };
 
 #endif /* AGENT_CHARGINGTASK_H_ */

@@ -35,6 +35,11 @@ protected:
 
 	static double pickUpTime;
 	static double dropOffTime;
+
+	// Time information for post-mortem analysis
+	double startedPickUpAt;
+	double finishedPickUpAt;
+	double startedDropOffAt;
 };
 
 #endif /* AGENT_TRANSPORTATIONTASK_H_ */
