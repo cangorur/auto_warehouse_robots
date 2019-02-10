@@ -6,12 +6,20 @@
 #include "OrientedPoint.h"
 #include "Point.h"
 
+namespace UncertaintyDirection {
+	enum class Direction {BEHIND, AHEAD};	
+}
+
+using namespace UncertaintyDirection;
+
 class TimingCalculator {
-public:
+public:	
 	explicit TimingCalculator() = default;
 	TimingCalculator(double startingTime, OrientedPoint startPoint, RobotHardwareProfile* hardwareProfile);
 	
 	double getUncertainty(double time) const;
+	double getUncertaintyForReservation(double time, Direction direction) const;
+	
 	double getDrivingAndTurningTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
 	double getTurningTime(Point prev, Point curr, Point next) const;
 	double getTurningTime(double startRotationInDeg, Point curr, Point next) const;

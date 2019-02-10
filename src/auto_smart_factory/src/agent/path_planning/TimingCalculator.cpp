@@ -5,6 +5,7 @@
 
 #include "Math.h"
 
+using namespace UncertaintyDirection;
 
 TimingCalculator::TimingCalculator(double startingTime, OrientedPoint startPoint, RobotHardwareProfile* hardwareProfile) :
 	startingTime(startingTime),
@@ -20,6 +21,16 @@ double TimingCalculator::getUncertainty(double time) const {
 	}
 	double uncertainty = timeSinceStart * hardwareProfile->getTimeUncertaintyPercentage() + hardwareProfile->getTimeUncertaintyAbsolute();
 	return std::abs(uncertainty);
+}
+
+double TimingCalculator::getUncertaintyForReservation(double time, Direction direction) const {
+	double uncertainty = getUncertainty(time);
+	
+	if(direction == Direction::BEHIND) {
+		return uncertainty * 0.4f;
+	} else {
+		return uncertainty * 0.8f;
+	}
 }
 
 double TimingCalculator::getDrivingAndTurningTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const {

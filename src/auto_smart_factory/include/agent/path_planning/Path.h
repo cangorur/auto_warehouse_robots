@@ -10,7 +10,7 @@
 
 class Path {
 public:
-	double maxReservationDistance = 1.75f;
+	double maxDrivingReservationDuration = 2.5f;
 	double reservationTimeMarginAhead = 0.f;
 	double reservationTimeMarginBehind = 0.f;
 	
