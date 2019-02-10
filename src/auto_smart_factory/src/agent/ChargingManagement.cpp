@@ -80,8 +80,11 @@ bool ChargingManagement::isChargingAppropriate() {
 }
 
 bool ChargingManagement::isCharged() {
-	ROS_INFO("Battery: %f", agent->getAgentBattery());
-	return agent->getAgentBattery() >= 99.5f;
+	bool charged = agent->getAgentBattery() >= 99.9f;
+	if(charged) {
+		ROS_INFO("[Agent %d] Finished charging with %f%%", agent->getAgentIdInt(), agent->getAgentBattery());
+	}
+	return charged;
 }
 
 double ChargingManagement::getCurrentBattery() {
