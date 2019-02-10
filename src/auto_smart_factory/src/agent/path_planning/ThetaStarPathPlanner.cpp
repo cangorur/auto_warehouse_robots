@@ -111,7 +111,7 @@ Path ThetaStarPathPlanner::findPath() {
 			if(prevNotNull) {
 				double timeAtPrev = prev->time;
 				timeAtPrev -= timing.getUncertainty(timeAtPrev);
-				double timeAtNeighbour = prev->time + timing.getDrivingTime(prev, neighbour);
+				double timeAtNeighbour = prev->time + timing.getDrivingAndTurningTime(prev, neighbour);
 				timeAtNeighbour += timing.getUncertainty(timeAtNeighbour);
 
 				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(prev->node->pos, timeAtPrev, neighbour->node->pos, timeAtNeighbour);
@@ -120,14 +120,14 @@ Path ThetaStarPathPlanner::findPath() {
 			}
 
 			if(prevNotNull && connectionWithPrevPossible) {
-				drivingTime = timing.getDrivingTime(prev, neighbour);
+				drivingTime = timing.getDrivingAndTurningTime(prev, neighbour);
 				newPrev = prev;
 				makeConnection = true;
 			} else {
 				// If no direct connection possible, try to connect via current
 				double timeAtCurrent = current->time;
 				timeAtCurrent -= timing.getUncertainty(timeAtCurrent);
-				double timeAtNeighbour = current->time + timing.getDrivingTime(current, neighbour);
+				double timeAtNeighbour = current->time + timing.getDrivingAndTurningTime(current, neighbour);
 				timeAtNeighbour += timing.getUncertainty(timeAtNeighbour);
 				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(current->node->pos, timeAtCurrent, neighbour->node->pos, timeAtNeighbour);
 
@@ -135,7 +135,7 @@ Path ThetaStarPathPlanner::findPath() {
 					bool waitBecauseUpcomingObstacle = result.hasUpcomingObstacle && timeAtNeighbour >= result.lastValidEntryTime;
 
 					if(!result.blockedByTimed && !waitBecauseUpcomingObstacle) {
-						drivingTime = timing.getDrivingTime(current, neighbour);
+						drivingTime = timing.getDrivingAndTurningTime(current, neighbour);
 						newPrev = current;
 						makeConnection = true;
 					} else {
@@ -148,7 +148,7 @@ Path ThetaStarPathPlanner::findPath() {
 						waitingTime = std::max(0.0, waitingTime);
 						waitingTime += timing.getUncertainty(waitingTime);
 
-						drivingTime = timing.getDrivingTime(current, neighbour);
+						drivingTime = timing.getDrivingAndTurningTime(current, neighbour);
 						newPrev = current;
 						makeConnection = true;
 					}

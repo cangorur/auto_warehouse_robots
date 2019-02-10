@@ -18,7 +18,7 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		start(start),
 		end(end),
 		isValidPath(true),
-		timing(startTimeOffset, hardwareProfile)
+		timing(startTimeOffset, start, hardwareProfile)
 {
 	if(nodes.size() != waitTimes.size()) {
 		ROS_FATAL("nodes.size() != waitTimes.size()");
@@ -40,36 +40,50 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 	// Turning time is considered as part of the following line segment.
 	// Therefore, a line segment driving time = Time to turn to target Point + driving time to target point 
 
+	/*duration = waitTimes.at(0);
+	batteryConsumption = hardwareProfile->getIdleBatteryConsumption(waitTimes.at(0));
+	departureTimes.push_back(startTimeOffset + waitTimes.at(0));
+	turningTimes.push_back(getInitialTurningTime());*/
 	duration = 0;
-	batteryConsumption = 0;
 	distance = 0;
-	if(!nodes.empty()) {
-		duration += waitTimes.at(0);
-		batteryConsumption += hardwareProfile->getIdleBatteryConsumption(waitTimes.at(0));
-		departureTimes.push_back(startTimeOffset + waitTimes.at(0));
+	batteryConsumption = 0;
 
-		if(nodes.size() > 1) {
-			for(unsigned long i = 1; i < nodes.size(); i++) { // last waitTime is not used
-				double currentDistance = Math::getDistance(nodes.at(i - 1), nodes.at(i));
+	for(unsigned long i = 0; i < nodes.size(); i++) { // last waitTime is not used
+		double currentDistance = Math::getDistance(nodes.at(i - 1), nodes.at(i));
 
-				// Don't compute angle difference for last node
-				double angleDifference = 0;
-				if(i < nodes.size() - 1) {
-					angleDifference = Math::getAngleDifferenceInDegree(Math::getRotationInDeg(nodes[i] - nodes[i - 1]), Math::getRotationInDeg(nodes[i + 1] - nodes[i]));
-				}
-
-				distance += currentDistance;
-				duration += hardwareProfile->getDrivingDuration(currentDistance);
-				duration += waitTimes.at(i);
-
-				batteryConsumption += hardwareProfile->getIdleBatteryConsumption(waitTimes.at(i) + hardwareProfile->getTurningDuration(angleDifference));
-				batteryConsumption += hardwareProfile->getDrivingBatteryConsumption(hardwareProfile->getDrivingDuration(currentDistance), currentDistance);
-
-				// Departure times does not include turningTime as this is considered part of the next segment
-				departureTimes.push_back(startTimeOffset + duration);
-				duration += hardwareProfile->getTurningDuration(angleDifference);
-			}
+		// Don't compute angle difference for last node
+		double turningDuration = 0;
+		bool performsOnSpotTurn = false;
+		if(i == 0) {
+			turningDuration = timing.getTurningTime(Math::toDeg(start.o), nodes.at(0), nodes.at(1));
+			performsOnSpotTurn = timing.performsOnSpotTurn(Math::toDeg(start.o), nodes.at(0), nodes.at(1));
+		} else if(i < nodes.size() - 1) {
+			turningDuration = timing.getTurningTime(nodes[i - 1], nodes[i], nodes[i + 1]);
+			performsOnSpotTurn = timing.performsOnSpotTurn(nodes[i - 1], nodes[i], nodes[i + 1]);
 		}
+
+		double onSpotTime;
+		double drivingTime;
+		if(performsOnSpotTurn) {
+			onSpotTime = std::max(waitTimes.at(i), turningDuration); 
+			drivingTime = hardwareProfile->getDrivingDuration(distance);
+		} else {
+			onSpotTime = waitTimes.at(i);
+			drivingTime = hardwareProfile->getDrivingDuration(distance) + turningDuration;
+		}
+		
+		// Distance
+		distance += currentDistance;
+		
+		// Duration: Driving is part of the next segment, add after departureTime
+		duration += onSpotTime;
+		departureTimes.push_back(startTimeOffset + duration);
+		duration += drivingTime;
+		
+		batteryConsumption += hardwareProfile->getIdleBatteryConsumption(onSpotTime) + hardwareProfile->getDrivingBatteryConsumption(currentDistance);
+		
+		onSpotTimes.push_back(onSpotTime);
+		drivingTimes.push_back(drivingTime);
 	}
 }
 
@@ -115,7 +129,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 
 		// Line segment
 		auto segmentCount = static_cast<unsigned int>(std::ceil(currentDistance / maxReservationDistance));
-		double segmentLength = currentDistance / static_cast<float>(segmentCount);
+		double segmentLength = currentDistance / static_cast<double>(segmentCount);
 
 		for(unsigned int segment = 0; segment < segmentCount; segment++) {
 			auto segmentDouble = static_cast<double>(segment);
@@ -172,7 +186,7 @@ const std::vector<double>& Path::getDepartureTimes() const {
 	return departureTimes;
 }
 
-float Path::getDistance() const {
+double Path::getDistance() const {
 	ROS_ASSERT(isValidPath);
 	return distance;
 }
@@ -182,7 +196,7 @@ double Path::getDuration() const {
 	return duration;
 }
 
-float Path::getBatteryConsumption() const {
+double Path::getBatteryConsumption() const {
 	ROS_ASSERT(isValidPath);
 	return batteryConsumption;
 }
@@ -237,3 +251,4 @@ OrientedPoint Path::getEnd() {
 bool Path::isValid() const {
 	return isValidPath;
 }
+

@@ -26,15 +26,15 @@ private:
 
 	// Computed internally for motion planner
 	std::vector<double> departureTimes;
-	float distance;
-	float duration;
-	float batteryConsumption;
+	double distance;
+	double duration;
+	double batteryConsumption;
 	
 	// For timing
 	TimingCalculator timing;
 	double targetReservationTime;
-	std::vector<double> turningTimes;
 	std::vector<double> drivingTimes;
+	std::vector<double> onSpotTimes;
 
 public:
 	explicit Path();
@@ -46,9 +46,9 @@ public:
 	const std::vector<double>& getWaitTimes() const;
 	const std::vector<double>& getDepartureTimes() const;
 
-	float getDistance() const;
+	double getDistance() const;
 	double getDuration() const;
-	float getBatteryConsumption() const;
+	double getBatteryConsumption() const;
 	double getStartTimeOffset() const;
 	RobotHardwareProfile* getRobotHardwareProfile() const;
 
