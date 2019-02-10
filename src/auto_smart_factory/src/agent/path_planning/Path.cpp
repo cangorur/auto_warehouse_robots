@@ -73,7 +73,7 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		
 		// Duration: Driving is part of the next segment, add after departureTime
 		duration += onSpotTime;
-		departureTimes.push_back(startTimeOffset + duration);
+		departureTimes.push_back(startTimeOffset + duration - 1.f);
 		duration += drivingTime;
 		
 		batteryConsumption += hardwareProfile->getIdleBatteryConsumption(onSpotTime) + hardwareProfile->getDrivingBatteryConsumption(currentDistance);
@@ -103,8 +103,8 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
 		// OnSpotTime
 		if(onSpotTimes.at(i) > 0 || i == 0) {
-			double startTime = currentTime - timing.getUncertaintyForReservation(currentTime, Direction::BEHIND) - reservationTimeMarginBehind;
-			double endTime = currentTime + onSpotTimes[i] + timing.getUncertaintyForReservation(currentTime + onSpotTimes[i], Direction::AHEAD) + reservationTimeMarginAhead;
+			double startTime = currentTime - timing.getReservationUncertainty(currentTime, Direction::BEHIND) - reservationTimeMarginBehind;
+			double endTime = currentTime + onSpotTimes[i] + timing.getReservationUncertainty(currentTime + onSpotTimes[i], Direction::AHEAD) + reservationTimeMarginAhead;
 
 			reservations.emplace_back(nodes[i], waitingReservationSize, 0, startTime, endTime, ownerId);
 			currentTime += onSpotTimes[i];
@@ -161,10 +161,10 @@ void Path::generateReservationsForSegment(std::vector<Rectangle>& reservations, 
 		Point pos = (startPos + endPos) / 2.f;
 
 		double startTime = timeAtStartPoint + (alpha * deltaDuration);
-		startTime -= (timing.getUncertaintyForReservation(startTime, Direction::BEHIND) + reservationTimeMarginBehind);
+		startTime -= (timing.getReservationUncertainty(startTime, Direction::BEHIND) + reservationTimeMarginBehind);
 
 		double endTime = timeAtStartPoint + ((alpha + 1.f) * deltaDuration);
-		endTime += (timing.getUncertaintyForReservation(endTime, Direction::AHEAD) + reservationTimeMarginAhead);
+		endTime += (timing.getReservationUncertainty(endTime, Direction::AHEAD) + reservationTimeMarginAhead);
 
 		reservations.emplace_back(pos, Point(deltaDistance + getReservationSize(), getReservationSize()), rotation, startTime, endTime, ownerId);
 	}
@@ -188,10 +188,10 @@ void Path::generateReservationsForCurvePoints(std::vector<Rectangle>& reservatio
 		Point pos = (startPos + endPos) / 2.f;
 
 		double startTime = timeAtStartPoint + (alpha * deltaDuration);
-		startTime -= (timing.getUncertaintyForReservation(startTime, Direction::BEHIND) + reservationTimeMarginBehind);
+		startTime -= (timing.getReservationUncertainty(startTime, Direction::BEHIND) + reservationTimeMarginBehind);
 
 		double endTime = timeAtStartPoint + ((alpha + 1.f) * deltaDuration);
-		endTime += (timing.getUncertaintyForReservation(endTime, Direction::AHEAD) + reservationTimeMarginAhead);
+		endTime += (timing.getReservationUncertainty(endTime, Direction::AHEAD) + reservationTimeMarginAhead);
 
 		reservations.emplace_back(pos, Point(deltaDistance + getReservationSize(), getReservationSize()), rotation, startTime, endTime, ownerId);
 	}

@@ -1,11 +1,10 @@
 #include <queue>
-#include <include/agent/path_planning/ThetaStarPathPlanner.h>
-
 #include "agent/path_planning/TimedLineOfSightResult.h"
-
 #include "ros/ros.h"
 #include "Math.h"
 #include "agent/path_planning/ThetaStarPathPlanner.h"
+
+using namespace UncertaintyDirection;
 
 ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint target, double startingTime, double targetReservationTime) :
 	map(thetaStarMap),
@@ -110,9 +109,9 @@ Path ThetaStarPathPlanner::findPath() {
 			bool connectionWithPrevPossible = false;
 			if(prevNotNull) {
 				double timeAtPrev = prev->time;
-				timeAtPrev -= timing.getUncertainty(timeAtPrev);
+				timeAtPrev -= timing.getPlanningUncertainty(timeAtPrev, Direction::BEHIND);
 				double timeAtNeighbour = prev->time + timing.getDrivingAndTurningTime(prev, neighbour);
-				timeAtNeighbour += timing.getUncertainty(timeAtNeighbour);
+				timeAtNeighbour += timing.getPlanningUncertainty(timeAtNeighbour, Direction::AHEAD);
 
 				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(prev->node->pos, timeAtPrev, neighbour->node->pos, timeAtNeighbour);
 				
@@ -126,9 +125,9 @@ Path ThetaStarPathPlanner::findPath() {
 			} else {
 				// If no direct connection possible, try to connect via current
 				double timeAtCurrent = current->time;
-				timeAtCurrent -= timing.getUncertainty(timeAtCurrent);
+				timeAtCurrent -= timing.getPlanningUncertainty(timeAtCurrent, Direction::BEHIND);
 				double timeAtNeighbour = current->time + timing.getDrivingAndTurningTime(current, neighbour);
-				timeAtNeighbour += timing.getUncertainty(timeAtNeighbour);
+				timeAtNeighbour += timing.getPlanningUncertainty(timeAtNeighbour, Direction::AHEAD);
 				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(current->node->pos, timeAtCurrent, neighbour->node->pos, timeAtNeighbour);
 
 				if(!result.blockedByStatic) {
@@ -146,7 +145,7 @@ Path ThetaStarPathPlanner::findPath() {
 							waitingTime = result.freeAfter - current->time;
 						}
 						waitingTime = std::max(0.0, waitingTime);
-						waitingTime += timing.getUncertainty(waitingTime);
+						waitingTime += timing.getRelativeUncertainty(waitingTime);
 
 						drivingTime = timing.getDrivingAndTurningTime(current, neighbour);
 						newPrev = current;
@@ -159,7 +158,7 @@ Path ThetaStarPathPlanner::findPath() {
 			if(makeConnection && (newPrev->time + drivingTime + waitingTime) < neighbour->time) {
 				
 				// Check for if connection is valid for upcoming obstacles
-				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time - timing.getUncertainty(newPrev->time), waitingTime + timing.getUncertainty(waitingTime), drivingTime + timing.getUncertainty(drivingTime))) {
+				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time - timing.getPlanningUncertainty(newPrev->time, Direction::BEHIND), waitingTime + timing.getRelativeUncertainty(waitingTime), drivingTime + timing.getRelativeUncertainty(drivingTime))) {
 					
 					double heuristic = getHeuristic(neighbour, targetNode->pos);
 

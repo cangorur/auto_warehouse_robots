@@ -14,22 +14,23 @@ TimingCalculator::TimingCalculator(double startingTime, OrientedPoint startPoint
 {
 }
 
-double TimingCalculator::getUncertainty(double time) const {
-	double timeSinceStart = time - startingTime;
-	if(timeSinceStart <= 0) {
-		return 0;
+double TimingCalculator::getPlanningUncertainty(double time, Direction direction) const {
+	double uncertainty = getUncertainty(time);
+
+	if(direction == Direction::BEHIND) {
+		return uncertainty * 0.1f;
+	} else {
+		return uncertainty * 1.0f;
 	}
-	double uncertainty = timeSinceStart * hardwareProfile->getTimeUncertaintyPercentage() + hardwareProfile->getTimeUncertaintyAbsolute();
-	return std::abs(uncertainty);
 }
 
-double TimingCalculator::getUncertaintyForReservation(double time, Direction direction) const {
+double TimingCalculator::getReservationUncertainty(double time, Direction direction) const {
 	double uncertainty = getUncertainty(time);
 	
 	if(direction == Direction::BEHIND) {
-		return uncertainty * 0.5f;
+		return uncertainty * 0.3f;
 	} else {
-		return uncertainty * 0.8f;
+		return uncertainty * 0.6f;
 	}
 }
 
@@ -70,5 +71,23 @@ bool TimingCalculator::performsOnSpotTurn(double startRotationInDeg, Point curr,
 	double currLineSegmentRotation = Math::getRotationInDeg(next - curr);
 
 	return hardwareProfile->performsOnSpotTurn(std::abs(Math::getAngleDifferenceInDegree(startRotationInDeg, currLineSegmentRotation)));
+}
+
+double TimingCalculator::getRelativeUncertainty(double time) const {
+	double timeSinceStart = time - startingTime;
+	if(timeSinceStart <= 0) {
+		return 0;
+	}
+	double uncertainty = timeSinceStart * hardwareProfile->getTimeUncertaintyPercentage();
+	return std::abs(uncertainty);
+}
+
+double TimingCalculator::getUncertainty(double time) const {
+	double timeSinceStart = time - startingTime;
+	if(timeSinceStart <= 0) {
+		return 0;
+	}
+	double uncertainty = timeSinceStart * hardwareProfile->getTimeUncertaintyPercentage() + hardwareProfile->getTimeUncertaintyAbsolute();
+	return std::abs(uncertainty);
 }
 
