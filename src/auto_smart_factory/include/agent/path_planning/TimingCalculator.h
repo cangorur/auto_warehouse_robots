@@ -17,8 +17,9 @@ public:
 	explicit TimingCalculator() = default;
 	TimingCalculator(double startingTime, OrientedPoint startPoint, RobotHardwareProfile* hardwareProfile);
 	
-	double getUncertainty(double time) const;
-	double getUncertaintyForReservation(double time, Direction direction) const;
+	double getPlanningUncertainty(double time, Direction direction) const;
+	double getReservationUncertainty(double time, Direction direction) const;
+	double getRelativeUncertainty(double time) const;
 	
 	double getDrivingAndTurningTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
 	double getTurningTime(Point prev, Point curr, Point next) const;
@@ -30,6 +31,8 @@ private:
 	double startingTime;
 	OrientedPoint startPoint;
 	RobotHardwareProfile* hardwareProfile;
+	
+	double getUncertainty(double time) const;
 };
 
 #endif //PROJECT_TIMINGCALCULATOR_H
