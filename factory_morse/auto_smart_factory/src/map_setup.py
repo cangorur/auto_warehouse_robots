@@ -132,7 +132,7 @@ def create_tray(tray_id, typeCnt, tray, simply_flag):
     create_tray_sensor(tray['x'], tray['y'], 0.28, tray_id, tray['type']) # 0.3
 
     # add ids of trays
-    create_id_texts(tray, typeCnt, tray['x'], tray['y'], 0, tray['orientation'])
+    #create_id_texts(tray, typeCnt, tray['x'], tray['y'], 0, tray['orientation'])
 
 def create_conveyor(map_config):
     for conveyor in map_config['human_robot_collaboration']['conveyors']:
@@ -249,7 +249,7 @@ def create_charging_station(tray_id, typeCnt, tray):
     charging_station.translate(tray['x'], tray['y'], 0.0)
     angle = math.radians(tray['orientation'])
     charging_station.rotate(0.0, 0.0, angle)
-    create_id_texts(tray, typeCnt, tray['x'], tray['y'], 0, tray['orientation'])
+    #create_id_texts(tray, typeCnt, tray['x'], tray['y'], 0, tray['orientation'])
 
     # define charging zone
     charging_zone = Zone(type = 'Charging')
