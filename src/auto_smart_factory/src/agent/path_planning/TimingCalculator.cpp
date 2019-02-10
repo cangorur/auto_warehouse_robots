@@ -27,7 +27,7 @@ double TimingCalculator::getUncertaintyForReservation(double time, Direction dir
 	double uncertainty = getUncertainty(time);
 	
 	if(direction == Direction::BEHIND) {
-		return uncertainty * 0.4f;
+		return uncertainty * 0.5f;
 	} else {
 		return uncertainty * 0.8f;
 	}

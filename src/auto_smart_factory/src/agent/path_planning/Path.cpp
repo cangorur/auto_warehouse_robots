@@ -101,8 +101,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 
 	// Skipping
 	std::vector<Point> curvePoints;
-	double skippedDistance = 0;
-	double maxSkipDistance = 0.25f;
+	double maxSkipDistance = 0.45f;
 	double timeAtSkippingStart = 0;
 
 	double currentTime = startTimeOffset;
@@ -110,7 +109,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		double distance = Math::getDistance(nodes[i], nodes[i + 1]);
 		
 		// OnSpotTime
-		if(onSpotTimes.at(0) > 0 || i == 0) {
+		if(onSpotTimes.at(i) > 0 || i == 0) {
 			double startTime = currentTime - timing.getUncertaintyForReservation(currentTime, Direction::BEHIND) - reservationTimeMarginBehind;
 			double endTime = currentTime + onSpotTimes[i] + timing.getUncertaintyForReservation(currentTime + onSpotTimes[i], Direction::AHEAD) + reservationTimeMarginAhead;
 
@@ -119,20 +118,22 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		}
 
 		// Skip point if possible
-		if(curvePoints.size() < 5 && distance <= maxSkipDistance && onSpotTimes[i] == 0) {
+		if(curvePoints.size() < 5 && distance <= maxSkipDistance && onSpotTimes[i] == 0 && onSpotTimes[i + 1] == 0) {
 			if(curvePoints.empty()) {
 				timeAtSkippingStart = currentTime;
 			}
 			
 			curvePoints.push_back(nodes[i]);
-			skippedDistance += distance;
 		} else if(!curvePoints.empty()) {
 			// Generate skipped points
-			generateReservationsForCurvePoints(reservations, curvePoints, timeAtSkippingStart, currentTime - timeAtSkippingStart, ownerId);	
-			ROS_ERROR("Skipped %d segments", curvePoints.size());
-			// Clear
+			if(curvePoints.size() > 1) {
+				// Generate previous line segment
+				generateReservationsForCurvePoints(reservations, curvePoints, timeAtSkippingStart, currentTime - timeAtSkippingStart, ownerId);
+			} else {
+				generateReservationsForSegment(reservations, nodes[i - 1], nodes[i], timeAtSkippingStart, currentTime - timeAtSkippingStart, ownerId);
+			}
+			
 			curvePoints.clear();
-			skippedDistance = 0;
 		} else {
 			generateReservationsForSegment(reservations, nodes[i], nodes[i + 1], currentTime, drivingTimes.at(i), ownerId);
 		}
