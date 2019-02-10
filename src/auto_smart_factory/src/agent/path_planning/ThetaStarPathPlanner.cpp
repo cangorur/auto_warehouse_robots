@@ -51,7 +51,7 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 
 			isValidPathQuery = false;
 		} else {
-			ROS_FATAL("[Agent %d] Path would need initial wait time of %f", map->getOwnerId(), initialWaitTime);
+			//ROS_FATAL("[Agent %d] Path would need initial wait time of %f", map->getOwnerId(), initialWaitTime);
 			//map->listAllReservationsIn(Point(start.x, start.y));
 		}
 	}
@@ -63,7 +63,7 @@ Path ThetaStarPathPlanner::findPath() {
 	}
 	
 	if(start.x == target.x && start.y == target.y) {
-		ROS_WARN("[Agent %d] Returning path with start == target ( %f/%f )", map->getOwnerId(), start.x, start.y);
+		//ROS_WARN("[Agent %d] Returning path with start == target ( %f/%f )", map->getOwnerId(), start.x, start.y);
 		return Path(startingTime, {Point(start), Point(start)}, {0.0, 0.0}, hardwareProfile, targetReservationTime, start, start);
 	}
 	
@@ -176,7 +176,7 @@ Path ThetaStarPathPlanner::findPath() {
 		Path path = constructPath(startingTime, targetInformation, targetReservationTime);
 		return smoothPath(path);
 	} else {
-		ROS_WARN("[Agent %d] No path found from node %f/%f to node %f/%f!", map->getOwnerId(), startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
+		//ROS_WARN("[Agent %d] No path found from node %f/%f to node %f/%f!", map->getOwnerId(), startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
 		//ROS_WARN("Reservations for start:");
 		//map->listAllReservationsIn(startNode->pos);
 
@@ -220,7 +220,6 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 		for(int j = 0; j < pathNodes.size(); j++) {
 			ROS_WARN("[%d] %f/%f", j, pathNodes[j].x, pathNodes[j].y);	
 		}	
-		
 		ROS_ASSERT(pathNodes.size() > 1);
 	}
 
