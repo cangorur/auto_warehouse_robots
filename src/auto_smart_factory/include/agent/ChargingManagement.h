@@ -93,7 +93,7 @@ private:
 	float chargingRate;
 	float motorDrainingRate;
 
-	float chargingAppropiateLevel = 100.f;
+	float chargingAppropriateLevel = 96.f;
 	
 	// Above this value no score penalty is applied
 	float upperThreshold = 50.00;

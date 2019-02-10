@@ -71,7 +71,7 @@ double ChargingManagement::getChargingTime(double consumptionTillCS){
 }
 
 bool ChargingManagement::isChargingAppropriate() {
-	return (agent->getAgentBattery() <= chargingAppropiateLevel);
+	return (agent->getAgentBattery() <= chargingAppropriateLevel);
 }
 
 bool ChargingManagement::isCharged() {
