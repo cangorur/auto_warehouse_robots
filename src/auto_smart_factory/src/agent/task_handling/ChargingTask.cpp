@@ -1,6 +1,6 @@
 #include "agent/task_handling/ChargingTask.h"
 
-double ChargingTask::chargingTime = 40.f;
+double ChargingTask::chargingTime = 100.f;
 
 ChargingTask::ChargingTask(uint32_t targetID, Path targetPath, double startTime) : 
 	Task(targetID, targetPath, Type::CHARGING, startTime)
