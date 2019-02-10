@@ -50,7 +50,6 @@ void RobotConfigServer::readRobotConfigs(std::string file) {
 		auto_smart_factory::RobotConfiguration robotConfig;
 		robotConfig.type_name = robotType.first;
 		robotConfig.discharging_rate = robotType.second.get<float>("discharging_rate");
-		robotConfig.discharging_rate = robotType.second.get<float>("motor_draining_rate");
 		robotConfig.charging_rate = robotType.second.get<float>("charging_rate");
 		robotConfig.motor_draining_rate = robotType.second.get<float>("motor_draining_rate");
 		robotConfig.min_linear_vel = robotType.second.get<float>("min_linear_vel");
