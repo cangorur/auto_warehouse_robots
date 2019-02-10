@@ -242,7 +242,7 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 }
 
 double ThetaStarPathPlanner::getTimeUncertainty(double time) const {
-	double timeSinceStart = time - startTimeOffset;
+	double timeSinceStart = time - startingTime;
 	if(timeSinceStart <= 0) {
 		return 0;
 	}
