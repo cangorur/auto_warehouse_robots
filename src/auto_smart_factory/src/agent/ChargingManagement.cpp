@@ -67,14 +67,6 @@ double ChargingManagement::getChargingTime(double consumptionTillCS){
 	return ((agent->getAgentBattery() - consumptionTillCS) /chargingRate) ;
 }
 
-double ChargingManagement::getBatteryConsumption(double idleTime){
-	return (idleTime*dischargingRate);
-}
-
-double ChargingManagement::getBatteryConsumption(double idleTime, double drivingDistance){
-	return (idleTime*dischargingRate + drivingDistance * motorDrainingRate);
-}
-
 bool ChargingManagement::isChargingAppropriate() {
 	return (agent->getAgentBattery() <= upperThreshold);
 }
@@ -97,14 +89,4 @@ bool ChargingManagement::isConsumptionPossible(double consumption) {
 
 bool ChargingManagement::isConsumptionPossible(double agentBatteryLevel, double consumption) {
 	return agentBatteryLevel - consumption - estimatedBatteryConsumptionToNearestChargingStation > criticalMinimum;
-}
-
-void  ChargingManagement::checkBattery() {
-	float batt = agent->getAgentBattery();
-	if (batt > 100){
-		ROS_ERROR("[Charging Management]:Agent %s battery >100! (%f)",agentID.c_str(), batt);
-	}else if(batt < 0){
-		ROS_ERROR("[Charging Management]:Agent %s battery <0! (%f)",agentID.c_str(), batt);
-	}
-
 }

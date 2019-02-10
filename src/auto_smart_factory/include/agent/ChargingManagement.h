@@ -74,15 +74,6 @@ public:
 	 * @param: Distance traveled by the robot
 	 */
 
-	// Already implemented in Path
-	double getBatteryConsumption(double idleTime);
-	double getBatteryConsumption(double idleTime, double drivingDistance);
-
-	/*
-	 * Check Battery for errors
-	 */
-	void checkBattery();
-
 private:
 	Agent* agent;
 
