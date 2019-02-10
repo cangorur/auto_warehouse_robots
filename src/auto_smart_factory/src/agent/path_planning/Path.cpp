@@ -1,5 +1,7 @@
 #include <utility>
 #include <cmath>
+#include <include/agent/path_planning/Path.h>
+
 #include "Math.h"
 #include "ros/ros.h"
 #include "visualization_msgs/Marker.h"
@@ -38,17 +40,12 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 
 	// Turning time is considered as part of the following line segment.
 	// Therefore, a line segment driving time = Time to turn to target Point + driving time to target point 
-
-	/*duration = waitTimes.at(0);
-	batteryConsumption = hardwareProfile->getIdleBatteryConsumption(waitTimes.at(0));
-	departureTimes.push_back(startTimeOffset + waitTimes.at(0));
-	turningTimes.push_back(getInitialTurningTime());*/
 	duration = 0;
 	distance = 0;
 	batteryConsumption = 0;
 
-	for(unsigned long i = 0; i < nodes.size(); i++) { // last waitTime is not used
-		double currentDistance = Math::getDistance(nodes.at(i - 1), nodes.at(i));
+	for(unsigned long i = 0; i < nodes.size() - 1; i++) { // last waitTime is not used
+		double currentDistance = Math::getDistance(nodes.at(i), nodes.at(i + 1));
 
 		// Don't compute angle difference for last node
 		double turningDuration = 0;
@@ -65,10 +62,10 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		double drivingTime;
 		if(performsOnSpotTurn) {
 			onSpotTime = std::max(waitTimes.at(i), turningDuration); 
-			drivingTime = hardwareProfile->getDrivingDuration(distance);
+			drivingTime = hardwareProfile->getDrivingDuration(currentDistance);
 		} else {
 			onSpotTime = waitTimes.at(i);
-			drivingTime = hardwareProfile->getDrivingDuration(distance) + turningDuration;
+			drivingTime = hardwareProfile->getDrivingDuration(currentDistance) + turningDuration;
 		}
 		
 		// Distance
@@ -84,6 +81,12 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		onSpotTimes.push_back(onSpotTime);
 		drivingTimes.push_back(drivingTime);
 	}
+	
+	// TargetPoint - getTurningTime also works with direction reversed. nodes.size is guaranteed to be >= 2
+	double finalTurningTime = timing.getTurningTime(Math::toDeg(end.o), nodes.at(nodes.size() - 2), nodes.back());
+	duration += finalTurningTime;
+	batteryConsumption += hardwareProfile->getIdleBatteryConsumption(finalTurningTime);
+
 }
 
 Path::Path() : 
@@ -93,17 +96,19 @@ Path::Path() :
 
 const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	std::vector<Rectangle> reservations;
+	
+	Point waitingReservationSize = Point(getReservationSize(), getReservationSize()) * 0.98f;
 
-	double reservationSize = ROBOT_RADIUS * 2.0f;
-	Point waitingReservationSize = Point(reservationSize, reservationSize) * 0.98f;
+	// Skipping
+	std::vector<Point> curvePoints;
+	double skippedDistance = 0;
+	double maxSkipDistance = 0.25f;
+	double timeAtSkippingStart = 0;
 
 	double currentTime = startTimeOffset;
-	bool skippedLastSegment = false;
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
-		double currentDistance = Math::getDistance(nodes[i], nodes[i + 1]);
-		Point normalizedDir = (nodes[i + 1] - nodes[i]) * 1.f * (1.f/currentDistance);
-		double currentRotation = Math::getRotationInDeg(normalizedDir);
-
+		double distance = Math::getDistance(nodes[i], nodes[i + 1]);
+		
 		// OnSpotTime
 		if(onSpotTimes.at(0) > 0 || i == 0) {
 			double startTime = currentTime - timing.getUncertaintyForReservation(currentTime, Direction::BEHIND) - reservationTimeMarginBehind;
@@ -113,67 +118,108 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 			currentTime += onSpotTimes[i];
 		}
 
-		int currentNode = i;
-		double currentDrivingTime = drivingTimes.at(i);
-		// Skipp line segments if they are too small to avoid generating LOTS of reservations
-		/*if(!skippedLastSegment && onSpotTimes.at(i) == 0 && onSpotTimes.at(i + 1) == 0 && currentDistance < 0.15f) {
-			skippedLastSegment = true;
-			continue;
+		// Skip point if possible
+		if(curvePoints.size() < 5 && distance <= maxSkipDistance && onSpotTimes[i] == 0) {
+			if(curvePoints.empty()) {
+				timeAtSkippingStart = currentTime;
+			}
+			
+			curvePoints.push_back(nodes[i]);
+			skippedDistance += distance;
+		} else if(!curvePoints.empty()) {
+			// Generate skipped points
+			generateReservationsForCurvePoints(reservations, curvePoints, timeAtSkippingStart, currentTime - timeAtSkippingStart, ownerId);	
+			ROS_ERROR("Skipped %d segments", curvePoints.size());
+			// Clear
+			curvePoints.clear();
+			skippedDistance = 0;
+		} else {
+			generateReservationsForSegment(reservations, nodes[i], nodes[i + 1], currentTime, drivingTimes.at(i), ownerId);
 		}
 		
-		if(skippedLastSegment) {
-			skippedLastSegment = false;
-			currentNode -= 1;
-			currentDistance = Math::getDistance(nodes[i - 1], nodes[i + 1]);
-		}*/
-
-		// Line segment
-		auto segmentCount = static_cast<unsigned int>(std::ceil(drivingTimes.at(i) / maxDrivingReservationDuration));
-		double deltaTime = currentDrivingTime / static_cast<double>(segmentCount);
-		double deltaDistance = currentDistance / static_cast<double>(segmentCount);
-
-		for(unsigned int segmentIndex = 0; segmentIndex < segmentCount; segmentIndex++) {
-			auto alpha = static_cast<double>(segmentIndex);
-			
-			Point startPos = nodes[currentNode] + (alpha * deltaDistance * normalizedDir);
-			Point endPos = nodes[currentNode] + ((alpha + 1.f) * deltaDistance * normalizedDir);
-			Point pos = (startPos + endPos) / 2.f;
-			
-			double startTime = currentTime + (alpha * deltaTime);
-			startTime -= (timing.getUncertaintyForReservation(startTime, Direction::BEHIND) + reservationTimeMarginBehind);
-			
-			double endTime = currentTime + ((alpha + 1.f) * deltaTime);
-			endTime += (timing.getUncertaintyForReservation(endTime, Direction::AHEAD) + reservationTimeMarginAhead);
-
-			reservations.emplace_back(pos, Point(deltaTime + reservationSize, reservationSize), currentRotation, startTime, endTime, ownerId);
-		}
-
 		currentTime += drivingTimes.at(i);
 	}
 	
-	// path computation is responsible for checking that this area is free for the specified time
 	if(targetReservationTime > 0) {		
-		double startTime = currentTime - reservationTimeMarginBehind;
-		double endTime = currentTime + targetReservationTime + reservationTimeMarginAhead;
-		
-		// Block approach space		
-		double offset = APPROACH_DISTANCE + 0.1f; // + distanceWhenApproached
-		double lengthMargin = 0.275f;
-		double widthMargin = 0.05f;
-		Point pos = nodes.back() + Math::getVectorFromOrientation(end.o) * offset;		
-		double length = (ROBOT_RADIUS + offset + lengthMargin) * 2.f;
-		double width = (ROBOT_RADIUS + widthMargin) * 2.f;
-		reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), startTime, endTime, ownerId);
-
-		// Block neighbour trays space
-		widthMargin = 0.235f; // Cover neighbouring trays too
-		pos = nodes.back() + Math::getVectorFromOrientation(end.o) * offset;
-		length = (ROBOT_RADIUS) * 2.f;
-		width = (ROBOT_RADIUS + widthMargin) * 2.f;
-		reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), startTime, endTime, ownerId);
+		generateReservationForTray(reservations, currentTime, ownerId);
 	}
 
 	return reservations;
+}
+
+void Path::generateReservationsForSegment(std::vector<Rectangle>& reservations, Point startPoint, Point endPoint, double timeAtStartPoint, double deltaTime, int ownerId) const {
+	double distance = Math::getDistance(startPoint, endPoint);
+	Point normalizedDir = (endPoint - startPoint) * (1.f/distance);
+	double rotation = Math::getRotationInDeg(normalizedDir);
+	
+	auto segmentCount = static_cast<unsigned int>(std::ceil(deltaTime / maxDrivingReservationDuration));
+	double deltaDuration = deltaTime / static_cast<double>(segmentCount);
+	double deltaDistance = distance / static_cast<double>(segmentCount);
+
+	for(unsigned int segmentIndex = 0; segmentIndex < segmentCount; segmentIndex++) {
+		auto alpha = static_cast<double>(segmentIndex);
+
+		Point startPos = startPoint + (alpha * deltaDistance * normalizedDir);
+		Point endPos = startPoint + ((alpha + 1.f) * deltaDistance * normalizedDir);
+		Point pos = (startPos + endPos) / 2.f;
+
+		double startTime = timeAtStartPoint + (alpha * deltaDuration);
+		startTime -= (timing.getUncertaintyForReservation(startTime, Direction::BEHIND) + reservationTimeMarginBehind);
+
+		double endTime = timeAtStartPoint + ((alpha + 1.f) * deltaDuration);
+		endTime += (timing.getUncertaintyForReservation(endTime, Direction::AHEAD) + reservationTimeMarginAhead);
+
+		reservations.emplace_back(pos, Point(deltaDistance + getReservationSize(), getReservationSize()), rotation, startTime, endTime, ownerId);
+	}
+}
+
+void Path::generateReservationsForCurvePoints(std::vector<Rectangle>& reservations, std::vector<Point> points, double timeAtStartPoint, double deltaTime, int ownerId) const {
+	// TODO maybe make reservation covering all points larger
+	double distance = Math::getDistance(points.front(), points.back());
+	Point normalizedDir = (points.back() - points.front()) * (1.f/distance);
+	double rotation = Math::getRotationInDeg(normalizedDir);
+
+	auto segmentCount = static_cast<unsigned int>(std::ceil(deltaTime / maxDrivingReservationDuration));
+	double deltaDuration = deltaTime / static_cast<double>(segmentCount);
+	double deltaDistance = distance / static_cast<double>(segmentCount);
+
+	for(unsigned int segmentIndex = 0; segmentIndex < segmentCount; segmentIndex++) {
+		auto alpha = static_cast<double>(segmentIndex);
+
+		Point startPos = points.front() + (alpha * deltaDistance * normalizedDir);
+		Point endPos = points.front() + ((alpha + 1.f) * deltaDistance * normalizedDir);
+		Point pos = (startPos + endPos) / 2.f;
+
+		double startTime = timeAtStartPoint + (alpha * deltaDuration);
+		startTime -= (timing.getUncertaintyForReservation(startTime, Direction::BEHIND) + reservationTimeMarginBehind);
+
+		double endTime = timeAtStartPoint + ((alpha + 1.f) * deltaDuration);
+		endTime += (timing.getUncertaintyForReservation(endTime, Direction::AHEAD) + reservationTimeMarginAhead);
+
+		reservations.emplace_back(pos, Point(deltaDistance + getReservationSize(), getReservationSize()), rotation, startTime, endTime, ownerId);
+	}
+}
+
+void Path::generateReservationForTray(std::vector<Rectangle>& reservations, double timeAtStartPoint, int ownerId) const {
+	double startTime = timeAtStartPoint - reservationTimeMarginBehind;
+	double endTime = timeAtStartPoint + targetReservationTime + reservationTimeMarginAhead;
+
+	// Block approach space		
+	double offset = APPROACH_DISTANCE + 0.1f; // + distanceWhenApproached
+	double lengthMargin = 0.275f;
+	double widthMargin = 0.05f;
+	Point pos = Point(end.x, end.y) + Math::getVectorFromOrientation(end.o) * offset;
+	double length = (ROBOT_RADIUS + offset + lengthMargin) * 2.f;
+	double width = (ROBOT_RADIUS + widthMargin) * 2.f;
+	
+	reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), startTime, endTime, ownerId);
+
+	// Block neighbour trays space
+	widthMargin = 0.235f; // Cover neighbouring trays too
+	length = (ROBOT_RADIUS) * 2.f;
+	width = (ROBOT_RADIUS + widthMargin) * 2.f;
+	
+	reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), startTime, endTime, ownerId);
 }
 
 const std::vector<Point>& Path::getNodes() const {
@@ -255,5 +301,9 @@ OrientedPoint Path::getEnd() {
 
 bool Path::isValid() const {
 	return isValidPath;
+}
+
+double Path::getReservationSize() const {
+	return ROBOT_RADIUS * 2.0f;
 }
 

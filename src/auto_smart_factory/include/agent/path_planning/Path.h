@@ -60,6 +60,13 @@ public:
 	OrientedPoint getStart();
 	OrientedPoint getEnd();
 	bool isValid() const;
+
+private:
+	void generateReservationsForSegment(std::vector<Rectangle>& reservations, Point startPoint, Point endPoint, double timeAtStartPoint, double deltaDuration, int ownerId) const;
+	void generateReservationsForCurvePoints(std::vector<Rectangle>& reservations, std::vector<Point> points, double timeAtStartPoint, double deltaTime, int ownerId) const;
+	void generateReservationForTray(std::vector<Rectangle>& reservations, double timeAtStartPoint, int ownerId) const;
+	
+	double getReservationSize() const;
 };
 
 #endif /* AGENT_PATH_H_ */
