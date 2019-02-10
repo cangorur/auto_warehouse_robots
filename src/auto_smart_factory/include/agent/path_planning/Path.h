@@ -9,7 +9,7 @@
 
 class Path {
 public:
-	double maxReservationLength = 3;
+	double maxReservationDistance = 1.75f;
 	double reservationTimeMarginAhead = 0.f;
 	double reservationTimeMarginBehind = 0.f;
 	

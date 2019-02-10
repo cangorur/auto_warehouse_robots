@@ -45,13 +45,13 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 
 		if(initialWaitTime > 1000) {
 			ROS_FATAL("[Agent %d] Initial wait time > 1000 -> standing in infinite reservation, no valid path possible", map->getOwnerId());
-			ROS_WARN("Reservations for start:");
-			map->listAllReservationsIn(Point(start.x, start.y));
+			//ROS_WARN("Reservations for start:");
+			//map->listAllReservationsIn(Point(start.x, start.y));
 
 			isValidPathQuery = false;
 		} else {
 			ROS_FATAL("[Agent %d] Path would need initial wait time of %f", map->getOwnerId(), initialWaitTime);
-			map->listAllReservationsIn(Point(start.x, start.y));
+			//map->listAllReservationsIn(Point(start.x, start.y));
 		}
 	}
 }
@@ -173,11 +173,11 @@ Path ThetaStarPathPlanner::findPath() {
 		return smoothPath(path);
 	} else {
 		ROS_WARN("[Agent %d] No path found from node %f/%f to node %f/%f!", map->getOwnerId(), startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
-		ROS_WARN("Reservations for start:");
-		map->listAllReservationsIn(startNode->pos);
+		//ROS_WARN("Reservations for start:");
+		//map->listAllReservationsIn(startNode->pos);
 
-		ROS_WARN("Reservations for target:");
-		map->listAllReservationsIn(targetNode->pos);
+		//ROS_WARN("Reservations for target:");
+		//map->listAllReservationsIn(targetNode->pos);
 
 		return Path();
 	}
@@ -267,11 +267,11 @@ Path ThetaStarPathPlanner::smoothPath(Path inputPath) const {
 		Point next = input[i + 1];
 
 		if(shouldSmoothCorner(prev, curr, next, inputWaitTimes[i])) {
-			std::vector<Point> subcurve = createCurveFromCorner(prev, curr, next);
+			std::vector<Point> subcurve = createCurveFromCorner(prev, curr, next, output.back());
 
 			// Only add points if not prev/next to avoid adding them twice (in cases where |prev,curr| is so small that prev is part of smoothed curve
 			for(auto& v : subcurve) {
-				if(v != prev && v != next) {
+				if(v != prev && v != next && v != output.back()) {
 					output.push_back(v);
 					outputWaitTimes.push_back(0);
 				}
@@ -291,11 +291,11 @@ Path ThetaStarPathPlanner::smoothPath(Path inputPath) const {
 	return Path(inputPath.getStartTimeOffset(), output, outputWaitTimes, hardwareProfile, targetReservationTime, inputPath.getStart(), inputPath.getEnd());
 }
 
-std::vector<Point> ThetaStarPathPlanner::createCurveFromCorner(Point prev, Point curr, Point next) const {
+std::vector<Point> ThetaStarPathPlanner::createCurveFromCorner(Point prev, Point curr, Point next, Point lastPointInOutput) const {
 	// Return curve which replaces the center input point
 	int pointsToInsert = 1;
 
-	Point curveStart = getCurveEdge(prev, curr);
+	Point curveStart = getCurveEdge(prev, curr, lastPointInOutput);
 	Point curveEnd = getCurveEdge(next, curr);
 
 	// Creates a curve with start, center and end points, possibly more
@@ -357,12 +357,27 @@ double ThetaStarPathPlanner::getAngle(const Point& prev, const Point& curr, cons
 }
 
 Point ThetaStarPathPlanner::getCurveEdge(Point neighbour, Point center) const {
-	double desiredDistance = 0.7f;
 	double distance = Math::getDistance(neighbour, center);
-	if(distance > desiredDistance) {
-		return center + (neighbour - center)/distance * desiredDistance;
+	if(distance > desiredDistanceForCurveEdge) {
+		return center + (neighbour - center)/distance * desiredDistanceForCurveEdge;
 	} else {
 		return neighbour;
+	}
+}
+
+Point ThetaStarPathPlanner::getCurveEdge(Point neighbour, Point center, Point lastPointInOutput) const {
+	double distance = Math::getDistance(neighbour, center);
+	Point curvePoint;
+	if(distance > desiredDistanceForCurveEdge) {
+		curvePoint = center + (neighbour - center)/distance * desiredDistanceForCurveEdge;
+	} else {
+		curvePoint = neighbour;
+	}
+
+	if(Math::getDistance(center, curvePoint) < Math::getDistance(center, lastPointInOutput)) {
+		return curvePoint;
+	} else {
+		return lastPointInOutput;
 	}
 }
 
@@ -370,8 +385,7 @@ std::vector<Point> ThetaStarPathPlanner::addPointsToCurve(Point curveStart, Poin
 	std::vector<Point> output;
 	Point offset;
 
-	if(pointsToAdd == 0) {
-		output.push_back(curveStart);
+	if(pointsToAdd == 0) {		output.push_back(curveStart);
 		output.push_back(center);
 		output.push_back(curveEnd);
 		return output;

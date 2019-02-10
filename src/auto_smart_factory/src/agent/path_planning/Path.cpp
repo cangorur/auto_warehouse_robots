@@ -113,7 +113,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		}
 
 		// Line segment
-		auto segmentCount = static_cast<unsigned int>(std::ceil(currentDistance / maxReservationLength));
+		auto segmentCount = static_cast<unsigned int>(std::ceil(currentDistance / maxReservationDistance));
 		double segmentLength = currentDistance / static_cast<float>(segmentCount);
 
 		for(unsigned int segment = 0; segment < segmentCount; segment++) {
