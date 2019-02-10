@@ -29,6 +29,7 @@ public:
 	
 	double getTimeUncertaintyPercentage() const;
 	double getTimeUncertaintyAbsolute() const;
+	double getOnSpotTurningAngle() const;
 };
 
 

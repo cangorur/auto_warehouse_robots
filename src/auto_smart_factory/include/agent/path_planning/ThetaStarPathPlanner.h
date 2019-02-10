@@ -30,11 +30,8 @@ private:
 
 	// Functions	
 	double getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const;
-	double getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
-
 	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double targetReservationTime) const;	
-	double getTimeUncertainty(double time) const;
-	
+
 	// Smoothing
 	Path smoothPath(Path source) const;
 	bool shouldSmoothCorner(Point prev, Point curr, Point next, double waitTimeAtCenter) const;
@@ -51,6 +48,7 @@ private:
 	// Query information
 	ThetaStarMap* map;
 	RobotHardwareProfile* hardwareProfile;
+	TimingCalculator timing;
 	
 	OrientedPoint start;
 	OrientedPoint target;

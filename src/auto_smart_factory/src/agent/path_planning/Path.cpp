@@ -17,7 +17,8 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		targetReservationTime(targetReservationTime),
 		start(start),
 		end(end),
-		isValidPath(true)
+		isValidPath(true),
+		timing(startTimeOffset, hardwareProfile)
 {
 	if(nodes.size() != waitTimes.size()) {
 		ROS_FATAL("nodes.size() != waitTimes.size()");
@@ -93,8 +94,8 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 
 		// Waiting time - always for first node
 		if(waitTimes.at(i) > 0 || i == 0) {
-			double startTime = currentTime - 0.5f * getTimeUncertainty(currentTime) - reservationTimeMarginBehind;
-			double endTime = currentTime + waitTimes[i] + getTimeUncertainty(currentTime + waitTimes[i]) + reservationTimeMarginAhead;
+			double startTime = currentTime - 0.5f * timing.getUncertainty(currentTime) - reservationTimeMarginBehind;
+			double endTime = currentTime + waitTimes[i] + timing.getUncertainty(currentTime + waitTimes[i]) + reservationTimeMarginAhead;
 			
 			reservations.emplace_back(nodes[i], waitingReservationSize, 0, startTime, endTime, ownerId);
 			currentTime += waitTimes[i];
@@ -124,9 +125,9 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 
 			Point pos = (startPos + endPos) / 2.f;
 			double startTime = currentTime + hardwareProfile->getDrivingDuration(segmentDouble * segmentLength);
-			startTime -= (0.5f * getTimeUncertainty(startTime) + reservationTimeMarginBehind);
+			startTime -= (0.5f * timing.getUncertainty(startTime) + reservationTimeMarginBehind);
 			double endTime = currentTime + hardwareProfile->getDrivingDuration((segmentDouble + 1.f) * segmentLength);
-			endTime += (getTimeUncertainty(endTime) + reservationTimeMarginAhead);
+			endTime += (timing.getUncertainty(endTime) + reservationTimeMarginAhead);
 
 			reservations.emplace_back(pos, Point(segmentLength + reservationSize, reservationSize), currentRotation, startTime, endTime, ownerId);
 		}
@@ -235,13 +236,4 @@ OrientedPoint Path::getEnd() {
 
 bool Path::isValid() const {
 	return isValidPath;
-}
-
-double Path::getTimeUncertainty(double time) const {
-	double timeSinceStart = time - startTimeOffset;
-	if(timeSinceStart <= 0) {
-		return 0;
-	}
-	double uncertainty = timeSinceStart * hardwareProfile->getTimeUncertaintyPercentage() + hardwareProfile->getTimeUncertaintyAbsolute();
-	return std::abs(uncertainty);
 }

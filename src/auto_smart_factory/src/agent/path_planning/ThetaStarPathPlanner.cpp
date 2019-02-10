@@ -13,7 +13,8 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 	start(OrientedPoint(start.x, start.y, Math::toDeg(start.o))),
 	target(OrientedPoint(target.x, target.y, Math::toDeg(target.o))),
 	startingTime(startingTime),
-	targetReservationTime(targetReservationTime)	
+	targetReservationTime(targetReservationTime),
+	timing(startingTime, start, hardwareProfile)
 {
 	isValidPathQuery = true;
 	
@@ -104,58 +105,61 @@ Path ThetaStarPathPlanner::findPath() {
 			ThetaStarGridNodeInformation* newPrev = nullptr;
 			bool makeConnection = false;
 
-			// Only try direct connection with prev if not at start node
-			bool connectionWithPrevPossible = prev != nullptr;
-			if(connectionWithPrevPossible) {
+			// Only try direct connection with prev if not at start node (prev != nullptr) AND not blocked by timed obstacle
+			bool prevNotNull = prev != nullptr;
+			bool connectionWithPrevPossible = false;
+			if(prevNotNull) {
 				double timeAtPrev = prev->time;
-				timeAtPrev -= getTimeUncertainty(timeAtPrev);
-				double timeAtNeighbour = prev->time + getDrivingTime(prev, neighbour);
-				timeAtNeighbour += getTimeUncertainty(timeAtNeighbour);
+				timeAtPrev -= timing.getUncertainty(timeAtPrev);
+				double timeAtNeighbour = prev->time + timing.getDrivingTime(prev, neighbour);
+				timeAtNeighbour += timing.getUncertainty(timeAtNeighbour);
 
 				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(prev->node->pos, timeAtPrev, neighbour->node->pos, timeAtNeighbour);
 				
 				connectionWithPrevPossible = !result.blockedByStatic && !result.blockedByTimed && (!result.hasUpcomingObstacle || (result.hasUpcomingObstacle && timeAtNeighbour < result.lastValidEntryTime));
 			}
 
-			if(connectionWithPrevPossible) {
-				drivingTime = getDrivingTime(prev, neighbour);
+			if(prevNotNull && connectionWithPrevPossible) {
+				drivingTime = timing.getDrivingTime(prev, neighbour);
 				newPrev = prev;
 				makeConnection = true;
 			} else {
+				// If no direct connection possible, try to connect via current
 				double timeAtCurrent = current->time;
-				timeAtCurrent -= getTimeUncertainty(timeAtCurrent);
-				double timeAtNeighbour = current->time + getDrivingTime(current, neighbour);
-				timeAtNeighbour += getTimeUncertainty(timeAtNeighbour);
+				timeAtCurrent -= timing.getUncertainty(timeAtCurrent);
+				double timeAtNeighbour = current->time + timing.getDrivingTime(current, neighbour);
+				timeAtNeighbour += timing.getUncertainty(timeAtNeighbour);
 				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(current->node->pos, timeAtCurrent, neighbour->node->pos, timeAtNeighbour);
 
 				if(!result.blockedByStatic) {
 					bool waitBecauseUpcomingObstacle = result.hasUpcomingObstacle && timeAtNeighbour >= result.lastValidEntryTime;
 
 					if(!result.blockedByTimed && !waitBecauseUpcomingObstacle) {
-						drivingTime = getDrivingTime(current, neighbour);
+						drivingTime = timing.getDrivingTime(current, neighbour);
 						newPrev = current;
 						makeConnection = true;
 					} else {
-						// Wait
+						// Calculate wait time
 						if(waitBecauseUpcomingObstacle) {
 							waitingTime = result.freeAfterUpcomingObstacle - current->time;
 						} else {
 							waitingTime = result.freeAfter - current->time;
 						}
 						waitingTime = std::max(0.0, waitingTime);
-						waitingTime += getTimeUncertainty(waitingTime);
+						waitingTime += timing.getUncertainty(waitingTime);
 
-						drivingTime = getDrivingTime(current, neighbour);
+						drivingTime = timing.getDrivingTime(current, neighbour);
 						newPrev = current;
 						makeConnection = true;
 					}
 				}
 			}
 
+			// Finally try to make connection
 			if(makeConnection && (newPrev->time + drivingTime + waitingTime) < neighbour->time) {
+				
 				// Check for if connection is valid for upcoming obstacles
-
-				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time - getTimeUncertainty(newPrev->time), waitingTime + getTimeUncertainty(waitingTime), drivingTime + getTimeUncertainty(drivingTime))) {
+				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time - timing.getUncertainty(newPrev->time), waitingTime + timing.getUncertainty(waitingTime), drivingTime + timing.getUncertainty(drivingTime))) {
 					
 					double heuristic = getHeuristic(neighbour, targetNode->pos);
 
@@ -185,23 +189,6 @@ Path ThetaStarPathPlanner::findPath() {
 
 double ThetaStarPathPlanner::getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const {
 	return hardwareProfile->getDrivingDuration(Math::getDistance(current->node->pos, targetPos));
-}
-
-double ThetaStarPathPlanner::getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const {
-	// Include turningTime to current line segment if prev is available
-	double turningTime = 0;
-
-	double prevLineSegmentRotation = 0;
-	if(current->prev != nullptr) {
-		prevLineSegmentRotation = Math::getRotationInDeg(current->node->pos - current->prev->node->pos);		
-	} else {
-		prevLineSegmentRotation = start.o;
-	}
-
-	double currLineSegmentRotation = Math::getRotationInDeg(target->node->pos - current->node->pos);
-	turningTime = hardwareProfile->getTurningDuration(std::abs(Math::getAngleDifferenceInDegree(prevLineSegmentRotation, currLineSegmentRotation)));
-
-	return hardwareProfile->getDrivingDuration(Math::getDistance(current->node->pos, target->node->pos)) + turningTime;
 }
 
 Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double targetReservationTime) const {
@@ -239,15 +226,6 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 
 	// Convert orientation to rad
 	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, targetReservationTime, OrientedPoint(start.x, start.y, Math::toRad(start.o)), OrientedPoint(target.x, target.y, Math::toRad(target.o)));
-}
-
-double ThetaStarPathPlanner::getTimeUncertainty(double time) const {
-	double timeSinceStart = time - startingTime;
-	if(timeSinceStart <= 0) {
-		return 0;
-	}
-	double uncertainty = timeSinceStart * hardwareProfile->getTimeUncertaintyPercentage() + hardwareProfile->getTimeUncertaintyAbsolute();
-	return std::abs(uncertainty);
 }
 
 Path ThetaStarPathPlanner::smoothPath(Path inputPath) const {

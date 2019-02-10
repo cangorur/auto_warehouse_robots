@@ -6,6 +6,7 @@
 #include "agent/path_planning/Point.h"
 #include "agent/path_planning/Rectangle.h"
 #include "RobotHardwareProfile.h"
+#include "TimingCalculator.h"
 
 class Path {
 public:
@@ -19,8 +20,6 @@ private:
 	std::vector<double> waitTimes;
 	RobotHardwareProfile* hardwareProfile;
 	
-	double targetReservationTime;
-	
 	OrientedPoint start;
 	OrientedPoint end;
 	bool isValidPath;
@@ -30,6 +29,12 @@ private:
 	float distance;
 	float duration;
 	float batteryConsumption;
+	
+	// For timing
+	TimingCalculator timing;
+	double targetReservationTime;
+	std::vector<double> turningTimes;
+	std::vector<double> drivingTimes;
 
 public:
 	explicit Path();
@@ -55,9 +60,6 @@ public:
 	OrientedPoint getStart();
 	OrientedPoint getEnd();
 	bool isValid() const;
-
-private:
-	double getTimeUncertainty(double time) const;
 };
 
 #endif /* AGENT_PATH_H_ */

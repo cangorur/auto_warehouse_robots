@@ -40,3 +40,7 @@ double RobotHardwareProfile::getTimeUncertaintyAbsolute() const {
 	return timeUncertaintyAbsolute;
 }
 
+double RobotHardwareProfile::getOnSpotTurningAngle() const {
+	return onSpotTurningAngle;
+}
+
