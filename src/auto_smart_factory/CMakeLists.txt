@@ -257,6 +257,7 @@ add_executable(agent_node
 		src/agent/path_planning/RobotHardwareProfile.cpp
 		src/agent/path_planning/TimedLineOfSightResult.cpp
 		src/agent/path_planning/ReservationManager.cpp
+		src/agent/path_planning/TimingCalculator.cpp
 
 		src/agent/Agent.cpp
 		src/agent/AgentNode.cpp

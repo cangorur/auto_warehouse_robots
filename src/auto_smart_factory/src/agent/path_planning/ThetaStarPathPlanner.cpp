@@ -13,7 +13,8 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 	start(OrientedPoint(start.x, start.y, Math::toDeg(start.o))),
 	target(OrientedPoint(target.x, target.y, Math::toDeg(target.o))),
 	startingTime(startingTime),
-	targetReservationTime(targetReservationTime)	
+	targetReservationTime(targetReservationTime),
+	timing(startingTime, start, hardwareProfile)
 {
 	isValidPathQuery = true;
 	
@@ -45,13 +46,13 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 
 		if(initialWaitTime > 1000) {
 			ROS_FATAL("[Agent %d] Initial wait time > 1000 -> standing in infinite reservation, no valid path possible", map->getOwnerId());
-			ROS_WARN("Reservations for start:");
-			map->listAllReservationsIn(Point(start.x, start.y));
+			//ROS_WARN("Reservations for start:");
+			//map->listAllReservationsIn(Point(start.x, start.y));
 
 			isValidPathQuery = false;
 		} else {
 			ROS_FATAL("[Agent %d] Path would need initial wait time of %f", map->getOwnerId(), initialWaitTime);
-			map->listAllReservationsIn(Point(start.x, start.y));
+			//map->listAllReservationsIn(Point(start.x, start.y));
 		}
 	}
 }
@@ -104,58 +105,61 @@ Path ThetaStarPathPlanner::findPath() {
 			ThetaStarGridNodeInformation* newPrev = nullptr;
 			bool makeConnection = false;
 
-			// Only try direct connection with prev if not at start node
-			bool connectionWithPrevPossible = prev != nullptr;
-			if(connectionWithPrevPossible) {
+			// Only try direct connection with prev if not at start node (prev != nullptr) AND not blocked by timed obstacle
+			bool prevNotNull = prev != nullptr;
+			bool connectionWithPrevPossible = false;
+			if(prevNotNull) {
 				double timeAtPrev = prev->time;
-				timeAtPrev -= getTimeUncertainty(timeAtPrev);
-				double timeAtNeighbour = prev->time + getDrivingTime(prev, neighbour);
-				timeAtNeighbour += getTimeUncertainty(timeAtNeighbour);
+				timeAtPrev -= timing.getUncertainty(timeAtPrev);
+				double timeAtNeighbour = prev->time + timing.getDrivingAndTurningTime(prev, neighbour);
+				timeAtNeighbour += timing.getUncertainty(timeAtNeighbour);
 
 				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(prev->node->pos, timeAtPrev, neighbour->node->pos, timeAtNeighbour);
 				
 				connectionWithPrevPossible = !result.blockedByStatic && !result.blockedByTimed && (!result.hasUpcomingObstacle || (result.hasUpcomingObstacle && timeAtNeighbour < result.lastValidEntryTime));
 			}
 
-			if(connectionWithPrevPossible) {
-				drivingTime = getDrivingTime(prev, neighbour);
+			if(prevNotNull && connectionWithPrevPossible) {
+				drivingTime = timing.getDrivingAndTurningTime(prev, neighbour);
 				newPrev = prev;
 				makeConnection = true;
 			} else {
+				// If no direct connection possible, try to connect via current
 				double timeAtCurrent = current->time;
-				timeAtCurrent -= getTimeUncertainty(timeAtCurrent);
-				double timeAtNeighbour = current->time + getDrivingTime(current, neighbour);
-				timeAtNeighbour += getTimeUncertainty(timeAtNeighbour);
+				timeAtCurrent -= timing.getUncertainty(timeAtCurrent);
+				double timeAtNeighbour = current->time + timing.getDrivingAndTurningTime(current, neighbour);
+				timeAtNeighbour += timing.getUncertainty(timeAtNeighbour);
 				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(current->node->pos, timeAtCurrent, neighbour->node->pos, timeAtNeighbour);
 
 				if(!result.blockedByStatic) {
 					bool waitBecauseUpcomingObstacle = result.hasUpcomingObstacle && timeAtNeighbour >= result.lastValidEntryTime;
 
 					if(!result.blockedByTimed && !waitBecauseUpcomingObstacle) {
-						drivingTime = getDrivingTime(current, neighbour);
+						drivingTime = timing.getDrivingAndTurningTime(current, neighbour);
 						newPrev = current;
 						makeConnection = true;
 					} else {
-						// Wait
+						// Calculate wait time
 						if(waitBecauseUpcomingObstacle) {
 							waitingTime = result.freeAfterUpcomingObstacle - current->time;
 						} else {
 							waitingTime = result.freeAfter - current->time;
 						}
 						waitingTime = std::max(0.0, waitingTime);
-						waitingTime += getTimeUncertainty(waitingTime);
+						waitingTime += timing.getUncertainty(waitingTime);
 
-						drivingTime = getDrivingTime(current, neighbour);
+						drivingTime = timing.getDrivingAndTurningTime(current, neighbour);
 						newPrev = current;
 						makeConnection = true;
 					}
 				}
 			}
 
+			// Finally try to make connection
 			if(makeConnection && (newPrev->time + drivingTime + waitingTime) < neighbour->time) {
+				
 				// Check for if connection is valid for upcoming obstacles
-
-				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time - getTimeUncertainty(newPrev->time), waitingTime + getTimeUncertainty(waitingTime), drivingTime + getTimeUncertainty(drivingTime))) {
+				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time - timing.getUncertainty(newPrev->time), waitingTime + timing.getUncertainty(waitingTime), drivingTime + timing.getUncertainty(drivingTime))) {
 					
 					double heuristic = getHeuristic(neighbour, targetNode->pos);
 
@@ -173,11 +177,11 @@ Path ThetaStarPathPlanner::findPath() {
 		return smoothPath(path);
 	} else {
 		ROS_WARN("[Agent %d] No path found from node %f/%f to node %f/%f!", map->getOwnerId(), startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
-		ROS_WARN("Reservations for start:");
-		map->listAllReservationsIn(startNode->pos);
+		//ROS_WARN("Reservations for start:");
+		//map->listAllReservationsIn(startNode->pos);
 
-		ROS_WARN("Reservations for target:");
-		map->listAllReservationsIn(targetNode->pos);
+		//ROS_WARN("Reservations for target:");
+		//map->listAllReservationsIn(targetNode->pos);
 
 		return Path();
 	}
@@ -185,23 +189,6 @@ Path ThetaStarPathPlanner::findPath() {
 
 double ThetaStarPathPlanner::getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const {
 	return hardwareProfile->getDrivingDuration(Math::getDistance(current->node->pos, targetPos));
-}
-
-double ThetaStarPathPlanner::getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const {
-	// Include turningTime to current line segment if prev is available
-	double turningTime = 0;
-
-	double prevLineSegmentRotation = 0;
-	if(current->prev != nullptr) {
-		prevLineSegmentRotation = Math::getRotationInDeg(current->node->pos - current->prev->node->pos);		
-	} else {
-		prevLineSegmentRotation = start.o;
-	}
-
-	double currLineSegmentRotation = Math::getRotationInDeg(target->node->pos - current->node->pos);
-	turningTime = hardwareProfile->getTurningDuration(std::abs(Math::getAngleDifferenceInDegree(prevLineSegmentRotation, currLineSegmentRotation)));
-
-	return hardwareProfile->getDrivingDuration(Math::getDistance(current->node->pos, target->node->pos)) + turningTime;
 }
 
 Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double targetReservationTime) const {
@@ -241,14 +228,6 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, targetReservationTime, OrientedPoint(start.x, start.y, Math::toRad(start.o)), OrientedPoint(target.x, target.y, Math::toRad(target.o)));
 }
 
-double ThetaStarPathPlanner::getTimeUncertainty(double time) const {
-	double timeSinceStart = time - startingTime;
-	if(timeSinceStart <= 0) {
-		return 0;
-	}
-	return timeSinceStart * hardwareProfile->getTimeUncertaintyPercentage();
-}
-
 Path ThetaStarPathPlanner::smoothPath(Path inputPath) const {
 	if(inputPath.getNodes().size() < 3) {
 		return inputPath;
@@ -267,11 +246,11 @@ Path ThetaStarPathPlanner::smoothPath(Path inputPath) const {
 		Point next = input[i + 1];
 
 		if(shouldSmoothCorner(prev, curr, next, inputWaitTimes[i])) {
-			std::vector<Point> subcurve = createCurveFromCorner(prev, curr, next);
+			std::vector<Point> subcurve = createCurveFromCorner(prev, curr, next, output.back());
 
 			// Only add points if not prev/next to avoid adding them twice (in cases where |prev,curr| is so small that prev is part of smoothed curve
 			for(auto& v : subcurve) {
-				if(v != prev && v != next) {
+				if(v != prev && v != next && v != output.back()) {
 					output.push_back(v);
 					outputWaitTimes.push_back(0);
 				}
@@ -291,11 +270,11 @@ Path ThetaStarPathPlanner::smoothPath(Path inputPath) const {
 	return Path(inputPath.getStartTimeOffset(), output, outputWaitTimes, hardwareProfile, targetReservationTime, inputPath.getStart(), inputPath.getEnd());
 }
 
-std::vector<Point> ThetaStarPathPlanner::createCurveFromCorner(Point prev, Point curr, Point next) const {
+std::vector<Point> ThetaStarPathPlanner::createCurveFromCorner(Point prev, Point curr, Point next, Point lastPointInOutput) const {
 	// Return curve which replaces the center input point
 	int pointsToInsert = 1;
 
-	Point curveStart = getCurveEdge(prev, curr);
+	Point curveStart = getCurveEdge(prev, curr, lastPointInOutput);
 	Point curveEnd = getCurveEdge(next, curr);
 
 	// Creates a curve with start, center and end points, possibly more
@@ -357,12 +336,27 @@ double ThetaStarPathPlanner::getAngle(const Point& prev, const Point& curr, cons
 }
 
 Point ThetaStarPathPlanner::getCurveEdge(Point neighbour, Point center) const {
-	double desiredDistance = 0.7f;
 	double distance = Math::getDistance(neighbour, center);
-	if(distance > desiredDistance) {
-		return center + (neighbour - center)/distance * desiredDistance;
+	if(distance > desiredDistanceForCurveEdge) {
+		return center + (neighbour - center)/distance * desiredDistanceForCurveEdge;
 	} else {
 		return neighbour;
+	}
+}
+
+Point ThetaStarPathPlanner::getCurveEdge(Point neighbour, Point center, Point lastPointInOutput) const {
+	double distance = Math::getDistance(neighbour, center);
+	Point curvePoint;
+	if(distance > desiredDistanceForCurveEdge) {
+		curvePoint = center + (neighbour - center)/distance * desiredDistanceForCurveEdge;
+	} else {
+		curvePoint = neighbour;
+	}
+
+	if(Math::getDistance(center, curvePoint) < Math::getDistance(center, lastPointInOutput)) {
+		return curvePoint;
+	} else {
+		return lastPointInOutput;
 	}
 }
 
@@ -370,8 +364,7 @@ std::vector<Point> ThetaStarPathPlanner::addPointsToCurve(Point curveStart, Poin
 	std::vector<Point> output;
 	Point offset;
 
-	if(pointsToAdd == 0) {
-		output.push_back(curveStart);
+	if(pointsToAdd == 0) {		output.push_back(curveStart);
 		output.push_back(center);
 		output.push_back(curveEnd);
 		return output;

@@ -123,7 +123,7 @@ private:
 
 	/// Threshold when robot should stop and turn on spot instead of pid controlled
 	double turnThreshold = Math::toRad(55.f);
-	double turnThresholdFirstPoint = Math::toRad(12.f);
+	double turnThresholdFirstPoint = Math::toRad(15.f);
 	
 	/// Turning and Driving Speed Limitations from robots config file
 	float maxTurningSpeed;

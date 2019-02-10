@@ -12,10 +12,12 @@
 class ThetaStarPathPlanner {
 public:
 	explicit ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint target, double startingTime, double targetReservationTime);
+	
 	Path findPath();
 
 private:
 	double initialTime = std::numeric_limits<double>::max() - 100000;
+	double desiredDistanceForCurveEdge = 0.85f;
 
 	typedef std::pair<double, ThetaStarGridNodeInformation*> GridInformationPair;
 	struct GridInformationPairComparator {
@@ -28,26 +30,25 @@ private:
 
 	// Functions	
 	double getHeuristic(ThetaStarGridNodeInformation* current, Point targetPos) const;
-	double getDrivingTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
-
 	Path constructPath(double startingTime, ThetaStarGridNodeInformation* targetInformation, double targetReservationTime) const;	
-	double getTimeUncertainty(double time) const;
-	
+
 	// Smoothing
 	Path smoothPath(Path source) const;
 	bool shouldSmoothCorner(Point prev, Point curr, Point next, double waitTimeAtCenter) const;
 
 	// Return curve which replaces the center input point
-	std::vector<Point> createCurveFromCorner(Point prev, Point curr, Point next) const;
+	std::vector<Point> createCurveFromCorner(Point prev, Point curr, Point next, Point lastPointInOutput) const;
 	std::vector<Point> addPointsToCurve(Point curveStart, Point center, Point curveEnd, int pointsToAdd) const;
 	std::vector<Point> smoothCurve(const std::vector<Point>& input) const;
 
 	Point getCurveEdge(Point neighbour, Point center) const;
+	Point getCurveEdge(Point neighbour, Point center, Point lastPointInOutput) const;
 	double getAngle(const Point& prev, const Point& curr, const Point& next) const;
 
 	// Query information
 	ThetaStarMap* map;
 	RobotHardwareProfile* hardwareProfile;
+	TimingCalculator timing;
 	
 	OrientedPoint start;
 	OrientedPoint target;

@@ -15,8 +15,8 @@ double RobotHardwareProfile::getIdleBatteryConsumption(double time) const {
 	return idleBatteryConsumption * time;
 }
 
-double RobotHardwareProfile::getDrivingBatteryConsumption(double time, double distance) const {
-	return drivingBatteryConsumption * distance + getIdleBatteryConsumption(time);
+double RobotHardwareProfile::getDrivingBatteryConsumption(double distance) const {
+	return drivingBatteryConsumption * distance + getIdleBatteryConsumption(getDrivingDuration(distance));
 }
 
 double RobotHardwareProfile::getDrivingDuration(double distance) const {
@@ -35,4 +35,14 @@ double RobotHardwareProfile::getTurningDuration(double angle) const {
 double RobotHardwareProfile::getTimeUncertaintyPercentage() const {
 	return timeUncertaintyPercentage;
 }
+
+double RobotHardwareProfile::getTimeUncertaintyAbsolute() const {
+	return timeUncertaintyAbsolute;
+}
+
+bool RobotHardwareProfile::performsOnSpotTurn(double angleInDeg) const {
+	return angleInDeg >= onSpotTurningAngle;
+}
+
+
 

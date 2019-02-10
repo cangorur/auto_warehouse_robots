@@ -9,24 +9,27 @@ private:
 	double drivingBatteryConsumption;
 
 	// Used to get average estimates from max speed values 
-	const double averageDrivingEfficiency = 0.75f;
+	const double averageDrivingEfficiency = 0.85f;
 
 	const double onSpotTurningAngle = 55.f;
-	const double drivingTurningEfficiency = 0.5f;
-	const double onSpotTurningEfficiency = 0.3f;
+	const double drivingTurningEfficiency = 0.7f;
+	const double onSpotTurningEfficiency = 0.38f;
 
 	// For reservations
-	const double timeUncertaintyPercentage = 0.25f;
+	const double timeUncertaintyPercentage = 0.075f;
+	const double timeUncertaintyAbsolute = 0.2f;
 
 public:
 	RobotHardwareProfile(double maxDrivingSpeed, double maxTurningSpeed, double idleBatteryConsumption, double drivingBatteryConsumption);
 
 	double getIdleBatteryConsumption(double time) const;
-	double getDrivingBatteryConsumption(double time, double distance) const;
+	double getDrivingBatteryConsumption(double distance) const;
 	double getDrivingDuration(double distance) const;
 	double getTurningDuration(double angle) const;
 	
 	double getTimeUncertaintyPercentage() const;
+	double getTimeUncertaintyAbsolute() const;
+	bool performsOnSpotTurn(double angleInDeg) const;
 };
 
 

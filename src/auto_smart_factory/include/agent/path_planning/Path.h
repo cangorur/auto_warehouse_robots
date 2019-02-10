@@ -6,10 +6,11 @@
 #include "agent/path_planning/Point.h"
 #include "agent/path_planning/Rectangle.h"
 #include "RobotHardwareProfile.h"
+#include "TimingCalculator.h"
 
 class Path {
 public:
-	double maxReservationLength = 3;
+	double maxDrivingReservationDuration = 2.0f;
 	double reservationTimeMarginAhead = 0.f;
 	double reservationTimeMarginBehind = 0.f;
 	
@@ -19,17 +20,21 @@ private:
 	std::vector<double> waitTimes;
 	RobotHardwareProfile* hardwareProfile;
 	
-	double targetReservationTime;
-	
 	OrientedPoint start;
 	OrientedPoint end;
 	bool isValidPath;
 
 	// Computed internally for motion planner
 	std::vector<double> departureTimes;
-	float distance;
-	float duration;
-	float batteryConsumption;
+	double distance;
+	double duration;
+	double batteryConsumption;
+	
+	// For timing
+	TimingCalculator timing;
+	double targetReservationTime;
+	std::vector<double> drivingTimes;
+	std::vector<double> onSpotTimes;
 
 public:
 	explicit Path();
@@ -41,9 +46,9 @@ public:
 	const std::vector<double>& getWaitTimes() const;
 	const std::vector<double>& getDepartureTimes() const;
 
-	float getDistance() const;
+	double getDistance() const;
 	double getDuration() const;
-	float getBatteryConsumption() const;
+	double getBatteryConsumption() const;
 	double getStartTimeOffset() const;
 	RobotHardwareProfile* getRobotHardwareProfile() const;
 
@@ -57,7 +62,11 @@ public:
 	bool isValid() const;
 
 private:
-	double getTimeUncertainty(double time) const;
+	void generateReservationsForSegment(std::vector<Rectangle>& reservations, Point startPoint, Point endPoint, double timeAtStartPoint, double deltaDuration, int ownerId) const;
+	void generateReservationsForCurvePoints(std::vector<Rectangle>& reservations, std::vector<Point> points, double timeAtStartPoint, double deltaTime, int ownerId) const;
+	void generateReservationForTray(std::vector<Rectangle>& reservations, double timeAtStartPoint, int ownerId) const;
+	
+	double getReservationSize() const;
 };
 
 #endif /* AGENT_PATH_H_ */
