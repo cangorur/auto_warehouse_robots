@@ -96,18 +96,11 @@ Path::Path() :
 
 const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	std::vector<Rectangle> reservations;
-	
 	Point waitingReservationSize = Point(getReservationSize(), getReservationSize()) * 0.98f;
-
-	// Skipping
-	std::vector<Point> curvePoints;
-	double maxSkipDistance = 0.45f;
-	double timeAtSkippingStart = 0;
+	double maxMergeDistance = 0.45f;
 
 	double currentTime = startTimeOffset;
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
-		double distance = Math::getDistance(nodes[i], nodes[i + 1]);
-		
 		// OnSpotTime
 		if(onSpotTimes.at(i) > 0 || i == 0) {
 			double startTime = currentTime - timing.getUncertaintyForReservation(currentTime, Direction::BEHIND) - reservationTimeMarginBehind;
@@ -117,27 +110,30 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 			currentTime += onSpotTimes[i];
 		}
 
-		// Skip point if possible
-		if(curvePoints.size() < 5 && distance <= maxSkipDistance && onSpotTimes[i] == 0 && onSpotTimes[i + 1] == 0) {
-			if(curvePoints.empty()) {
-				timeAtSkippingStart = currentTime;
-			}
+		// Try to merge points to curve
+		unsigned int j = i;
+		double curveSegmentsDrivingTime = 0;
+		std::vector<Point> curvePoints;
+		while(j < i + 5 && j < nodes.size() - 1) {
+			double distance = Math::getDistance(nodes[j], nodes[j + 1]);
 			
-			curvePoints.push_back(nodes[i]);
-		} else if(!curvePoints.empty()) {
-			// Generate skipped points
-			if(curvePoints.size() > 1) {
-				// Generate previous line segment
-				generateReservationsForCurvePoints(reservations, curvePoints, timeAtSkippingStart, currentTime - timeAtSkippingStart, ownerId);
+			if(distance <= maxMergeDistance && onSpotTimes[j] == 0) {
+				curvePoints.push_back(nodes[j]);
+				curveSegmentsDrivingTime += drivingTimes[j];
+				j++;
 			} else {
-				generateReservationsForSegment(reservations, nodes[i - 1], nodes[i], timeAtSkippingStart, currentTime - timeAtSkippingStart, ownerId);
+				break;
 			}
-			
-			curvePoints.clear();
-		} else {
-			generateReservationsForSegment(reservations, nodes[i], nodes[i + 1], currentTime, drivingTimes.at(i), ownerId);
 		}
 		
+		if(curvePoints.size() > 1) {
+			generateReservationsForCurvePoints(reservations, curvePoints, currentTime, curveSegmentsDrivingTime, ownerId);
+			currentTime += curveSegmentsDrivingTime;
+			i = j;
+			continue;
+		}
+
+		generateReservationsForSegment(reservations, nodes[i], nodes[i + 1], currentTime, drivingTimes.at(i), ownerId);
 		currentTime += drivingTimes.at(i);
 	}
 	
@@ -264,10 +260,10 @@ visualization_msgs::Marker Path::getVisualizationMsgLines(std_msgs::ColorRGBA co
 
 	msg.id = 1;
 	msg.type = visualization_msgs::Marker::LINE_STRIP;
-	msg.scale.x = 0.1;
+	msg.scale.x = 0.06f;
 
 	msg.color = color;
-	msg.color.a = 0.6f;
+	msg.color.a = 0.75f;
 	
 	for(const Point& point : nodes) {
 		geometry_msgs::Point p;

@@ -9,7 +9,7 @@ private:
 	double drivingBatteryConsumption;
 
 	// Used to get average estimates from max speed values 
-	const double averageDrivingEfficiency = 0.85f;
+	const double averageDrivingEfficiency = 0.82f;
 
 	const double onSpotTurningAngle = 55.f;
 	const double drivingTurningEfficiency = 0.7f;
