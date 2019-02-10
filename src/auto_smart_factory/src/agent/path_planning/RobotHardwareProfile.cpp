@@ -36,3 +36,7 @@ double RobotHardwareProfile::getTimeUncertaintyPercentage() const {
 	return timeUncertaintyPercentage;
 }
 
+double RobotHardwareProfile::getTimeUncertaintyAbsolute() const {
+	return timeUncertaintyAbsolute;
+}
+

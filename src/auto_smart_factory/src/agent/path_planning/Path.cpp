@@ -242,5 +242,6 @@ double Path::getTimeUncertainty(double time) const {
 	if(timeSinceStart <= 0) {
 		return 0;
 	}
-	return timeSinceStart * hardwareProfile->getTimeUncertaintyPercentage();
+	double uncertainty = timeSinceStart * hardwareProfile->getTimeUncertaintyPercentage() + hardwareProfile->getTimeUncertaintyAbsolute();
+	return std::abs(uncertainty);
 }

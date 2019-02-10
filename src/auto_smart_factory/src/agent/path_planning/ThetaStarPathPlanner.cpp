@@ -242,11 +242,12 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 }
 
 double ThetaStarPathPlanner::getTimeUncertainty(double time) const {
-	double timeSinceStart = time - startingTime;
+	double timeSinceStart = time - startTimeOffset;
 	if(timeSinceStart <= 0) {
 		return 0;
 	}
-	return timeSinceStart * hardwareProfile->getTimeUncertaintyPercentage();
+	double uncertainty = timeSinceStart * hardwareProfile->getTimeUncertaintyPercentage() + hardwareProfile->getTimeUncertaintyAbsolute();
+	return std::abs(uncertainty);
 }
 
 Path ThetaStarPathPlanner::smoothPath(Path inputPath) const {
