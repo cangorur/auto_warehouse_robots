@@ -33,6 +33,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	pos.update(position.x, position.y, orientation, ros::Time::now());
 	positionInitialized = true;
 
+	/* If motion planner is stopped or finished, set velocity to zero */
 	if (mode == Mode::FINISHED || mode == Mode::STOP) {
 		publishVelocity(0.0, 0.0);
 		return;
@@ -54,7 +55,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
-	/* Check if path is valid */
+	/* Check if path is valid, as it is required for the following procedures */
 	if (!pathObject.isValid()) {
 		publishVelocity(0.0, 0.0);
 		mode = Mode::FINISHED;
@@ -82,12 +83,11 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	}
 
 	if (previousTargetIndex >= 0 && pathObject.getDepartureTimes().at(previousTargetIndex) > ros::Time::now().toSec()) {
-		/* While waiting already turn into target direction to not waste time */
+		/* While waiting already turn into target direction to not waste time and if finished set linear and angular velocity to zero */
 		turnTowards(currentTarget);
 
-		/* If mode is driving, stop and go into WAIT mode until departure time is reached */
+		/* If mode is driving go into WAIT mode until departure time is reached, turnTowards() will either rotate or if not necessary set velocity to zero */
 		if (mode == Mode::PID || mode == Mode::READY) {
-			publishVelocity(0.0, 0.0);
 			mode = Mode::WAIT;
 		}
 		return;
