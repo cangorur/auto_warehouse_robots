@@ -145,7 +145,7 @@ Path ThetaStarPathPlanner::findPath() {
 							waitingTime = result.freeAfter - current->time;
 						}
 						waitingTime = std::max(0.0, waitingTime);
-						waitingTime += timing.getRelativeUncertainty(waitingTime);
+						//waitingTime += timing.getRelativeUncertainty(waitingTime);
 
 						drivingTime = timing.getDrivingAndTurningTime(current, neighbour);
 						newPrev = current;
@@ -156,16 +156,31 @@ Path ThetaStarPathPlanner::findPath() {
 
 			// Finally try to make connection
 			if(makeConnection && (newPrev->time + drivingTime + waitingTime) < neighbour->time) {
-				
 				// Check for if connection is valid for upcoming obstacles
-				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time - timing.getPlanningUncertainty(newPrev->time, Direction::BEHIND), waitingTime + timing.getRelativeUncertainty(waitingTime), drivingTime + timing.getRelativeUncertainty(drivingTime))) {
-					
+				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime)) {
 					double heuristic = getHeuristic(neighbour, targetNode->pos);
 
 					neighbour->time = newPrev->time + drivingTime + waitingTime;
 					neighbour->prev = newPrev;
 					neighbour->waitTimeAtPrev = waitingTime;
 					queue.push(std::make_pair(neighbour->time + heuristic, neighbour));
+				} else {
+					TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(newPrev->node->pos, newPrev->time, neighbour->node->pos, newPrev->time + waitingTime + drivingTime);
+					
+					if(!result.blockedByStatic && result.blockedByTimed) {
+						double newWaitingTime = result.freeAfter - newPrev->time;
+						waitingTime = std::max(waitingTime, newWaitingTime);
+
+						if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime)) {
+							double heuristic = getHeuristic(neighbour, targetNode->pos);
+
+							neighbour->time = newPrev->time + drivingTime + waitingTime;
+							neighbour->prev = newPrev;
+							neighbour->waitTimeAtPrev = waitingTime;
+							queue.push(std::make_pair(neighbour->time + heuristic, neighbour));
+							ROS_WARN("Made connection only after second attempt");
+						}
+					}
 				}
 			}
 		}
