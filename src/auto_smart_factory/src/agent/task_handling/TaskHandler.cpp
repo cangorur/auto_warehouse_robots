@@ -1,6 +1,3 @@
-
-#include <include/agent/task_handling/TaskHandler.h>
-
 #include "agent/task_handling/TaskHandler.h"
 
 TaskHandler::TaskHandler(Agent* agent, ros::Publisher* scorePub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm) : 

@@ -59,15 +59,15 @@ void TransportationTask::setState(Task::State state) {
 			startedAt = ros::Time::now().toSec();
 			break;
 		
-		case Task::State::PICKUP:
+		case Task::State::APPROACH_SOURCE:
 			startedPickUpAt = ros::Time::now().toSec();
 			break;
 		
-		case Task::State::RESERVING_TARGET:
+		case Task::State::TO_TARGET:
 			finishedPickUpAt = ros::Time::now().toSec();
 			break;
 
-		case Task::State::DROPOFF:
+		case Task::State::APPROACH_TARGET:
 			startedDropOffAt = ros::Time::now().toSec();
 			break;
 

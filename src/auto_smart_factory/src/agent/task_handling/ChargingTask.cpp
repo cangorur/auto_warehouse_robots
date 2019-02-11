@@ -33,7 +33,7 @@ void ChargingTask::setState(Task::State state) {
 			startedAt = ros::Time::now().toSec();
 			break;
 		
-		case Task::State::CHARGING:
+		case Task::State::APPROACH_TARGET:
 			arrivedAt = ros::Time::now().toSec();
 			break;
 		
