@@ -82,6 +82,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
+	/* Wait at current waypoint until departure time is reached */
 	if (previousTargetIndex >= 0 && pathObject.getDepartureTimes().at(previousTargetIndex) > ros::Time::now().toSec()) {
 		/* While waiting already turn into target direction to not waste time and if finished set linear and angular velocity to zero */
 		turnTowards(currentTarget);
@@ -91,6 +92,13 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 			mode = Mode::WAIT;
 		}
 		return;
+	}
+
+	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) <= 0.2f) {
+		if (std::abs(getRotationToTarget(pos, currentTarget)) > 0.02) {
+			turnTowards(currentTarget);
+			return;
+		}
 	}
 
 	/* Follow the path using the pid controller */
