@@ -137,14 +137,14 @@ void Task::receiveRobotGripperUpdate(const auto_smart_factory::GripperState& msg
 		//ROS_INFO("[task %d] Received gripper grab ack from robot.", getId());
 
 		if(msg.package.id != taskData.package.id || msg.package.type_id != taskData.package.type_id) {
-			ROS_ERROR("[task %d] Grabbed package is not the package this task got assigned! (assigned package id=%d type=%d, grabbed package id=%d type=%d)", getId(), taskData.package.id, taskData.package.type_id, msg.package.id, msg.package.type_id);
+			ROS_ERROR("[task %d] Robot %s grabbed package is not the package this task got assigned! (assigned package id=%d type=%d, grabbed package id=%d type=%d)", getId(), taskData.robotOffer.robotId.c_str(), taskData.package.id, taskData.package.type_id, msg.package.id, msg.package.type_id);
 		}
 	} else {
 		robotReleaseAck = true;
 		//ROS_INFO("[task %d] Received gripper release ack from robot.", getId());
 
 		if(msg.package.id != taskData.package.id || msg.package.type_id != taskData.package.type_id) {
-			ROS_ERROR("[task %d] Released package is not the package this task got assigned! (assigned package id=%d type=%d, released package id=%d type=%d)",	getId(), taskData.package.id, taskData.package.type_id, msg.package.id, msg.package.type_id);
+			ROS_ERROR("[task %d] Robot %s released package is not the package this task got assigned! (assigned package id=%d type=%d, released package id=%d type=%d)", getId(), taskData.robotOffer.robotId.c_str(), taskData.package.id, taskData.package.type_id, msg.package.id, msg.package.type_id);
 		}
 	}
 }
