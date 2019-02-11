@@ -129,7 +129,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		if(curvePoints.size() > 1) {
 			generateReservationsForCurvePoints(reservations, curvePoints, currentTime, curveSegmentsDrivingTime, ownerId);
 			currentTime += curveSegmentsDrivingTime;
-			i = j;
+			i = j - 1; // -1 because for-loop ++
 			continue;
 		}
 
