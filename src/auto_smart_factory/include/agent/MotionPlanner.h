@@ -86,6 +86,11 @@ private:
 	/* Calculate rotation to target */
 	double getRotationToTarget(Position currentPosition, Point targetPosition);
 
+	/* Linear Velocity calculation */
+	double calculateLinearVelocity(double cte);
+	double getDistanceToTarget();
+	double getNextCurveAngle(double distance);
+
 	/* Helper function to publish the velocity on the robots motion topic */
 	void publishVelocity(double speed, double angle);
 	

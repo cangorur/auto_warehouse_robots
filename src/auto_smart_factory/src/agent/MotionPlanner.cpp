@@ -94,6 +94,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
+	/* Precision alignment to final waypoint */
 	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) <= 0.2f) {
 		if (std::abs(getRotationToTarget(pos, currentTarget)) > 0.02) {
 			turnTowards(currentTarget);
@@ -116,12 +117,31 @@ void MotionPlanner::followPath() {
 	linearVelocity = Math::clamp(linearVelocity, minDrivingSpeed, maxDrivingSpeed);
 
 	// Limit speed if approaching final point
-	double distToTarget = Math::getDistance(Point(pos.x, pos.y), currentTarget);
-	if (isCurrentPointLastPoint() && distToTarget <= distToSlowDown) {
-		linearVelocity = Math::clamp(distToTarget * 1.5f, minPrecisionDrivingSpeed, maxDrivingSpeed);
+	if (getDistanceToTarget() <= distToSlowDown) {
+		linearVelocity = Math::clamp(getDistanceToTarget()*0.5, minPrecisionDrivingSpeed, linearVelocity);
 	}
 
 	publishVelocity(linearVelocity, angularVelocity);
+}
+
+double MotionPlanner::calculateLinearVelocity(double cte) {
+	double maxCteVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte) - 1.0), (double) maxDrivingSpeed - minDrivingSpeed);
+	double maxPreCurveVelocity = 0.0;
+	double maxTargetVelocity = Math::clamp(getDistanceToTarget()*0.5, minDrivingSpeed, maxDrivingSpeed);
+}
+
+double MotionPlanner::getDistanceToTarget() {
+	double distanceToNextWaypoint = Math::getDistance(Point(pos.x, pos.y), currentTarget);
+	double distanceToTarget = 0.0;
+	for(unsigned long i = currentTargetIndex+1; i < pathObject.getNodes().size(); i++) {
+		distanceToTarget += Math::getDistance(pathObject.getNodes().at(i), pathObject.getNodes().at(i-1));
+	}
+
+	return distanceToNextWaypoint+distanceToTarget;
+}
+
+double MotionPlanner::getNextCurveAngle(double distance) {
+
 }
 
 void MotionPlanner::turnTowards(Point target) {
