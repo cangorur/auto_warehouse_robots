@@ -1,6 +1,5 @@
 #include <utility>
 #include <cmath>
-#include <include/agent/path_planning/Path.h>
 
 #include "Math.h"
 #include "ros/ros.h"
