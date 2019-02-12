@@ -458,7 +458,7 @@ void Map::listAllReservationsIn(Point p) {
 
 bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 	for(const auto& r : reservations) {
-		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId && r.getEndTime() - r.getStartTime() > 25.f) {
+		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId && r.getEndTime() - r.getStartTime() >= 30.f) {
 			return true;
 		}		
 	}
