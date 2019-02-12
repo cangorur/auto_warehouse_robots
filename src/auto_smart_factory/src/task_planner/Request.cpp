@@ -13,7 +13,7 @@
 
 using namespace auto_smart_factory;
 
-const ros::Duration Request::timeoutDuration = ros::Duration(1);
+const ros::Duration Request::timeoutDuration = ros::Duration(0.5f);
 
 unsigned int Request::nextId = 0;
 
@@ -28,6 +28,7 @@ Request::Request(TaskPlanner* tp, TaskRequirementsConstPtr taskRequirements, std
 	status.create_time = ros::Time::now();
 	this->status.status = "just created";
 	status.pkg_config = taskRequirements->getPackageConfig();
+	acceptingScores = false;
 
 	ros::NodeHandle pn("~");
 }
@@ -88,7 +89,7 @@ TaskData Request::allocateResources() {
 
 			// allocate robot (try to assign task)
 			if(!allocateRobot(candidate)) {
-				ROS_WARN("[request %d] robot allocation fail", this->status.id);
+				// ROS_WARN("[request %d] robot allocation fail", this->status.id);
 				continue;
 			}
 
@@ -183,53 +184,62 @@ TaskRequirementsConstPtr Request::getRequirements() const {
 }
 
 void Request::receiveTaskResponse(const auto_smart_factory::TaskRating& tr) {
-	if(this->status.id != tr.request_id){
-		ROS_INFO("[Request %d] received answer to another [Request %d] from %s", this->status.id, tr.request_id, tr.robot_id.c_str());
+	if(status.id != tr.request_id) {
+		ROS_WARN("[Request %d] received answer to Request %d from %s", status.id, tr.request_id, tr.robot_id.c_str());
 		return;
 	}
-	if(!tr.reject){
-		// add robot as candidate
-		ROS_ASSERT_MSG(tr.estimatedDuration > 0, "Tried to create robot candidate with estimatedDuration == 0");
-		RobotCandidate candidate = RobotCandidate(tr.robot_id, taskPlanner->getTrayConfig(tr.start_id), taskPlanner->getTrayConfig(tr.end_id), tr.estimatedDuration, tr.score);
-		robotCandidates.push_back(candidate);
+
+	if(acceptingScores) {
+		if(!tr.reject) {
+			// add robot as candidate
+			ROS_ASSERT_MSG(tr.estimatedDuration > 0, "[Request %d] Tried to create robot candidate with estimatedDuration == 0", status.id);
+			robotCandidates.emplace_back(tr.robot_id, taskPlanner->getTrayConfig(tr.start_id), taskPlanner->getTrayConfig(tr.end_id), tr.estimatedDuration, tr.score);
+		}
+		
+		// Use id (string) as key 
+		answeredRobots[tr.robot_id] = tr.reject;
+	} else {
+		ROS_WARN("[Request %d] received score after accepted period", status.id);
 	}
-	
-	// Use id (string) as key 
-	answeredRobots[tr.robot_id] = tr.reject;
 }
 
 bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates, const std::vector<Tray>& targetTrayCandidates) {
 	robotCandidates.clear();
+	// make sure the vector can hold all robot answers without needing to resize
+	robotCandidates.reserve(taskPlanner->getRegisteredRobots().size());
 	answeredRobots.clear();
 
 	taskPlanner->publishTask(sourceTrayCandidates, targetTrayCandidates, status.id);
 	
 	waitForRobotScores(Request::timeoutDuration, ros::Rate(10));
 
-	if(!robotCandidates.empty()){
+	if(robotCandidates.size() > 1){
 		std::sort(robotCandidates.begin(), robotCandidates.end(),
 			          [](const RobotCandidate& first, const RobotCandidate& second) {
 				          return first.score < second.score;
 			          });
 		return true;
 	}
-
-	// ROS_INFO("[Request %d] finished getting candidates!", this->status.id);
-
 	return false;
 }
 
-void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency){
+void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency) {
 	ros::Time start = ros::Time::now();
 	ros::Time end = start + timeout;
-	// ROS_INFO("[Request %d] is waiting for robot scores", status.id);
-	while(ros::Time::now() < end){
-		if(taskPlanner->getRegisteredRobots().size() == answeredRobots.size()){
+	acceptingScores = true;
+	while(ros::Time::now() < end) {
+		if(taskPlanner->getRegisteredRobots().size() == answeredRobots.size()) {
 			ROS_INFO("[Request %d] received all answers", status.id);
+			acceptingScores = false;
 			return;
 		}
 		ros::spinOnce();
 		frequency.sleep();
 	}
-	ROS_WARN("[Request %d] Timeout while waiting for robot scores, got %d scores", status.id, (unsigned int)answeredRobots.size());
+	acceptingScores = false;
+	ROS_WARN("[Request %d] Timeout while waiting for robot scores, got %d answers,", status.id, (unsigned int)answeredRobots.size());
+}
+
+bool Request::isBusy() {
+	return acceptingScores;
 }

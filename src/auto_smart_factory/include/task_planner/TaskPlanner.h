@@ -110,8 +110,7 @@ private:
 	 * @param res Response object
 	 * @return Always true
 	 */
-	bool
-	newInputRequest(auto_smart_factory::NewPackageInputRequest& req, auto_smart_factory::NewPackageInputResponse& res);
+	bool newInputRequest(auto_smart_factory::NewPackageInputRequest& req, auto_smart_factory::NewPackageInputResponse& res);
 
 	/**
 	 * Handle new output request.
@@ -188,10 +187,10 @@ private:
 	std::map<std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> > registeredRobots;
 
 	/// List of pending input requests
-	std::vector<RequestPtr> inputRequests;
+	std::vector<Request> inputRequests;
 
 	/// List of pending ouput requests
-	std::vector<RequestPtr> outputRequests;
+	std::vector<Request> outputRequests;
 
 	/// Map of running tasks
 	std::map<unsigned int, TaskPtr> runningTasks;

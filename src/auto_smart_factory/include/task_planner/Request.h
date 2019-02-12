@@ -73,9 +73,15 @@ public:
 
 	/*
 	 * Receive response to an task announcement
-	 * @param TODO!!
-	*/
+	 * @param Answer of a robot as TaskRating message
+	 */
 	void receiveTaskResponse(const auto_smart_factory::TaskRating& tr);
+
+	/*
+	 * Returns if the Request is currently waiting for answers
+	 * @return busy information
+	 */
+	bool isBusy();
 
 	/// the time the robots have to answer the request
 	static const ros::Duration timeoutDuration;
@@ -128,6 +134,9 @@ protected:
 
 	/// a map of robots who answered with robot_id as key and their reject flag as value
 	std::map<std::string, bool> answeredRobots;
+
+	/// variable guarding that no scores are accepted after the timeout
+	bool acceptingScores;
 
 protected:
 	/// used to generate unique ids
