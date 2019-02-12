@@ -15,6 +15,7 @@ TimingCalculator::TimingCalculator(double startingTime, OrientedPoint startPoint
 }
 
 double TimingCalculator::getPlanningUncertainty(double time, Direction direction) const {
+	return 0;
 	double uncertainty = getUncertainty(time);
 
 	if(direction == Direction::BEHIND) {
@@ -25,6 +26,7 @@ double TimingCalculator::getPlanningUncertainty(double time, Direction direction
 }
 
 double TimingCalculator::getReservationUncertainty(double time, Direction direction) const {
+	return 0;
 	double uncertainty = getUncertainty(time);
 	
 	if(direction == Direction::BEHIND) {

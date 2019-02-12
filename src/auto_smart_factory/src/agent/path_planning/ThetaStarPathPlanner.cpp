@@ -178,7 +178,7 @@ Path ThetaStarPathPlanner::findPath() {
 							neighbour->prev = newPrev;
 							neighbour->waitTimeAtPrev = waitingTime;
 							queue.push(std::make_pair(neighbour->time + heuristic, neighbour));
-							ROS_WARN("[Agent %d] Made connection only after second attempt", map->getOwnerId());
+							//ROS_INFO("[Agent %d] Made connection only after second attempt", map->getOwnerId());
 						}
 					}
 				}

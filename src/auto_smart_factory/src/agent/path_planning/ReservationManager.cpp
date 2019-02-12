@@ -96,6 +96,14 @@ bool ReservationManager::getHasReservedPath() const {
 	return hasReservedPath;
 }
 
+OrientedPoint ReservationManager::getReservedPathTarget() const {
+	if(!hasReservedPath) {
+		ROS_FATAL("[ReservationManager %d] Tried to get path target but hasNoReservedPath!", agentId);
+	}
+	
+	// Todo implement
+}
+
 Path ReservationManager::getReservedPath() {
 	if(!hasReservedPath) {
 		ROS_FATAL("[ReservationManager %d] Tried to get path but hasNoReservedPath!", agentId);
@@ -112,13 +120,18 @@ bool ReservationManager::calculateNewPath() {
 	if(pathToReserve.isValid()) {
 		return true;
 	} else {
+		bidingForReservation = false;
+		
 		ROS_FATAL("[ReservationManager %d] Tried to generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
 		ROS_WARN("Reservations for start:");
 		map->listAllReservationsIn(Point(startPoint.x, startPoint.y));
 
 		ROS_WARN("Reservations for target:");
 		map->listAllReservationsIn(Point(endPoint.x, endPoint.y));
-		
 		return false;
 	}
+}
+
+bool ReservationManager::isReplanningNeccessary() {
+	return false;
 }

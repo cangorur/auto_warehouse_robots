@@ -19,7 +19,7 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 		ownerId(ownerId)
 {
 	if(infiniteReservationTime == 0) {
-		infiniteReservationTime = ros::Time::now().toSec() + 1000000.f;
+		infiniteReservationTime = ros::Time::now().toSec() + 100000.f;
 	}
 	
 	this->obstacles.clear();
@@ -112,7 +112,7 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 		}
 	}
 	
-	double maxTime = endTime + 10000.f;
+	double maxTime = endTime + 1000.f;
 	if((result.blockedByTimed && result.freeAfter > maxTime) ||
 	   (result.hasUpcomingObstacle && (result.lastValidEntryTime > maxTime || result.freeAfterUpcomingObstacle > maxTime))) {
 		result.blockedByStatic = true;
@@ -128,7 +128,7 @@ bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double sta
 
 	for(const Rectangle& reservation : reservations) {
 		// Check if the waiting part is free
-		if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime, ownerId) && Math::isPointInRectangle(pos1, reservation)) {
+		if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime - 0.01f, ownerId) && Math::isPointInRectangle(pos1, reservation)) {
 			//printf("Connection dropped due to waiting: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
 			return false;
 		}

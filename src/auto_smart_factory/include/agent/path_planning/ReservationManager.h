@@ -23,6 +23,8 @@ public:
 	Path getReservedPath();
 	bool isBidingForReservation() const;
 	bool getHasReservedPath() const;
+	OrientedPoint getReservedPathTarget() const;
+	bool isReplanningNeccessary();
 	
 private:
 	// General info
