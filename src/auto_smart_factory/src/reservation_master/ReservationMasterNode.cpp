@@ -8,7 +8,7 @@ int main(int argc, char** argv) {
 	ReservationMaster reservationMaster;
 	ROS_INFO("Reservation master ready!");
 
-	ros::Rate r(5);
+	ros::Rate r(20);
 	while(ros::ok()) {
 		reservationMaster.update();
 		ros::spinOnce();
