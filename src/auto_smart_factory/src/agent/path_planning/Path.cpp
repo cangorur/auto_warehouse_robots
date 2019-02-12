@@ -203,7 +203,7 @@ void Path::generateReservationForTray(std::vector<Rectangle>& reservations, doub
 	// Block approach space		
 	double offset = APPROACH_DISTANCE + 0.1f; // + distanceWhenApproached
 	double lengthMargin = 0.275f;
-	double widthMargin = 0.05f;
+	double widthMargin = 0.1f;
 	Point pos = Point(end.x, end.y) + Math::getVectorFromOrientation(end.o) * offset;
 	double length = (ROBOT_RADIUS + offset + lengthMargin) * 2.f;
 	double width = (ROBOT_RADIUS + widthMargin) * 2.f;
