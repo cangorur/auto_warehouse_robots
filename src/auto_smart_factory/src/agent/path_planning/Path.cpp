@@ -72,7 +72,7 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		
 		// Duration: Driving is part of the next segment, add after departureTime
 		duration += onSpotTime;
-		departureTimes.push_back(startTimeOffset + duration - 0.5f);
+		departureTimes.push_back(startTimeOffset + duration - 0.25f);
 		duration += drivingTime;
 		
 		batteryConsumption += hardwareProfile->getIdleBatteryConsumption(onSpotTime) + hardwareProfile->getDrivingBatteryConsumption(currentDistance);
