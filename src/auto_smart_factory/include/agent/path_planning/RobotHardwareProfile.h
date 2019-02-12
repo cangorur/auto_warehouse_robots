@@ -12,12 +12,12 @@ private:
 	const double averageDrivingEfficiency = 0.82f;
 
 	const double onSpotTurningAngle = 55.f;
-	const double drivingTurningEfficiency = 0.7f;
+	const double drivingTurningEfficiency = 0.65f;
 	const double onSpotTurningEfficiency = 0.38f;
 
-	// For reservations
+	// For reservations == not used
 	const double timeUncertaintyPercentage = 0.075f;
-	const double timeUncertaintyAbsolute = 0.2f;
+	const double timeUncertaintyAbsolute = 0.08f;
 
 public:
 	RobotHardwareProfile(double maxDrivingSpeed, double maxTurningSpeed, double idleBatteryConsumption, double drivingBatteryConsumption);

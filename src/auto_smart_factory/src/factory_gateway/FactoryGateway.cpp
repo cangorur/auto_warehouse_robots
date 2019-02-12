@@ -51,12 +51,6 @@ void FactoryGateway::initialize() {
 	robot7_battery = n.subscribe("/robot_7/battery", 1000, &FactoryGateway::receiveRobot7Battery, this);
 	robot8_battery = n.subscribe("/robot_8/battery", 1000, &FactoryGateway::receiveRobot8Battery, this);
 
-	/*
-	registerAgentServer = pn.advertiseService("register_agent",
-			&TaskPlanner::registerAgent, this);
-	statusUpdatePub = pn.advertise<TaskPlannerState>("status", 1);
-	*/
-
 	ROS_INFO("Warehouse Gateway is initialized.");
 }
 
