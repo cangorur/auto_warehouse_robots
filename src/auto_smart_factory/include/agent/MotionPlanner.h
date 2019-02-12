@@ -132,7 +132,7 @@ private:
 
 	/// Precision configuration to reach points
 	float distToReachPoint = 0.3f;
-	float distToReachFinalPoint = 0.06f;
+	float distToReachFinalPoint = 0.02f;
 	float distToSlowDown = 0.7f;
 	float minPrecisionDrivingSpeed = 0.08f;
 
