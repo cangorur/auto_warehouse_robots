@@ -383,10 +383,18 @@ void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourc
 }
 
 void TaskPlanner::extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa){
-	for(Tray t : sourceTrays){
-		tsa->start_ids.push_back(t.id);
+	unsigned int i = 0;
+	for(Tray t : sourceTrays) {
+		if (i <= maxTrays || maxTrays == 0) {
+			tsa->start_ids.push_back(t.id);
+		}
+		i++;
 	}
-	for(Tray t : targetTrays){
-		tsa->end_ids.push_back(t.id);
+	i = 0;
+	for(Tray t : targetTrays) {
+		if(i <= maxTrays || maxTrays == 0) {
+			tsa->end_ids.push_back(t.id);
+		}
+		i++;
 	}
 }

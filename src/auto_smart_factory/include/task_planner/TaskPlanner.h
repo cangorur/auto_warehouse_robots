@@ -236,6 +236,9 @@ private:
 
 	/// Task planner task announcement publisher
 	ros::Publisher taskAnnouncerPub;
+
+	/// the maximum number of trays that are announced in a task announcement if is set to 0 all will be announced
+	const uint64_t maxTrays = 3;
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_TASK_PLANNER_TASKPLANNER_H_ */
