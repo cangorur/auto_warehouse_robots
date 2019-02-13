@@ -47,5 +47,8 @@ private:
 
 };
 
+bool operator ==(const Rectangle& left, const Rectangle& right);
+bool operator !=(const Rectangle& left, const Rectangle& right);
+
 
 #endif //PROTOTYPE_RECTANGLE_HPP

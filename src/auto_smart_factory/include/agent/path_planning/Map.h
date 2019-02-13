@@ -43,11 +43,11 @@ public:
 	visualization_msgs::Marker getActiveReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type baseColor);
 
 	// Line of sight checks
-	bool isInsideAnyInflatedObstacle(const Point& point) const;	
+	bool isInsideAnyStaticInflatedObstacle(const Point& point) const;	
 	bool isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const;
-	bool isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
-	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
-	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const;
+
+	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, std::vector<Rectangle>& reservationsToIgnore) const;
+	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, std::vector<Rectangle>& reservationsToIgnore) const;
 	
 	bool isPointInMap(const Point& pos) const;
 	Point getRandomFreePoint() const;
@@ -74,6 +74,7 @@ public:
 	int getOwnerId() const;
 	
 	void listAllReservationsIn(Point p);
+	std::vector<Rectangle> getRectanglesOnStartingPoint(Point p) const;
 
 private:
 

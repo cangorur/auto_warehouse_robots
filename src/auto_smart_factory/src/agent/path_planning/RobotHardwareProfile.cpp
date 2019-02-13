@@ -1,5 +1,6 @@
 #include <cmath>
 #include <include/agent/path_planning/RobotHardwareProfile.h>
+#include <algorithm>
 
 #include "agent/path_planning/RobotHardwareProfile.h"
 
@@ -24,11 +25,12 @@ double RobotHardwareProfile::getDrivingDuration(double distance) const {
 }
 
 double RobotHardwareProfile::getTurningDuration(double angle) const {
+	// In degree
 	angle = std::abs(angle);
 	if(angle < onSpotTurningAngle) {
 		return angle / (drivingTurningEfficiency * maxTurningSpeed);
 	} else {
-		return angle / (onSpotTurningEfficiency * maxTurningSpeed);	
+		return getOnSpotTurningTime(angle);	
 	}
 }
 
@@ -42,6 +44,28 @@ double RobotHardwareProfile::getTimeUncertaintyAbsolute() const {
 
 bool RobotHardwareProfile::performsOnSpotTurn(double angleInDeg) const {
 	return angleInDeg >= onSpotTurningAngle;
+}
+
+double RobotHardwareProfile::getOnSpotTurningTime(double angle) const {
+	// Speed equals angle at this speed
+	double time = 0;
+	
+	// Min turning segment
+	double angleAtMinSpeed = std::min(minTurningSpeed, angle);
+	angle -= angleAtMinSpeed;
+	time += angleAtMinSpeed / minTurningSpeed;
+	
+	// Linear decelerating segment
+	double angleAtLinearDeceleration = std::min(maxTurningSpeed - minTurningSpeed, angle);
+	angle -= angleAtLinearDeceleration;
+	double averageSpeedDuringDeceleration = minTurningSpeed + (angleAtLinearDeceleration / 2.f);
+	time += angleAtLinearDeceleration / averageSpeedDuringDeceleration;
+
+	// Max turning speed
+	double angleAtMaxSpeed = angle;
+	time += angleAtMaxSpeed / maxTurningSpeed;
+	
+	return time;
 }
 
 

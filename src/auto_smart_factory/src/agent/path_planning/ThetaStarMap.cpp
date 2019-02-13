@@ -18,7 +18,7 @@ ThetaStarMap::ThetaStarMap(Map* map, float resolution) :
 	while(current.x <= end.x) {
 		current.y = start.y;
 		while(current.y <= end.y) {
-			if(!map->isInsideAnyInflatedObstacle(current)) {
+			if(!map->isInsideAnyStaticInflatedObstacle(current)) {
 				nodes.emplace(std::pair<Point, GridNode*>(current, new GridNode(current)));
 			}
 			current.y += resolution;
@@ -68,20 +68,12 @@ const GridNode* ThetaStarMap::getNodeClosestTo(const Point& pos) const {
 	return nearestNode;
 }
 
-bool ThetaStarMap::isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const {
-	return map->isStaticLineOfSightFree(pos1, pos2);
+TimedLineOfSightResult ThetaStarMap::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, std::vector<Rectangle>& reservationsToIgnore) const {
+	return map->whenIsTimedLineOfSightFree(pos1, startTime, pos2, endTime, reservationsToIgnore);
 }
 
-bool ThetaStarMap::isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
-	return map->isTimedLineOfSightFree(pos1, startTime, pos2, endTime);
-}
-
-TimedLineOfSightResult ThetaStarMap::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
-	return map->whenIsTimedLineOfSightFree(pos1, startTime, pos2, endTime);
-}
-
-bool ThetaStarMap::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const {
-	return map->isTimedConnectionFree(pos1, pos2, startTime, waitingTime, drivingTime);
+bool ThetaStarMap::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, std::vector<Rectangle>& reservationsToIgnore) const {
+	return map->isTimedConnectionFree(pos1, pos2, startTime, waitingTime, drivingTime, reservationsToIgnore);
 }
 
 void ThetaStarMap::listAllReservationsIn(Point p) {
@@ -89,7 +81,7 @@ void ThetaStarMap::listAllReservationsIn(Point p) {
 }
 
 bool ThetaStarMap::addAdditionalNode(Point pos) {
-	if(!map->isPointInMap(pos) || map->isInsideAnyInflatedObstacle(pos)) {
+	if(!map->isPointInMap(pos) || map->isInsideAnyStaticInflatedObstacle(pos)) {
 		return false;
 	}
 
@@ -118,4 +110,8 @@ bool ThetaStarMap::addAdditionalNode(Point pos) {
 
 int ThetaStarMap::getOwnerId() const {
 	return map->getOwnerId();
+}
+
+std::vector<Rectangle> ThetaStarMap::getRectanglesOnStartingPoint(Point p) const {
+	return map->getRectanglesOnStartingPoint(p);
 }

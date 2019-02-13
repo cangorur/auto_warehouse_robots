@@ -4,7 +4,8 @@
 class RobotHardwareProfile {
 private:
 	double maxDrivingSpeed; // Length-Unit / Time-Unit
-	double maxTurningSpeed; // Angle / Time-Unit
+	double maxTurningSpeed; // Angle (deg) / Time-Unit
+	double minTurningSpeed = 17.0;
 	double idleBatteryConsumption;
 	double drivingBatteryConsumption;
 
@@ -13,7 +14,6 @@ private:
 
 	const double onSpotTurningAngle = 55.f;
 	const double drivingTurningEfficiency = 0.65f;
-	const double onSpotTurningEfficiency = 0.38f;
 
 	// For reservations == not used
 	const double timeUncertaintyPercentage = 0.075f;
@@ -30,6 +30,9 @@ public:
 	double getTimeUncertaintyPercentage() const;
 	double getTimeUncertaintyAbsolute() const;
 	bool performsOnSpotTurn(double angleInDeg) const;
+
+private:
+	double getOnSpotTurningTime(double angle) const;
 };
 
 

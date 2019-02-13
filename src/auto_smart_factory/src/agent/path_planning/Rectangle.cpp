@@ -123,4 +123,16 @@ int Rectangle::getOwnerId() const {
 	return ownerId;
 }
 
+bool operator ==(const Rectangle& left, const Rectangle& right) {
+	return left.getStartTime() == right.getStartTime() &&
+	       left.getEndTime() == right.getEndTime() &&
+	       left.getPosition() == right.getPosition() &&
+	       left.getSize() == right.getSize() &&
+	       left.getRotation() == right.getRotation() &&
+	       left.getOwnerId() == right.getOwnerId();			
+}
+
+bool operator !=(const Rectangle& left, const Rectangle& right) {
+	return !(left == right);
+}
 
