@@ -11,8 +11,8 @@
 class Path {
 public:
 	double maxDrivingReservationDuration = 2.0f;
-	double reservationTimeMarginAhead = 0.f;
-	double reservationTimeMarginBehind = 0.f;
+	double reservationTimeMarginAhead = 0.6f;
+	double reservationTimeMarginBehind = 0.3f;
 	
 private:
 	double startTimeOffset = 0;

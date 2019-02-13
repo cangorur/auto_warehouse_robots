@@ -86,6 +86,11 @@ private:
 	/* Calculate rotation to target */
 	double getRotationToTarget(Position currentPosition, Point targetPosition);
 
+	/* Linear Velocity calculation */
+	double calculateLinearVelocity(double cte);
+	double getDistanceToTarget();
+	double getNextCurveAngle(double distance);
+
 	/* Helper function to publish the velocity on the robots motion topic */
 	void publishVelocity(double speed, double angle);
 	
@@ -132,7 +137,7 @@ private:
 
 	/// Precision configuration to reach points
 	float distToReachPoint = 0.3f;
-	float distToReachFinalPoint = 0.1f;
+	float distToReachFinalPoint = 0.02f;
 	float distToSlowDown = 0.7f;
 	float minPrecisionDrivingSpeed = 0.08f;
 

@@ -20,8 +20,8 @@ def handleMoveGripper(req):
     global mutex1
     rospy.loginfo(req.gripper_id)
     while mutex1 == 1:
-        pass
-        #rospy.loginfo("waiting")
+        #pass
+        rospy.loginfo("waiting")
     mutex1 = 1
     success = True
     try:

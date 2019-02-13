@@ -33,6 +33,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	pos.update(position.x, position.y, orientation, ros::Time::now());
 	positionInitialized = true;
 
+	/* If motion planner is stopped or finished, set velocity to zero */
 	if (mode == Mode::FINISHED || mode == Mode::STOP) {
 		publishVelocity(0.0, 0.0);
 		return;
@@ -54,7 +55,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
-	/* Check if path is valid */
+	/* Check if path is valid, as it is required for the following procedures */
 	if (!pathObject.isValid()) {
 		publishVelocity(0.0, 0.0);
 		mode = Mode::FINISHED;
@@ -81,16 +82,24 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
+	/* Wait at current waypoint until departure time is reached */
 	if (previousTargetIndex >= 0 && pathObject.getDepartureTimes().at(previousTargetIndex) > ros::Time::now().toSec()) {
-		/* While waiting already turn into target direction to not waste time */
+		/* While waiting already turn into target direction to not waste time and if finished set linear and angular velocity to zero */
 		turnTowards(currentTarget);
 
-		/* If mode is driving, stop and go into WAIT mode until departure time is reached */
+		/* If mode is driving go into WAIT mode until departure time is reached, turnTowards() will either rotate or if not necessary set velocity to zero */
 		if (mode == Mode::PID || mode == Mode::READY) {
-			publishVelocity(0.0, 0.0);
 			mode = Mode::WAIT;
 		}
 		return;
+	}
+
+	/* Precision alignment to final waypoint */
+	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) <= 0.2f) {
+		if (std::abs(getRotationToTarget(pos, currentTarget)) > 0.02) {
+			turnTowards(currentTarget);
+			return;
+		}
 	}
 
 	/* Follow the path using the pid controller */
@@ -108,12 +117,31 @@ void MotionPlanner::followPath() {
 	linearVelocity = Math::clamp(linearVelocity, minDrivingSpeed, maxDrivingSpeed);
 
 	// Limit speed if approaching final point
-	double distToTarget = Math::getDistance(Point(pos.x, pos.y), currentTarget);
-	if (isCurrentPointLastPoint() && distToTarget <= distToSlowDown) {
-		linearVelocity = Math::clamp(distToTarget * 1.5f, minPrecisionDrivingSpeed, maxDrivingSpeed);
+	if (getDistanceToTarget() <= distToSlowDown) {
+		linearVelocity = Math::clamp(getDistanceToTarget()*0.5, minPrecisionDrivingSpeed, linearVelocity);
 	}
 
 	publishVelocity(linearVelocity, angularVelocity);
+}
+
+double MotionPlanner::calculateLinearVelocity(double cte) {
+	double maxCteVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte) - 1.0), (double) maxDrivingSpeed - minDrivingSpeed);
+	double maxPreCurveVelocity = 0.0;
+	double maxTargetVelocity = Math::clamp(getDistanceToTarget()*0.5, minDrivingSpeed, maxDrivingSpeed);
+}
+
+double MotionPlanner::getDistanceToTarget() {
+	double distanceToNextWaypoint = Math::getDistance(Point(pos.x, pos.y), currentTarget);
+	double distanceToTarget = 0.0;
+	for(unsigned long i = currentTargetIndex+1; i < pathObject.getNodes().size(); i++) {
+		distanceToTarget += Math::getDistance(pathObject.getNodes().at(i), pathObject.getNodes().at(i-1));
+	}
+
+	return distanceToNextWaypoint+distanceToTarget;
+}
+
+double MotionPlanner::getNextCurveAngle(double distance) {
+
 }
 
 void MotionPlanner::turnTowards(Point target) {

@@ -13,8 +13,8 @@
 #define EPS 1e-6
 
 // Defined as 0.25 + error margin
-#define ROBOT_RADIUS 0.285f
-#define APPROACH_DISTANCE 0.22f
+#define ROBOT_RADIUS 0.28f
+#define APPROACH_DISTANCE 0.4f
 
 // Rotation  0  = >
 // Rotation 90  = v

@@ -1,6 +1,5 @@
 #include <utility>
 #include <cmath>
-#include <include/agent/path_planning/Path.h>
 
 #include "Math.h"
 #include "ros/ros.h"
@@ -73,7 +72,7 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		
 		// Duration: Driving is part of the next segment, add after departureTime
 		duration += onSpotTime;
-		departureTimes.push_back(startTimeOffset + duration - 0.5f);
+		departureTimes.push_back(startTimeOffset + duration - 0.25f);
 		duration += drivingTime;
 		
 		batteryConsumption += hardwareProfile->getIdleBatteryConsumption(onSpotTime) + hardwareProfile->getDrivingBatteryConsumption(currentDistance);
@@ -204,7 +203,7 @@ void Path::generateReservationForTray(std::vector<Rectangle>& reservations, doub
 	// Block approach space		
 	double offset = APPROACH_DISTANCE + 0.1f; // + distanceWhenApproached
 	double lengthMargin = 0.275f;
-	double widthMargin = 0.05f;
+	double widthMargin = 0.1f;
 	Point pos = Point(end.x, end.y) + Math::getVectorFromOrientation(end.o) * offset;
 	double length = (ROBOT_RADIUS + offset + lengthMargin) * 2.f;
 	double width = (ROBOT_RADIUS + widthMargin) * 2.f;
