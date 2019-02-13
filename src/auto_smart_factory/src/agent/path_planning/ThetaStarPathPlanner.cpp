@@ -54,7 +54,7 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 				reservationsToIgnore = map->getRectanglesOnStartingPoint(startNode->pos);
 				ROS_WARN("[Agent %d] Path would need initial wait time of %f. Ignoring %d reservations instead!", map->getOwnerId(), initialWaitTime, (int) reservationsToIgnore.size());	
 			} else {
-				ROS_WARN("[Agent %d] Path would need initial wait time of %f", map->getOwnerId(), initialWaitTime, (int) reservationsToIgnore.size());
+				ROS_WARN("[Agent %d] Path would need initial wait time of %f", map->getOwnerId(), initialWaitTime);
 				isValidPathQuery = false;
 			}			
 			//map->listAllReservationsIn(Point(start.x, start.y));
