@@ -187,10 +187,10 @@ private:
 	std::map<std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> > registeredRobots;
 
 	/// List of pending input requests
-	std::vector<Request> inputRequests;
+	std::list<Request> inputRequests;
 
 	/// List of pending ouput requests
-	std::vector<Request> outputRequests;
+	std::list<Request> outputRequests;
 
 	/// Map of running tasks
 	std::map<unsigned int, TaskPtr> runningTasks;
