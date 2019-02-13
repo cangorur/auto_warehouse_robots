@@ -136,7 +136,7 @@ bool TaskPlanner::newInputRequest(auto_smart_factory::NewPackageInputRequest& re
 	
 	inputRequests.push_back(inputRequest);
 	// get the object that is actually in the vector
-	std::vector<Request>::reverse_iterator inputRequestPtr = inputRequests.rbegin();
+	std::list<Request>::reverse_iterator inputRequestPtr = inputRequests.rbegin();
 	try {
 		// try to allocate resources for request
 		TaskData taskData = inputRequestPtr->allocateResources();
@@ -181,7 +181,7 @@ bool TaskPlanner::newOutputRequest(NewPackageOutputRequest& req,
 	ROS_INFO("[request %d] New output request at output tray %d for package type %d.", outputRequest.getId(), req.output_tray_id, req.package.type_id); 
 	outputRequests.push_back(outputRequest);
 	// get the object that is actually in the vector
-	std::vector<Request>::reverse_iterator outputRequestPtr = outputRequests.rbegin();
+	std::list<Request>::reverse_iterator outputRequestPtr = outputRequests.rbegin();
 	try {
 		// try to allocate resources for request
 		TaskData taskData = outputRequestPtr->allocateResources();
@@ -230,7 +230,7 @@ void TaskPlanner::rescheduleEvent(const ros::TimerEvent& e) {
 
 void TaskPlanner::resourceChangeEvent() {
 	// first, check if any output request can be started
-	std::vector<Request>::iterator outputRequest = outputRequests.begin();
+	std::list<Request>::iterator outputRequest = outputRequests.begin();
 	while(outputRequest != outputRequests.end()) {
 		if(!outputRequest->isBusy()) {
 			ROS_INFO("[task planner] Checking output request %d.", outputRequest->getId());
@@ -258,7 +258,7 @@ void TaskPlanner::resourceChangeEvent() {
 	}
 
 	// then, check if any input request can be started
-	std::vector<Request>::iterator inputRequest = inputRequests.begin();
+	std::list<Request>::iterator inputRequest = inputRequests.begin();
 	while(inputRequest != inputRequests.end()) {
 		if(!inputRequest->isBusy()){
 			ROS_INFO("[task planner] Checking input request %d.", inputRequest->getId());
