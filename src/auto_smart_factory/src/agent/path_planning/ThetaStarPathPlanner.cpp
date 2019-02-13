@@ -18,12 +18,10 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 	isValidPathQuery = true;
 	
 	if(!map->addAdditionalNode(Point(start.x, start.y))) {
-		ROS_FATAL("[Agent %d] Node at StartPoint %f/%f could not be created", map->getOwnerId(), start.x, start.y);
-		isValidPathQuery = false;
+		ROS_FATAL("[Agent %d] Node at StartPoint %f/%f could not be created. Taking nearest other point instead", map->getOwnerId(), start.x, start.y);
 	}
 	if(!map->addAdditionalNode(Point(target.x, target.y))) {
-		ROS_FATAL("[Agent %d] Node at TargetPoint %f/%f could not be created", map->getOwnerId(), target.x, target.y);
-		isValidPathQuery = false;
+		ROS_FATAL("[Agent %d] Node at TargetPoint %f/%f could not be created. Taking nearest other point instead", map->getOwnerId(), target.x, target.y);
 	}
 
 	startNode = map->getNodeClosestTo(Point(start));
@@ -39,18 +37,21 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 	}	
 
 	double initialWaitTime = 0;
-	TimedLineOfSightResult initialCheckResult = map->whenIsTimedLineOfSightFree(Point(start.x, start.y), startingTime, startNode->pos, startingTime + 1.1f);
+	// Use empty vector here
+	reservationsToIgnore.clear();
+	TimedLineOfSightResult initialCheckResult = map->whenIsTimedLineOfSightFree(startNode->pos, startingTime, startNode->pos, startingTime + 1.1f, reservationsToIgnore);
 	if(initialCheckResult.blockedByTimed) {
 		initialWaitTime = initialCheckResult.freeAfter - (startingTime + 0.1f);
 
 		if(initialWaitTime > 1000) {
 			ROS_FATAL("[Agent %d] Initial wait time > 1000 -> standing in infinite reservation, no valid path possible", map->getOwnerId());
-			//ROS_WARN("Reservations for start:");
-			//map->listAllReservationsIn(Point(start.x, start.y));
-
 			isValidPathQuery = false;
+			
+			//ROS_WARN("Reservations for start:");
+			//map->listAllReservationsIn(Point(start.x, start.y));			
 		} else {
-			//ROS_FATAL("[Agent %d] Path would need initial wait time of %f", map->getOwnerId(), initialWaitTime);
+			reservationsToIgnore = map->getRectanglesOnStartingPoint(startNode->pos);
+			ROS_FATAL("[Agent %d] Path would need initial wait time of %f. Ignoring %d reservations instead!", map->getOwnerId(), initialWaitTime, (int) reservationsToIgnore.size());
 			//map->listAllReservationsIn(Point(start.x, start.y));
 		}
 	}
@@ -113,7 +114,7 @@ Path ThetaStarPathPlanner::findPath() {
 				double timeAtNeighbour = prev->time + timing.getDrivingAndTurningTime(prev, neighbour);
 				timeAtNeighbour += timing.getPlanningUncertainty(timeAtNeighbour, Direction::AHEAD);
 
-				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(prev->node->pos, timeAtPrev, neighbour->node->pos, timeAtNeighbour);
+				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(prev->node->pos, timeAtPrev, neighbour->node->pos, timeAtNeighbour, reservationsToIgnore);
 				
 				connectionWithPrevPossible = !result.blockedByStatic && !result.blockedByTimed && (!result.hasUpcomingObstacle || (result.hasUpcomingObstacle && timeAtNeighbour < result.lastValidEntryTime));
 			}
@@ -128,7 +129,7 @@ Path ThetaStarPathPlanner::findPath() {
 				timeAtCurrent -= timing.getPlanningUncertainty(timeAtCurrent, Direction::BEHIND);
 				double timeAtNeighbour = current->time + timing.getDrivingAndTurningTime(current, neighbour);
 				timeAtNeighbour += timing.getPlanningUncertainty(timeAtNeighbour, Direction::AHEAD);
-				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(current->node->pos, timeAtCurrent, neighbour->node->pos, timeAtNeighbour);
+				TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(current->node->pos, timeAtCurrent, neighbour->node->pos, timeAtNeighbour, reservationsToIgnore);
 
 				if(!result.blockedByStatic) {
 					bool waitBecauseUpcomingObstacle = result.hasUpcomingObstacle && timeAtNeighbour >= result.lastValidEntryTime;
@@ -157,7 +158,7 @@ Path ThetaStarPathPlanner::findPath() {
 			// Finally try to make connection
 			if(makeConnection && (newPrev->time + drivingTime + waitingTime) < neighbour->time) {
 				// Check for if connection is valid for upcoming obstacles
-				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime)) {
+				if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime, reservationsToIgnore)) {
 					double heuristic = getHeuristic(neighbour, targetNode->pos);
 
 					neighbour->time = newPrev->time + drivingTime + waitingTime;
@@ -165,13 +166,13 @@ Path ThetaStarPathPlanner::findPath() {
 					neighbour->waitTimeAtPrev = waitingTime;
 					queue.push(std::make_pair(neighbour->time + heuristic, neighbour));
 				} else {
-					TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(newPrev->node->pos, newPrev->time, neighbour->node->pos, newPrev->time + waitingTime + drivingTime);
+					TimedLineOfSightResult result = map->whenIsTimedLineOfSightFree(newPrev->node->pos, newPrev->time, neighbour->node->pos, newPrev->time + waitingTime + drivingTime, reservationsToIgnore);
 					
 					if(!result.blockedByStatic && result.blockedByTimed) {
 						double newWaitingTime = result.freeAfter - newPrev->time;
 						waitingTime = std::max(waitingTime, newWaitingTime);
 
-						if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime)) {
+						if(map->isTimedConnectionFree(newPrev->node->pos, neighbour->node->pos, newPrev->time, waitingTime, drivingTime, reservationsToIgnore)) {
 							double heuristic = getHeuristic(neighbour, targetNode->pos);
 
 							neighbour->time = newPrev->time + drivingTime + waitingTime;

@@ -57,6 +57,8 @@ private:
 	double startingTime;
 	double targetReservationTime;
 	bool isValidPathQuery;
+	
+	std::vector<Rectangle> reservationsToIgnore;
 };
 
 

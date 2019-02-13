@@ -47,7 +47,7 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 	}
 }
 
-bool Map::isInsideAnyInflatedObstacle(const Point& point) const {
+bool Map::isInsideAnyStaticInflatedObstacle(const Point& point) const {
 	for(const Rectangle& obstacle : obstacles) {
 		if(obstacle.isInsideInflated(point)) {
 			return true;
@@ -67,29 +67,26 @@ bool Map::isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const {
 	return true;
 }
 
-bool Map::isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
-	if(!isStaticLineOfSightFree(pos1, pos2)) {
-		return false;
-	}
-
-	for(const Rectangle& reservation : reservations) {
-		if(reservation.doesOverlapTimeRange(startTime, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
-TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
+TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, std::vector<Rectangle>& reservationsToIgnore) const {
 	TimedLineOfSightResult result;
 
 	if(!isStaticLineOfSightFree(pos1, pos2)) {
 		result.blockedByStatic = true;
 		return result;
 	}
-
+	
 	for(const Rectangle& reservation : reservations) {
+		bool skip = false;
+		for(const Rectangle& r : reservationsToIgnore) {
+			if(r == reservation) {
+				skip = true;
+				break;
+			}
+		}
+		if(skip) {
+			continue;
+		}
+		
 		// Directly blocked
 		if(reservation.doesOverlapTimeRange(startTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
 			result.blockedByTimed = true;
@@ -121,12 +118,22 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 	return result;
 }
 
-bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const {
+bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, std::vector<Rectangle>& reservationsToIgnore) const {
 	// Does not check against static obstacles, this is only used to verify a already planned connection
-	
 	double endTime = startTime + waitingTime + drivingTime;
 
 	for(const Rectangle& reservation : reservations) {
+		bool skip = false;
+		for(const Rectangle& r : reservationsToIgnore) {
+			if(r == reservation) {
+				skip = true;
+				break;
+			}
+		}
+		if(skip) {
+			continue;
+		}
+		
 		// Check if the waiting part is free
 		if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime - 0.01f, ownerId) && Math::isPointInRectangle(pos1, reservation)) {
 			//printf("Connection dropped due to waiting: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
@@ -149,7 +156,7 @@ Point Map::getRandomFreePoint() const {
 	
 	while(!pointFound) {
 		point = Point(Math::getRandom(-width/2.f, width/2.f), Math::getRandom(-height/2.f, height/2.f));
-		pointFound = !isInsideAnyInflatedObstacle(point);
+		pointFound = !isInsideAnyStaticInflatedObstacle(point);
 	}
 	
 	return point;	
@@ -472,4 +479,16 @@ bool Map::isPointTargetOfAnotherRobot(const auto_smart_factory::Tray& tray) {
 
 int Map::getOwnerId() const {
 	return ownerId;
+}
+
+std::vector<Rectangle> Map::getRectanglesOnStartingPoint(Point p) const {
+	std::vector<Rectangle> rectangles;
+
+	for(const auto& r : reservations) {
+		if(Math::isPointInRectangle(p, r) && r.getOwnerId() != ownerId) {
+			rectangles.push_back(r);
+		}
+	}
+	
+	return rectangles;
 }
