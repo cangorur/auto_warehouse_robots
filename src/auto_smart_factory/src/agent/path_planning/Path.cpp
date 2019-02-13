@@ -170,11 +170,16 @@ void Path::generateReservationsForSegment(std::vector<Rectangle>& reservations, 
 }
 
 void Path::generateReservationsForCurvePoints(std::vector<Rectangle>& reservations, std::vector<Point> points, double timeAtStartPoint, double deltaTime, int ownerId) const {
-	// TODO maybe make reservation covering all points larger
 	double distance = Math::getDistance(points.front(), points.back());
 	Point normalizedDir = (points.back() - points.front()) * (1.f/distance);
 	double rotation = Math::getRotationInDeg(normalizedDir);
 
+	// Compute offset
+	Point halfDistance = points.front() + (points.back() - points.front()) * 0.5f;
+	Point widthDirection = points.at(static_cast<unsigned long>(std::floor((points.size() - 1) / 2))) - halfDistance;
+	double widthOffset = Math::getLength(widthDirection) * 2.f;
+	
+	// Split into multiple segments
 	auto segmentCount = static_cast<unsigned int>(std::ceil(deltaTime / maxDrivingReservationDuration));
 	double deltaDuration = deltaTime / static_cast<double>(segmentCount);
 	double deltaDistance = distance / static_cast<double>(segmentCount);
@@ -192,7 +197,7 @@ void Path::generateReservationsForCurvePoints(std::vector<Rectangle>& reservatio
 		double endTime = timeAtStartPoint + ((alpha + 1.f) * deltaDuration);
 		endTime += (timing.getReservationUncertainty(endTime, Direction::AHEAD) + reservationTimeMarginAhead);
 
-		reservations.emplace_back(pos, Point(deltaDistance + getReservationSize(), getReservationSize()), rotation, startTime, endTime, ownerId);
+		reservations.emplace_back(pos + widthDirection, Point(deltaDistance + getReservationSize(), getReservationSize() + widthOffset), rotation, startTime, endTime, ownerId);
 	}
 }
 
