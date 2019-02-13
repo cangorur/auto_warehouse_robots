@@ -4,6 +4,7 @@
 #include "ros/ros.h"
 #include "agent/path_planning/OrientedPoint.h"
 #include "agent/path_planning/Path.h"
+#include "auto_smart_factory/TaskEvaluation.h"
 
 class Task {
 public:
@@ -30,6 +31,8 @@ public:
 
 	virtual double getDuration() = 0;
 
+	virtual void fillInEvaluationData(auto_smart_factory::TaskEvaluation* msg) = 0;
+
 	// returns the estimated end time of this task
 	double getEndTime();
 	
@@ -50,6 +53,7 @@ protected:
 	OrientedPoint targetPosition;
 
 	// Time information for post-mortem analysis
+	double assignedAt;
 	double startedAt;
 	double finishedAt;
 };

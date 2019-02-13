@@ -90,3 +90,14 @@ double TransportationTask::getPickUpTime() {
 double TransportationTask::getDropOffTime() {
 	return dropOffTime;
 }
+
+void TransportationTask::fillInEvaluationData(auto_smart_factory::TaskEvaluation* msg) {
+	msg->task_type = "transportation";
+	msg->finishedAt = finishedAt;
+	msg->assignedAt = assignedAt;
+	msg->startedAt = startedAt;
+	msg->request_id = id;
+	msg->startedPickUpAt = startedPickUpAt;
+	msg->finishedPickUpAt = finishedPickUpAt;
+	msg->startedDropOffAt = startedDropOffAt;
+}

@@ -23,9 +23,9 @@
 #include "auto_smart_factory/NewPackageOutput.h"
 #include "auto_smart_factory/RegisterAgent.h"
 #include "auto_smart_factory/TaskPlannerState.h"
+#include "auto_smart_factory/TaskEvaluation.h"
 
 #include "task_planner/Task.h"
-#include "auto_smart_factory/Tray.h"
 #include "task_planner/Request.h"
 
 /**
@@ -169,9 +169,19 @@ private:
 
 	void receiveTaskResponse(const auto_smart_factory::TaskRating& tr);
 
-	/// extract tray data into points and ids
+	/** 
+	 * copy as many tray data ids from targetTrays and sourceTrays into task announcement object as the maxTrays class variable allows
+	 * This leads to maximum (maxTrays)^2 possible combinations of source and target trays the robots have to compute
+	 * @param vector of possible source trays
+	 * @param vector of possible target trays
+	 * @param the taskAnnouncement message which should hold the tray ids
+	 */
 	void extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa);
 
+	/*
+	 * sends the evaluation data of the current task
+	 */
+	void sendEvaluationData();
 
 private:
 	/// flag indicating that something has changed and that the task planner should try to assign tasks

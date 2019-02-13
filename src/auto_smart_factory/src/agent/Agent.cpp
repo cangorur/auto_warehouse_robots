@@ -76,6 +76,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 	gripper_state_pub = pn.advertise<auto_smart_factory::GripperState>("gripper_state", 1);
 	task_announce_sub = n.subscribe("/task_planner/task_broadcast", 1, &Agent::announcementCallback, this);
 	taskrating_pub = pn.advertise<auto_smart_factory::TaskRating>("/task_response", 1);
+	taskEvaluation_pub = pn.advertise<auto_smart_factory::TaskEvaluation>("/task_evaluation", 1);
 	// TODO: Below topic can give some hints (example information an agent may need). They are not published in any of the nodes
 	// collision_alert_sub = n.subscribe("/collisionAlert", 1, &Agent::collisionAlertCallback, this);
 
@@ -107,7 +108,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		reservationManager = new ReservationManager(&reservationRequest_pub, map, agentIdInt);
 		
 		// Task Handler
-		taskHandler = new TaskHandler(this, &(taskrating_pub), map, motionPlanner, gripper, chargingManagement, reservationManager);
+		taskHandler = new TaskHandler(this, &(taskrating_pub), &(taskEvaluation_pub), map, motionPlanner, gripper, chargingManagement, reservationManager);
 		
 		// Agent color
 		double color_r = 200;

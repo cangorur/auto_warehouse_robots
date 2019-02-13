@@ -36,6 +36,7 @@
 #include "auto_smart_factory/RobotConfiguration.h"
 #include "auto_smart_factory/CollisionAction.h"
 #include "auto_smart_factory/TaskAnnouncement.h"
+#include "auto_smart_factory/TaskEvaluation.h"
 #include "agent/path_planning/ReservationManager.h"
 #include "agent/path_planning/Map.h"
 #include "agent/path_planning/RobotHardwareProfile.h"
@@ -141,6 +142,7 @@ protected:
 	/* Battery sensor callback handler. Saves battery level.
 	 * @param msg: battery level [0.0 - 100.0] */
 	void batteryCallback(const std_msgs::Float32& msg);
+	
 	/* Collision msg Callback handler. Disables the obstacle_detection and stops the motion_planner instances for the
 	* time_to_halt specified in the msg. If there is not time_to_halt specified in the msg. That means that the agent has
 	* to wait until a new path chunk is assigned to it to continue performing its task
@@ -149,9 +151,15 @@ protected:
 	**/
 	void collisionAlertCallback(const auto_smart_factory::CollisionAction& msg);
 	
+	/*
+	 * Publishes the visualisation message
+	 */
 	void publishVisualisation(const ros::TimerEvent& e);
 
-	// Task Handler
+	/*
+	 * Callback for task Announcement messages computing the score and answering with score message
+	 * @param taskAnnouncement: the taskAnnouncement message
+	 */
 	void announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement);
 	
 	// Reservation coordination
@@ -232,6 +240,9 @@ protected:
 
 	// Publisher for heartbeat topic
 	ros::Publisher heartbeat_pub;
+
+	/// publisher for evaluation
+	ros::Publisher taskEvaluation_pub;
 
 	// pointer to instance of the Charging Management
 	ChargingManagement* chargingManagement;

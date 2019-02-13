@@ -23,6 +23,9 @@
 	<!-- Reservation Master -->
 	<node pkg="auto_smart_factory" type="reservation_master" name="reservation_master" />
 
+	<!-- Evaluation Node -->
+	<node pkg="auto_smart_factory" type="evaluator" name="evaluator" />
+
 	<!-- Configuration Server -->
 	<node pkg="auto_smart_factory" type="config_server" name="config_server">
         	<!-- configuration files -->

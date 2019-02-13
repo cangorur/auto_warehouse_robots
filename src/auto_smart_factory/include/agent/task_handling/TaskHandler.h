@@ -13,6 +13,7 @@
 #include "agent/path_planning/ReservationManager.h"
 #include "auto_smart_factory/TaskAnnouncement.h"
 #include "auto_smart_factory/TaskRating.h"
+#include "auto_smart_factory/TaskEvaluation.h"
 #include "agent/path_planning/Map.h"
 #include "agent/MotionPlanner.h"
 #include "agent/Gripper.h"
@@ -23,7 +24,7 @@ class Agent;
 class TaskHandler
 {
 	public:
-    	explicit TaskHandler(Agent* agent, ros::Publisher* scorePublish, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm);
+    	explicit TaskHandler(Agent* agent, ros::Publisher* scorePublish, ros::Publisher* evalPub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm);
 
     	void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId, double estimatedDuration);
 		void rejectTask(unsigned int requestId);
@@ -57,6 +58,8 @@ class TaskHandler
 		void announcementCallback(const auto_smart_factory::TaskAnnouncement& tA);
 
 	private:
+		void sendEvaluationData();
+
 		void answerAnnouncements();
 
 		void answerAnnouncement(auto_smart_factory::TaskAnnouncement& taskAnnouncement);
@@ -81,6 +84,9 @@ class TaskHandler
 
 		// a pointer to the publisher for the score
     	ros::Publisher* scorePublisher;
+
+		// a pointer to the publisher for evaluations
+		ros::Publisher* evalPub;
 
 		// the task was changed to the next one in queue
 		bool isNextTask = false;

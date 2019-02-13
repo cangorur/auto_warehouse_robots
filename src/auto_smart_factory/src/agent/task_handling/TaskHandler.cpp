@@ -1,8 +1,9 @@
 #include "agent/task_handling/TaskHandler.h"
 
-TaskHandler::TaskHandler(Agent* agent, ros::Publisher* scorePub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm) : 
+TaskHandler::TaskHandler(Agent* agent, ros::Publisher* scorePub, ros::Publisher* evalPub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm) : 
 	agent(agent),
 	scorePublisher(scorePub),
+	evalPub(evalPub),
 	map(map),
 	motionPlanner(mp),
 	gripper(gripper),
@@ -218,6 +219,7 @@ void TaskHandler::executeTask() {
 
 void TaskHandler::nextTask() {
 	if (currentTask != nullptr) {
+		sendEvaluationData();
 		delete currentTask;
 	}
 	if(!queue.empty()){
@@ -399,4 +401,12 @@ void TaskHandler::answerAnnouncement(auto_smart_factory::TaskAnnouncement& taskA
 double TaskHandler::getApproachDistance(OrientedPoint robotPos, OrientedPoint pathTargetPos) const {
 	Point pointInFrontOfTray = Point(pathTargetPos.x, pathTargetPos.y) + Math::getVectorFromOrientation(pathTargetPos.o) * APPROACH_DISTANCE;
 	return Math::getDistance(Point(robotPos.x, robotPos.y), pointInFrontOfTray);
+}
+
+
+void TaskHandler::sendEvaluationData() {
+	auto_smart_factory::TaskEvaluation msg;
+	msg.robot_id = agent->getAgentID();
+	currentTask->fillInEvaluationData(&msg);
+	evalPub->publish(msg);
 }

@@ -60,3 +60,11 @@ void ChargingTask::adjustChargingStation(uint32_t targetID, Path targetPath, dou
 	this->targetBatCons = targetPath.getBatteryConsumption();
 	this->targetPosition = targetPath.getEnd();
 }
+
+void ChargingTask::fillInEvaluationData(auto_smart_factory::TaskEvaluation* msg) {
+	msg->task_type = "charging";
+	msg->finishedAt = finishedAt;
+	msg->assignedAt = assignedAt;
+	msg->startedAt = startedAt;
+	msg->arrived_at = arrivedAt;
+}

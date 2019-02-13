@@ -79,6 +79,7 @@ add_message_files(
 		TaskState.msg
 		TaskPlannerState.msg
 		TaskAnnouncement.msg
+		TaskEvaluation.msg
 		TaskRating.msg
 		TraySensor.msg
 		PackagePool.msg
@@ -324,6 +325,15 @@ add_executable(reservation_master_node
 set_target_properties(reservation_master_node PROPERTIES OUTPUT_NAME reservation_master PREFIX "")
 add_dependencies(reservation_master_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(reservation_master_node ${catkin_LIBRARIES})
+
+# Evaluation Node
+add_executable(evaluation_node
+		src/evaluation/EvaluatorNode.cpp
+		src/evaluation/Evaluator.cpp
+		)
+set_target_properties(evaluation_node PROPERTIES OUTPUT_NAME evaluator PREFIX "")
+add_dependencies(evaluation_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(evaluation_node ${catkin_LIBRARIES})
 
 # cpptest
 #add_executable(test_service_node

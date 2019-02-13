@@ -10,6 +10,7 @@ Task::Task(uint32_t targetId, Path pathToTarget, Type type, double startTime) :
 	targetPosition = pathToTarget.getEnd();
 	startedAt = 0.0f;
 	finishedAt = 0.0f;
+	assignedAt = ros::Time::now().toSec();
 }
 
 uint32_t Task::getTargetTrayId() {
