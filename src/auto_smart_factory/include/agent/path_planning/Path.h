@@ -13,6 +13,7 @@ public:
 	double maxDrivingReservationDuration = 2.0f;
 	double reservationTimeMarginAhead = 0.15f;
 	double reservationTimeMarginBehind = 0.1f;
+	double finalPointAdditionalTime = 0.5f;
 	
 private:
 	double startTimeOffset = 0;

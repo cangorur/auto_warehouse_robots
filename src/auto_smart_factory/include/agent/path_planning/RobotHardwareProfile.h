@@ -13,6 +13,7 @@ private:
 	const double averageDrivingEfficiency = 0.82f;
 
 	const double onSpotTurningAngle = 55.f;
+	const double onSpotTurningAngleFirstPoint = 15.f;
 	const double drivingTurningEfficiency = 0.65f;
 
 	// For reservations == not used
@@ -29,7 +30,7 @@ public:
 	
 	double getTimeUncertaintyPercentage() const;
 	double getTimeUncertaintyAbsolute() const;
-	bool performsOnSpotTurn(double angleInDeg) const;
+	bool performsOnSpotTurn(double angleInDeg, bool firstPoint) const;
 
 private:
 	double getOnSpotTurningTime(double angle) const;

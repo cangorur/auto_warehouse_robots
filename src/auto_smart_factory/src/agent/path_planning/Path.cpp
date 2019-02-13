@@ -51,10 +51,10 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		bool performsOnSpotTurn = false;
 		if(i == 0) {
 			turningDuration = timing.getTurningTime(Math::toDeg(start.o), nodes.at(0), nodes.at(1));
-			performsOnSpotTurn = timing.performsOnSpotTurn(Math::toDeg(start.o), nodes.at(0), nodes.at(1));
+			performsOnSpotTurn = timing.performsOnSpotTurn(Math::toDeg(start.o), nodes.at(0), nodes.at(1), true);
 		} else if(i < nodes.size() - 1) {
 			turningDuration = timing.getTurningTime(nodes[i - 1], nodes[i], nodes[i + 1]);
-			performsOnSpotTurn = timing.performsOnSpotTurn(nodes[i - 1], nodes[i], nodes[i + 1]);
+			performsOnSpotTurn = timing.performsOnSpotTurn(nodes[i - 1], nodes[i], nodes[i + 1], false);
 		}
 
 		double onSpotTime;
@@ -81,11 +81,14 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		drivingTimes.push_back(drivingTime);
 	}
 	
+	// MP Precision mode time
+	duration += finalPointAdditionalTime;
+	batteryConsumption += hardwareProfile->getIdleBatteryConsumption(finalPointAdditionalTime);
+	
 	// TargetPoint - getTurningTime also works with direction reversed. nodes.size is guaranteed to be >= 2
 	double finalTurningTime = timing.getTurningTime(Math::toDeg(end.o), nodes.at(nodes.size() - 2), nodes.back());
 	duration += finalTurningTime;
 	batteryConsumption += hardwareProfile->getIdleBatteryConsumption(finalTurningTime);
-
 }
 
 Path::Path() : 
@@ -176,7 +179,7 @@ void Path::generateReservationsForCurvePoints(std::vector<Rectangle>& reservatio
 
 	// Compute offset
 	Point halfDistance = points.front() + (points.back() - points.front()) * 0.5f;
-	Point widthDirection = points.at(static_cast<unsigned long>(std::floor((points.size() - 1) / 2))) - halfDistance;
+	Point widthDirection = (points.at(static_cast<unsigned long>(std::floor((points.size() - 1) / 2))) - halfDistance) * 0.5f;
 	double widthOffset = Math::getLength(widthDirection) * 2.f;
 	
 	// Split into multiple segments

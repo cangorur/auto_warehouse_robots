@@ -24,8 +24,8 @@ public:
 	double getDrivingAndTurningTime(ThetaStarGridNodeInformation* current, ThetaStarGridNodeInformation* target) const;
 	double getTurningTime(Point prev, Point curr, Point next) const;
 	double getTurningTime(double startRotationInDeg, Point curr, Point next) const;
-	bool performsOnSpotTurn(Point prev, Point curr, Point next) const;
-	bool performsOnSpotTurn(double startRotationInDeg, Point curr, Point next) const;
+	bool performsOnSpotTurn(Point prev, Point curr, Point next, bool firstPoint) const;
+	bool performsOnSpotTurn(double startRotationInDeg, Point curr, Point next, bool firstPoint) const;
 
 private:
 	double startingTime;

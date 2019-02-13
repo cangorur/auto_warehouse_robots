@@ -42,8 +42,12 @@ double RobotHardwareProfile::getTimeUncertaintyAbsolute() const {
 	return timeUncertaintyAbsolute;
 }
 
-bool RobotHardwareProfile::performsOnSpotTurn(double angleInDeg) const {
-	return angleInDeg >= onSpotTurningAngle;
+bool RobotHardwareProfile::performsOnSpotTurn(double angleInDeg, bool firstPoint) const {
+	if(firstPoint) {
+		return angleInDeg >= onSpotTurningAngleFirstPoint;
+	} else {
+		return angleInDeg >= onSpotTurningAngle;	
+	}
 }
 
 double RobotHardwareProfile::getOnSpotTurningTime(double angle) const {

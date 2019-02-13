@@ -61,17 +61,17 @@ double TimingCalculator::getTurningTime(double startRotationInDeg, Point curr, P
 	return hardwareProfile->getTurningDuration(std::abs(Math::getAngleDifferenceInDegree(startRotationInDeg, currLineSegmentRotation)));
 }
 
-bool TimingCalculator::performsOnSpotTurn(Point prev, Point curr, Point next) const {
+bool TimingCalculator::performsOnSpotTurn(Point prev, Point curr, Point next, bool firstPoint) const {
 	double prevLineSegmentRotation = Math::getRotationInDeg(curr - prev);
 	double currLineSegmentRotation = Math::getRotationInDeg(next - curr);
 
-	return hardwareProfile->performsOnSpotTurn(std::abs(Math::getAngleDifferenceInDegree(prevLineSegmentRotation, currLineSegmentRotation)));
+	return hardwareProfile->performsOnSpotTurn(std::abs(Math::getAngleDifferenceInDegree(prevLineSegmentRotation, currLineSegmentRotation)), firstPoint);
 }
 
-bool TimingCalculator::performsOnSpotTurn(double startRotationInDeg, Point curr, Point next) const {
+bool TimingCalculator::performsOnSpotTurn(double startRotationInDeg, Point curr, Point next,bool firstPoint) const {
 	double currLineSegmentRotation = Math::getRotationInDeg(next - curr);
 
-	return hardwareProfile->performsOnSpotTurn(std::abs(Math::getAngleDifferenceInDegree(startRotationInDeg, currLineSegmentRotation)));
+	return hardwareProfile->performsOnSpotTurn(std::abs(Math::getAngleDifferenceInDegree(startRotationInDeg, currLineSegmentRotation)), firstPoint);
 }
 
 double TimingCalculator::getRelativeUncertainty(double time) const {
