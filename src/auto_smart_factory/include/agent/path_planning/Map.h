@@ -59,7 +59,7 @@ public:
 	void deleteReservationsFromAgent(int agentId);
 		
 	// Path queries
-	Path getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime, double targetReservationTime);
+	Path getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime, double targetReservationTime, bool ignoreStartingReservations);
 	Path getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime, double targetReservationTime);
 	Path getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime, double targetReservationTime);
 	Path getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime, double targetReservationTime);

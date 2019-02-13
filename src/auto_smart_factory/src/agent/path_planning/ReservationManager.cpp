@@ -115,7 +115,7 @@ Path ReservationManager::getReservedPath() {
 }
 
 bool ReservationManager::calculateNewPath() {
-	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathStartingTimeOffset, targetReservationDuration);
+	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathStartingTimeOffset, targetReservationDuration, true);
 
 	if(pathToReserve.isValid()) {
 		return true;

@@ -6,7 +6,7 @@
 
 using namespace UncertaintyDirection;
 
-ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint target, double startingTime, double targetReservationTime) :
+ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHardwareProfile* hardwareProfile, OrientedPoint start, OrientedPoint target, double startingTime, double targetReservationTime, bool ignoreStartingReservations) :
 	map(thetaStarMap),
 	hardwareProfile(hardwareProfile),
 	start(OrientedPoint(start.x, start.y, Math::toDeg(start.o))),
@@ -50,8 +50,13 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 			//ROS_WARN("Reservations for start:");
 			//map->listAllReservationsIn(Point(start.x, start.y));			
 		} else {
-			reservationsToIgnore = map->getRectanglesOnStartingPoint(startNode->pos);
-			ROS_FATAL("[Agent %d] Path would need initial wait time of %f. Ignoring %d reservations instead!", map->getOwnerId(), initialWaitTime, (int) reservationsToIgnore.size());
+			if(ignoreStartingReservations) {
+				reservationsToIgnore = map->getRectanglesOnStartingPoint(startNode->pos);
+				ROS_WARN("[Agent %d] Path would need initial wait time of %f. Ignoring %d reservations instead!", map->getOwnerId(), initialWaitTime, (int) reservationsToIgnore.size());	
+			} else {
+				ROS_WARN("[Agent %d] Path would need initial wait time of %f", map->getOwnerId(), initialWaitTime, (int) reservationsToIgnore.size());
+				isValidPathQuery = false;
+			}			
 			//map->listAllReservationsIn(Point(start.x, start.y));
 		}
 	}

@@ -174,15 +174,15 @@ float Map::getMargin() const {
 	return margin;
 }
 
-Path Map::getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime, double targetReservationTime) {
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, start, end, startingTime, targetReservationTime);
+Path Map::getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime, double targetReservationTime, bool ignoreStartingReservations) {
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, start, end, startingTime, targetReservationTime, ignoreStartingReservations);
 	return thetaStarPathPlanner.findPath();
 }
 
 Path Map::getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime, double targetReservationTime) {
 	const OrientedPoint endPoint = getPointInFrontOfTray(end);
 	
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, start, endPoint, startingTime, targetReservationTime);
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, start, endPoint, startingTime, targetReservationTime, false);
 	//ROS_INFO("Computing path from (%f/%f) to tray of type %s (%f/%f)", start.x, start.y, end.type.c_str(), getPointInFrontOfTray(end).x, getPointInFrontOfTray(end).y);
 	
 	return thetaStarPathPlanner.findPath();
@@ -190,7 +190,7 @@ Path Map::getThetaStarPath(const OrientedPoint& start, const auto_smart_factory:
 
 Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime, double targetReservationTime) {
 	const OrientedPoint startPoint = getPointInFrontOfTray(start);
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, startPoint, end, startingTime, targetReservationTime);
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, startPoint, end, startingTime, targetReservationTime, false);
 	
 	//ROS_INFO("Computing path from tray of type %s (%f/%f) to (%f/%f)", start.type.c_str(), getPointInFrontOfTray(start).x, getPointInFrontOfTray(start).y, end.x, end.y);
 	
@@ -201,7 +201,7 @@ Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_sma
 	const OrientedPoint startPoint = getPointInFrontOfTray(start);
 	const OrientedPoint endPoint = getPointInFrontOfTray(end);
 
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, startPoint, endPoint, startingTime, targetReservationTime);
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, startPoint, endPoint, startingTime, targetReservationTime, false);
 	//ROS_INFO("Computing path from tray of type %s (%f/%f) to tray of type %s (%f/%f)", start.type.c_str(), getPointInFrontOfTray(start).x, getPointInFrontOfTray(start).y, end.type.c_str(), getPointInFrontOfTray(end).x, getPointInFrontOfTray(end).y);
 	
 	return thetaStarPathPlanner.findPath();
