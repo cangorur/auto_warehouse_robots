@@ -21,6 +21,8 @@ private:
 
 	unsigned int numberTransportationTasks;
 
+	double start;
+
 	ros::Subscriber evalSub;
 
 	std::vector<auto_smart_factory::TaskEvaluation> evalMessages;
