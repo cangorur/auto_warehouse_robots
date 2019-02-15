@@ -206,9 +206,9 @@ void MotionPlanner::driveStraight() {
 	}
 
 	if(mode == Mode::FORWARD) {
-		publishVelocity(Math::clamp(currentDistance * 1.5f, minDrivingSpeed, maxDrivingSpeed), 0.0);
+		publishVelocity(Math::clamp((driveDistance-currentDistance) * 1.5f, minDrivingSpeed, maxDrivingSpeed), 0.0);
 	} else {
-		publishVelocity(-Math::clamp(currentDistance * 1.5f, minDrivingSpeed, maxDrivingSpeed), 0.0);
+		publishVelocity(-Math::clamp((driveDistance-currentDistance) * 1.5f, minDrivingSpeed, maxDrivingSpeed), 0.0);
 	}
 }
 
