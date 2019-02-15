@@ -209,7 +209,7 @@ void Path::generateReservationForTray(std::vector<Rectangle>& reservations, doub
 	double endTime = timeAtStartPoint + targetReservationTime + reservationTimeMarginAhead;
 
 	// Block approach space		
-	double offset = APPROACH_DISTANCE + 0.05f; // + distanceWhenApproached
+	double offset = APPROACH_DISTANCE + DISTANCE_WHEN_APPROACHED;
 	double lengthMargin = 0.3f;
 	double widthMargin = 0.1f;
 	Point pos = Point(end.x, end.y) + Math::getVectorFromOrientation(end.o) * offset;
