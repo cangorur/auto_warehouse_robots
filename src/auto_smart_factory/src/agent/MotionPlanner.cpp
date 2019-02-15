@@ -254,12 +254,16 @@ bool MotionPlanner::isDone() {
 	return mode == Mode::FINISHED;
 }
 
+bool MotionPlanner::isStopped() {
+	return mode == Mode::STOP;
+}
+
 bool MotionPlanner::hasPath() {
 	return pathObject.isValid();
 }
 
 bool MotionPlanner::isDrivingBackwards() {
-	return false;
+	return currentLinearVelocity < 0;
 }
 
 bool MotionPlanner::isWaypointReached() {
@@ -271,6 +275,8 @@ bool MotionPlanner::isWaypointReached() {
 }
 
 void MotionPlanner::publishVelocity(double speed, double angle) {
+	currentLinearVelocity = speed;
+	currentAngularVelocity = angle;
 	geometry_msgs::Twist msg;
 
 	msg.linear.x = speed;

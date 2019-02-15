@@ -58,7 +58,9 @@ public:
 
 	void start();
 	void stop();
+
 	bool isDone();
+	bool isStopped();
 	bool hasPath();
 	bool isDrivingBackwards();
 
@@ -107,6 +109,10 @@ private:
 
 	/// the current mode
 	Mode mode = Mode::STOP;
+
+	/// Current Velocities
+	double currentLinearVelocity = 0.0;
+	double currentAngularVelocity = 0.0;
 	
 	/// the current path of the robot
 	Path pathObject;
