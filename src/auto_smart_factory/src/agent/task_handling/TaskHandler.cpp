@@ -35,7 +35,7 @@ void TaskHandler::rejectTask(unsigned int requestId) {
 }
 
 void TaskHandler::update() { 
-	if(reservationManager->isReplanningNecessary()) {
+	if(reservationManager->isReplanningNecessary() || reservationManager->isReplanningBeneficial()) {
 		replan();
 		answerAnnouncements();
 		return;
@@ -239,6 +239,7 @@ void TaskHandler::nextTask() {
 		if (queue.front()->isCharging()) {
 			double now = ros::Time::now().toSec();
 			std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(motionPlanner->getPositionAsOrientedPoint(), now);
+			
 			if(pathToCS.first.isValid()) {
 				((ChargingTask*) queue.front())->adjustChargingStation(pathToCS.second, pathToCS.first, now);
 			} else {
@@ -380,9 +381,7 @@ void TaskHandler::answerAnnouncement(auto_smart_factory::TaskAnnouncement& taskA
 				
 				// Update best score
 				if(best == nullptr || score < best->score){
-					if(best != nullptr){
-						delete best;
-					}
+					delete best;
 					best = new TrayScore(it_id, st_id, score, estimatedDuration);
 				}
 			}

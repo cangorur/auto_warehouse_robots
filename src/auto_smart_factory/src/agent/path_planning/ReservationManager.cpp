@@ -12,6 +12,7 @@ ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int 
 	hasReservedPath(false),
 	bidingForReservation(false),
 	replanningNecessary(false),
+	replanningBeneficial(false),
 	requestedEmergencyStop(false)
 {
 	// Add infinite reservation for starting point
@@ -44,7 +45,11 @@ void ReservationManager::update(Point pos) {
 void ReservationManager::reservationBroadcastCallback(const auto_smart_factory::ReservationBroadcast& msg) {
 	// This only works if the messages arrive in order
 	if(msg.isReservationBroadcastOrDenial) {
-		std::vector<Rectangle> oldReservations = map->deleteReservationsFromAgent(msg.ownerId);		
+		std::vector<Rectangle> oldReservations;
+		if(!msg.isEmergencyStop) {
+			oldReservations = map->deleteReservationsFromAgent(msg.ownerId);	
+		}
+						
 		std::vector<Rectangle> reservations = getReservationsFromMessage(msg);
 		map->addReservations(reservations);		
 		
@@ -187,11 +192,11 @@ bool ReservationManager::calculateNewPath() {
 		bidingForReservation = false;
 		
 		ROS_FATAL("[RM %d] Tried to generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-		ROS_WARN("Reservations for start:");
-		map->listAllReservationsIn(Point(startPoint.x, startPoint.y));
+		//ROS_WARN("Reservations for start:");
+		//map->listAllReservationsIn(Point(startPoint.x, startPoint.y));
 
-		ROS_WARN("Reservations for target:");
-		map->listAllReservationsIn(Point(endPoint.x, endPoint.y));
+		//ROS_WARN("Reservations for target:");
+		//map->listAllReservationsIn(Point(endPoint.x, endPoint.y));
 		return false;
 	}
 }

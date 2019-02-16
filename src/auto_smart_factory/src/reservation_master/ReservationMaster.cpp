@@ -75,7 +75,7 @@ void ReservationMaster::sendReservationBroadcastMessage(int requestIndex) {
 }
 
 void ReservationMaster::sendEmergencyStopBroadcastMessage(int requestIndex) {
-	ROS_INFO("[Reservation Master] Sending emergency stop for agent %d", requests[requestIndex].ownerId);
+	//ROS_INFO("[Reservation Master] Sending emergency stop for agent %d", requests[requestIndex].ownerId);
 	auto_smart_factory::ReservationBroadcast msg;
 	msg.isReservationBroadcastOrDenial = static_cast<unsigned char>(true);
 	msg.isEmergencyStop = static_cast<unsigned char>(true);
