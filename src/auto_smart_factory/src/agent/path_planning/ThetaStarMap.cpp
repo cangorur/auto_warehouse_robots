@@ -38,7 +38,7 @@ ThetaStarMap::ThetaStarMap(Map* map, float resolution) :
 		linkToNode(element.second, element.second->pos + Point(+ resolution, + resolution));
 	}
 	
-	ROS_INFO("[Theta*] Generated map with %d nodes", (int) nodes.size());
+	//ROS_INFO("[Theta*] Generated map with %d nodes", (int) nodes.size());
 }
 
 void ThetaStarMap::linkToNode(GridNode* node, Point targetPos) {
@@ -68,12 +68,12 @@ const GridNode* ThetaStarMap::getNodeClosestTo(const Point& pos) const {
 	return nearestNode;
 }
 
-TimedLineOfSightResult ThetaStarMap::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, std::vector<Rectangle>& reservationsToIgnore) const {
-	return map->whenIsTimedLineOfSightFree(pos1, startTime, pos2, endTime, reservationsToIgnore);
+TimedLineOfSightResult ThetaStarMap::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, const std::vector<Rectangle>& smallerReservations) const {
+	return map->whenIsTimedLineOfSightFree(pos1, startTime, pos2, endTime, smallerReservations);
 }
 
-bool ThetaStarMap::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, std::vector<Rectangle>& reservationsToIgnore) const {
-	return map->isTimedConnectionFree(pos1, pos2, startTime, waitingTime, drivingTime, reservationsToIgnore);
+bool ThetaStarMap::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, const std::vector<Rectangle>& smallerReservations) const {
+	return map->isTimedConnectionFree(pos1, pos2, startTime, waitingTime, drivingTime, smallerReservations);
 }
 
 void ThetaStarMap::listAllReservationsIn(Point p) {

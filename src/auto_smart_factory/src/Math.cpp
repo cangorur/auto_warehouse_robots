@@ -332,6 +332,27 @@ bool Math::isPointInRectangle(const Point& p, const Rectangle& rectangle) {
 	}
 }
 
+bool Math::doesLineSegmentIntersectNonInflatedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle) {
+	const Point* rect = rectangle.getPointsNonInflated();
+
+	return (doLineSegmentsIntersect(lStart, lEnd, rect[0], rect[1]) ||
+	        doLineSegmentsIntersect(lStart, lEnd, rect[1], rect[2]) ||
+	        doLineSegmentsIntersect(lStart, lEnd, rect[2], rect[3]) ||
+	        doLineSegmentsIntersect(lStart, lEnd, rect[3], rect[0]) ||
+	        isPointInNonInflatedRectangle(lStart, rectangle) ||
+	        isPointInNonInflatedRectangle(lEnd, rectangle));
+}
+
+bool Math::isPointInNonInflatedRectangle(const Point& p, const Rectangle& rectangle) {
+	const Point* rect = rectangle.getPointsNonInflated();
+
+	Point ap = rect[0] - p;
+	Point ab = rect[0] - rect[1];
+	Point ad = rect[0] - rect[3];
+
+	return (0 < dotProduct(ap, ab) && dotProduct(ap, ab) < dotProduct(ab, ab)) && (0 < dotProduct(ap, ad) && dotProduct(ap, ad) < dotProduct(ad, ad));
+}
+
 bool Math::isPointInAxisAlignedRectangle(const Point& p, const Rectangle& rectangle) {
 	return !(p.x < rectangle.getMinXInflated() || p.x > rectangle.getMaxXInflated() ||
 	         p.y < rectangle.getMinYInflated() || p.y > rectangle.getMaxYInflated());

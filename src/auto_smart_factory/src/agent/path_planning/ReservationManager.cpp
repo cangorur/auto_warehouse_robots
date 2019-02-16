@@ -4,7 +4,7 @@
 
 #include "agent/path_planning/ReservationManager.h"
 
-ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int agentId, Point startingPosition) :
+ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int agentId, auto_smart_factory::WarehouseConfiguration warehouseConfig) :
 	publisher(publisher),
 	map(map),
 	agentId(agentId),
@@ -15,15 +15,26 @@ ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int 
 	requestedEmergencyStop(false)
 {
 	// Add infinite reservation for starting point
-	double now = ros::Time::now().toSec();
-	double infiniteReservationStartTime = now - 1000.f;
-	lastReservedPathReservations.emplace_back(startingPosition, Point(Path::getReservationSize(), Path::getReservationSize()), 0, infiniteReservationStartTime, Map::infiniteReservationTime, agentId);
+	double infiniteReservationStartTime = ros::Time::now().toSec() - 1000.f;
+
+
+	// Add infinite reservation for starting point
+	for(const auto& idlePosition : warehouseConfig.idle_positions) {
+		std::string idStr = idlePosition.id.substr(idlePosition.id.find('_') + 1);
+		int id = std::stoi(idStr);
+		
+		if(id == agentId) {
+			Point pos = Point(static_cast<float>(idlePosition.pose.x), static_cast<float>(idlePosition.pose.y));
+			lastReservedPathReservations.emplace_back(pos, Point(Path::getReservationSize(), Path::getReservationSize()), 0, infiniteReservationStartTime, Map::infiniteReservationTime, agentId);
+		}
+	}
 }
 
 void ReservationManager::update(Point pos) {
 	double now = ros::Time::now().toSec();
 	
 	if(!replanningNecessary && !isInOwnReservation(pos, now)) {
+		ROS_WARN("[RM %d] Replanning necessary because agent is not in own reservation", agentId);
 		replanningNecessary = true;
 	}
 	
@@ -33,11 +44,7 @@ void ReservationManager::update(Point pos) {
 void ReservationManager::reservationBroadcastCallback(const auto_smart_factory::ReservationBroadcast& msg) {
 	// This only works if the messages arrive in order
 	if(msg.isReservationBroadcastOrDenial) {
-		std::vector<Rectangle> oldReservations = map->deleteReservationsFromAgent(msg.ownerId);
-		if(!replanningBeneficial && isReplanningBeneficialWithoutTheseReservations(oldReservations)) {
-			replanningBeneficial = true;
-		}
-		
+		std::vector<Rectangle> oldReservations = map->deleteReservationsFromAgent(msg.ownerId);		
 		std::vector<Rectangle> reservations = getReservationsFromMessage(msg);
 		map->addReservations(reservations);		
 		
@@ -48,7 +55,6 @@ void ReservationManager::reservationBroadcastCallback(const auto_smart_factory::
 				hasReservedPath = true;
 				bidingForReservation = false;
 				pathRetrievedCount = 0;
-				lastReservedPathTarget = pathToReserve.getEnd();
 			}
 
 			replanningNecessary = false;
@@ -56,8 +62,14 @@ void ReservationManager::reservationBroadcastCallback(const auto_smart_factory::
 			saveReservationsAsLastReserved(msg);
 			
 		} else {
+			if(!replanningBeneficial && isReplanningBeneficialWithoutTheseReservations(oldReservations)) {
+				ROS_WARN("[RM %d] Replanning beneficial because the path from robot %d was removed", agentId, msg.ownerId);
+				replanningBeneficial = true;
+			}
+			
 			if(msg.isEmergencyStop) {
-				if(doesEmergencyStopPreventsOwnPath(reservations)) {
+				if(!replanningNecessary && doesEmergencyStopPreventsOwnPath(reservations)) {
+					ROS_WARN("[RM %d] Replanning necessary because a emergency stop from robot %d appeared on its path", agentId, msg.ownerId);
 					replanningNecessary = true;
 				}
 			}
@@ -156,17 +168,9 @@ bool ReservationManager::getHasReservedPath() const {
 	return hasReservedPath;
 }
 
-OrientedPoint ReservationManager::getLastReservedPathTarget() const {
-	if(!hasReservedPath) {
-		ROS_FATAL("[ReservationManager %d] Tried to get path target but hasNoReservedPath!", agentId);
-	}
-	
-	return lastReservedPathTarget;
-}
-
 Path ReservationManager::getLastReservedPath() {
 	if(!hasReservedPath) {
-		ROS_FATAL("[ReservationManager %d] Tried to get path but hasNoReservedPath!", agentId);
+		ROS_FATAL("[RM %d] Tried to get path but hasNoReservedPath!", agentId);
 	}
 	pathRetrievedCount++;
 	ROS_ASSERT_MSG(pathRetrievedCount == 1, "A reserved path may only be retrieved once!!");
@@ -182,7 +186,7 @@ bool ReservationManager::calculateNewPath() {
 	} else {
 		bidingForReservation = false;
 		
-		ROS_FATAL("[ReservationManager %d] Tried to generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+		ROS_FATAL("[RM %d] Tried to generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
 		ROS_WARN("Reservations for start:");
 		map->listAllReservationsIn(Point(startPoint.x, startPoint.y));
 
@@ -211,6 +215,10 @@ bool ReservationManager::hasRequestedEmergencyStop() const {
 }
 
 bool ReservationManager::doesEmergencyStopPreventsOwnPath(const std::vector<Rectangle>& emergencyStopReservations) const {
+	if(!pathToReserve.isValid()) {
+		return false;
+	}
+	
 	double now = ros::Time::now().toSec();
 	const std::vector<Point>& nodes = pathToReserve.getNodes();
 	const std::vector<double>& departureTimes = pathToReserve.getDepartureTimes();
@@ -231,6 +239,10 @@ bool ReservationManager::doesEmergencyStopPreventsOwnPath(const std::vector<Rect
 }
 
 bool ReservationManager::isReplanningBeneficialWithoutTheseReservations(const std::vector<Rectangle>& oldReservations) const {
+	if(!pathToReserve.isValid()) {
+		return false;
+	}
+	
 	double now = ros::Time::now().toSec();
 	const std::vector<Point>& nodes = pathToReserve.getNodes();
 	const std::vector<double>& departureTimes = pathToReserve.getDepartureTimes();

@@ -16,6 +16,7 @@ private:
 	
 	// Faster physic processing
 	Point pointsInflated[4];
+	Point pointsNonInflated[4];
 	bool isAxisAligned;
 	double minXInflated, maxXInflated, minYInflated, maxYInflated;
 
@@ -24,6 +25,7 @@ public:
 	Rectangle(Point pos, Point size, float rotation, double startTime, double endTime, int ownerId);
 	
 	const Point* getPointsInflated() const;
+	const Point* getPointsNonInflated() const;
 	Point getPosition() const;
 	Point getSize() const;
 	float getRotation() const;

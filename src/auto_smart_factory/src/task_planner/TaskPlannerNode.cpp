@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
 	ros::NodeHandle nh;
 
 	TaskPlanner taskPlanner;
-	ROS_INFO("Task planner ready!");
+	//ROS_INFO("Task planner ready!");
 
 	ros::Rate r(10);
 	while(ros::ok()) {

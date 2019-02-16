@@ -10,7 +10,7 @@
 
 class ReservationManager {
 public:
-	ReservationManager(ros::Publisher* publisher, Map* map, int agentId, Point startingPosition);
+	ReservationManager(ros::Publisher* publisher, Map* map, int agentId, auto_smart_factory::WarehouseConfiguration warehouseConfig);
 	~ReservationManager() = default;
 
 	void update(Point pos);
@@ -24,7 +24,6 @@ public:
 	Path getLastReservedPath();
 	bool isBidingForReservation() const;
 	bool getHasReservedPath() const;
-	OrientedPoint getLastReservedPathTarget() const;
 	bool hasRequestedEmergencyStop() const;
 	bool isReplanningNecessary() const;
 	bool isReplanningBeneficial() const;
@@ -51,7 +50,6 @@ private:
 	bool calculateNewPath();
 	
 	// Error State detection
-	OrientedPoint lastReservedPathTarget;
 	std::vector<Rectangle> lastReservedPathReservations;
 	bool replanningNecessary;
 	bool requestedEmergencyStop;

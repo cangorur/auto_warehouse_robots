@@ -3,6 +3,7 @@
 # Created by M.AL Dakhil
 
 from auto_smart_factory.srv import *
+from time import sleep
 import rospy
 import pymorse
 
@@ -18,10 +19,9 @@ def handleMoveGripper(req):
 		boolean success
     '''
     global mutex1
-    rospy.loginfo(req.gripper_id)
+    #rospy.loginfo(req.gripper_id)
     while mutex1 == 1:
-        #pass
-        rospy.loginfo("waiting")
+        sleep(0.01)
     mutex1 = 1
     success = True
     try:
@@ -29,7 +29,10 @@ def handleMoveGripper(req):
             sim.rpc('simulation', 'set_object_position', req.gripper_id, [req.x, req.y, req.z])
     except:
         success = False
-    rospy.loginfo("[gripper manipulator]: MoveGripper {} success: {}!".format(req.gripper_id, success))
+        
+    if not success: 
+        rospy.loginfo("[gripper manipulator]: MoveGripper {} success: {}!".format(req.gripper_id, success))
+    
     mutex1 = 0
     return MoveGripperResponse(success)
 
@@ -43,5 +46,5 @@ if __name__ == "__main__":
     rospy.init_node('gripper_manipulator')
     addMoveGripperServer()
 
-    rospy.loginfo("GripperManipulator ready!")
+    #rospy.loginfo("GripperManipulator ready!")
     rospy.spin()

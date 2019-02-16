@@ -44,7 +44,7 @@ bool WarehouseManagement::getWarehouseConfiguration() {
 	auto_smart_factory::GetWarehouseConfig srv;
 	ros::service::waitForService(srv_name.c_str());
 	if(client.call(srv)) {
-		ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
+		//ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
 		warehouseConfig = srv.response.warehouse_configuration;
 		return true;
 	} else {

@@ -58,7 +58,9 @@ public:
 	static bool areLineSegmentsParallel(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End);
 	static bool doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End);
 	static bool doesLineSegmentIntersectRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
+	static bool doesLineSegmentIntersectNonInflatedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
 	static bool isPointInRectangle(const Point& p, const Rectangle& rectangle);
+	static bool isPointInNonInflatedRectangle(const Point& p, const Rectangle& rectangle);
 
 	static double projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 	static double getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);

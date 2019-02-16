@@ -6,6 +6,7 @@ private:
 	double maxDrivingSpeed; // Length-Unit / Time-Unit
 	double maxTurningSpeed; // Angle (deg) / Time-Unit
 	double minTurningSpeed = 17.0;
+	
 	double idleBatteryConsumption;
 	double drivingBatteryConsumption;
 

@@ -125,11 +125,11 @@ bool StorageManagement::reserveTray(
 		if(t.available) {
 			t.available = false;
 			res.success = true;
-			ROS_INFO("[storage management] Reservation of tray %d (occupied: %s).", t.id, std::to_string(t.occupied).c_str());
+			//ROS_INFO("[storage management] Reservation of tray %d (occupied: %s).", t.id, std::to_string(t.occupied).c_str());
 			publishStorageUpdate(t, auto_smart_factory::StorageUpdate::RESERVATION);
 		} else {
 			// tray is not available
-			ROS_INFO("[storage management] Reserving storage tray failed: Tray is not available.");
+			//ROS_INFO("[storage management] Reserving storage tray failed: Tray is not available.");
 			res.success = false;
 		}
 	} catch(std::out_of_range& e) {
@@ -151,7 +151,7 @@ bool StorageManagement::endTrayReservation(
 			// un-reserve tray
 			t.available = true;
 			res.success = true;
-			ROS_INFO("[storage management] De-reservation of tray %d (occupied: %s).", t.id, std::to_string(t.occupied).c_str());
+			//ROS_INFO("[storage management] De-reservation of tray %d (occupied: %s).", t.id, std::to_string(t.occupied).c_str());
 			publishStorageUpdate(t, auto_smart_factory::StorageUpdate::DERESERVATION);
 		} else {
 			// tray is not reserved
@@ -172,7 +172,7 @@ bool StorageManagement::setPackage(auto_smart_factory::SetPackageRequest& req, a
 	try {
 		auto_smart_factory::TrayState& t = trayStates.at(req.trayId);
 		t.package = req.pkg;
-		ROS_INFO("[storage management] Set package (id: %d, type: %d) at tray %d", t.package.id, t.package.type_id, t.id);
+		//ROS_INFO("[storage management] Set package (id: %d, type: %d) at tray %d", t.package.id, t.package.type_id, t.id);
 		return true;
 	} catch(std::out_of_range& e) {
 		// tray does not exist
@@ -214,7 +214,7 @@ void StorageManagement::receiveTraySensorMsg(const auto_smart_factory::TraySenso
 
 			state.occupied = true;
 
-			ROS_INFO("[storage management] Package was put into tray %d", msg.tray_id);
+			//ROS_INFO("[storage management] Package was put into tray %d", msg.tray_id);
 
 			publishStorageUpdate(state, auto_smart_factory::StorageUpdate::OCCUPATION);
 		} else {
@@ -228,7 +228,7 @@ void StorageManagement::receiveTraySensorMsg(const auto_smart_factory::TraySenso
 
 			state.occupied = false;
 
-			ROS_INFO("[storage management] Package was removed from tray %d", msg.tray_id);
+			//ROS_INFO("[storage management] Package was removed from tray %d", msg.tray_id);
 
 			publishStorageUpdate(state, auto_smart_factory::StorageUpdate::DEOCCUPATION);
 		}

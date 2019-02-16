@@ -51,7 +51,7 @@ void TaskHandler::update() {
 
 				std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(motionPlanner->getPositionAsOrientedPoint(), now);
 				if(pathToCS.first.isValid()) {
-					ROS_WARN("[%s] Adding charging task while in idle state", agent->getAgentID().c_str());
+					//ROS_INFO("[%s] Adding charging task while in idle state", agent->getAgentID().c_str());
 					addChargingTask(pathToCS.second, pathToCS.first, now);
 				} else {
 					ROS_FATAL("[%s] Could not add charging task while idling, path is invalid", agent->getAgentID().c_str());
@@ -188,7 +188,7 @@ void TaskHandler::executeTask() {
 					currentTask->setState(Task::State::DROPOFF);
 				} else if (currentTask->isCharging()) {
 					currentTask->setState(Task::State::CHARGING);
-					ROS_INFO("[%s] Starting charging", agent->getAgentID().c_str());
+					//ROS_INFO("[%s] Starting charging", agent->getAgentID().c_str());
 				}
 				lastApproachDistance = getApproachDistance(motionPlanner->getPositionAsOrientedPoint(), (currentTask->getTargetPosition()));
 				motionPlanner->driveForward(lastApproachDistance);
@@ -207,7 +207,6 @@ void TaskHandler::executeTask() {
 			// Check charging progress
 			if (motionPlanner->isDone()) {
 				if (this->chargingManagement->isCharged()) {
-					ROS_INFO("[%s] Finished charging", agent->getAgentID().c_str());
 					currentTask->setState(Task::State::LEAVE_TARGET);
 					motionPlanner->driveBackward(lastApproachDistance);
 				}

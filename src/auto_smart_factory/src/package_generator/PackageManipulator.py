@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 from auto_smart_factory.srv import *
+from time import sleep
 import rospy
 import pymorse
 
 mutex = 0
-
 
 def handleMovePackage(req):
     '''
@@ -16,10 +16,9 @@ def handleMovePackage(req):
 		boolean success
     '''
     global mutex
-    rospy.loginfo(req.package_id)
+    #rospy.loginfo(req.package_id)
     while mutex == 1:
-        pass
-        #rospy.loginfo("waiting")
+        sleep(0.01)
     mutex = 1
     success = True
     try:
@@ -27,7 +26,9 @@ def handleMovePackage(req):
             sim.rpc('simulation', 'set_object_position', req.package_id, [req.x, req.y, req.z], [0, 0, 0])
     except:
         success = False
-    rospy.logdebug("[package manipulator]: MovePackage {} success: {}!".format(req.package_id, success))
+        
+    if not success:
+        rospy.logdebug("[package manipulator]: MovePackage {} success: {}!".format(req.package_id, success))
     mutex = 0
     return MovePackageResponse(success)
 
@@ -39,5 +40,5 @@ def addMovePackageServer():
 if __name__ == "__main__":
     rospy.init_node('package_manipulator')
     addMovePackageServer()
-    rospy.loginfo("PackageManipulator ready!")
+    #rospy.loginfo("PackageManipulator ready!")
     rospy.spin()

@@ -106,8 +106,7 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		chargingManagement = new ChargingManagement(this, warehouseConfig, robotConfig, map);
 
 		// Reservation Manager
-		Point idlePosition = Point(warehouse_configuration.idle_positions[agentIdInt].pose.x, warehouse_configuration.idle_positions[agentIdInt].pose.y);
-		reservationManager = new ReservationManager(&reservationRequest_pub, map, agentIdInt, idlePosition);
+		reservationManager = new ReservationManager(&reservationRequest_pub, map, agentIdInt, warehouse_configuration);
 		
 		// Task Handler
 		taskHandler = new TaskHandler(this, &(taskrating_pub), &(taskEvaluation_pub), &(taskStarted_pub), map, motionPlanner, gripper, chargingManagement, reservationManager);

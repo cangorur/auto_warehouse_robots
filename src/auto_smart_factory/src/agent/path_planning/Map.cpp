@@ -67,7 +67,7 @@ bool Map::isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const {
 	return true;
 }
 
-TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, std::vector<Rectangle>& reservationsToIgnore) const {
+TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, const std::vector<Rectangle>& smallerReservations) const {
 	TimedLineOfSightResult result;
 
 	if(!isStaticLineOfSightFree(pos1, pos2)) {
@@ -76,39 +76,52 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 	}
 	
 	for(const Rectangle& reservation : reservations) {
-		bool skip = false;
-		for(const Rectangle& r : reservationsToIgnore) {
-			if(r == reservation) {
-				skip = true;
-				break;
+		if(std::find(smallerReservations.begin(), smallerReservations.end(), reservation) != smallerReservations.end()) {
+			// Directly blocked
+			if(reservation.doesOverlapTimeRange(startTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectNonInflatedRectangle(pos1, pos2, reservation)) {
+				result.blockedByTimed = true;
+				if(reservation.getFreeAfter() > result.freeAfter) {
+					result.freeAfter = reservation.getFreeAfter();
+				}
 			}
-		}
-		if(skip) {
-			continue;
-		}
-		
-		// Directly blocked
-		if(reservation.doesOverlapTimeRange(startTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
-			result.blockedByTimed = true;
-			if(reservation.getFreeAfter() > result.freeAfter) {
-				result.freeAfter = reservation.getFreeAfter();
-			}
-		}
 
-		// Upcoming obstacles			
-		if(Math::isPointInRectangle(pos2, reservation) && reservation.getStartTime() > endTime && reservation.getOwnerId() != ownerId) {
-			result.hasUpcomingObstacle = true;
-			// Todo make adaptive - for now assume that every reservation can be left in x seconds
-			double minTimeToLeave = 5;
+			// Upcoming obstacles			
+			if(Math::isPointInNonInflatedRectangle(pos2, reservation) && reservation.getStartTime() > endTime && reservation.getOwnerId() != ownerId) {
+				result.hasUpcomingObstacle = true;
+				// Todo make adaptive - for now assume that every reservation can be left in x seconds
+				double minTimeToLeave = 5;
 
-			double lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
-			if(lastValidEntryTime < result.lastValidEntryTime) {
-				result.lastValidEntryTime = lastValidEntryTime;
-				result.freeAfterUpcomingObstacle = reservation.getEndTime();
+				double lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
+				if(lastValidEntryTime < result.lastValidEntryTime) {
+					result.lastValidEntryTime = lastValidEntryTime;
+					result.freeAfterUpcomingObstacle = reservation.getEndTime();
+				}
 			}
-		}
+		} else {
+			// Directly blocked
+			if(reservation.doesOverlapTimeRange(startTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+				result.blockedByTimed = true;
+				if(reservation.getFreeAfter() > result.freeAfter) {
+					result.freeAfter = reservation.getFreeAfter();
+				}
+			}
+
+			// Upcoming obstacles			
+			if(Math::isPointInRectangle(pos2, reservation) && reservation.getStartTime() > endTime && reservation.getOwnerId() != ownerId) {
+				result.hasUpcomingObstacle = true;
+				// Todo make adaptive - for now assume that every reservation can be left in x seconds
+				double minTimeToLeave = 5;
+
+				double lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
+				if(lastValidEntryTime < result.lastValidEntryTime) {
+					result.lastValidEntryTime = lastValidEntryTime;
+					result.freeAfterUpcomingObstacle = reservation.getEndTime();
+				}
+			}	
+		}		
 	}
 	
+	// Treat "infinite" obstacles as completely blocked and dont wait forever
 	double maxTime = endTime + 1000.f;
 	if((result.blockedByTimed && result.freeAfter > maxTime) ||
 	   (result.hasUpcomingObstacle && (result.lastValidEntryTime > maxTime || result.freeAfterUpcomingObstacle > maxTime))) {
@@ -118,33 +131,32 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 	return result;
 }
 
-bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, std::vector<Rectangle>& reservationsToIgnore) const {
+bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, const std::vector<Rectangle>& smallerReservations) const {
 	// Does not check against static obstacles, this is only used to verify a already planned connection
 	double endTime = startTime + waitingTime + drivingTime;
 
 	for(const Rectangle& reservation : reservations) {
-		bool skip = false;
-		for(const Rectangle& r : reservationsToIgnore) {
-			if(r == reservation) {
-				skip = true;
-				break;
+		if(std::find(smallerReservations.begin(), smallerReservations.end(), reservation) != smallerReservations.end()) {
+			// Check if the waiting part is free
+			if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime - 0.01f, ownerId) && Math::isPointInNonInflatedRectangle(pos1, reservation)) {
+				return false;
 			}
-		}
-		if(skip) {
-			continue;
-		}
-		
-		// Check if the waiting part is free
-		if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime - 0.01f, ownerId) && Math::isPointInRectangle(pos1, reservation)) {
-			//printf("Connection dropped due to waiting: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
-			return false;
-		}
 
-		// Check if the driving part is free
-		if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
-			//printf("Connection dropped due to driving: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
-			return false;
-		}
+			// Check if the driving part is free
+			if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectNonInflatedRectangle(pos1, pos2, reservation)) {
+				return false;
+			}
+		} else {
+			// Check if the waiting part is free
+			if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime - 0.01f, ownerId) && Math::isPointInRectangle(pos1, reservation)) {
+				return false;
+			}
+
+			// Check if the driving part is free
+			if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+				return false;
+			}	
+		}		
 	}
 
 	return true;
@@ -224,19 +236,19 @@ void Map::deleteExpiredReservations(double time) {
 }
 
 std::vector<Rectangle> Map::deleteReservationsFromAgent(int agentId) {
-	std::vector<Rectangle> reservations;
+	std::vector<Rectangle> deletedReservations;
 	auto iter = reservations.begin();
 
 	while(iter != reservations.end()) {
 		if((*iter).getOwnerId() == agentId) {
-			reservations.push_back(*iter);
+			deletedReservations.push_back(*iter);
 			iter = reservations.erase(iter);
 		} else {
 			iter++;
 		}
 	}
 	
-	return reservations;
+	return deletedReservations;
 }
 
 void Map::addReservations(const std::vector<Rectangle>& newReservations) {

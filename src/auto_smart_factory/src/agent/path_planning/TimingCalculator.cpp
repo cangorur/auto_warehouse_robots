@@ -68,7 +68,7 @@ bool TimingCalculator::performsOnSpotTurn(Point prev, Point curr, Point next, bo
 	return hardwareProfile->performsOnSpotTurn(std::abs(Math::getAngleDifferenceInDegree(prevLineSegmentRotation, currLineSegmentRotation)), firstPoint);
 }
 
-bool TimingCalculator::performsOnSpotTurn(double startRotationInDeg, Point curr, Point next,bool firstPoint) const {
+bool TimingCalculator::performsOnSpotTurn(double startRotationInDeg, Point curr, Point next, bool firstPoint) const {
 	double currLineSegmentRotation = Math::getRotationInDeg(next - curr);
 
 	return hardwareProfile->performsOnSpotTurn(std::abs(Math::getAngleDifferenceInDegree(startRotationInDeg, currLineSegmentRotation)), firstPoint);

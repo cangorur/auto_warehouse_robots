@@ -46,8 +46,8 @@ public:
 	bool isInsideAnyStaticInflatedObstacle(const Point& point) const;	
 	bool isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const;
 
-	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, std::vector<Rectangle>& reservationsToIgnore) const;
-	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, std::vector<Rectangle>& reservationsToIgnore) const;
+	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, const std::vector<Rectangle>& smallerReservations) const;
+	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, const std::vector<Rectangle>& smallerReservations) const;
 	
 	bool isPointInMap(const Point& pos) const;
 	Point getRandomFreePoint() const;

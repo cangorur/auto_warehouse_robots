@@ -105,7 +105,7 @@ bool PackageGenerator::generateService(auto_smart_factory::NewPackageGenerator::
 		return false;
 	}
 
-	ROS_INFO("[package generator] Next package generation: %s!", input_chosen ? "Input" : "Output");
+	//ROS_INFO("[package generator] Next package generation: %s!", input_chosen ? "Input" : "Output");
 	bool success = false;
 
 	// package.type_id = packageConfigs[index].id;
@@ -122,7 +122,7 @@ bool PackageGenerator::generateService(auto_smart_factory::NewPackageGenerator::
 
 	if(success) {
 		updateTimer();
-		ROS_INFO("[package generator] Package has been generated !");
+		//ROS_INFO("[package generator] Package has been generated !");
 	}
 	res.success = success;
 	return success;
@@ -169,7 +169,7 @@ void PackageGenerator::generate() {
 	}*/
 	tray = getTray(selected[i].id);
 
-	ROS_INFO("[package generator] Next package generation: %s!", input_chosen ? "Input" : "Output");
+	//ROS_INFO("[package generator] Next package generation: %s!", input_chosen ? "Input" : "Output");
 	bool success = false;
 
 	auto_smart_factory::Package package;
@@ -230,10 +230,10 @@ bool PackageGenerator::getStorageInformation() {
 		   || storageState.stamp < srv.response.state.stamp) {
 			storageState = srv.response.state;
 			hasStorageState = true;
-			ROS_INFO("[package generator] Storage information succesfully received & updated!");
+			//ROS_INFO("[package generator] Storage information succesfully received & updated!");
 			return true;
 		} else {
-			ROS_WARN("[package generator] Received storage information is outdated!");
+			//ROS_WARN("[package generator] Received storage information is outdated!");
 			return false;
 		}
 	} else {
@@ -331,7 +331,6 @@ bool PackageGenerator::newPackageInputOnConveyor(auto_smart_factory::Tray tray, 
 
 	// move package
 	// Drop height: Tray height (input tray) = 0.3 m + Half package height = 0.25 / 2 = 0.125 m
-	// std::cout << "tray IDs that the pkgs are inputted:  " << tray.id << std::endl;
 	//TODO: currently the locations are hard coded to move the pkg on conveyor which runs and makes it fall to input tray-01 !! this will be fixed according to the trays !
 	if(!movePackage(4.f - 0.15f, 0.80f, 1.f, package)) { 
 		//if (!movePackage(tray.x + 0.50 , tray.y - 4.85, 1 , package)) {
@@ -367,18 +366,17 @@ bool PackageGenerator::newPackageInputOnConveyor(auto_smart_factory::Tray tray, 
 		ROS_ERROR("[package generator] Failed to call service %s!", srv_name.c_str());
 		ros::Duration(1.0).sleep();
 	}
-	ROS_INFO("[package generator] Input request created at tray %d.", tray.id);
+	//ROS_INFO("[package generator] Input request created at tray %d.", tray.id);
 
 	return true;
 }
 
 bool PackageGenerator::newPackageInput(auto_smart_factory::Tray tray, auto_smart_factory::Package package) {
-
 	TrayAllocatorPtr allocatedInputTray = std::make_shared<TrayAllocator>(tray.id);
 
 	// check if input tray reservation was successful
 	if(!allocatedInputTray->isValid()) {
-		ROS_DEBUG("[package generator] Allocation of input tray %d was not successful!", tray.id);
+		//ROS_DEBUG("[package generator] Allocation of input tray %d was not successful!", tray.id);
 		return false;
 	}
 
@@ -402,7 +400,6 @@ bool PackageGenerator::newPackageInput(auto_smart_factory::Tray tray, auto_smart
 
 	// move package
 	// Drop height: 0.3 (tray height) + package half height = 0.125 + 0.025 margin so they dont collide initially
-	std::cout << "tray IDs that the pkgs are inputted:  " << tray.id << std::endl;
 	if(!movePackageOntoTray(tray, package)) {
 		ROS_WARN("[package generator] Moving package failed.");
 		return false;
@@ -437,7 +434,7 @@ bool PackageGenerator::newPackageInput(auto_smart_factory::Tray tray, auto_smart
 		ROS_ERROR("[package generator] Failed to call service %s!", srv_name.c_str());
 		ros::Duration(1.0).sleep();
 	}
-	ROS_INFO("[package generator] Input request created at tray %d.", tray.id);
+	//ROS_INFO("[package generator] Input request created at tray %d.", tray.id);
 
 	return true;
 }
@@ -451,7 +448,7 @@ bool PackageGenerator::newPackageOutput(int output_tray_id, auto_smart_factory::
 
 	if(client.call(srv)) {
 		if(srv.response.success) {
-			ROS_INFO("[package generator] New output request generated at tray %i!", output_tray_id);
+			//ROS_INFO("[package generator] New output request generated at tray %i!", output_tray_id);
 			return true;
 		} else {
 			//ROS_INFO("[package generator] Output tray %i is not available for an output request!", output_tray_id);

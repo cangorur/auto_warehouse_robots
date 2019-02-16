@@ -164,7 +164,7 @@ bool Request::allocateRobot(const RobotCandidate& candidate) const {
 	srv.request.storage_tray = candidate.target.id;
 
 	if(assignTaskClient.call(srv)) {
-		ROS_INFO("[request %d] was assigned to %s with Task score %.2f", status.id, candidate.robotId.c_str(), candidate.score);
+		//ROS_INFO("[request %d] was assigned to %s with Task score %.2f", status.id, candidate.robotId.c_str(), candidate.score);
 		return srv.response.success;
 	}
 
@@ -229,7 +229,7 @@ void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency) {
 	acceptingScores = true;
 	while(ros::Time::now() < end) {
 		if(taskPlanner->getRegisteredRobots().size() == answeredRobots.size()) {
-			ROS_INFO("[Request %d] received all answers", status.id);
+			//ROS_INFO("[Request %d] received all answers", status.id);
 			acceptingScores = false;
 			return;
 		}
@@ -237,7 +237,7 @@ void Request::waitForRobotScores(ros::Duration timeout, ros::Rate frequency) {
 		frequency.sleep();
 	}
 	acceptingScores = false;
-	ROS_WARN("[Request %d] Timeout while waiting for robot scores, got %d answers,", status.id, (unsigned int)answeredRobots.size());
+	//ROS_INFO("[Request %d] Timeout while waiting for robot scores, got %d answers,", status.id, (unsigned int)answeredRobots.size());
 }
 
 bool Request::isBusy() {

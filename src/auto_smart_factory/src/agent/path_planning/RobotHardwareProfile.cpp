@@ -69,7 +69,7 @@ double RobotHardwareProfile::getOnSpotTurningTime(double angle) const {
 	double angleAtMaxSpeed = angle;
 	time += angleAtMaxSpeed / maxTurningSpeed;
 	
-	return time;
+	return time * 1.1f;
 }
 
 

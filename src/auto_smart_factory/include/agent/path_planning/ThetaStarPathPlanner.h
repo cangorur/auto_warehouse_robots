@@ -58,7 +58,7 @@ private:
 	double targetReservationTime;
 	bool isValidPathQuery;
 	
-	std::vector<Rectangle> reservationsToIgnore;
+	std::vector<Rectangle> smallerReservations;
 };
 
 

@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <include/agent/path_planning/Rectangle.h>
+
 #include "agent/path_planning/Rectangle.h"
 #include "Math.h"
 
@@ -23,6 +25,14 @@ Rectangle::Rectangle(Point pos_, Point size_, float rotation_, double startTime,
 		//color = sf::Color(200, 0, 200);
 	}
 
+	// Generate Points
+	Point diagonal = size * 0.4f;
+	Point diagonalMirrored = Point(diagonal.x, -diagonal.y);
+	pointsNonInflated[0] = pos + Math::rotateVector(diagonal, rotation);
+	pointsNonInflated[2] = pos + Math::rotateVector(diagonal, rotation + 180);
+	pointsNonInflated[1] = pos + Math::rotateVector(diagonalMirrored, rotation);
+	pointsNonInflated[3] = pos + Math::rotateVector(diagonalMirrored, rotation + 180);
+	
 	// Generate inflated points
 	Point sizeInflated = Point(size.x + ROBOT_RADIUS * 2, size.y + ROBOT_RADIUS * 2);
 	Point diagonalInflated = Point(size.x + ROBOT_RADIUS * 2, size.y + ROBOT_RADIUS * 2) * 0.5f;
@@ -96,6 +106,10 @@ double Rectangle::getEndTime() const {
 
 int Rectangle::getOwnerId() const {
 	return ownerId;
+}
+
+const Point* Rectangle::getPointsNonInflated() const {
+	return pointsNonInflated;
 }
 
 bool operator ==(const Rectangle& left, const Rectangle& right) {

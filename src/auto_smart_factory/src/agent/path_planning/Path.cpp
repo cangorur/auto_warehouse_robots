@@ -50,7 +50,7 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		double turningDuration = 0;
 		bool performsOnSpotTurn = false;
 		if(i == 0) {
-			turningDuration = timing.getTurningTime(Math::toDeg(start.o), nodes.at(0), nodes.at(1));
+			turningDuration = timing.getTurningTime(Math::toDeg(start.o), nodes.at(0), nodes.at(1)) + 0.25f;
 			performsOnSpotTurn = timing.performsOnSpotTurn(Math::toDeg(start.o), nodes.at(0), nodes.at(1), true);
 		} else if(i < nodes.size() - 1) {
 			turningDuration = timing.getTurningTime(nodes[i - 1], nodes[i], nodes[i + 1]);
