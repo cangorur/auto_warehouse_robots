@@ -248,6 +248,7 @@ void MotionPlanner::start() {
 void MotionPlanner::stop() {
 	mode = Mode::STOP;
 	publishVelocity(0.0, 0.0);
+	publishEmptyVisualisationPath();
 }
 
 bool MotionPlanner::isDone() {

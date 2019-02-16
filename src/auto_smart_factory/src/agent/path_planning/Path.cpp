@@ -9,7 +9,7 @@
 
 using namespace UncertaintyDirection;
 
-Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile, double targetReservationTime, OrientedPoint start, OrientedPoint end) :
+Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double> waitTimes_, RobotHardwareProfile* hardwareProfile, double targetReservationTime, OrientedPoint start, OrientedPoint end, int agentId) :
 		startTimeOffset(startTimeOffset),
 		nodes(std::move(nodes_)),
 		waitTimes(std::move(waitTimes_)),
@@ -19,17 +19,13 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		end(end),
 		isValidPath(true),
 		timing(startTimeOffset, start, hardwareProfile)
-{
+{	
 	if(nodes.size() != waitTimes.size()) {
-		ROS_FATAL("nodes.size() != waitTimes.size()");
+		ROS_FATAL("[Agent %d] nodes.size() != waitTimes.size()", agentId);
 		isValidPath = false;
 	}
 	if(nodes.size() < 2) {
-		ROS_FATAL("Tried to construct path with no node points");
-		isValidPath = false;
-	}
-	if(nodes.at(0) == nodes.at(1)) {
-		ROS_FATAL("Tried to construct path with identical points (point[0] == point[1]");
+		ROS_FATAL("[Agent %d] Tried to construct path with no node points", agentId);
 		isValidPath = false;
 	}
 	
@@ -51,7 +47,8 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		bool performsOnSpotTurn = false;
 		if(i == 0) {
 			turningDuration = timing.getTurningTime(Math::toDeg(start.o), nodes.at(0), nodes.at(1)) + 0.25f;
-			performsOnSpotTurn = timing.performsOnSpotTurn(Math::toDeg(start.o), nodes.at(0), nodes.at(1), true);
+			//performsOnSpotTurn = timing.performsOnSpotTurn(Math::toDeg(start.o), nodes.at(0), nodes.at(1), true);
+			performsOnSpotTurn = true;
 		} else if(i < nodes.size() - 1) {
 			turningDuration = timing.getTurningTime(nodes[i - 1], nodes[i], nodes[i + 1]);
 			performsOnSpotTurn = timing.performsOnSpotTurn(nodes[i - 1], nodes[i], nodes[i + 1], false);
@@ -103,6 +100,8 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	Point waitingReservationSize = Point(getReservationSize(), getReservationSize()) * 0.98f;
 	double maxMergeDistance = 0.45f;
 
+	generateReservationForTray(reservations, start, startTimeOffset, onSpotTimes[0] + 1.5f, ownerId);
+
 	double currentTime = startTimeOffset;
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
 		// OnSpotTime
@@ -142,7 +141,7 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 	}
 	
 	if(targetReservationTime > 0) {		
-		generateReservationForTray(reservations, currentTime, ownerId);
+		generateReservationForTray(reservations, end, currentTime, targetReservationTime, ownerId);
 	}
 
 	return reservations;
@@ -206,26 +205,26 @@ void Path::generateReservationsForCurvePoints(std::vector<Rectangle>& reservatio
 	}
 }
 
-void Path::generateReservationForTray(std::vector<Rectangle>& reservations, double timeAtStartPoint, int ownerId) const {
-	double startTime = timeAtStartPoint - reservationTimeMarginBehind;
-	double endTime = timeAtStartPoint + targetReservationTime + reservationTimeMarginAhead;
+void Path::generateReservationForTray(std::vector<Rectangle>& reservations, OrientedPoint pos, double reservationStartTime, double duration, int ownerId) const {
+	double startTime = reservationStartTime - reservationTimeMarginBehind;
+	double endTime = reservationStartTime + duration + reservationTimeMarginAhead;
 
 	// Block approach space		
 	double offset = APPROACH_DISTANCE + DISTANCE_WHEN_APPROACHED;
 	double lengthMargin = 0.3f;
 	double widthMargin = 0.1f;
-	Point pos = Point(end.x, end.y) + Math::getVectorFromOrientation(end.o) * offset;
+	Point center = Point(pos.x, pos.y) + Math::getVectorFromOrientation(pos.o) * offset;
 	double length = (ROBOT_RADIUS + offset + lengthMargin) * 2.f;
 	double width = (ROBOT_RADIUS + widthMargin) * 2.f;
 	
-	reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), startTime, endTime, ownerId);
+	reservations.emplace_back(center, Point(length, width), Math::toDeg(pos.o), startTime, endTime, ownerId);
 
 	// Block neighbour trays space
 	widthMargin = 0.23f; // Cover neighbouring trays too
 	length = (ROBOT_RADIUS) * 2.f;
 	width = (ROBOT_RADIUS + widthMargin) * 2.f;
 	
-	reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), startTime, endTime, ownerId);
+	reservations.emplace_back(center, Point(length, width), Math::toDeg(pos.o), startTime, endTime, ownerId);
 }
 
 const std::vector<Point>& Path::getNodes() const {

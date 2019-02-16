@@ -479,16 +479,12 @@ void Map::listAllReservationsIn(Point p) {
 
 bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 	for(const auto& r : reservations) {
-		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId && r.getEndTime() - r.getStartTime() >= 50.f) {
+		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId && r.getEndTime() - r.getStartTime() >= 150.f) {
 			return true;
 		}		
 	}
 	
 	return false;
-}
-
-bool Map::isPointTargetOfAnotherRobot(const auto_smart_factory::Tray& tray) {
-	return isPointTargetOfAnotherRobot(getPointInFrontOfTray(tray));
 }
 
 int Map::getOwnerId() const {

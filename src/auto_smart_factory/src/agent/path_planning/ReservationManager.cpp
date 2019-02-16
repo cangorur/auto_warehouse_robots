@@ -46,9 +46,9 @@ void ReservationManager::reservationBroadcastCallback(const auto_smart_factory::
 	// This only works if the messages arrive in order
 	if(msg.isReservationBroadcastOrDenial) {
 		std::vector<Rectangle> oldReservations;
-		if(!msg.isEmergencyStop) {
-			oldReservations = map->deleteReservationsFromAgent(msg.ownerId);	
-		}
+		//if(!msg.isEmergencyStop) {
+		oldReservations = map->deleteReservationsFromAgent(msg.ownerId);	
+		//}
 						
 		std::vector<Rectangle> reservations = getReservationsFromMessage(msg);
 		map->addReservations(reservations);		
@@ -184,7 +184,7 @@ Path ReservationManager::getLastReservedPath() {
 }
 
 bool ReservationManager::calculateNewPath() {
-	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathStartingTimeOffset, targetReservationDuration, true);
+	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec(), targetReservationDuration, true);
 
 	if(pathToReserve.isValid()) {
 		return true;
@@ -253,7 +253,6 @@ bool ReservationManager::isReplanningBeneficialWithoutTheseReservations(const st
 			return true;
 		}	
 	}
-	
 
 	return false;
 }

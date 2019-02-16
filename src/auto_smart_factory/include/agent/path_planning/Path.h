@@ -40,7 +40,7 @@ private:
 
 public:
 	explicit Path();
-	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, double targetReservationTime, OrientedPoint start, OrientedPoint end);
+	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, double targetReservationTime, OrientedPoint start, OrientedPoint end, int agentId);
 	
 	virtual ~Path() = default;
 
@@ -68,7 +68,7 @@ public:
 private:
 	void generateReservationsForSegment(std::vector<Rectangle>& reservations, Point startPoint, Point endPoint, double timeAtStartPoint, double deltaDuration, int ownerId) const;
 	void generateReservationsForCurvePoints(std::vector<Rectangle>& reservations, std::vector<Point> points, double timeAtStartPoint, double deltaTime, int ownerId) const;
-	void generateReservationForTray(std::vector<Rectangle>& reservations, double timeAtStartPoint, int ownerId) const;
+	void generateReservationForTray(std::vector<Rectangle>& reservations, OrientedPoint pos, double reservationStartTime, double duration, int ownerId) const;
 };
 
 #endif /* AGENT_PATH_H_ */

@@ -59,8 +59,7 @@ Path ThetaStarPathPlanner::findPath() {
 	}
 	
 	if(start.x == target.x && start.y == target.y) {
-		//ROS_WARN("[Agent %d] Returning path with start == target ( %f/%f )", map->getOwnerId(), start.x, start.y);
-		return Path(startingTime, {Point(start), Point(start)}, {0.0, 0.0}, hardwareProfile, targetReservationTime, start, start);
+		return Path(startingTime, {Point(start), Point(start)}, {0.0, 0.0}, hardwareProfile, targetReservationTime, start, start, map->getOwnerId());
 	}
 	
 	GridInformationMap exploredSet;
@@ -235,7 +234,7 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 	}
 
 	// Convert orientation to rad
-	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, targetReservationTime, OrientedPoint(start.x, start.y, Math::toRad(start.o)), OrientedPoint(target.x, target.y, Math::toRad(target.o)));
+	return Path(startingTime, pathNodes, waitTimes, hardwareProfile, targetReservationTime, OrientedPoint(start.x, start.y, Math::toRad(start.o)), OrientedPoint(target.x, target.y, Math::toRad(target.o)), map->getOwnerId());
 }
 
 Path ThetaStarPathPlanner::smoothPath(Path inputPath) const {
@@ -277,7 +276,7 @@ Path ThetaStarPathPlanner::smoothPath(Path inputPath) const {
 	output.push_back(input.back());
 	outputWaitTimes.push_back(inputWaitTimes.back());
 
-	return Path(inputPath.getStartTimeOffset(), output, outputWaitTimes, hardwareProfile, targetReservationTime, inputPath.getStart(), inputPath.getEnd());
+	return Path(inputPath.getStartTimeOffset(), output, outputWaitTimes, hardwareProfile, targetReservationTime, inputPath.getStart(), inputPath.getEnd(), map->getOwnerId());
 }
 
 std::vector<Point> ThetaStarPathPlanner::createCurveFromCorner(Point prev, Point curr, Point next, Point lastPointInOutput) const {

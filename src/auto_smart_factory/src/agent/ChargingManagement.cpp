@@ -25,27 +25,36 @@ void ChargingManagement::getAllChargingStations(){
 		}
 	}
 
+	if(charging_trays.size() != 8) {
+		ROS_FATAL("Did not found 8 charging trays, only found %d", (int) charging_trays.size());
+	}
 	//ROS_INFO("[Charging Management]:Found (%d) Charging Stations !",(unsigned int) charging_trays.size());
 }
 
 std::pair<Path, uint32_t> ChargingManagement::getPathToNearestChargingStation(OrientedPoint start, double startingTime) {
 	u_int32_t nearestStationId = 0;
 	Path shortestPath;
-	double nearestStationDuration = std::numeric_limits<double>::max();
+	double nearestStationDuration = 99999;
 	
 	//Find paths for all possible charging stations
 	for(auto& charging_tray : charging_trays) {
-		if(map->isPointTargetOfAnotherRobot(charging_tray)) {
+		if(map->isPointTargetOfAnotherRobot(map->getPointInFrontOfTray(charging_tray))) {
 			continue;
 		}		
 		
-		Path path = map->getThetaStarPath(start, charging_tray, startingTime, ChargingTask::getChargingTime());
+		Path path = map->getThetaStarPath(start, map->getPointInFrontOfTray(charging_tray), startingTime, ChargingTask::getChargingTime(), true);
 		if(path.isValid() && path.getDuration() < nearestStationDuration) {
 			nearestStationDuration = path.getDuration();
 			
 			shortestPath = path;
 			nearestStationId = charging_tray.id;
 		}
+	}
+	
+	if(!shortestPath.isValid()) {
+		int rand = static_cast<int>(std::floor(Math::getRandom(0, charging_trays.size() - 1)));
+		Path path = map->getThetaStarPath(start, map->getPointInFrontOfTray(charging_trays[rand]), startingTime, ChargingTask::getChargingTime(), true);
+		nearestStationId = charging_trays[rand].id;
 	}
 	
     return std::make_pair(shortestPath, nearestStationId);

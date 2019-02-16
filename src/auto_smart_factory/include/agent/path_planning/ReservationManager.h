@@ -42,7 +42,6 @@ private:
 	OrientedPoint endPoint;
 	double targetReservationDuration;
 	int pathRetrievedCount;
-	const double pathStartingTimeOffset = 0.0f;
 	
 	void saveReservationsAsLastReserved(const auto_smart_factory::ReservationBroadcast& msg);
 	std::vector<Rectangle> getReservationsFromMessage(const auto_smart_factory::ReservationBroadcast& msg);

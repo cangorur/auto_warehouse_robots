@@ -65,7 +65,6 @@ public:
 	Path getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime, double targetReservationTime);
 	
 	bool isPointTargetOfAnotherRobot(OrientedPoint pos);
-	bool isPointTargetOfAnotherRobot(const auto_smart_factory::Tray& tray);
 	
 	// Getter
 	float getWidth() const;

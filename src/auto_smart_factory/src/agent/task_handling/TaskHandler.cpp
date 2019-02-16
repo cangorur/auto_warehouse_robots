@@ -35,18 +35,11 @@ void TaskHandler::rejectTask(unsigned int requestId) {
 }
 
 void TaskHandler::update() { 
-	if(reservationManager->isReplanningNecessary()) {
-		ROS_WARN("[Task Handler %d] Replanning Necessary", agent->getAgentIdInt());
+	if(reservationManager->isReplanningNecessary() || reservationManager->isReplanningBeneficial()) {
 		replan();
-		answerAnnouncements();
-		return;
-	} else {
-		if(reservationManager->isReplanningBeneficial()) {
-			ROS_INFO("[Task Handler %d] Replanning beneficial", agent->getAgentIdInt());
-			replan();
-		}
-		answerAnnouncements();
 	}
+	
+	answerAnnouncements();
 	
 	if (!isTaskInExecution()) {
 		if (isIdle()) {
@@ -61,9 +54,7 @@ void TaskHandler::update() {
 				} else {
 					ROS_FATAL("[%s] Could not add charging task while idling, path is invalid", agent->getAgentID().c_str());
 				}
-			} else {
-				// TODO Drive to idle position
-			}
+			} 
 		}
 		nextTask();
 	} else {
@@ -134,6 +125,9 @@ void TaskHandler::executeTask() {
 					std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(motionPlanner->getPositionAsOrientedPoint(), now);
 					if(pathToCS.first.isValid()) {
 						((ChargingTask*) currentTask)->adjustChargingStation(pathToCS.second, pathToCS.first, now);
+					} else {
+						ROS_FATAL("[Agent %d] Could not find a valid path to any charging station!", agent->getAgentIdInt());
+						return;
 					}
 					reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), ChargingTask::getChargingTime());
 				} else {
@@ -168,11 +162,11 @@ void TaskHandler::executeTask() {
 			break;
 
 		case Task::State::RESERVING_TARGET:
-			if (motionPlanner->isDone() || isReplanning) {
+			if (motionPlanner->isDone() || motionPlanner->isStopped()) {
 				if(reservationManager->isBidingForReservation() && !isReplanning) {
 					break;
 				}
-				if(reservationManager->getHasReservedPath() && hasTriedToReservePathToTarget && !isReplanning){
+				if(reservationManager->getHasReservedPath() && hasTriedToReservePathToTarget && !isReplanning) {
 					currentTask->setState(Task::State::TO_TARGET);
 					motionPlanner->newPath(reservationManager->getLastReservedPath());
 					motionPlanner->start();
@@ -276,14 +270,14 @@ double TaskHandler::getEstimatedBatteryLevelAfterQueuedTasks() {
 
 	if(currentTask != nullptr) {
 		if(currentTask->isCharging()) {
-			estimatedBattery = 99.f;
+			estimatedBattery = 100.f;
 		} else {
 			estimatedBattery -= currentTask->getBatteryConsumption();
 		}
 	}	
 	for(Task* t : queue) {
 		if(t->isCharging()) {
-			estimatedBattery = 99.f;
+			estimatedBattery = 100.f;
 		} else {
 			estimatedBattery -= t->getBatteryConsumption();
 		}
@@ -394,7 +388,7 @@ void TaskHandler::answerAnnouncement(auto_smart_factory::TaskAnnouncement& taskA
 		rejectTask(taskAnnouncement.request_id);
 		
 		// Queue charging task if not already present
-		if(lastTask != nullptr && !(lastTask->isCharging())) {
+		/*if(lastTask == nullptr || !lastTask->isCharging()) {
 			ROS_INFO("[Agent %d] Adding charging task because new task could not be taken", agent->getAgentIdInt());
 			std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(lastTask->getTargetPosition(), lastTask->getEndTime());
 			
@@ -403,7 +397,7 @@ void TaskHandler::answerAnnouncement(auto_smart_factory::TaskAnnouncement& taskA
 			} else {
 				ROS_FATAL("[Agent %d] Could not find a valid path to any charging station!", agent->getAgentIdInt());	
 			}		
-		}
+		}*/
 	}
 }
 
@@ -421,12 +415,14 @@ void TaskHandler::sendEvaluationData() {
 }
 
 void TaskHandler::replan() {
-	if(reservationManager->hasRequestedEmergencyStop()) {
+	if(reservationManager->hasRequestedEmergencyStop() || isReplanning) {
 		return;
 	}
-	if(reservationManager->isReplanningNecessary()){
-		// put reservation on current position, only when replanning necessary not benefical
+	if(reservationManager->isReplanningNecessary()) {
+		ROS_WARN("[Task Handler %d] Replanning Necessary", agent->getAgentIdInt());
 		reservationManager->publishEmergencyStop(Point(motionPlanner->getPositionAsOrientedPoint()));
+	} else {
+		ROS_INFO("[Task Handler %d] Replanning beneficial", agent->getAgentIdInt());
 	}
 
 	// reset task to latest possible path planning state if necessary
@@ -446,6 +442,7 @@ void TaskHandler::replan() {
 					currentTask->setState(Task::State::WAITING);
 				} else if(currentTask->isTransportation()) {
 					currentTask->setState(Task::State::RESERVING_TARGET);
+					hasTriedToReservePathToTarget = false;
 				}
 				break;
 
