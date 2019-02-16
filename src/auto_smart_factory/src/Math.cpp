@@ -333,6 +333,7 @@ bool Math::isPointInRectangle(const Point& p, const Rectangle& rectangle) {
 }
 
 bool Math::doesLineSegmentIntersectNonInflatedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle) {
+	return false;
 	const Point* rect = rectangle.getPointsNonInflated();
 
 	return (doLineSegmentsIntersect(lStart, lEnd, rect[0], rect[1]) ||
@@ -344,6 +345,7 @@ bool Math::doesLineSegmentIntersectNonInflatedRectangle(const Point& lStart, con
 }
 
 bool Math::isPointInNonInflatedRectangle(const Point& p, const Rectangle& rectangle) {
+	return false;
 	const Point* rect = rectangle.getPointsNonInflated();
 
 	Point ap = rect[0] - p;

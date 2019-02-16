@@ -18,7 +18,6 @@ ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int 
 	// Add infinite reservation for starting point
 	double infiniteReservationStartTime = ros::Time::now().toSec() - 1000.f;
 
-
 	// Add infinite reservation for starting point
 	for(const auto& idlePosition : warehouseConfig.idle_positions) {
 		std::string idStr = idlePosition.id.substr(idlePosition.id.find('_') + 1);
@@ -46,9 +45,7 @@ void ReservationManager::reservationBroadcastCallback(const auto_smart_factory::
 	// This only works if the messages arrive in order
 	if(msg.isReservationBroadcastOrDenial) {
 		std::vector<Rectangle> oldReservations;
-		//if(!msg.isEmergencyStop) {
 		oldReservations = map->deleteReservationsFromAgent(msg.ownerId);	
-		//}
 						
 		std::vector<Rectangle> reservations = getReservationsFromMessage(msg);
 		map->addReservations(reservations);		
@@ -133,8 +130,10 @@ void ReservationManager::requestPathReservation() {
 		msg.ownerId = agentId;
 		msg.bid = pathToReserve.getDuration();
 		msg.isEmergencyStop = static_cast<unsigned char>(false);
+		
+		bool startsAtTray = lastReservedPathReservations.size() > 1;
 
-		for(const auto& r : pathToReserve.generateReservations(agentId)) {
+		for(const auto& r : pathToReserve.generateReservations(agentId, startsAtTray)) {
 			auto_smart_factory::Rectangle rectangle;
 			rectangle.posX = r.getPosition().x;
 			rectangle.posY = r.getPosition().y;
@@ -192,11 +191,11 @@ bool ReservationManager::calculateNewPath() {
 		bidingForReservation = false;
 		
 		ROS_FATAL("[RM %d] Tried to generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-		//ROS_WARN("Reservations for start:");
-		//map->listAllReservationsIn(Point(startPoint.x, startPoint.y));
+		ROS_WARN("Reservations for start:");
+		map->listAllReservationsIn(Point(startPoint.x, startPoint.y));
 
-		//ROS_WARN("Reservations for target:");
-		//map->listAllReservationsIn(Point(endPoint.x, endPoint.y));
+		ROS_WARN("Reservations for target:");
+		map->listAllReservationsIn(Point(endPoint.x, endPoint.y));
 		return false;
 	}
 }
@@ -248,8 +247,9 @@ bool ReservationManager::isReplanningBeneficialWithoutTheseReservations(const st
 		return false;
 	}
 
+	double pathFinishTime = pathToReserve.getDepartureTimes().back();
 	for(const Rectangle& r : oldReservations) {
-		if(Math::isPointInRectangle(Point(pathToReserve.getEnd().x, pathToReserve.getEnd().y), r)) {
+		if(Math::isPointInRectangle(Point(pathToReserve.getEnd().x, pathToReserve.getEnd().y), r) && r.getEndTime() - r.getStartTime() >= 45.f && std::abs(pathFinishTime - r.getEndTime()) <= 6.f) {
 			return true;
 		}	
 	}

@@ -54,7 +54,7 @@ public:
 	double getStartTimeOffset() const;
 	RobotHardwareProfile* getRobotHardwareProfile() const;
 
-	const std::vector<Rectangle> generateReservations(int ownerId) const;
+	const std::vector<Rectangle> generateReservations(int ownerId, bool startsAtTray) const;
 	
 	// ROS visualisation
 	visualization_msgs::Marker getVisualizationMsgLines(std_msgs::ColorRGBA color);

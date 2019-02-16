@@ -46,9 +46,8 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		double turningDuration = 0;
 		bool performsOnSpotTurn = false;
 		if(i == 0) {
-			turningDuration = timing.getTurningTime(Math::toDeg(start.o), nodes.at(0), nodes.at(1)) + 0.25f;
-			//performsOnSpotTurn = timing.performsOnSpotTurn(Math::toDeg(start.o), nodes.at(0), nodes.at(1), true);
-			performsOnSpotTurn = true;
+			turningDuration = timing.getTurningTime(Math::toDeg(start.o), nodes.at(0), nodes.at(1)) + 0.5f;
+			performsOnSpotTurn = timing.performsOnSpotTurn(Math::toDeg(start.o), nodes.at(0), nodes.at(1), true);
 		} else if(i < nodes.size() - 1) {
 			turningDuration = timing.getTurningTime(nodes[i - 1], nodes[i], nodes[i + 1]);
 			performsOnSpotTurn = timing.performsOnSpotTurn(nodes[i - 1], nodes[i], nodes[i + 1], false);
@@ -82,7 +81,7 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 	duration += finalPointAdditionalTime;
 	batteryConsumption += hardwareProfile->getIdleBatteryConsumption(finalPointAdditionalTime);
 
-	departureTimes.push_back(startTimeOffset + duration - 0.25f);
+	departureTimes.push_back(startTimeOffset + duration);
 	
 	// TargetPoint - getTurningTime also works with direction reversed. nodes.size is guaranteed to be >= 2
 	double finalTurningTime = timing.getTurningTime(Math::toDeg(end.o), nodes.at(nodes.size() - 2), nodes.back());
@@ -95,12 +94,14 @@ Path::Path() :
 {
 }
 
-const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
+const std::vector<Rectangle> Path::generateReservations(int ownerId, bool startsAtTray) const {
 	std::vector<Rectangle> reservations;
 	Point waitingReservationSize = Point(getReservationSize(), getReservationSize()) * 0.98f;
 	double maxMergeDistance = 0.45f;
 
-	generateReservationForTray(reservations, start, startTimeOffset, onSpotTimes[0] + 1.5f, ownerId);
+	if(startsAtTray) {
+		generateReservationForTray(reservations, start, startTimeOffset, onSpotTimes[0] + 2.5f, ownerId);
+	}
 
 	double currentTime = startTimeOffset;
 	for(unsigned int i = 0; i < nodes.size() - 1; i++) {
@@ -108,6 +109,10 @@ const std::vector<Rectangle> Path::generateReservations(int ownerId) const {
 		if(onSpotTimes.at(i) > 0 || i == 0) {
 			double startTime = currentTime - timing.getReservationUncertainty(currentTime, Direction::BEHIND) - reservationTimeMarginBehind;
 			double endTime = currentTime + onSpotTimes[i] + timing.getReservationUncertainty(currentTime + onSpotTimes[i], Direction::AHEAD) + reservationTimeMarginAhead;
+			
+			if(i == 0) {
+				endTime += 2.f;
+			}
 
 			reservations.emplace_back(nodes[i], waitingReservationSize, 0, startTime, endTime, ownerId);
 			currentTime += onSpotTimes[i];
