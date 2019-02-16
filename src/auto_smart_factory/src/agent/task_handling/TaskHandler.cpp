@@ -35,7 +35,7 @@ void TaskHandler::rejectTask(unsigned int requestId) {
 }
 
 void TaskHandler::update() { 
-	if(reservationManager->isReplanningNecessary()) {
+	if(reservationManager->isReplanningNecessary() || reservationManager->isReplanningBeneficial()) {
 		replan();
 		answerAnnouncements();
 		return;
@@ -373,9 +373,7 @@ void TaskHandler::answerAnnouncement(auto_smart_factory::TaskAnnouncement& taskA
 				
 				// Update best score
 				if(best == nullptr || score < best->score){
-					if(best != nullptr){
-						delete best;
-					}
+					delete best;
 					best = new TrayScore(it_id, st_id, score, estimatedDuration);
 				}
 			}
