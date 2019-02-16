@@ -435,11 +435,13 @@ void TaskHandler::replan() {
 		switch (currentTask->getState()) {
 			case Task::State::TO_SOURCE:
 				// transportation task
+				motionPlanner->stop();
 				currentTask->setState(Task::State::WAITING);
 				break;
 
 			case Task::State::TO_TARGET:
 				// transportation or charging task
+				motionPlanner->stop();
 				if(currentTask->isCharging()) {
 					currentTask->setState(Task::State::WAITING);
 				} else if(currentTask->isTransportation()) {
