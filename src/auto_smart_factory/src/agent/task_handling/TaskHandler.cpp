@@ -105,7 +105,7 @@ void TaskHandler::executeTask() {
 				} else if (currentTask->isCharging()) {
 					currentTask->setState(Task::State::TO_TARGET);
 				}
-				motionPlanner->newPath(reservationManager->getReservedPath());
+				motionPlanner->newPath(reservationManager->getLastReservedPath());
 				motionPlanner->start();
 			} else {
 				// Start to bid for path reservations
@@ -151,7 +151,7 @@ void TaskHandler::executeTask() {
 				}
 				if(reservationManager->getHasReservedPath() && hasTriedToReservePathToTarget){
 					currentTask->setState(Task::State::TO_TARGET);
-					motionPlanner->newPath(reservationManager->getReservedPath());
+					motionPlanner->newPath(reservationManager->getLastReservedPath());
 					motionPlanner->start();
 				} else {
 					// bid for a reservation if reservation failed

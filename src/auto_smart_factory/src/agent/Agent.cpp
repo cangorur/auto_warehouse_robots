@@ -37,7 +37,7 @@ void Agent::update() {
 		}
 		
 		// Update Map and Reservations
-		reservationManager->update();
+		reservationManager->update(Point(position.x, position.y));
 				
 		/* Task Execution */
 		taskHandler->update();				
@@ -102,10 +102,11 @@ bool Agent::initialize(auto_smart_factory::WarehouseConfiguration warehouse_conf
 		map = new Map(warehouseConfig, obstacles, hardwareProfile, agentIdInt);
 
 		// Charging Management
-		this->chargingManagement = new ChargingManagement(this,this->warehouseConfig, this->robotConfig, this->map);
+		chargingManagement = new ChargingManagement(this, warehouseConfig, robotConfig, map);
 
 		// Reservation Manager
-		reservationManager = new ReservationManager(&reservationRequest_pub, map, agentIdInt);
+		Point idlePosition = Point(warehouse_configuration.idle_positions[agentIdInt].pose.x, warehouse_configuration.idle_positions[agentIdInt].pose.y);
+		reservationManager = new ReservationManager(&reservationRequest_pub, map, agentIdInt, idlePosition);
 		
 		// Task Handler
 		taskHandler = new TaskHandler(this, &(taskrating_pub), &(taskEvaluation_pub), map, motionPlanner, gripper, chargingManagement, reservationManager);

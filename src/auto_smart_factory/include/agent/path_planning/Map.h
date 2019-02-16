@@ -54,7 +54,7 @@ public:
 	OrientedPoint getPointInFrontOfTray(const auto_smart_factory::Tray& tray);
 
 	// Reservations
-	void addReservations(std::vector<Rectangle> newReservations);
+	void addReservations(const std::vector<Rectangle>& newReservations);
 	void deleteExpiredReservations(double time);
 	void deleteReservationsFromAgent(int agentId);
 		

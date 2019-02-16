@@ -293,12 +293,12 @@ RobotHardwareProfile* Path::getRobotHardwareProfile() const {
 	return hardwareProfile;
 }
 
-OrientedPoint Path::getStart() {
+OrientedPoint Path::getStart() const {
 	ROS_ASSERT(isValidPath);
 	return start;
 }
 
-OrientedPoint Path::getEnd() {
+OrientedPoint Path::getEnd() const {
 	ROS_ASSERT(isValidPath);
 	return end;
 }
@@ -307,7 +307,7 @@ bool Path::isValid() const {
 	return isValidPath;
 }
 
-double Path::getReservationSize() const {
+double Path::getReservationSize() {
 	return ROBOT_RADIUS * 2.0f;
 }
 

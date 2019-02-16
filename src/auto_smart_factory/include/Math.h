@@ -81,6 +81,7 @@ public:
 private:
 	static bool doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
 	static bool doesLineSegmentIntersectNonAxisAlignedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
+	static bool isPointInAxisAlignedRectangle(const Point& p, const Rectangle& rectangle);
 };
 
 #endif //PROJECT_MATH_H
