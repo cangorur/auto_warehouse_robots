@@ -43,13 +43,13 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 		int id = std::stoi(idStr);
 		Point pos = Point(static_cast<float>(idlePosition.pose.x), static_cast<float>(idlePosition.pose.y));
 		
-		reservations.emplace_back(pos, Point(ROBOT_RADIUS * 2.f, ROBOT_RADIUS * 2.f), 0, infiniteReservationStartTime, infiniteReservationTime, id);
+		reservations.emplace_back(pos, Point(Path::getReservationSize(), Path::getReservationSize()), 0, infiniteReservationStartTime, infiniteReservationTime, id);
 	}
 }
 
 bool Map::isInsideAnyStaticInflatedObstacle(const Point& point) const {
 	for(const Rectangle& obstacle : obstacles) {
-		if(obstacle.isInsideInflated(point)) {
+		if(Math::isPointInRectangle(point, obstacle)) {
 			return true;
 		}
 	}
@@ -223,19 +223,23 @@ void Map::deleteExpiredReservations(double time) {
 	}
 }
 
-void Map::deleteReservationsFromAgent(int agentId) {
+std::vector<Rectangle> Map::deleteReservationsFromAgent(int agentId) {
+	std::vector<Rectangle> reservations;
 	auto iter = reservations.begin();
 
 	while(iter != reservations.end()) {
 		if((*iter).getOwnerId() == agentId) {
+			reservations.push_back(*iter);
 			iter = reservations.erase(iter);
 		} else {
 			iter++;
 		}
 	}
+	
+	return reservations;
 }
 
-void Map::addReservations(std::vector<Rectangle> newReservations) {
+void Map::addReservations(const std::vector<Rectangle>& newReservations) {
 	for(const auto& r : newReservations) {
 		reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime(), r.getOwnerId());
 	}
@@ -246,11 +250,9 @@ OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 
 	// Assume tray.orientation is in degree
 	float trayRadius = 0.25f;
-	float approachRoutineLength = APPROACH_DISTANCE;
-	float distanceWhenApproached = 0.08f;
 	float robotRadius = ROBOT_RADIUS; // Real radius, not including margin for reservations
 	
-	float offset = trayRadius + approachRoutineLength + distanceWhenApproached + robotRadius;
+	float offset = trayRadius + APPROACH_DISTANCE + DISTANCE_WHEN_APPROACHED + robotRadius;
 	
 	double inputDx = std::cos(tray.orientation * PI / 180);
 	double inputDy = std::sin(tray.orientation * PI / 180);

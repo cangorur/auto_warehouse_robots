@@ -58,7 +58,9 @@ public:
 
 	void start();
 	void stop();
+
 	bool isDone();
+	bool isStopped();
 	bool hasPath();
 	bool isDrivingBackwards();
 
@@ -107,6 +109,10 @@ private:
 
 	/// the current mode
 	Mode mode = Mode::STOP;
+
+	/// Current Velocities
+	double currentLinearVelocity = 0.0;
+	double currentAngularVelocity = 0.0;
 	
 	/// the current path of the robot
 	Path pathObject;
@@ -139,7 +145,7 @@ private:
 	float distToReachPoint = 0.3f;
 	float distToReachFinalPoint = 0.02f;
 	float distToSlowDown = 0.7f;
-	float minPrecisionDrivingSpeed = 0.08f;
+	float minPrecisionDrivingSpeed = 0.1f;
 
 	/// Will be true when position is updated the first time
 	bool positionInitialized = false;

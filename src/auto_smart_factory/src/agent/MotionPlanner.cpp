@@ -22,7 +22,7 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	ros::NodeHandle n;
 	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-	steerPid = new PidController(0.0, 1.6, 0.0, 5.0);
+	steerPid = new PidController(0.0, 2.4, 0.0, 6.0);
 }
 
 MotionPlanner::~MotionPlanner() {
@@ -96,7 +96,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 
 	/* Precision alignment to final waypoint */
 	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) <= 0.2f) {
-		if (std::abs(getRotationToTarget(pos, currentTarget)) > 0.02) {
+		if (std::abs(getRotationToTarget(pos, currentTarget)) > 0.04) {
 			turnTowards(currentTarget);
 			return;
 		}
@@ -206,9 +206,9 @@ void MotionPlanner::driveStraight() {
 	}
 
 	if(mode == Mode::FORWARD) {
-		publishVelocity(Math::clamp(currentDistance * 1.5f, minPrecisionDrivingSpeed, maxDrivingSpeed), 0.0);
+		publishVelocity(Math::clamp((driveDistance-currentDistance) * 1.5f, minDrivingSpeed, maxDrivingSpeed), 0.0);
 	} else {
-		publishVelocity(-Math::clamp(currentDistance * 1.5f, minPrecisionDrivingSpeed, maxDrivingSpeed), 0.0);
+		publishVelocity(-Math::clamp((driveDistance-currentDistance) * 1.5f, minDrivingSpeed, maxDrivingSpeed), 0.0);
 	}
 }
 
@@ -254,12 +254,16 @@ bool MotionPlanner::isDone() {
 	return mode == Mode::FINISHED;
 }
 
+bool MotionPlanner::isStopped() {
+	return mode == Mode::STOP;
+}
+
 bool MotionPlanner::hasPath() {
 	return pathObject.isValid();
 }
 
 bool MotionPlanner::isDrivingBackwards() {
-	return false;
+	return currentLinearVelocity < 0;
 }
 
 bool MotionPlanner::isWaypointReached() {
@@ -271,6 +275,8 @@ bool MotionPlanner::isWaypointReached() {
 }
 
 void MotionPlanner::publishVelocity(double speed, double angle) {
+	currentLinearVelocity = speed;
+	currentAngularVelocity = angle;
 	geometry_msgs::Twist msg;
 
 	msg.linear.x = speed;

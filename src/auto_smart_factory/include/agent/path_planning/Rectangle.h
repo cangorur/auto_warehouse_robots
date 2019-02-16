@@ -23,7 +23,6 @@ public:
 	Rectangle(Point pos, Point size, float rotation);
 	Rectangle(Point pos, Point size, float rotation, double startTime, double endTime, int ownerId);
 	
-	bool isInsideInflated(const Point& point) const;
 	const Point* getPointsInflated() const;
 	Point getPosition() const;
 	Point getSize() const;
@@ -41,9 +40,6 @@ public:
 	double getFreeAfter() const;
 	
 	int getOwnerId() const;
-
-private:
-	bool isInsideAxisAlignedInflated(const Point& point) const;	
 
 };
 

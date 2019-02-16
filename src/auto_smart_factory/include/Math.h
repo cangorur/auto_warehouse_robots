@@ -13,8 +13,9 @@
 #define EPS 1e-6
 
 // Defined as 0.25 + error margin
-#define ROBOT_RADIUS 0.28f
-#define APPROACH_DISTANCE 0.4f
+#define ROBOT_RADIUS 0.275f
+#define APPROACH_DISTANCE 0.1f
+#define DISTANCE_WHEN_APPROACHED 0.05f
 
 // Rotation  0  = >
 // Rotation 90  = v
@@ -80,6 +81,7 @@ public:
 private:
 	static bool doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
 	static bool doesLineSegmentIntersectNonAxisAlignedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
+	static bool isPointInAxisAlignedRectangle(const Point& p, const Rectangle& rectangle);
 };
 
 #endif //PROJECT_MATH_H

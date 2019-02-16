@@ -10,10 +10,11 @@
 
 class Path {
 public:
-	double maxDrivingReservationDuration = 2.0f;
-	double reservationTimeMarginAhead = 0.15f;
-	double reservationTimeMarginBehind = 0.1f;
-	double finalPointAdditionalTime = 0.5f;
+	double maxDrivingReservationDuration = 1.75f;
+	double reservationTimeMarginAhead = 0.125f;
+	double reservationTimeMarginBehind = 0.075f;
+	
+	double finalPointAdditionalTime = 0.35f;
 	
 private:
 	double startTimeOffset = 0;
@@ -58,16 +59,16 @@ public:
 	// ROS visualisation
 	visualization_msgs::Marker getVisualizationMsgLines(std_msgs::ColorRGBA color);
 
-	OrientedPoint getStart();
-	OrientedPoint getEnd();
+	OrientedPoint getStart() const;
+	OrientedPoint getEnd() const;
 	bool isValid() const;
+	
+	static double getReservationSize();
 
 private:
 	void generateReservationsForSegment(std::vector<Rectangle>& reservations, Point startPoint, Point endPoint, double timeAtStartPoint, double deltaDuration, int ownerId) const;
 	void generateReservationsForCurvePoints(std::vector<Rectangle>& reservations, std::vector<Point> points, double timeAtStartPoint, double deltaTime, int ownerId) const;
 	void generateReservationForTray(std::vector<Rectangle>& reservations, double timeAtStartPoint, int ownerId) const;
-	
-	double getReservationSize() const;
 };
 
 #endif /* AGENT_PATH_H_ */

@@ -209,8 +209,8 @@ void Path::generateReservationForTray(std::vector<Rectangle>& reservations, doub
 	double endTime = timeAtStartPoint + targetReservationTime + reservationTimeMarginAhead;
 
 	// Block approach space		
-	double offset = APPROACH_DISTANCE + 0.1f; // + distanceWhenApproached
-	double lengthMargin = 0.275f;
+	double offset = APPROACH_DISTANCE + DISTANCE_WHEN_APPROACHED;
+	double lengthMargin = 0.3f;
 	double widthMargin = 0.1f;
 	Point pos = Point(end.x, end.y) + Math::getVectorFromOrientation(end.o) * offset;
 	double length = (ROBOT_RADIUS + offset + lengthMargin) * 2.f;
@@ -219,7 +219,7 @@ void Path::generateReservationForTray(std::vector<Rectangle>& reservations, doub
 	reservations.emplace_back(pos, Point(length, width), Math::toDeg(end.o), startTime, endTime, ownerId);
 
 	// Block neighbour trays space
-	widthMargin = 0.235f; // Cover neighbouring trays too
+	widthMargin = 0.23f; // Cover neighbouring trays too
 	length = (ROBOT_RADIUS) * 2.f;
 	width = (ROBOT_RADIUS + widthMargin) * 2.f;
 	
@@ -293,12 +293,12 @@ RobotHardwareProfile* Path::getRobotHardwareProfile() const {
 	return hardwareProfile;
 }
 
-OrientedPoint Path::getStart() {
+OrientedPoint Path::getStart() const {
 	ROS_ASSERT(isValidPath);
 	return start;
 }
 
-OrientedPoint Path::getEnd() {
+OrientedPoint Path::getEnd() const {
 	ROS_ASSERT(isValidPath);
 	return end;
 }
@@ -307,7 +307,7 @@ bool Path::isValid() const {
 	return isValidPath;
 }
 
-double Path::getReservationSize() const {
+double Path::getReservationSize() {
 	return ROBOT_RADIUS * 2.0f;
 }
 
