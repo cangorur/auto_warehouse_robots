@@ -39,8 +39,6 @@ void ChargingTask::setState(Task::State state) {
 		
 		case Task::State::FINISHED:
 			finishedAt = ros::Time::now().toSec();
-			ROS_INFO("Charging Task execution started at %f with duration %f\n\tTook %f to drive to Charging Station\n\tTook %f to charge", 
-				startedAt, (finishedAt-startedAt), (arrivedAt-startedAt), (finishedAt-arrivedAt));
 			break;
 	
 		default:

@@ -331,7 +331,7 @@ bool PackageGenerator::newPackageInputOnConveyor(auto_smart_factory::Tray tray, 
 
 	// move package
 	// Drop height: Tray height (input tray) = 0.3 m + Half package height = 0.25 / 2 = 0.125 m
-	std::cout << "tray IDs that the pkgs are inputted:  " << tray.id << std::endl;
+	// std::cout << "tray IDs that the pkgs are inputted:  " << tray.id << std::endl;
 	//TODO: currently the locations are hard coded to move the pkg on conveyor which runs and makes it fall to input tray-01 !! this will be fixed according to the trays !
 	if(!movePackage(4.f - 0.15f, 0.80f, 1.f, package)) { 
 		//if (!movePackage(tray.x + 0.50 , tray.y - 4.85, 1 , package)) {

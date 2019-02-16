@@ -98,7 +98,7 @@ TaskData Request::allocateResources() {
 			if(!targetTray->setPackage(pkg)) {
 				ROS_ERROR("[request %d] Could not set package information at target tray (id: %d, type: %d)!", this->status.id, pkg.id, pkg.type_id);
 			} else {
-				ROS_INFO("[request %d] Successfully set package at target tray (id: %d, type: %d)!", this->status.id, pkg.id, pkg.type_id);
+				// ROS_INFO("[request %d] Successfully set package at target tray %d (id: %d, type: %d)!", this->status.id, targetTray->getId(), pkg.id, pkg.type_id);
 			}
 
 			//ROS_INFO("[request %d] Successfully allocated robot %s.", this->status.id, candidate.robotId.c_str());

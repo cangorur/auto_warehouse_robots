@@ -73,8 +73,6 @@ void TransportationTask::setState(Task::State state) {
 
 		case Task::State::FINISHED:
 			finishedAt = ros::Time::now().toSec();
-			ROS_INFO("Task %d started at %f with duration %f\n\tTook %f to drive to source tray\n\tTook %f to pick up package\n\tTook %f to drive to target tray\n\tTook %f to drop off package", 
-				id, startedAt, finishedAt-startedAt, startedPickUpAt-startedAt, finishedPickUpAt-startedPickUpAt, startedDropOffAt-finishedPickUpAt, finishedAt-startedDropOffAt);
 			break;
 	
 		default:
