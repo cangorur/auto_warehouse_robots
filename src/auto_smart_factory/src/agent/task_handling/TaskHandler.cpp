@@ -1,9 +1,10 @@
 #include "agent/task_handling/TaskHandler.h"
 
-TaskHandler::TaskHandler(Agent* agent, ros::Publisher* scorePub, ros::Publisher* evalPub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm) : 
+TaskHandler::TaskHandler(Agent* agent, ros::Publisher* scorePub, ros::Publisher* evalPub, ros::Publisher* startedPub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm) : 
 	agent(agent),
 	scorePublisher(scorePub),
 	evalPub(evalPub),
+	startedPub(startedPub),
 	map(map),
 	motionPlanner(mp),
 	gripper(gripper),
@@ -34,6 +35,16 @@ void TaskHandler::rejectTask(unsigned int requestId) {
 }
 
 void TaskHandler::update() {
+	/* 
+	if(TODO VINCENT: add replanningNecessary function) {
+		replan();
+		answerAnnouncements();
+		return;
+	} else {
+		answerAnnouncements();
+	}
+	*/
+	// TODO: remove this answerAnnouncements
 	answerAnnouncements();
 	if (!isTaskInExecution()) {
 		if (isIdle()) {
@@ -95,13 +106,17 @@ void TaskHandler::executeTask() {
 
 	switch(currentTask->getState()) {
 		case Task::State::WAITING:
-			if(reservationManager->isBidingForReservation()) {
+			if(reservationManager->isBidingForReservation() && !isReplanning) {
 				break;
 			}
 			
-			if(reservationManager->getHasReservedPath() && !isNextTask) {
+			if(reservationManager->getHasReservedPath() && !isNextTask && !isReplanning) {
 				if (currentTask->isTransportation()) {
 					currentTask->setState(Task::State::TO_SOURCE);
+					auto_smart_factory::TaskStarted msg;
+					msg.started = true;
+					msg.taskId = ((TransportationTask*) currentTask)->getId();
+					startedPub->publish(msg);
 				} else if (currentTask->isCharging()) {
 					currentTask->setState(Task::State::TO_TARGET);
 				}
@@ -117,6 +132,7 @@ void TaskHandler::executeTask() {
 					ROS_FATAL("[%s] Task is neither TransportationTask nor ChargingTask!", agent->getAgentID().c_str());
 				}
 				isNextTask = false;
+				isReplanning = false;
 			}
 			break;
 
@@ -140,16 +156,15 @@ void TaskHandler::executeTask() {
 				gripper->loadPackage(true);
 				motionPlanner->driveBackward(lastApproachDistance);
 				currentTask->setState(Task::State::RESERVING_TARGET);
-				// reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
 			}
 			break;
 
 		case Task::State::RESERVING_TARGET:
-			if (motionPlanner->isDone()) {
-				if(reservationManager->isBidingForReservation()) {
+			if (motionPlanner->isDone() && !isReplanning) {
+				if(reservationManager->isBidingForReservation() && !isReplanning) {
 					break;
 				}
-				if(reservationManager->getHasReservedPath() && hasTriedToReservePathToTarget){
+				if(reservationManager->getHasReservedPath() && hasTriedToReservePathToTarget && !isReplanning){
 					currentTask->setState(Task::State::TO_TARGET);
 					motionPlanner->newPath(reservationManager->getReservedPath());
 					motionPlanner->start();
@@ -157,6 +172,7 @@ void TaskHandler::executeTask() {
 					// bid for a reservation if reservation failed
 					reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
 					hasTriedToReservePathToTarget = true;
+					isReplanning = false;
 				}
 			}
 			break;
@@ -409,4 +425,43 @@ void TaskHandler::sendEvaluationData() {
 	msg.robot_id = agent->getAgentID();
 	currentTask->fillInEvaluationData(&msg);
 	evalPub->publish(msg);
+}
+
+void TaskHandler::replan() {
+
+	// TODO: Wait for force reservation
+	/*
+	if(isBiddingForForceReservation()) {
+		return;
+	}
+	*/
+	// TODO: put reservation on current position.
+
+	// reset task to latest possible path planning state if necessary
+	if(isTaskInExecution()) {
+		isReplanning = true;
+		switch (currentTask->getState()) {
+			case Task::State::TO_SOURCE:
+				// transportation task
+				motionPlanner->stop();
+				currentTask->setState(Task::State::WAITING);
+				break;
+
+			case Task::State::TO_TARGET:
+				// transportation or charging task
+				motionPlanner->stop();
+				if(currentTask->isCharging()) {
+					currentTask->setState(Task::State::WAITING);
+				} else if(currentTask->isTransportation()) {
+					currentTask->setState(Task::State::RESERVING_TARGET);
+				}
+				break;
+
+			default:
+				// Task::State::WAITING, APPROACH_SOURCE, LEAVE_SOURCE, PICKUP, RESERVING_TARGET, 
+				// 		APPROACH_TARGET, DROPOFF, LEAVE_TARGET, FINISHED, CHARGING
+				// do nothing
+				break;
+		}
+	}
 }

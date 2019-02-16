@@ -81,6 +81,7 @@ add_message_files(
 		TaskAnnouncement.msg
 		TaskEvaluation.msg
 		TaskRating.msg
+		TaskStarted.msg
 		TraySensor.msg
 		PackagePool.msg
 		Robot.msg

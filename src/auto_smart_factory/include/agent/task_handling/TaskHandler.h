@@ -14,6 +14,7 @@
 #include "auto_smart_factory/TaskAnnouncement.h"
 #include "auto_smart_factory/TaskRating.h"
 #include "auto_smart_factory/TaskEvaluation.h"
+#include "auto_smart_factory/TaskStarted.h"
 #include "agent/path_planning/Map.h"
 #include "agent/MotionPlanner.h"
 #include "agent/Gripper.h"
@@ -24,7 +25,7 @@ class Agent;
 class TaskHandler
 {
 	public:
-    	explicit TaskHandler(Agent* agent, ros::Publisher* scorePublish, ros::Publisher* evalPub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm);
+    	explicit TaskHandler(Agent* agent, ros::Publisher* scorePublish, ros::Publisher* evalPub, ros::Publisher* startedPub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm);
 
     	void publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId, double estimatedDuration);
 		void rejectTask(unsigned int requestId);
@@ -58,6 +59,8 @@ class TaskHandler
 		void announcementCallback(const auto_smart_factory::TaskAnnouncement& tA);
 
 	private:
+		void replan();
+
 		void sendEvaluationData();
 
 		void answerAnnouncements();
@@ -88,11 +91,17 @@ class TaskHandler
 		// a pointer to the publisher for evaluations
 		ros::Publisher* evalPub;
 
+		// a pointer to the publisher for started tasks
+		ros::Publisher* startedPub;
+
 		// the task was changed to the next one in queue
 		bool isNextTask = false;
 
 		// the current task has tried to reserve a path to target
 		bool hasTriedToReservePathToTarget = false;
+
+		// is currently replanning
+		bool isReplanning = false;
 
 		// the list of unanswered rask announcements
 		std::list<auto_smart_factory::TaskAnnouncement> announcements;

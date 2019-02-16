@@ -11,6 +11,7 @@
 #include <thread>
 
 #include "auto_smart_factory/TaskState.h"
+#include "auto_smart_factory/TaskStarted.h"
 #include "auto_smart_factory/GetStorageState.h"
 #include "auto_smart_factory/AssignTask.h"
 #include "auto_smart_factory/RobotConfiguration.h"
@@ -18,7 +19,6 @@
 #include "auto_smart_factory/GripperState.h"
 #include "auto_smart_factory/ReserveStorageTray.h"
 #include "task_planner/RobotCandidate.h"
-
 #include "task_planner/TaskRequirements.h"
 #include "task_planner/TaskData.h"
 #include "task_planner/InputTaskRequirements.h"
@@ -85,6 +85,13 @@ protected:
 	bool superviseExecution();
 
 	/**
+	 * Busy wait for acknowledgement that task execution has started
+	 * This function has no timeout as tasks can be queued to be executed an unkown
+	 * amount of time in the future 
+	 */
+	void waitForTaskStartedAck();
+	
+	/**
 	 * Busy wait for a load acknowledgment by tray sensor and robot.
 	 *
 	 * \todo Implement timeout detection based on estimated time
@@ -101,6 +108,12 @@ protected:
 	 * @return True if acknowledgments were received before timeout
 	 */
 	bool waitForUnloadAck();
+
+	/**
+	 * Used to receive if a task has started
+	 * @param msg task started
+	 */
+	void receiveTaskStarted(const auto_smart_factory::TaskStarted& msg);
 
 	/**
 	 * Used to receive storage updates.
@@ -132,6 +145,7 @@ protected:
 
 	bool loadAck, unloadAck;
 	bool robotGrabAck, robotReleaseAck;
+	bool taskStarted;
 };
 
 typedef std::shared_ptr<Task> TaskPtr;

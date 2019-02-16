@@ -37,6 +37,7 @@
 #include "auto_smart_factory/CollisionAction.h"
 #include "auto_smart_factory/TaskAnnouncement.h"
 #include "auto_smart_factory/TaskEvaluation.h"
+#include "auto_smart_factory/TaskStarted.h"
 #include "agent/path_planning/ReservationManager.h"
 #include "agent/path_planning/Map.h"
 #include "agent/path_planning/RobotHardwareProfile.h"
@@ -227,6 +228,9 @@ protected:
 
 	// Publisher for TaskHandler
 	ros::Publisher taskrating_pub;
+
+	// Publisher for task Planner task started messages
+	ros::Publisher taskStarted_pub;
 
 	// Ros visualisation
 	ros::Publisher visualisationPublisher;

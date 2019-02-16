@@ -9,6 +9,7 @@
 #include "task_planner/TaskPlanner.h"
 #include "auto_smart_factory/StorePackage.h"
 #include "auto_smart_factory/RetrievePackage.h"
+#include "auto_smart_factory/TaskStarted.h"
 
 using namespace auto_smart_factory;
 
@@ -64,6 +65,8 @@ bool Task::superviseExecution() {
 
 	// supervise robot using TaskData
 	// this should be executed in a separate task since it includes waiting
+	state.status = "Waiting for starting acknowledgement";
+	waitForTaskStartedAck();
 
 	state.status = "Waiting for load acknowledgment.";
 
@@ -111,41 +114,58 @@ bool Task::superviseExecution() {
 	return true;
 }
 
+void Task::receiveTaskStarted(const auto_smart_factory::TaskStarted& msg){
+	if(msg.started && getId() == msg.taskId){
+		taskStarted = true;
+	}
+}
+
 void Task::receiveLoadStorageUpdate(const StorageUpdate& msg) {
 	if(msg.state.id == taskData.robotOffer.source.id && msg.action == StorageUpdate::DEOCCUPATION) {
 		loadAck = true;
-		//ROS_INFO("[task %d] Received tray load ack from tray %d.", getId(), msg.state.id);
+		// ROS_INFO("[task %d] Received tray load ack from tray %d.", getId(), msg.state.id);
 	} else if(msg.state.id == taskData.robotOffer.source.id && msg.action == StorageUpdate::OCCUPATION) {
 		loadAck = false;
-		//ROS_WARN("[task %d] Package that should be removed from tray %d was again put into it.", getId(), msg.state.id);
+		ROS_WARN("[task %d] Package that should be removed from tray %d was again put into it.", getId(), msg.state.id);
 	}
 }
 
 void Task::receiveUnloadStorageUpdate(const StorageUpdate& msg) {
 	if(msg.state.id == taskData.robotOffer.target.id && msg.action == StorageUpdate::OCCUPATION) {
 		unloadAck = true;
-		//ROS_INFO("[task %d] Received tray unload ack from tray %d.", getId(), msg.state.id);
+		// ROS_INFO("[task %d] Received tray unload ack from tray %d.", getId(), msg.state.id);
 	} else if(msg.state.id == taskData.robotOffer.target.id && msg.action == StorageUpdate::DEOCCUPATION) {
 		unloadAck = false;
-		//ROS_WARN("[task %d] Package that should be put into tray %d was again removed from it.", getId(), msg.state.id);
+		ROS_WARN("[task %d] Package that should be put into tray %d was again removed from it.", getId(), msg.state.id);
 	}
 }
 
 void Task::receiveRobotGripperUpdate(const auto_smart_factory::GripperState& msg) {
 	if(msg.loaded) {
 		robotGrabAck = true;
-		//ROS_INFO("[task %d] Received gripper grab ack from robot.", getId());
+		// ROS_INFO("[task %d] Received gripper grab ack from robot.", getId());
 
 		if(msg.package.id != taskData.package.id || msg.package.type_id != taskData.package.type_id) {
-			ROS_ERROR("[task %d] Robot %s grabbed package is not the package this task got assigned! (assigned package id=%d type=%d, grabbed package id=%d type=%d)", getId(), taskData.robotOffer.robotId.c_str(), taskData.package.id, taskData.package.type_id, msg.package.id, msg.package.type_id);
+			ROS_ERROR("[task %d] Robot %s grabbed package from tray %d is not the package this task got assigned! (assigned package id=%d type=%d, grabbed package id=%d type=%d)", getId(), taskData.robotOffer.robotId.c_str(), taskData.allocatedSource->getId(), taskData.package.id, taskData.package.type_id, msg.package.id, msg.package.type_id);
 		}
 	} else {
 		robotReleaseAck = true;
-		//ROS_INFO("[task %d] Received gripper release ack from robot.", getId());
+		// ROS_INFO("[task %d] Received gripper release ack from robot.", getId());
 
 		if(msg.package.id != taskData.package.id || msg.package.type_id != taskData.package.type_id) {
-			ROS_ERROR("[task %d] Robot %s released package is not the package this task got assigned! (assigned package id=%d type=%d, released package id=%d type=%d)", getId(), taskData.robotOffer.robotId.c_str(), taskData.package.id, taskData.package.type_id, msg.package.id, msg.package.type_id);
+			ROS_ERROR("[task %d] Robot %s released package to tray %d is not the package this task got assigned! (assigned package id=%d type=%d, released package id=%d type=%d)", getId(), taskData.robotOffer.robotId.c_str(), taskData.allocatedTarget->getId(), taskData.package.id, taskData.package.type_id, msg.package.id, msg.package.type_id);
 		}
+	}
+}
+
+void Task::waitForTaskStartedAck() {
+	ros::NodeHandle n;
+	taskStarted = false;
+
+	ros::Subscriber startedTaskSub = n.subscribe("/" + taskData.robotOffer.robotId + "/task_started", 1000, &Task::receiveTaskStarted, this);
+	ros::Rate r(5);
+	while(!taskStarted){
+		r.sleep();
 	}
 }
 
