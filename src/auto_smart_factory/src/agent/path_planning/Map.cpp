@@ -43,13 +43,13 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 		int id = std::stoi(idStr);
 		Point pos = Point(static_cast<float>(idlePosition.pose.x), static_cast<float>(idlePosition.pose.y));
 		
-		reservations.emplace_back(pos, Point(ROBOT_RADIUS * 2.f, ROBOT_RADIUS * 2.f), 0, infiniteReservationStartTime, infiniteReservationTime, id);
+		reservations.emplace_back(pos, Point(Path::getReservationSize(), Path::getReservationSize()), 0, infiniteReservationStartTime, infiniteReservationTime, id);
 	}
 }
 
 bool Map::isInsideAnyStaticInflatedObstacle(const Point& point) const {
 	for(const Rectangle& obstacle : obstacles) {
-		if(obstacle.isInsideInflated(point)) {
+		if(Math::isPointInRectangle(point, obstacle)) {
 			return true;
 		}
 	}
@@ -235,7 +235,7 @@ void Map::deleteReservationsFromAgent(int agentId) {
 	}
 }
 
-void Map::addReservations(std::vector<Rectangle> newReservations) {
+void Map::addReservations(const std::vector<Rectangle>& newReservations) {
 	for(const auto& r : newReservations) {
 		reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime(), r.getOwnerId());
 	}

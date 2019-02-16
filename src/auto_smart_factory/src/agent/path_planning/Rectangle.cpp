@@ -42,31 +42,6 @@ Rectangle::Rectangle(Point pos_, Point size_, float rotation_, double startTime,
 Rectangle::Rectangle(Point pos, Point size, float rotation) :
 		Rectangle(pos, size, rotation, -1, -1, -1) {}
 
-bool Rectangle::isInsideInflated(const Point& point) const {
-	bool isInAxisAligned = isInsideAxisAlignedInflated(point);
-	
-	if(isAxisAligned) {
-		 return isInAxisAligned;
-	} else {
-		if(!isInAxisAligned) {
-			return false;
-		}
-		
-		Point ab = pointsInflated[1] - pointsInflated[0];
-		Point bc = pointsInflated[2] - pointsInflated[1];
-		Point ap = point - pointsInflated[0];
-		Point bp = point - pointsInflated[1];
-
-		return (0 <= Math::dotProduct(ab, ap) && Math::dotProduct(ab, ap) <= Math::dotProduct(ab, ab) &&
-		        0 <= Math::dotProduct(bc, bp) && Math::dotProduct(bc, bp) <= Math::dotProduct(bc, bc));	
-	}
-}
-
-bool Rectangle::isInsideAxisAlignedInflated(const Point& point) const {
-	return !(point.x < minXInflated || point.x > maxXInflated ||
-	         point.y < minYInflated || point.y > maxYInflated);
-}
-
 const Point* Rectangle::getPointsInflated() const {
 	return pointsInflated;
 }
