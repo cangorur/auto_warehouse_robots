@@ -35,11 +35,16 @@ void TaskHandler::rejectTask(unsigned int requestId) {
 }
 
 void TaskHandler::update() { 
-	if(reservationManager->isReplanningNecessary() || reservationManager->isReplanningBeneficial()) {
+	if(reservationManager->isReplanningNecessary()) {
+		ROS_FATAL("[Task Handler %d] Replanning Necessary", agent->getAgentIdInt());
 		replan();
 		answerAnnouncements();
 		return;
 	} else {
+		if(reservationManager->isReplanningBeneficial()) {
+			ROS_FATAL("[Task Handler %d] Replanning beneficial", agent->getAgentIdInt());
+			replan();
+		}
 		answerAnnouncements();
 	}
 	
@@ -163,7 +168,7 @@ void TaskHandler::executeTask() {
 			break;
 
 		case Task::State::RESERVING_TARGET:
-			if (motionPlanner->isDone() && !isReplanning) {
+			if (motionPlanner->isDone() || isReplanning) {
 				if(reservationManager->isBidingForReservation() && !isReplanning) {
 					break;
 				}
@@ -419,9 +424,10 @@ void TaskHandler::replan() {
 	if(reservationManager->hasRequestedEmergencyStop()) {
 		return;
 	}
-	ROS_FATAL("[Task Handler %d] Replanning", agent->getAgentIdInt());
-	// put reservation on current position
-	reservationManager->publishEmergencyStop(Point(motionPlanner->getPositionAsOrientedPoint()));
+	if(reservationManager->isReplanningNecessary()){
+		// put reservation on current position, only when replanning necessary not benefical
+		reservationManager->publishEmergencyStop(Point(motionPlanner->getPositionAsOrientedPoint()));
+	}
 
 	// reset task to latest possible path planning state if necessary
 	if(isTaskInExecution()) {
