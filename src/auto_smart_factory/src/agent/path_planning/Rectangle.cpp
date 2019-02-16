@@ -26,7 +26,7 @@ Rectangle::Rectangle(Point pos_, Point size_, float rotation_, double startTime,
 	}
 
 	// Generate Points
-	Point diagonal = size * 0.4f;
+	Point diagonal = size * 0.2f;
 	Point diagonalMirrored = Point(diagonal.x, -diagonal.y);
 	pointsNonInflated[0] = pos + Math::rotateVector(diagonal, rotation);
 	pointsNonInflated[2] = pos + Math::rotateVector(diagonal, rotation + 180);

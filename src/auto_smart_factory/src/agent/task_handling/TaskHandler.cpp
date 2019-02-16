@@ -36,7 +36,10 @@ void TaskHandler::rejectTask(unsigned int requestId) {
 
 void TaskHandler::update() { 
 	if(reservationManager->isReplanningNecessary()) {
+<<<<<<< HEAD
 		ROS_FATAL("[Task Handler %d] Replanning Necessary", agent->getAgentIdInt());
+=======
+>>>>>>> 7c59d0758d7b0e9734072a33d61f38d78ea27aff
 		replan();
 		answerAnnouncements();
 		return;
@@ -435,13 +438,11 @@ void TaskHandler::replan() {
 		switch (currentTask->getState()) {
 			case Task::State::TO_SOURCE:
 				// transportation task
-				motionPlanner->stop();
 				currentTask->setState(Task::State::WAITING);
 				break;
 
 			case Task::State::TO_TARGET:
 				// transportation or charging task
-				motionPlanner->stop();
 				if(currentTask->isCharging()) {
 					currentTask->setState(Task::State::WAITING);
 				} else if(currentTask->isTransportation()) {
