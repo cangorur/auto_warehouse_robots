@@ -84,6 +84,8 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 	// MP Precision mode time
 	duration += finalPointAdditionalTime;
 	batteryConsumption += hardwareProfile->getIdleBatteryConsumption(finalPointAdditionalTime);
+
+	departureTimes.push_back(startTimeOffset + duration - 0.25f);
 	
 	// TargetPoint - getTurningTime also works with direction reversed. nodes.size is guaranteed to be >= 2
 	double finalTurningTime = timing.getTurningTime(Math::toDeg(end.o), nodes.at(nodes.size() - 2), nodes.back());

@@ -247,22 +247,13 @@ bool ReservationManager::isReplanningBeneficialWithoutTheseReservations(const st
 	if(!pathToReserve.isValid()) {
 		return false;
 	}
-	
-	double now = ros::Time::now().toSec();
-	const std::vector<Point>& nodes = pathToReserve.getNodes();
-	const std::vector<double>& departureTimes = pathToReserve.getDepartureTimes();
 
-	for(int i = 0; i < nodes.size() - 1; i++) {
-		if(now > departureTimes[i + 1]) {
-			continue;
-		}
-
-		for(const Rectangle& oldReservation : oldReservations) {
-			if(oldReservation.doesOverlapTimeRange(departureTimes[i], departureTimes[i + 1], agentId) && Math::doesLineSegmentIntersectRectangle(nodes[i], nodes[i + 1], oldReservation)) {
-				return true;
-			}
-		}
+	for(const Rectangle& r : oldReservations) {
+		if(Math::isPointInRectangle(Point(pathToReserve.getEnd().x, pathToReserve.getEnd().y), r)) {
+			return true;
+		}	
 	}
+	
 
 	return false;
 }
