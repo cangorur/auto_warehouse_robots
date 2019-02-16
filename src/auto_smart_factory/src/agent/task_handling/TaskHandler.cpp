@@ -35,7 +35,7 @@ void TaskHandler::rejectTask(unsigned int requestId) {
 }
 
 void TaskHandler::update() { 
-	if(reservationManager->isReplanningNecessary() || reservationManager->isReplanningBeneficial()) {
+	if(reservationManager->isReplanningNecessary()) {
 		replan();
 		answerAnnouncements();
 		return;
@@ -428,7 +428,8 @@ void TaskHandler::replan() {
 		return;
 	}
 	ROS_FATAL("[Task Handler %d] Replanning", agent->getAgentIdInt());
-	// put reservation on current position
+	
+	motionPlanner->stop();
 	reservationManager->publishEmergencyStop(Point(motionPlanner->getPositionAsOrientedPoint()));
 
 	// reset task to latest possible path planning state if necessary
@@ -437,13 +438,11 @@ void TaskHandler::replan() {
 		switch (currentTask->getState()) {
 			case Task::State::TO_SOURCE:
 				// transportation task
-				motionPlanner->stop();
 				currentTask->setState(Task::State::WAITING);
 				break;
 
 			case Task::State::TO_TARGET:
 				// transportation or charging task
-				motionPlanner->stop();
 				if(currentTask->isCharging()) {
 					currentTask->setState(Task::State::WAITING);
 				} else if(currentTask->isTransportation()) {
