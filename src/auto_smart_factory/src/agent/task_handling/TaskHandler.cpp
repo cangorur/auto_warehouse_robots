@@ -34,18 +34,15 @@ void TaskHandler::rejectTask(unsigned int requestId) {
 	scorePublisher->publish(scoreMessage);
 }
 
-void TaskHandler::update() {
-	/* 
-	if(TODO VINCENT: add replanningNecessary function) {
+void TaskHandler::update() { 
+	if(reservationManager->isReplanningNecessary()) {
 		replan();
 		answerAnnouncements();
 		return;
 	} else {
 		answerAnnouncements();
 	}
-	*/
-	// TODO: remove this answerAnnouncements
-	answerAnnouncements();
+	
 	if (!isTaskInExecution()) {
 		if (isIdle()) {
 			// check battery status,
@@ -113,6 +110,7 @@ void TaskHandler::executeTask() {
 			if(reservationManager->getHasReservedPath() && !isNextTask && !isReplanning) {
 				if (currentTask->isTransportation()) {
 					currentTask->setState(Task::State::TO_SOURCE);
+					// sending the message here might cause this message to appear multiple times for one task, but the additional messages should be ignored
 					auto_smart_factory::TaskStarted msg;
 					msg.started = true;
 					msg.taskId = ((TransportationTask*) currentTask)->getId();
@@ -428,14 +426,12 @@ void TaskHandler::sendEvaluationData() {
 }
 
 void TaskHandler::replan() {
-
-	// TODO: Wait for force reservation
-	/*
-	if(isBiddingForForceReservation()) {
+	if(reservationManager->hasRequestedEmergencyStop()) {
 		return;
 	}
-	*/
-	// TODO: put reservation on current position.
+	ROS_FATAL("[Task Handler %d] Replanning", agent->getAgentIdInt());
+	// put reservation on current position
+	reservationManager->publishEmergencyStop(Point(motionPlanner->getPositionAsOrientedPoint()));
 
 	// reset task to latest possible path planning state if necessary
 	if(isTaskInExecution()) {
