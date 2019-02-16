@@ -207,7 +207,7 @@ bool ReservationManager::isReplanningNecessary() const {
 
 bool ReservationManager::isInOwnReservation(Point pos, double time) {
 	for(const Rectangle& r : lastReservedPathReservations) {
-		if(r.getStartTime() <= time && time <= r.getEndTime() && Math::isPointInRectangle(pos, r)) {
+		if(r.getStartTime() - 0.5f <= time && time <= r.getEndTime() + 0.5f && Math::isPointInRectangle(pos, r)) {
 			return true;
 		}
 	}

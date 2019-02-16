@@ -36,13 +36,13 @@ void TaskHandler::rejectTask(unsigned int requestId) {
 
 void TaskHandler::update() { 
 	if(reservationManager->isReplanningNecessary()) {
-		ROS_FATAL("[Task Handler %d] Replanning Necessary", agent->getAgentIdInt());
+		ROS_WARN("[Task Handler %d] Replanning Necessary", agent->getAgentIdInt());
 		replan();
 		answerAnnouncements();
 		return;
 	} else {
 		if(reservationManager->isReplanningBeneficial()) {
-			ROS_FATAL("[Task Handler %d] Replanning beneficial", agent->getAgentIdInt());
+			ROS_INFO("[Task Handler %d] Replanning beneficial", agent->getAgentIdInt());
 			replan();
 		}
 		answerAnnouncements();
