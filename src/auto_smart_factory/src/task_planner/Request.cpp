@@ -213,7 +213,7 @@ bool Request::getRobotCandidates(const std::vector<Tray>& sourceTrayCandidates, 
 	
 	waitForRobotScores(Request::timeoutDuration, ros::Rate(10));
 
-	if(robotCandidates.size() > 1){
+	if(robotCandidates.size() >= 1){
 		std::sort(robotCandidates.begin(), robotCandidates.end(),
 			          [](const RobotCandidate& first, const RobotCandidate& second) {
 				          return first.score < second.score;
