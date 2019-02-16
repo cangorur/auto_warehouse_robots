@@ -27,6 +27,7 @@ public:
 	OrientedPoint getLastReservedPathTarget() const;
 	bool hasRequestedEmergencyStop() const;
 	bool isReplanningNecessary() const;
+	bool isReplanningBeneficial() const;
 	
 private:
 	// General info
@@ -57,6 +58,10 @@ private:
 	
 	bool isInOwnReservation(Point pos, double time);
 	bool doesEmergencyStopPreventsOwnPath(const std::vector<Rectangle>& emergencyStopReservations) const;
+	bool isReplanningBeneficialWithoutTheseReservations(const std::vector<Rectangle>& oldReservations) const;
+	
+	// More optimal path
+	bool replanningBeneficial;
 	
 };
 

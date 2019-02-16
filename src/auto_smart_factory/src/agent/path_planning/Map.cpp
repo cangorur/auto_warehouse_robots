@@ -223,16 +223,20 @@ void Map::deleteExpiredReservations(double time) {
 	}
 }
 
-void Map::deleteReservationsFromAgent(int agentId) {
+std::vector<Rectangle> Map::deleteReservationsFromAgent(int agentId) {
+	std::vector<Rectangle> reservations;
 	auto iter = reservations.begin();
 
 	while(iter != reservations.end()) {
 		if((*iter).getOwnerId() == agentId) {
+			reservations.push_back(*iter);
 			iter = reservations.erase(iter);
 		} else {
 			iter++;
 		}
 	}
+	
+	return reservations;
 }
 
 void Map::addReservations(const std::vector<Rectangle>& newReservations) {

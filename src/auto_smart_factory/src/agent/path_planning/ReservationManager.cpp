@@ -33,20 +33,26 @@ void ReservationManager::update(Point pos) {
 void ReservationManager::reservationBroadcastCallback(const auto_smart_factory::ReservationBroadcast& msg) {
 	// This only works if the messages arrive in order
 	if(msg.isReservationBroadcastOrDenial) {
-		map->deleteReservationsFromAgent(msg.ownerId);
+		std::vector<Rectangle> oldReservations = map->deleteReservationsFromAgent(msg.ownerId);
+		if(isReplanningBeneficialWithoutTheseReservations(oldReservations)) {
+			replanningBeneficial = true;
+		}
+		
 		std::vector<Rectangle> reservations = getReservationsFromMessage(msg);
-		map->addReservations(reservations);
+		map->addReservations(reservations);		
 		
 		if(msg.ownerId == agentId) {
 			if(msg.isEmergencyStop) {
 				requestedEmergencyStop = false;
-				replanningNecessary = false;
 			} else {
 				hasReservedPath = true;
 				bidingForReservation = false;
 				pathRetrievedCount = 0;
 				lastReservedPathTarget = pathToReserve.getEnd();
-			}			
+			}
+
+			replanningNecessary = false;
+			replanningBeneficial = false;
 			saveReservationsAsLastReserved(msg);
 			
 		} else {
@@ -54,7 +60,7 @@ void ReservationManager::reservationBroadcastCallback(const auto_smart_factory::
 				if(doesEmergencyStopPreventsOwnPath(reservations)) {
 					replanningNecessary = true;
 				}
-			}	
+			}
 		}
 	} else if (msg.ownerId == agentId) {
 		// Reservation was denied
@@ -222,4 +228,28 @@ bool ReservationManager::doesEmergencyStopPreventsOwnPath(const std::vector<Rect
     }
     
     return false;
+}
+
+bool ReservationManager::isReplanningBeneficialWithoutTheseReservations(const std::vector<Rectangle>& oldReservations) const {
+	double now = ros::Time::now().toSec();
+	const std::vector<Point>& nodes = pathToReserve.getNodes();
+	const std::vector<double>& departureTimes = pathToReserve.getDepartureTimes();
+
+	for(int i = 0; i < nodes.size() - 1; i++) {
+		if(now > departureTimes[i + 1]) {
+			continue;
+		}
+
+		for(const Rectangle& oldReservation : oldReservations) {
+			if(oldReservation.doesOverlapTimeRange(departureTimes[i], departureTimes[i + 1], agentId) && Math::doesLineSegmentIntersectRectangle(nodes[i], nodes[i + 1], oldReservation)) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+bool ReservationManager::isReplanningBeneficial() const {
+	return replanningBeneficial;
 }

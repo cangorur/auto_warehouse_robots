@@ -56,7 +56,7 @@ public:
 	// Reservations
 	void addReservations(const std::vector<Rectangle>& newReservations);
 	void deleteExpiredReservations(double time);
-	void deleteReservationsFromAgent(int agentId);
+	std::vector<Rectangle> deleteReservationsFromAgent(int agentId);
 		
 	// Path queries
 	Path getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime, double targetReservationTime, bool ignoreStartingReservations);
