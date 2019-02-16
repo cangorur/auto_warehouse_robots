@@ -34,7 +34,7 @@ void ReservationManager::reservationBroadcastCallback(const auto_smart_factory::
 	// This only works if the messages arrive in order
 	if(msg.isReservationBroadcastOrDenial) {
 		std::vector<Rectangle> oldReservations = map->deleteReservationsFromAgent(msg.ownerId);
-		if(isReplanningBeneficialWithoutTheseReservations(oldReservations)) {
+		if(!replanningBeneficial && isReplanningBeneficialWithoutTheseReservations(oldReservations)) {
 			replanningBeneficial = true;
 		}
 		
