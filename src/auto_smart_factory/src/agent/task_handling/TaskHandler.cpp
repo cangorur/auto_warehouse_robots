@@ -36,10 +36,7 @@ void TaskHandler::rejectTask(unsigned int requestId) {
 
 void TaskHandler::update() { 
 	if(reservationManager->isReplanningNecessary()) {
-<<<<<<< HEAD
 		ROS_FATAL("[Task Handler %d] Replanning Necessary", agent->getAgentIdInt());
-=======
->>>>>>> 7c59d0758d7b0e9734072a33d61f38d78ea27aff
 		replan();
 		answerAnnouncements();
 		return;
