@@ -10,5 +10,4 @@ class RandomInitBatteryOverlay(MorseOverlay):
         
         # set random initial charge
         # minimum 20% to avoid initially broken down robots
-        #self.overlaid_object.local_data['charge'] = random.uniform(20., 100.)
         self.overlaid_object.local_data['charge'] = random.uniform(96., 100.)        

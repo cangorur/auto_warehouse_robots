@@ -234,7 +234,9 @@ protected:
 	unsigned long lastTimestamp = 0;
 
 	/// Time frequeny for generating packages in seconds
-	unsigned long breakDuration = 5;
+	double breakDuration = 0.0;
+	double breakIncrease = 0.2;
+	double maxBreakDuration = 5;
 
 	/// Flag if the request plans should be considered
 	bool doRequestPlans = false;

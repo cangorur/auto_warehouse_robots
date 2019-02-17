@@ -93,7 +93,7 @@ private:
 	float chargingRate;
 	float motorDrainingRate;
 
-	float chargingAppropriateLevel = 96.f;
+	float chargingAppropriateLevel = 95.f;
 	
 	// Above this value no score penalty is applied
 	float upperThreshold = 50.00;
@@ -104,7 +104,7 @@ private:
 	// Below minimum => no new tasks
 	float criticalMinimum = 10.00;
 	
-	float estimatedBatteryConsumptionToNearestChargingStation = 10.f;
+	float estimatedBatteryConsumptionToNearestChargingStation = 5.f;
 
 	//Vector of all the Charging Trays
 	std::vector <auto_smart_factory::Tray> charging_trays;
