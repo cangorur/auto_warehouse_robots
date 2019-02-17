@@ -280,6 +280,8 @@ void PackageGenerator::updateTimer() {
 	timeval time;
 	gettimeofday(&time, 0);
 	lastTimestamp = time.tv_sec;
+	
+	breakDuration = std::min(breakDuration + breakIncrease, maxBreakDuration);
 }
 
 
