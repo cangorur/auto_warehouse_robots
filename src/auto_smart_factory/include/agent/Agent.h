@@ -5,7 +5,6 @@
 #include "agent/Gripper.h"
 #include "agent/ObstacleDetection.h"
 #include "agent/task_handling/TaskHandler.h"
-#include "agent/task_handling/TrayScore.h"
 #include "agent/ChargingManagement.h"
 
 #include <random>
@@ -36,11 +35,15 @@
 #include "auto_smart_factory/WarehouseConfiguration.h"
 #include "auto_smart_factory/RobotConfiguration.h"
 #include "auto_smart_factory/CollisionAction.h"
-#include "auto_smart_factory/ReservationCoordination.h"
+#include "auto_smart_factory/TaskAnnouncement.h"
+#include "auto_smart_factory/TaskEvaluation.h"
+#include "auto_smart_factory/TaskStarted.h"
 #include "agent/path_planning/ReservationManager.h"
 #include "agent/path_planning/Map.h"
 #include "agent/path_planning/RobotHardwareProfile.h"
 
+// forward declaration of TaskHandler class
+class TaskHandler;
 
 /* The agent component manages all robot related stuff and holds a motion planner, obstacle detection &
  * gripper instance. Furthermore it subscribes to robots sensor topics like pose, laser & battery sensor
@@ -76,6 +79,11 @@ public:
 	 * keep this agent doing what it is supposed to. E.g. publish the heartbeat at every step.
 	 * That is why it is called every tick (see AgentNode.cpp). */
 	void update();
+
+	/* Returns the tray with the given tray id.
+	 * @param tray_id: id of the specified tray
+	 * @return tray with the specified id */
+	auto_smart_factory::Tray getTray(unsigned int tray_id);
 
 	ros::Publisher* getVisualisationPublisher();
 
@@ -124,11 +132,6 @@ protected:
 	 * @return True if the task has successfully been assigned */
 	bool assignTask(auto_smart_factory::AssignTask::Request& req, auto_smart_factory::AssignTask::Response& res);
 
-	/* Returns the tray with the given tray id.
-	 * @param tray_id: id of the specified tray
-	 * @return tray with the specified id */
-	auto_smart_factory::Tray getTray(unsigned int tray_id);
-
 	/* Pose sensor callback handler. Calls the update function of the motion planner.
 	 * @param msg: information about the position & orientation of the robot on the map */
 	void poseCallback(const geometry_msgs::PoseStamped& msg);
@@ -140,6 +143,7 @@ protected:
 	/* Battery sensor callback handler. Saves battery level.
 	 * @param msg: battery level [0.0 - 100.0] */
 	void batteryCallback(const std_msgs::Float32& msg);
+	
 	/* Collision msg Callback handler. Disables the obstacle_detection and stops the motion_planner instances for the
 	* time_to_halt specified in the msg. If there is not time_to_halt specified in the msg. That means that the agent has
 	* to wait until a new path chunk is assigned to it to continue performing its task
@@ -148,13 +152,19 @@ protected:
 	**/
 	void collisionAlertCallback(const auto_smart_factory::CollisionAction& msg);
 	
+	/*
+	 * Publishes the visualisation message
+	 */
 	void publishVisualisation(const ros::TimerEvent& e);
 
-	// Task Handler
+	/*
+	 * Callback for task Announcement messages computing the score and answering with score message
+	 * @param taskAnnouncement: the taskAnnouncement message
+	 */
 	void announcementCallback(const auto_smart_factory::TaskAnnouncement& taskAnnouncement);
 	
 	// Reservation coordination
-	void reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg);
+	void reservationBroadcastCallback(const auto_smart_factory::ReservationBroadcast& msg);
 
 	// ROS Nodehandle
 	ros::NodeHandle n;
@@ -180,14 +190,11 @@ protected:
 	// Flag that shows whether this agent has already been registered at the task planner
 	bool registered = false;
 
-	// Flag that shows if the robot is currently in idle state or not
-	bool isIdle = true;
-
 	// Publisher/Subscriber for ReservationCoordination
 	ReservationManager* reservationManager;
 	
-	ros::Publisher reservationCoordination_pub;
-	ros::Subscriber reservationCoordination_sub;
+	ros::Publisher reservationRequest_pub;
+	ros::Subscriber reservationBroadcast_sub;
 
 	// Server for initialization request
 	ros::ServiceServer init_srv;
@@ -222,6 +229,9 @@ protected:
 	// Publisher for TaskHandler
 	ros::Publisher taskrating_pub;
 
+	// Publisher for task Planner task started messages
+	ros::Publisher taskStarted_pub;
+
 	// Ros visualisation
 	ros::Publisher visualisationPublisher;
 	ros::Timer vizPublicationTimer;
@@ -234,6 +244,9 @@ protected:
 
 	// Publisher for heartbeat topic
 	ros::Publisher heartbeat_pub;
+
+	/// publisher for evaluation
+	ros::Publisher taskEvaluation_pub;
 
 	// pointer to instance of the Charging Management
 	ChargingManagement* chargingManagement;
@@ -265,6 +278,7 @@ protected:
 	// current battery level
 	float batteryLevel = 100.0;
 
+	// the color of the agent
 	std_msgs::ColorRGBA agentColor;
 };
 

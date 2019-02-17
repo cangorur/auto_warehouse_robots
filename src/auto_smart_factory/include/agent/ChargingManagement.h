@@ -4,10 +4,13 @@
 #include "ros/ros.h"
 #include <string>
 #include <vector>
-#include "auto_smart_factory/WarehouseConfiguration.h"
-#include "auto_smart_factory/RobotHeartbeat.h"
+#include <auto_smart_factory/WarehouseConfiguration.h>
+#include <auto_smart_factory/RobotConfiguration.h>
+#include <auto_smart_factory/RobotHeartbeat.h>
 #include "auto_smart_factory/Tray.h"
 #include "agent/path_planning/Map.h"
+#include "std_msgs/Float32.h"
+
 
 class Agent;
 /**
@@ -20,7 +23,7 @@ public:
 	 * Default constructor.
 	 * Sets up the initialize service.
 	 */
-	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration, Map* map);
+	ChargingManagement(Agent* agent, auto_smart_factory::WarehouseConfiguration warehouse_configuration, auto_smart_factory::RobotConfiguration robot_configuration, Map* map);
 
 	virtual ~ChargingManagement() = default;
 
@@ -59,6 +62,18 @@ public:
 	// Checks if the battery consumption is possible given the theoretical battery level
 	bool isConsumptionPossible(double agentBatteryLevel, double consumption);
 
+	/*
+	 * Gets charging time
+	 * @param: Battery consumption till robot reaches charging station
+	 */
+	double getChargingTime(double consumptionTillCS);
+
+	/*
+	 * Get battery consumption by the robot
+	 * @param: Time robot spent idling
+	 * @param: Distance traveled by the robot
+	 */
+
 private:
 	Agent* agent;
 
@@ -71,13 +86,22 @@ private:
 	// information about the current warehouse map
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;
 
-	// Max energy level of the agent to participate in charging
-	float upperThreshold = 70.00;
+	// information about the role of this agent
+	auto_smart_factory::RobotConfiguration robotConfig;
 
-	// Energy level between upper and critical for non-linear score
+	float dischargingRate;
+	float chargingRate;
+	float motorDrainingRate;
+
+	float chargingAppropriateLevel = 96.f;
+	
+	// Above this value no score penalty is applied
+	float upperThreshold = 50.00;
+
+	// greater => quadratic function, smaller => linear function
 	float lowerThreshold = 35.00;
 
-	// Minimum energy level of the agent to participate in charging
+	// Below minimum => no new tasks
 	float criticalMinimum = 10.00;
 	
 	float estimatedBatteryConsumptionToNearestChargingStation = 10.f;

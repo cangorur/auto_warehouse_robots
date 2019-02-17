@@ -17,6 +17,7 @@ public:
 	double getBatteryConsumption() override;
 	double getDuration() override;
 	void setState(Task::State state) override;
+	void fillInEvaluationData(auto_smart_factory::TaskEvaluation* msg) override;
 	
 	static double getPickUpTime();
 	static double getDropOffTime();
@@ -35,6 +36,11 @@ protected:
 
 	static double pickUpTime;
 	static double dropOffTime;
+
+	// Time information for post-mortem analysis
+	double startedPickUpAt;
+	double finishedPickUpAt;
+	double startedDropOffAt;
 };
 
 #endif /* AGENT_TRANSPORTATIONTASK_H_ */

@@ -3,7 +3,8 @@
         "width" : 16,
         "height" : 16,
 	"margin" : 0.5,
-	"theta_star_resolution" : 0.5
+	"theta_star_resolution" : 0.5,
+	"mergeObstacles" : true
     },
     "tray_geometry" : {
         "width" : 0.5,
@@ -369,7 +370,7 @@
         },
 	{
             "name" : "robot_4",
-            "type" : "Pioneer P3-DX Light",
+            "type" : "Pioneer P3-DX",
             "idle_position" : {
                  "x" : 14.0,
                  "y" : 6.5,
@@ -405,7 +406,7 @@
         },
 	{
             "name" : "robot_7",
-            "type" : "Pioneer P3-DX",
+            "type" : "Pioneer P3-DX Light",
             "idle_position" : {
                  "x" : 14.0,
                  "y" : 11.5,

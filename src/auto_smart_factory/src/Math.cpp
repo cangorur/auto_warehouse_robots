@@ -1,5 +1,7 @@
 #include <cmath>
 #include <time.h>
+#include <include/Math.h>
+
 
 #include "Math.h"
 #include "agent/path_planning/Point.h"
@@ -310,14 +312,52 @@ bool Math::doesLineSegmentIntersectNonAxisAlignedRectangle(const Point& lStart, 
 
 bool Math::isPointInRectangle(const Point& p, const Rectangle& rectangle) {
 	// https://math.stackexchange.com/a/190373
-	//(0<AM⋅AB<AB⋅AB)∧(0<AM⋅AD<AD⋅AD)
-	const Point* rect = rectangle.getPointsInflated();
+	// (0<AM⋅AB<AB⋅AB)∧(0<AM⋅AD<AD⋅AD)
+	bool isInAxisAligned = isPointInAxisAlignedRectangle(p, rectangle);
+
+	if(rectangle.getIsAxisAligned()) {
+		return isInAxisAligned;
+	} else {
+		if(!isInAxisAligned) {
+			return false;
+		}
+
+		const Point* rect = rectangle.getPointsInflated();
+
+		Point ap = rect[0] - p;
+		Point ab = rect[0] - rect[1];
+		Point ad = rect[0] - rect[3];
+
+		return (0 < dotProduct(ap, ab) && dotProduct(ap, ab) < dotProduct(ab, ab)) && (0 < dotProduct(ap, ad) && dotProduct(ap, ad) < dotProduct(ad, ad));
+	}
+}
+
+bool Math::doesLineSegmentIntersectNonInflatedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle) {
+	return false;
+	const Point* rect = rectangle.getPointsNonInflated();
+
+	return (doLineSegmentsIntersect(lStart, lEnd, rect[0], rect[1]) ||
+	        doLineSegmentsIntersect(lStart, lEnd, rect[1], rect[2]) ||
+	        doLineSegmentsIntersect(lStart, lEnd, rect[2], rect[3]) ||
+	        doLineSegmentsIntersect(lStart, lEnd, rect[3], rect[0]) ||
+	        isPointInNonInflatedRectangle(lStart, rectangle) ||
+	        isPointInNonInflatedRectangle(lEnd, rectangle));
+}
+
+bool Math::isPointInNonInflatedRectangle(const Point& p, const Rectangle& rectangle) {
+	return false;
+	const Point* rect = rectangle.getPointsNonInflated();
 
 	Point ap = rect[0] - p;
 	Point ab = rect[0] - rect[1];
 	Point ad = rect[0] - rect[3];
 
-	return (0 < dotProduct(ap,ab) && dotProduct(ap,ab) < dotProduct(ab, ab)) && (0 < dotProduct(ap, ad) && dotProduct(ap, ad) < dotProduct(ad, ad));
+	return (0 < dotProduct(ap, ab) && dotProduct(ap, ab) < dotProduct(ab, ab)) && (0 < dotProduct(ap, ad) && dotProduct(ap, ad) < dotProduct(ad, ad));
+}
+
+bool Math::isPointInAxisAlignedRectangle(const Point& p, const Rectangle& rectangle) {
+	return !(p.x < rectangle.getMinXInflated() || p.x > rectangle.getMaxXInflated() ||
+	         p.y < rectangle.getMinYInflated() || p.y > rectangle.getMaxYInflated());
 }
 
 bool Math::doesLineSegmentIntersectRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle) {

@@ -6,6 +6,7 @@
  */
 
 #include <boost/property_tree/json_parser.hpp>
+#include "Math.h"
 #include "config_server/MapConfigServer.h"
 
 using namespace boost::property_tree;
@@ -51,6 +52,9 @@ void MapConfigServer::readMapConfig(std::string file) {
 	// read tray config
 	warehouseConfig.tray_geometry.width = configTree.get<float>("tray_geometry.width");
 	warehouseConfig.tray_geometry.height = configTree.get<float>("tray_geometry.height");
+	
+	mergeObstacles = configTree.get<bool>("map.mergeObstacles");
+	ROS_INFO("Merging obstacles");
 
 	// read trays
 	warehouseConfig.trays.clear();
@@ -105,23 +109,52 @@ void MapConfigServer::readMapConfig(std::string file) {
 }
 
 void MapConfigServer::addStaticObstacles() {
-	warehouseConfig.map_configuration.obstacles.clear();
+	std::vector<Rectangle> rectangles;
 	
 	for(const auto_smart_factory::Tray& tray : warehouseConfig.trays) {
-		setRectangularObstacle(tray.x, tray.y, warehouseConfig.tray_geometry.width, warehouseConfig.tray_geometry.height, 0);
+		setRectangularObstacle(rectangles, tray.x, tray.y, warehouseConfig.tray_geometry.width, warehouseConfig.tray_geometry.height, 0);
 	}
+	
+	// Convert
+	warehouseConfig.map_configuration.obstacles.clear();
+	
+	for(const Rectangle& r : rectangles) {
+		auto_smart_factory::Rectangle rectangle;
+		rectangle.posX = r.getPosition().x;
+		rectangle.posY = r.getPosition().y;
+		rectangle.sizeX = r.getSize().x;
+		rectangle.sizeY = r.getSize().y;
+		rectangle.rotation = r.getRotation();
+		rectangle.ownerId = -1;
+
+		warehouseConfig.map_configuration.obstacles.push_back(rectangle);
+	}	
 }
 
-void MapConfigServer::setRectangularObstacle(float x, float y, float width, float height, float rotation) {
-	auto_smart_factory::Rectangle rectangle;
-	rectangle.posX = x;
-	rectangle.posY = y;
-	rectangle.sizeX = width;
-	rectangle.sizeY = height;
-	rectangle.rotation = rotation;	
-	rectangle.ownerId = -1;
+void MapConfigServer::setRectangularObstacle(std::vector<Rectangle>& rectangles, float x, float y, float width, float height, float rotation) {
+	Rectangle r1 = Rectangle(Point(x, y), Point(width, height), rotation);
 	
-	warehouseConfig.map_configuration.obstacles.push_back(rectangle);
+	if(mergeObstacles) {
+		// Try to merge with existing ones
+		auto iter = rectangles.begin();
+		while(iter != rectangles.end()) {
+			if(!(r1.getMinXInflated() > iter->getMaxXInflated() || r1.getMinYInflated() > iter->getMaxYInflated() ||
+			     iter->getMinXInflated() > r1.getMaxXInflated() || iter->getMinYInflated() > r1.getMaxYInflated())) {
+				// Construct new rectangle
+				double minX = std::min(r1.getMinXInflated(), iter->getMinXInflated()) + ROBOT_RADIUS;
+				double maxX = std::max(r1.getMaxXInflated(), iter->getMaxXInflated()) - ROBOT_RADIUS;
+				double minY = std::min(r1.getMinYInflated(), iter->getMinYInflated()) + ROBOT_RADIUS;
+				double maxY = std::max(r1.getMaxYInflated(), iter->getMaxYInflated()) - ROBOT_RADIUS;
+
+				r1 = Rectangle(Point((maxX + minX) * 0.5f, (maxY + minY) * 0.5f), Point(maxX - minX, maxY - minY), 0);
+				rectangles.erase(iter);
+				break;
+			}
+			iter++;
+		}
+	}
+	
+	rectangles.push_back(r1);
 }
 
 bool MapConfigServer::configCallback(auto_smart_factory::GetWarehouseConfig::Request& req, auto_smart_factory::GetWarehouseConfig::Response& res) {

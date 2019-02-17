@@ -14,11 +14,17 @@ public:
 	double getBatteryConsumption() override;
 	double getDuration() override;
 	void setState(Task::State state) override;
+	void fillInEvaluationData(auto_smart_factory::TaskEvaluation* msg) override;
 	
 	static double getChargingTime();
 
+	void adjustChargingStation(uint32_t targetID, Path targetPath, double startTime);
+
 protected:
 	static double chargingTime;
+
+	// Time information for post-mortem analysis
+	double arrivedAt;
 };
 
 #endif /* AGENT_CHARGINGTASK_H_ */

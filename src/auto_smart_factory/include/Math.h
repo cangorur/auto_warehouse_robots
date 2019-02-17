@@ -13,7 +13,9 @@
 #define EPS 1e-6
 
 // Defined as 0.25 + error margin
-#define ROBOT_RADIUS 0.27f
+#define ROBOT_RADIUS 0.275f
+#define APPROACH_DISTANCE 0.1f
+#define DISTANCE_WHEN_APPROACHED 0.05f
 
 // Rotation  0  = >
 // Rotation 90  = v
@@ -56,7 +58,9 @@ public:
 	static bool areLineSegmentsParallel(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End);
 	static bool doLineSegmentsIntersect(const Point& l1Start, const Point& l1End, const Point& l2Start, const Point& l2End);
 	static bool doesLineSegmentIntersectRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
+	static bool doesLineSegmentIntersectNonInflatedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
 	static bool isPointInRectangle(const Point& p, const Rectangle& rectangle);
+	static bool isPointInNonInflatedRectangle(const Point& p, const Rectangle& rectangle);
 
 	static double projectPointOnLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
 	static double getDistanceToLineSegment(const Point& lStart, const Point& lEnd, const Point& point);
@@ -79,6 +83,7 @@ public:
 private:
 	static bool doesLineSegmentIntersectAxisAlignedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
 	static bool doesLineSegmentIntersectNonAxisAlignedRectangle(const Point& lStart, const Point& lEnd, const Rectangle& rectangle);
+	static bool isPointInAxisAlignedRectangle(const Point& p, const Rectangle& rectangle);
 };
 
 #endif //PROJECT_MATH_H

@@ -2,41 +2,37 @@
 #define PROJECT_RESERVATIONMANAGER_H
 
 #include "ros/publisher.h"
-#include "auto_smart_factory/ReservationCoordination.h"
+#include "auto_smart_factory/ReservationBroadcast.h"
 #include "agent/path_planning/OrientedPoint.h"
 #include "Map.h"
-#include "ReservationBid.h"
 #include "queue"
 #include "vector"
 
 class ReservationManager {
 public:
-	ReservationManager(ros::Publisher* publisher, Map* map, int agentId, int agentCount);
+	ReservationManager(ros::Publisher* publisher, Map* map, int agentId, auto_smart_factory::WarehouseConfiguration warehouseConfig);
 	~ReservationManager() = default;
 
-	void update();
-	void reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg);
+	void update(Point pos);
+	void reservationBroadcastCallback(const auto_smart_factory::ReservationBroadcast& msg);
 
 	// Path reservations
 	void startBiddingForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint, double targetReservationDuration);
+	void publishEmergencyStop(Point pos);
 	
 	// Getter
-	Path getReservedPath();
+	Path getLastReservedPath();
 	bool isBidingForReservation() const;
 	bool getHasReservedPath() const;
+	bool hasRequestedEmergencyStop() const;
+	bool isReplanningNecessary() const;
+	bool isReplanningBeneficial() const;
 	
 private:
 	// General info
 	ros::Publisher* publisher;
 	Map* map;	
 	int agentId;
-	int agentCount;
-	
-	// Current auction
-	int currentAuctionId;
-	double currentAuctionStartTime;
-	int currentAuctionReceivedBids;
-	ReservationBid currentAuctionHighestBid;
 	
 	// Path bidding
 	bool bidingForReservation;
@@ -47,22 +43,22 @@ private:
 	double targetReservationDuration;
 	int pathRetrievedCount;
 	
-	// Delayed auction start
-	bool initializeNewDelayedAuction;
-	double timestampToInitializeDelayedAuction;
-
-	std::vector<std::pair<int, ReservationBid>> reservationBidQueue;
+	void saveReservationsAsLastReserved(const auto_smart_factory::ReservationBroadcast& msg);
+	std::vector<Rectangle> getReservationsFromMessage(const auto_smart_factory::ReservationBroadcast& msg);
+	void requestPathReservation();
+	bool calculateNewPath();
 	
-	const double emptyAuctionDelay = 0.2f;
-	const double pathReservationStartingTimeOffset = 0.5f;
-	const double auctionTimeout = 6.0f;
+	// Error State detection
+	std::vector<Rectangle> lastReservedPathReservations;
+	bool replanningNecessary;
+	bool requestedEmergencyStop;
 	
-	void addReservations(const auto_smart_factory::ReservationCoordination& msg);
-	void publishReservations(std::vector<Rectangle> reservations);
-	void updateHighestBid(ReservationBid newBid);
-	void startNewAuction(int newAuctionId, double newAuctionStartTime);
-	void initializeNewAuction(int currentAuctionId, double newAuctionStartTime);
-	void closeAuction();
+	bool isInOwnReservation(Point pos, double time);
+	bool doesEmergencyStopPreventsOwnPath(const std::vector<Rectangle>& emergencyStopReservations) const;
+	bool isReplanningBeneficialWithoutTheseReservations(const std::vector<Rectangle>& oldReservations) const;
+	
+	// More optimal path
+	bool replanningBeneficial;
 	
 };
 

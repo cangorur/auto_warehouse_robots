@@ -16,24 +16,25 @@ private:
 	
 	// Faster physic processing
 	Point pointsInflated[4];
+	Point pointsNonInflated[4];
 	bool isAxisAligned;
-	float minXInflated, maxXInflated, minYInflated, maxYInflated;
+	double minXInflated, maxXInflated, minYInflated, maxYInflated;
 
 public:
 	Rectangle(Point pos, Point size, float rotation);
 	Rectangle(Point pos, Point size, float rotation, double startTime, double endTime, int ownerId);
 	
-	bool isInsideInflated(const Point& point) const;
 	const Point* getPointsInflated() const;
+	const Point* getPointsNonInflated() const;
 	Point getPosition() const;
 	Point getSize() const;
 	float getRotation() const;
 	
 	bool getIsAxisAligned() const;
-	float getMinXInflated() const;
-	float getMaxXInflated() const;
-	float getMinYInflated() const;
-	float getMaxYInflated() const;
+	double getMinXInflated() const;
+	double getMaxXInflated() const;
+	double getMinYInflated() const;
+	double getMaxYInflated() const;
 
 	bool doesOverlapTimeRange(double start, double end, int ownerId) const;
 	double getStartTime() const;
@@ -42,10 +43,10 @@ public:
 	
 	int getOwnerId() const;
 
-private:
-	bool isInsideAxisAlignedInflated(const Point& point) const;	
-
 };
+
+bool operator ==(const Rectangle& left, const Rectangle& right);
+bool operator !=(const Rectangle& left, const Rectangle& right);
 
 
 #endif //PROTOTYPE_RECTANGLE_HPP

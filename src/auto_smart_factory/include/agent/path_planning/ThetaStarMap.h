@@ -19,13 +19,14 @@ public:
 	ThetaStarMap() = default;
 	ThetaStarMap(Map* map, float resolution);
 
-	bool isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const;
-	bool isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
-	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const;
-	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const;
-	const GridNode* getNodeClosestTo(const Point& pos) const;
+	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, const std::vector<Rectangle>& smallerReservations) const;
+	bool isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, const std::vector<Rectangle>& smallerReservations) const;
 	
-	void addAdditionalNode(Point pos);
+	const GridNode* getNodeClosestTo(const Point& pos) const;
+
+	std::vector<Rectangle> getRectanglesOnStartingPoint(Point p) const;
+
+	bool addAdditionalNode(Point pos);
 	
 	// Debugging
 	void listAllReservationsIn(Point p);

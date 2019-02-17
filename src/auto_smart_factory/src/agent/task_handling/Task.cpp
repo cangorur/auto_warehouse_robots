@@ -1,6 +1,3 @@
-
-#include <include/agent/task_handling/Task.h>
-
 #include "agent/task_handling/Task.h"
 
 Task::Task(uint32_t targetId, Path pathToTarget, Type type, double startTime) : 
@@ -11,6 +8,9 @@ Task::Task(uint32_t targetId, Path pathToTarget, Type type, double startTime) :
 	targetDuration = pathToTarget.getDuration();
 	targetBatCons = pathToTarget.getBatteryConsumption();
 	targetPosition = pathToTarget.getEnd();
+	startedAt = 0.0f;
+	finishedAt = 0.0f;
+	assignedAt = ros::Time::now().toSec();
 }
 
 uint32_t Task::getTargetTrayId() {

@@ -23,9 +23,9 @@
 #include "auto_smart_factory/NewPackageOutput.h"
 #include "auto_smart_factory/RegisterAgent.h"
 #include "auto_smart_factory/TaskPlannerState.h"
+#include "auto_smart_factory/TaskEvaluation.h"
 
 #include "task_planner/Task.h"
-#include "auto_smart_factory/Tray.h"
 #include "task_planner/Request.h"
 
 /**
@@ -75,6 +75,11 @@ public:
                 	 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, 
 					 uint32_t requestId);
 
+	/* 
+	 * Function checking if something has changed and if so tries to assign not yet assigned tasks
+	 */
+	void update();
+
 private:
 	/**
 	 * Initialize service handler.
@@ -105,8 +110,7 @@ private:
 	 * @param res Response object
 	 * @return Always true
 	 */
-	bool
-	newInputRequest(auto_smart_factory::NewPackageInputRequest& req, auto_smart_factory::NewPackageInputResponse& res);
+	bool newInputRequest(auto_smart_factory::NewPackageInputRequest& req, auto_smart_factory::NewPackageInputResponse& res);
 
 	/**
 	 * Handle new output request.
@@ -165,19 +169,38 @@ private:
 
 	void receiveTaskResponse(const auto_smart_factory::TaskRating& tr);
 
-	/// extract tray data into points and ids
+	/** 
+	 * copy as many tray data ids from targetTrays and sourceTrays into task announcement object as the maxTrays class variable allows
+	 * This leads to maximum (maxTrays)^2 possible combinations of source and target trays the robots have to compute
+	 * @param vector of possible source trays
+	 * @param vector of possible target trays
+	 * @param the taskAnnouncement message which should hold the tray ids
+	 */
 	void extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa);
 
+	/*
+	 * sends the evaluation data of the current task
+	 */
+	void sendEvaluationData();
 
 private:
+	/// flag indicating that something has changed and that the task planner should try to assign tasks
+	bool resourcesChanged = false;
+
+	// frequency with which the task planner checks if it can assign previously unassigned tasks
+	ros::Duration updateFrequency;
+
+	/// the thread in which the task planner update function is working
+	std::thread updateExecutionThread;
+
 	/// all registered robots: mapping their id to their configuration and their state (idle/busy with idle = true)
 	std::map<std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> > registeredRobots;
 
 	/// List of pending input requests
-	std::vector<RequestPtr> inputRequests;
+	std::list<Request> inputRequests;
 
 	/// List of pending ouput requests
-	std::vector<RequestPtr> outputRequests;
+	std::list<Request> outputRequests;
 
 	/// Map of running tasks
 	std::map<unsigned int, TaskPtr> runningTasks;
@@ -223,6 +246,9 @@ private:
 
 	/// Task planner task announcement publisher
 	ros::Publisher taskAnnouncerPub;
+
+	/// the maximum number of trays that are announced in a task announcement if is set to 0 all will be announced
+	const uint64_t maxTrays = 3;
 };
 
 #endif /* AUTO_SMART_FACTORY_SRC_TASK_PLANNER_TASKPLANNER_H_ */

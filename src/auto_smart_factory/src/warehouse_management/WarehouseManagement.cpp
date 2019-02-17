@@ -44,7 +44,7 @@ bool WarehouseManagement::getWarehouseConfiguration() {
 	auto_smart_factory::GetWarehouseConfig srv;
 	ros::service::waitForService(srv_name.c_str());
 	if(client.call(srv)) {
-		ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
+		//ROS_INFO("[warehouse management]: %s success!", srv_name.c_str());
 		warehouseConfig = srv.response.warehouse_configuration;
 		return true;
 	} else {
@@ -376,41 +376,25 @@ void WarehouseManagement::receiveHeartbeat(auto_smart_factory::RobotHeartbeat hb
 std_msgs::ColorRGBA WarehouseManagement::batteryLevelToColor(double batteryLevel) {
 	std_msgs::ColorRGBA c;
 	c.a = 1;
-	if(batteryLevel >= 75.0) {
-		c.r = 0;
-		c.g = 2.0 - (batteryLevel - 50.0) / 25.0;
-		c.b = 1;
-	} else if(batteryLevel >= 50) {
-		c.r = 0;
-		c.g = 1;
-		c.b = (batteryLevel - 50.0) / 25.0;
-	} else if(batteryLevel >= 25.0) {
-		c.r = 2.0 - batteryLevel / 25.0;
-		c.g = 1;
-		c.b = 0;
-	} else if(batteryLevel > 0) {
-		c.r = 1;
-		c.g = batteryLevel / 25.0;
-		c.b = 0;
-	} else if(batteryLevel <= 0.0) {
-		c.r = 0;
-		c.g = 0;
-		c.b = 0;
-	}
+	auto b = static_cast<float>(batteryLevel / 100.f);
+	
+	c.r = std::min(2.0f * (1.0f - b), 1.f);
+	c.g = std::min(2.0f * b, 1.f);
+	c.b = 0.f;
+	
 	return c;
 }
 
 void WarehouseManagement::receiveTaskPlannerState(auto_smart_factory::TaskPlannerState msg) {
+	return;
 	ROS_INFO("---------- Current state of the task planner: ----------");
 
-	ROS_INFO("Pending requests:");
-
+	//ROS_INFO("Pending requests:");
 	for(const auto_smart_factory::RequestStatus& req : msg.requests) {
-		ROS_INFO("- [R %d] Type: %s    Status: %s", req.id, req.type.c_str(), req.status.c_str());
+		//ROS_INFO("- [R %d] Type: %s    Status: %s", req.id, req.type.c_str(), req.status.c_str());
 	}
 
-	ROS_INFO("Current Tasks:");
-
+	//ROS_INFO("Current Tasks:");
 	for(const auto_smart_factory::TaskState& task : msg.tasks) {
 		ROS_INFO("- [T %d] Status: %s", task.id, task.status.c_str());
 	}

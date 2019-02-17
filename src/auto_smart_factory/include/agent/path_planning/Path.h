@@ -6,11 +6,15 @@
 #include "agent/path_planning/Point.h"
 #include "agent/path_planning/Rectangle.h"
 #include "RobotHardwareProfile.h"
+#include "TimingCalculator.h"
 
 class Path {
 public:
-	double maxReservationLength = 3;
-	double reservationTimeMargin = 1.5f;
+	double maxDrivingReservationDuration = 1.75f;
+	double reservationTimeMarginAhead = 0.15f;
+	double reservationTimeMarginBehind = 0.1f;
+	
+	double finalPointAdditionalTime = 0.35f;
 	
 private:
 	double startTimeOffset = 0;
@@ -18,21 +22,25 @@ private:
 	std::vector<double> waitTimes;
 	RobotHardwareProfile* hardwareProfile;
 	
-	double targetReservationTime;
-	
 	OrientedPoint start;
 	OrientedPoint end;
 	bool isValidPath;
 
 	// Computed internally for motion planner
 	std::vector<double> departureTimes;
-	float distance;
-	float duration;
-	float batteryConsumption;
+	double distance;
+	double duration;
+	double batteryConsumption;
+	
+	// For timing
+	TimingCalculator timing;
+	double targetReservationTime;
+	std::vector<double> drivingTimes;
+	std::vector<double> onSpotTimes;
 
 public:
 	explicit Path();
-	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, double targetReservationTime, OrientedPoint start, OrientedPoint end);
+	explicit Path(double startTimeOffset, std::vector<Point> nodes, std::vector<double> waitTimes, RobotHardwareProfile* hardwareProfile, double targetReservationTime, OrientedPoint start, OrientedPoint end, int agentId);
 	
 	virtual ~Path() = default;
 
@@ -40,24 +48,27 @@ public:
 	const std::vector<double>& getWaitTimes() const;
 	const std::vector<double>& getDepartureTimes() const;
 
-	float getDistance() const;
+	double getDistance() const;
 	double getDuration() const;
-	float getBatteryConsumption() const;
+	double getBatteryConsumption() const;
 	double getStartTimeOffset() const;
 	RobotHardwareProfile* getRobotHardwareProfile() const;
 
-	const std::vector<Rectangle> generateReservations(int ownerId) const;
+	const std::vector<Rectangle> generateReservations(int ownerId, bool startsAtTray) const;
 	
 	// ROS visualisation
 	visualization_msgs::Marker getVisualizationMsgLines(std_msgs::ColorRGBA color);
 
-	OrientedPoint getStart();
-	OrientedPoint getEnd();
-	
+	OrientedPoint getStart() const;
+	OrientedPoint getEnd() const;
 	bool isValid() const;
+	
+	static double getReservationSize();
 
+private:
+	void generateReservationsForSegment(std::vector<Rectangle>& reservations, Point startPoint, Point endPoint, double timeAtStartPoint, double deltaDuration, int ownerId) const;
+	void generateReservationsForCurvePoints(std::vector<Rectangle>& reservations, std::vector<Point> points, double timeAtStartPoint, double deltaTime, int ownerId) const;
+	void generateReservationForTray(std::vector<Rectangle>& reservations, OrientedPoint pos, double reservationStartTime, double duration, int ownerId) const;
 };
-
-bool operator ==(const Path& p1, const Path& p2);
 
 #endif /* AGENT_PATH_H_ */

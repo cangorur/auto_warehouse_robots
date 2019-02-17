@@ -19,7 +19,7 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 		ownerId(ownerId)
 {
 	if(infiniteReservationTime == 0) {
-		infiniteReservationTime = ros::Time::now().toSec() + 1000000.f;
+		infiniteReservationTime = ros::Time::now().toSec() + 100000.f;
 	}
 	
 	this->obstacles.clear();
@@ -43,13 +43,13 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 		int id = std::stoi(idStr);
 		Point pos = Point(static_cast<float>(idlePosition.pose.x), static_cast<float>(idlePosition.pose.y));
 		
-		reservations.emplace_back(pos, Point(ROBOT_RADIUS * 2.f, ROBOT_RADIUS * 2.f), 0, infiniteReservationStartTime, infiniteReservationTime, id);
+		reservations.emplace_back(pos, Point(Path::getReservationSize(), Path::getReservationSize()), 0, infiniteReservationStartTime, infiniteReservationTime, id);
 	}
 }
 
-bool Map::isInsideAnyInflatedObstacle(const Point& point) const {
+bool Map::isInsideAnyStaticInflatedObstacle(const Point& point) const {
 	for(const Rectangle& obstacle : obstacles) {
-		if(obstacle.isInsideInflated(point)) {
+		if(Math::isPointInRectangle(point, obstacle)) {
 			return true;
 		}
 	}
@@ -67,52 +67,62 @@ bool Map::isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const {
 	return true;
 }
 
-bool Map::isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
-	if(!isStaticLineOfSightFree(pos1, pos2)) {
-		return false;
-	}
-
-	for(const Rectangle& reservation : reservations) {
-		if(reservation.doesOverlapTimeRange(startTime, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
-TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
+TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, const std::vector<Rectangle>& smallerReservations) const {
 	TimedLineOfSightResult result;
 
 	if(!isStaticLineOfSightFree(pos1, pos2)) {
 		result.blockedByStatic = true;
 		return result;
 	}
-
+	
 	for(const Rectangle& reservation : reservations) {
-		// Directly blocked
-		if(reservation.doesOverlapTimeRange(startTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
-			result.blockedByTimed = true;
-			if(reservation.getFreeAfter() > result.freeAfter) {
-				result.freeAfter = reservation.getFreeAfter();
+		if(std::find(smallerReservations.begin(), smallerReservations.end(), reservation) != smallerReservations.end()) {
+			// Directly blocked
+			if(reservation.doesOverlapTimeRange(startTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectNonInflatedRectangle(pos1, pos2, reservation)) {
+				result.blockedByTimed = true;
+				if(reservation.getFreeAfter() > result.freeAfter) {
+					result.freeAfter = reservation.getFreeAfter();
+				}
 			}
-		}
 
-		// Upcoming obstacles			
-		if(Math::isPointInRectangle(pos2, reservation) && reservation.getStartTime() > endTime && reservation.getOwnerId() != ownerId) {
-			result.hasUpcomingObstacle = true;
-			// Todo make adaptive - for now assume that every reservation can be left in x seconds
-			double minTimeToLeave = 8;
+			// Upcoming obstacles			
+			if(Math::isPointInNonInflatedRectangle(pos2, reservation) && reservation.getStartTime() > endTime && reservation.getOwnerId() != ownerId) {
+				result.hasUpcomingObstacle = true;
+				// Todo make adaptive - for now assume that every reservation can be left in x seconds
+				double minTimeToLeave = 5;
 
-			double lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
-			if(lastValidEntryTime < result.lastValidEntryTime) {
-				result.lastValidEntryTime = lastValidEntryTime;
-				result.freeAfterUpcomingObstacle = reservation.getEndTime();
+				double lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
+				if(lastValidEntryTime < result.lastValidEntryTime) {
+					result.lastValidEntryTime = lastValidEntryTime;
+					result.freeAfterUpcomingObstacle = reservation.getEndTime();
+				}
 			}
-		}
+		} else {
+			// Directly blocked
+			if(reservation.doesOverlapTimeRange(startTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+				result.blockedByTimed = true;
+				if(reservation.getFreeAfter() > result.freeAfter) {
+					result.freeAfter = reservation.getFreeAfter();
+				}
+			}
+
+			// Upcoming obstacles			
+			if(Math::isPointInRectangle(pos2, reservation) && reservation.getStartTime() > endTime && reservation.getOwnerId() != ownerId) {
+				result.hasUpcomingObstacle = true;
+				// Todo make adaptive - for now assume that every reservation can be left in x seconds
+				double minTimeToLeave = 5;
+
+				double lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
+				if(lastValidEntryTime < result.lastValidEntryTime) {
+					result.lastValidEntryTime = lastValidEntryTime;
+					result.freeAfterUpcomingObstacle = reservation.getEndTime();
+				}
+			}	
+		}		
 	}
 	
-	double maxTime = endTime + 10000.f;
+	// Treat "infinite" obstacles as completely blocked and dont wait forever
+	double maxTime = endTime + 1000.f;
 	if((result.blockedByTimed && result.freeAfter > maxTime) ||
 	   (result.hasUpcomingObstacle && (result.lastValidEntryTime > maxTime || result.freeAfterUpcomingObstacle > maxTime))) {
 		result.blockedByStatic = true;
@@ -121,23 +131,32 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 	return result;
 }
 
-bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const {
+bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, const std::vector<Rectangle>& smallerReservations) const {
 	// Does not check against static obstacles, this is only used to verify a already planned connection
-	
 	double endTime = startTime + waitingTime + drivingTime;
 
 	for(const Rectangle& reservation : reservations) {
-		// Check if the waiting part is free
-		if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime, ownerId) && Math::isPointInRectangle(pos1, reservation)) {
-			//printf("Connection dropped due to waiting: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
-			return false;
-		}
+		if(std::find(smallerReservations.begin(), smallerReservations.end(), reservation) != smallerReservations.end()) {
+			// Check if the waiting part is free
+			if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime - 0.01f, ownerId) && Math::isPointInNonInflatedRectangle(pos1, reservation)) {
+				return false;
+			}
 
-		// Check if the driving part is free
-		if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.001f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
-			//printf("Connection dropped due to driving: %.1f/%.1f -> %.1f/%.1f : wait: %.1f, drive: %.1f\n", pos1.x, pos1.y, pos2.x, pos2.y, waitingTime, drivingTime);
-			return false;
-		}
+			// Check if the driving part is free
+			if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectNonInflatedRectangle(pos1, pos2, reservation)) {
+				return false;
+			}
+		} else {
+			// Check if the waiting part is free
+			if(reservation.doesOverlapTimeRange(startTime, startTime + waitingTime - 0.01f, ownerId) && Math::isPointInRectangle(pos1, reservation)) {
+				return false;
+			}
+
+			// Check if the driving part is free
+			if(reservation.doesOverlapTimeRange(startTime + waitingTime + 0.01f, endTime, ownerId) && Math::doesLineSegmentIntersectRectangle(pos1, pos2, reservation)) {
+				return false;
+			}	
+		}		
 	}
 
 	return true;
@@ -149,7 +168,7 @@ Point Map::getRandomFreePoint() const {
 	
 	while(!pointFound) {
 		point = Point(Math::getRandom(-width/2.f, width/2.f), Math::getRandom(-height/2.f, height/2.f));
-		pointFound = !isInsideAnyInflatedObstacle(point);
+		pointFound = !isInsideAnyStaticInflatedObstacle(point);
 	}
 	
 	return point;	
@@ -167,34 +186,37 @@ float Map::getMargin() const {
 	return margin;
 }
 
-Path Map::getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime, double targetReservationTime) {
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
-	return thetaStarPathPlanner.findPath(start, end, startingTime, targetReservationTime);
+Path Map::getThetaStarPath(const OrientedPoint& start, const OrientedPoint& end, double startingTime, double targetReservationTime, bool ignoreStartingReservations) {
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, start, end, startingTime, targetReservationTime, ignoreStartingReservations);
+	return thetaStarPathPlanner.findPath();
 }
 
 Path Map::getThetaStarPath(const OrientedPoint& start, const auto_smart_factory::Tray& end, double startingTime, double targetReservationTime) {
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	const OrientedPoint endPoint = getPointInFrontOfTray(end);
 	
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, start, endPoint, startingTime, targetReservationTime, false);
 	//ROS_INFO("Computing path from (%f/%f) to tray of type %s (%f/%f)", start.x, start.y, end.type.c_str(), getPointInFrontOfTray(end).x, getPointInFrontOfTray(end).y);
-	return thetaStarPathPlanner.findPath(start, endPoint, startingTime, targetReservationTime);
+	
+	return thetaStarPathPlanner.findPath();
 }
 
 Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const OrientedPoint& end, double startingTime, double targetReservationTime) {
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	const OrientedPoint startPoint = getPointInFrontOfTray(start);
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, startPoint, end, startingTime, targetReservationTime, false);
 	
 	//ROS_INFO("Computing path from tray of type %s (%f/%f) to (%f/%f)", start.type.c_str(), getPointInFrontOfTray(start).x, getPointInFrontOfTray(start).y, end.x, end.y);
-	return thetaStarPathPlanner.findPath(startPoint, end, startingTime, targetReservationTime);
+	
+	return thetaStarPathPlanner.findPath();
 }
 
 Path Map::getThetaStarPath(const auto_smart_factory::Tray& start, const auto_smart_factory::Tray& end, double startingTime, double targetReservationTime) {
-	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile);
 	const OrientedPoint startPoint = getPointInFrontOfTray(start);
 	const OrientedPoint endPoint = getPointInFrontOfTray(end);
-	
+
+	ThetaStarPathPlanner thetaStarPathPlanner(&thetaStarMap, hardwareProfile, startPoint, endPoint, startingTime, targetReservationTime, false);
 	//ROS_INFO("Computing path from tray of type %s (%f/%f) to tray of type %s (%f/%f)", start.type.c_str(), getPointInFrontOfTray(start).x, getPointInFrontOfTray(start).y, end.type.c_str(), getPointInFrontOfTray(end).x, getPointInFrontOfTray(end).y);
-	return thetaStarPathPlanner.findPath(startPoint, endPoint, startingTime, targetReservationTime);
+	
+	return thetaStarPathPlanner.findPath();
 }
 
 bool Map::isPointInMap(const Point& pos) const {
@@ -213,19 +235,23 @@ void Map::deleteExpiredReservations(double time) {
 	}
 }
 
-void Map::deleteReservationsFromAgent(int agentId) {
+std::vector<Rectangle> Map::deleteReservationsFromAgent(int agentId) {
+	std::vector<Rectangle> deletedReservations;
 	auto iter = reservations.begin();
 
 	while(iter != reservations.end()) {
 		if((*iter).getOwnerId() == agentId) {
+			deletedReservations.push_back(*iter);
 			iter = reservations.erase(iter);
 		} else {
 			iter++;
 		}
 	}
+	
+	return deletedReservations;
 }
 
-void Map::addReservations(std::vector<Rectangle> newReservations) {
+void Map::addReservations(const std::vector<Rectangle>& newReservations) {
 	for(const auto& r : newReservations) {
 		reservations.emplace_back(r.getPosition(), r.getSize(), r.getRotation(), r.getStartTime(), r.getEndTime(), r.getOwnerId());
 	}
@@ -235,13 +261,15 @@ OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 	OrientedPoint p;
 
 	// Assume tray.orientation is in degree
-	float trayRadius = 0.51f;
-	float approachRoutineLength = 0.3f;
+	float trayRadius = 0.25f;
+	float robotRadius = ROBOT_RADIUS; // Real radius, not including margin for reservations
+	
+	float offset = trayRadius + APPROACH_DISTANCE + DISTANCE_WHEN_APPROACHED + robotRadius;
 	
 	double inputDx = std::cos(tray.orientation * PI / 180);
 	double inputDy = std::sin(tray.orientation * PI / 180);
-	p.x = static_cast<float>(tray.x + (trayRadius + approachRoutineLength + ROBOT_RADIUS) * inputDx);
-	p.y = static_cast<float>(tray.y + (trayRadius + approachRoutineLength + ROBOT_RADIUS) * inputDy);
+	p.x = static_cast<float>(tray.x + offset * inputDx);
+	p.y = static_cast<float>(tray.y + offset * inputDy);
 	p.o = static_cast<float>(Math::normalizeRad(Math::toRad(tray.orientation + 180.f)));
 	
 	return p;
@@ -451,7 +479,7 @@ void Map::listAllReservationsIn(Point p) {
 
 bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 	for(const auto& r : reservations) {
-		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId && r.getEndTime() - r.getStartTime() > 15.f) {
+		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId && r.getEndTime() - r.getStartTime() >= 150.f) {
 			return true;
 		}		
 	}
@@ -459,10 +487,18 @@ bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 	return false;
 }
 
-bool Map::isPointTargetOfAnotherRobot(const auto_smart_factory::Tray& tray) {
-	return isPointTargetOfAnotherRobot(getPointInFrontOfTray(tray));
-}
-
 int Map::getOwnerId() const {
 	return ownerId;
+}
+
+std::vector<Rectangle> Map::getRectanglesOnStartingPoint(Point p) const {
+	std::vector<Rectangle> rectangles;
+
+	for(const auto& r : reservations) {
+		if(Math::isPointInRectangle(p, r) && r.getOwnerId() != ownerId) {
+			rectangles.push_back(r);
+		}
+	}
+	
+	return rectangles;
 }

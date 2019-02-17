@@ -22,7 +22,7 @@ MotionPlanner::MotionPlanner(Agent* a, auto_smart_factory::RobotConfiguration ro
 	ros::NodeHandle n;
 	pathPub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
-	steerPid = new PidController(0.0, 1.8, 0.0, 4.0);
+	steerPid = new PidController(0.0, 2.4, 0.0, 6.0);
 }
 
 MotionPlanner::~MotionPlanner() {
@@ -33,6 +33,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	pos.update(position.x, position.y, orientation, ros::Time::now());
 	positionInitialized = true;
 
+	/* If motion planner is stopped or finished, set velocity to zero */
 	if (mode == Mode::FINISHED || mode == Mode::STOP) {
 		publishVelocity(0.0, 0.0);
 		return;
@@ -45,7 +46,6 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		} else {
 			turnTowards(alignDirection);
 		}
-
 		return;
 	}
 
@@ -55,7 +55,7 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 		return;
 	}
 
-	/* Check if path is valid */
+	/* Check if path is valid, as it is required for the following procedures */
 	if (!pathObject.isValid()) {
 		publishVelocity(0.0, 0.0);
 		mode = Mode::FINISHED;
@@ -75,22 +75,31 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 	}
 
 	/* Turn towards target orientation on spot when curve angle is above turnThreshold */
-	if (mode == Mode::TURN || std::abs(getRotationToTarget(pos, currentTarget)) >= turnThreshold || (std::abs(getRotationToTarget(pos, currentTarget)) >= 0.2 && currentTargetIndex < 2)) {
+	double rotationDifference = std::abs(getRotationToTarget(pos, currentTarget));
+	if (mode == Mode::TURN || rotationDifference >= turnThreshold || (rotationDifference >= turnThresholdFirstPoint && currentTargetIndex < 2)) {
 		mode = Mode::TURN;
 		turnTowards(currentTarget);
 		return;
 	}
 
+	/* Wait at current waypoint until departure time is reached */
 	if (previousTargetIndex >= 0 && pathObject.getDepartureTimes().at(previousTargetIndex) > ros::Time::now().toSec()) {
-		/* While waiting already turn into target direction to not waste time */
+		/* While waiting already turn into target direction to not waste time and if finished set linear and angular velocity to zero */
 		turnTowards(currentTarget);
 
-		/* If mode is driving, stop and go into WAIT mode until departure time is reached */
+		/* If mode is driving go into WAIT mode until departure time is reached, turnTowards() will either rotate or if not necessary set velocity to zero */
 		if (mode == Mode::PID || mode == Mode::READY) {
-			publishVelocity(0.0, 0.0);
 			mode = Mode::WAIT;
 		}
 		return;
+	}
+
+	/* Precision alignment to final waypoint */
+	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) <= 0.2f) {
+		if (std::abs(getRotationToTarget(pos, currentTarget)) > 0.04) {
+			turnTowards(currentTarget);
+			return;
+		}
 	}
 
 	/* Follow the path using the pid controller */
@@ -102,48 +111,67 @@ void MotionPlanner::followPath() {
 	
 	double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(pos.x, pos.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(pos.x, pos.y));
 	double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
-	angularVelocity = std::min(std::max(angularVelocity, (double) -maxTurningSpeed), (double) maxTurningSpeed);
+	angularVelocity = Math::clamp(angularVelocity, (double) -maxTurningSpeed, (double) maxTurningSpeed);
 
-	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte)-1), (double) maxDrivingSpeed - minDrivingSpeed);
+	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte) - 1.0), (double) maxDrivingSpeed - minDrivingSpeed);
+	linearVelocity = Math::clamp(linearVelocity, minDrivingSpeed, maxDrivingSpeed);
 
-	if (isCurrentPointLastPoint() && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.4f) {
-		linearVelocity = std::max(0.1, Math::getDistance(Point(pos.x, pos.y), currentTarget));
-	}
-	if ((currentTargetIndex == pathObject.getNodes().size() - 1) && Math::getDistance(Point(pos.x, pos.y), currentTarget) < 0.5f) {
-		linearVelocity = std::max(0.1, Math::getDistance(Point(pos.x, pos.y), currentTarget));
+	// Limit speed if approaching final point
+	if (getDistanceToTarget() <= distToSlowDown) {
+		linearVelocity = Math::clamp(getDistanceToTarget()*0.5, minPrecisionDrivingSpeed, linearVelocity);
 	}
 
 	publishVelocity(linearVelocity, angularVelocity);
 }
 
+double MotionPlanner::calculateLinearVelocity(double cte) {
+	double maxCteVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte) - 1.0), (double) maxDrivingSpeed - minDrivingSpeed);
+	double maxPreCurveVelocity = 0.0;
+	double maxTargetVelocity = Math::clamp(getDistanceToTarget()*0.5, minDrivingSpeed, maxDrivingSpeed);
+}
+
+double MotionPlanner::getDistanceToTarget() {
+	double distanceToNextWaypoint = Math::getDistance(Point(pos.x, pos.y), currentTarget);
+	double distanceToTarget = 0.0;
+	for(unsigned long i = currentTargetIndex+1; i < pathObject.getNodes().size(); i++) {
+		distanceToTarget += Math::getDistance(pathObject.getNodes().at(i), pathObject.getNodes().at(i-1));
+	}
+
+	return distanceToNextWaypoint+distanceToTarget;
+}
+
+double MotionPlanner::getNextCurveAngle(double distance) {
+
+}
+
 void MotionPlanner::turnTowards(Point target) {
 	double rotation = getRotationToTarget(pos, target);
-	if(std::abs(rotation) <= 0.1f) {
+	if(std::abs(rotation) <= 0.02f) {
 		/* If in align mode, the task is finished after rotation. If not, the robot should continue driving afterwards */
+		publishVelocity(0, 0);
 		if(mode == Mode::ALIGN) {
 			mode = Mode::FINISHED;
-			publishVelocity(0, 0);
 		} else {
 			mode = Mode::READY;
 		}
 		return;
 	}
-	publishVelocity(0, Math::clamp(std::abs(rotation), 0, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+	publishVelocity(0, Math::clamp(std::abs(rotation) * 2.f, 0.2f, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
 }
 
 void MotionPlanner::turnTowards(double direction) {
 	double rotation = Math::getAngleDifferenceInRad(pos.o, direction);
-	if(std::abs(rotation) <= 0.1f) {
+	if(std::abs(rotation) <= 0.02f) {
 		/* If in align mode, the task is finished after rotation. If not, the robot should continue driving afterwards */
+		publishVelocity(0, 0);
 		if(mode == Mode::ALIGN) {
 			mode = Mode::FINISHED;
-			publishVelocity(0, 0);
 		} else {
 			mode = Mode::READY;
 		}
 		return;
 	}
-	publishVelocity(0, Math::clamp(std::abs(rotation), 0.3, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
+	publishVelocity(0, Math::clamp(std::abs(rotation) * 2.f, 0.2f, maxTurningSpeed) * (rotation < 0.f ? -1.f : 1.f));
 }
 
 void MotionPlanner::alignTowards(Point target) {
@@ -171,16 +199,16 @@ void MotionPlanner::driveBackward(double distance) {
 
 void MotionPlanner::driveStraight() {
 	double currentDistance = Math::getDistance(Point(driveStartPosition.x, driveStartPosition.y), Point(pos.x, pos.y));
-	if(currentDistance >= driveDistance) {
+	if(currentDistance >= driveDistance - 0.015f) {
 		mode = Mode::FINISHED;
 		publishVelocity(0.0, 0.0);
 		return;
 	}
 
 	if(mode == Mode::FORWARD) {
-		publishVelocity(Math::clamp(currentDistance, 0.1, 0.5), 0.0);
+		publishVelocity(Math::clamp((driveDistance-currentDistance) * 1.5f, minDrivingSpeed, maxDrivingSpeed), 0.0);
 	} else {
-		publishVelocity(-Math::clamp(currentDistance, 0.1, 0.5), 0.0);
+		publishVelocity(-Math::clamp((driveDistance-currentDistance) * 1.5f, minDrivingSpeed, maxDrivingSpeed), 0.0);
 	}
 }
 
@@ -220,10 +248,15 @@ void MotionPlanner::start() {
 void MotionPlanner::stop() {
 	mode = Mode::STOP;
 	publishVelocity(0.0, 0.0);
+	publishEmptyVisualisationPath();
 }
 
 bool MotionPlanner::isDone() {
 	return mode == Mode::FINISHED;
+}
+
+bool MotionPlanner::isStopped() {
+	return mode == Mode::STOP;
 }
 
 bool MotionPlanner::hasPath() {
@@ -231,7 +264,7 @@ bool MotionPlanner::hasPath() {
 }
 
 bool MotionPlanner::isDrivingBackwards() {
-	return false;
+	return currentLinearVelocity < 0;
 }
 
 bool MotionPlanner::isWaypointReached() {
@@ -243,6 +276,8 @@ bool MotionPlanner::isWaypointReached() {
 }
 
 void MotionPlanner::publishVelocity(double speed, double angle) {
+	currentLinearVelocity = speed;
+	currentAngularVelocity = angle;
 	geometry_msgs::Twist msg;
 
 	msg.linear.x = speed;

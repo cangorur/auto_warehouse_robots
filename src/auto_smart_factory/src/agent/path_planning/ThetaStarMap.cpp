@@ -18,7 +18,7 @@ ThetaStarMap::ThetaStarMap(Map* map, float resolution) :
 	while(current.x <= end.x) {
 		current.y = start.y;
 		while(current.y <= end.y) {
-			if(!map->isInsideAnyInflatedObstacle(current)) {
+			if(!map->isInsideAnyStaticInflatedObstacle(current)) {
 				nodes.emplace(std::pair<Point, GridNode*>(current, new GridNode(current)));
 			}
 			current.y += resolution;
@@ -38,7 +38,7 @@ ThetaStarMap::ThetaStarMap(Map* map, float resolution) :
 		linkToNode(element.second, element.second->pos + Point(+ resolution, + resolution));
 	}
 	
-	ROS_INFO("[Theta*] Generated map with %d nodes", (int) nodes.size());
+	//ROS_INFO("[Theta*] Generated map with %d nodes", (int) nodes.size());
 }
 
 void ThetaStarMap::linkToNode(GridNode* node, Point targetPos) {
@@ -49,11 +49,11 @@ void ThetaStarMap::linkToNode(GridNode* node, Point targetPos) {
 }
 
 const GridNode* ThetaStarMap::getNodeClosestTo(const Point& pos) const {
-	float shortestDistance = std::numeric_limits<float>::max();
+	double shortestDistance = std::numeric_limits<float>::max();
 	const GridNode* nearestNode = nullptr;
 	
 	for(const auto& element : nodes) {
-		float distance = Math::getDistanceSquared(element.first, pos);
+		double distance = Math::getDistanceSquared(element.first, pos);
 
 		if(distance < shortestDistance) {
 			shortestDistance = distance;
@@ -68,29 +68,21 @@ const GridNode* ThetaStarMap::getNodeClosestTo(const Point& pos) const {
 	return nearestNode;
 }
 
-bool ThetaStarMap::isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const {
-	return map->isStaticLineOfSightFree(pos1, pos2);
+TimedLineOfSightResult ThetaStarMap::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, const std::vector<Rectangle>& smallerReservations) const {
+	return map->whenIsTimedLineOfSightFree(pos1, startTime, pos2, endTime, smallerReservations);
 }
 
-bool ThetaStarMap::isTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
-	return map->isTimedLineOfSightFree(pos1, startTime, pos2, endTime);
-}
-
-TimedLineOfSightResult ThetaStarMap::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime) const {
-	return map->whenIsTimedLineOfSightFree(pos1, startTime, pos2, endTime);
-}
-
-bool ThetaStarMap::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime) const {
-	return map->isTimedConnectionFree(pos1, pos2, startTime, waitingTime, drivingTime);
+bool ThetaStarMap::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, const std::vector<Rectangle>& smallerReservations) const {
+	return map->isTimedConnectionFree(pos1, pos2, startTime, waitingTime, drivingTime, smallerReservations);
 }
 
 void ThetaStarMap::listAllReservationsIn(Point p) {
 	map->listAllReservationsIn(p);
 }
 
-void ThetaStarMap::addAdditionalNode(Point pos) {
-	if(!map->isPointInMap(pos) || map->isInsideAnyInflatedObstacle(pos)) {
-		return;
+bool ThetaStarMap::addAdditionalNode(Point pos) {
+	if(!map->isPointInMap(pos) || map->isInsideAnyStaticInflatedObstacle(pos)) {
+		return false;
 	}
 
 	// Add new node
@@ -99,10 +91,10 @@ void ThetaStarMap::addAdditionalNode(Point pos) {
 
 	// If node was newly added
 	if(emplaceResult.second) {
-		float maxDistance = resolution * resolution;
+		double maxDistance = resolution * resolution;
 
 		for(std::pair<Point, GridNode*> neighbour : nodes) {
-			float distance = Math::getDistanceSquared(neighbour.first, pos);
+			double distance = Math::getDistanceSquared(neighbour.first, pos);
 
 			if(distance <= maxDistance && map->isStaticLineOfSightFree(pos, neighbour.first))  {
 				newGridNode->neighbours.push_back(neighbour.second);
@@ -112,8 +104,14 @@ void ThetaStarMap::addAdditionalNode(Point pos) {
 	} else {
 		delete newGridNode;
 	}
+	
+	return true;
 }
 
 int ThetaStarMap::getOwnerId() const {
 	return map->getOwnerId();
+}
+
+std::vector<Rectangle> ThetaStarMap::getRectanglesOnStartingPoint(Point p) const {
+	return map->getRectanglesOnStartingPoint(p);
 }

@@ -1,205 +1,167 @@
 
+#include <include/agent/path_planning/ReservationManager.h>
+#include <auto_smart_factory/ReservationRequest.h>
+
 #include "agent/path_planning/ReservationManager.h"
 
-ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int agentId, int agentCount) :
+ReservationManager::ReservationManager(ros::Publisher* publisher, Map* map, int agentId, auto_smart_factory::WarehouseConfiguration warehouseConfig) :
 	publisher(publisher),
 	map(map),
 	agentId(agentId),
-	agentCount(agentCount),
-	currentAuctionId(0),
-	currentAuctionHighestBid(-1.f, -1)
+	pathRetrievedCount(0),
+	hasReservedPath(false),
+	bidingForReservation(false),
+	replanningNecessary(false),
+	replanningBeneficial(false),
+	requestedEmergencyStop(false)
 {
-	hasReservedPath = false;
-	bidingForReservation = false;
+	// Add infinite reservation for starting point
+	double infiniteReservationStartTime = ros::Time::now().toSec() - 1000.f;
 
-	if(agentId == agentCount) {
-		initializeNewDelayedAuction = true;
-		timestampToInitializeDelayedAuction = ros::Time::now().toSec() + emptyAuctionDelay;
-	} else {
-		initializeNewDelayedAuction = false;
+	// Add infinite reservation for starting point
+	for(const auto& idlePosition : warehouseConfig.idle_positions) {
+		std::string idStr = idlePosition.id.substr(idlePosition.id.find('_') + 1);
+		int id = std::stoi(idStr);
+		
+		if(id == agentId) {
+			Point pos = Point(static_cast<float>(idlePosition.pose.x), static_cast<float>(idlePosition.pose.y));
+			lastReservedPathReservations.emplace_back(pos, Point(Path::getReservationSize(), Path::getReservationSize()), 0, infiniteReservationStartTime, Map::infiniteReservationTime, agentId);
+		}
 	}
 }
 
-void ReservationManager::update() {
+void ReservationManager::update(Point pos) {
 	double now = ros::Time::now().toSec();
-	map->deleteExpiredReservations(now);
 	
-	// Start new delayed auction
-	if(initializeNewDelayedAuction && now >= timestampToInitializeDelayedAuction) {
-		initializeNewDelayedAuction = false;
+	if(!replanningNecessary && !isInOwnReservation(pos, now)) {
+		ROS_WARN("[RM %d] Replanning necessary because agent is not in own reservation", agentId);
+		replanningNecessary = true;
+	}
+	
+	map->deleteExpiredReservations(now);		
+}
 
-		int auctionId = currentAuctionId;
-		startNewAuction(auctionId + 1, now);
-		initializeNewAuction(auctionId, now);		
-	}
-	
-	// Process queued reservationBids
-	auto iter = reservationBidQueue.begin();
-	while(iter != reservationBidQueue.end()) {
-		if((*iter).first < currentAuctionId) {
-			iter = reservationBidQueue.erase(iter);
-		} else if((*iter).first == currentAuctionId) {
-			updateHighestBid(ReservationBid((*iter).second.bid, (*iter).second.agentId));
-			iter = reservationBidQueue.erase(iter);
+void ReservationManager::reservationBroadcastCallback(const auto_smart_factory::ReservationBroadcast& msg) {
+	// This only works if the messages arrive in order
+	if(msg.isReservationBroadcastOrDenial) {
+		std::vector<Rectangle> oldReservations;
+		oldReservations = map->deleteReservationsFromAgent(msg.ownerId);	
+						
+		std::vector<Rectangle> reservations = getReservationsFromMessage(msg);
+		map->addReservations(reservations);		
+		
+		if(msg.ownerId == agentId) {
+			if(msg.isEmergencyStop) {
+				requestedEmergencyStop = false;
+			} else {
+				hasReservedPath = true;
+				bidingForReservation = false;
+				pathRetrievedCount = 0;
+			}
+
+			replanningNecessary = false;
+			replanningBeneficial = false;
+			saveReservationsAsLastReserved(msg);
+			
 		} else {
-			iter++;
+			if(!replanningBeneficial && isReplanningBeneficialWithoutTheseReservations(oldReservations)) {
+				ROS_WARN("[RM %d] Replanning beneficial because the path from robot %d was removed", agentId, msg.ownerId);
+				replanningBeneficial = true;
+			}
+			
+			if(msg.isEmergencyStop) {
+				if(!replanningNecessary && doesEmergencyStopPreventsOwnPath(reservations)) {
+					ROS_WARN("[RM %d] Replanning necessary because a emergency stop from robot %d appeared on its path", agentId, msg.ownerId);
+					replanningNecessary = true;
+				}
+			}
 		}
-	}
-	
-	// Auction timeout
-	if(now >= currentAuctionStartTime + auctionTimeout && currentAuctionId > 1) {
-		if(agentId == currentAuctionHighestBid.agentId) {
-			ROS_ERROR("[ReservationManager %d]: Auction %d timed out. %d agents left", agentId, currentAuctionId, currentAuctionReceivedBids);
-		}
-		agentCount = currentAuctionReceivedBids;
-		startNewAuction(currentAuctionId + 1, now);
+	} else if (msg.ownerId == agentId) {
+		// Reservation was denied
+		if(bidingForReservation) {
+			if(calculateNewPath()) {
+				requestPathReservation();
+			}
+		}		
 	}	
 }
 
-void ReservationManager::reservationCoordinationCallback(const auto_smart_factory::ReservationCoordination& msg) {
-	// Ignore own messages
-	if(msg.robotId == agentId) {
-		return;
-	}
-
-	// Queue out of order bidding messages, process reservation messages
-	if(msg.auctionId != currentAuctionId && !msg.isReservationMessage) {
-		if(msg.auctionId > currentAuctionId) {
-			reservationBidQueue.emplace_back(msg.auctionId, ReservationBid(msg.bid, msg.robotId));
-		}
-					
-		return;
-	}
-	
-	if(msg.isReservationMessage) {
-		map->deleteReservationsFromAgent(msg.robotId);
-		addReservations(msg);
-		startNewAuction(msg.auctionId + 1, msg.timestamp);
-	} else {
-		updateHighestBid(ReservationBid(msg.bid, msg.robotId));
-	}
-}
-
-void ReservationManager::addReservations(const auto_smart_factory::ReservationCoordination& msg) {
+std::vector<Rectangle> ReservationManager::getReservationsFromMessage(const auto_smart_factory::ReservationBroadcast& msg) {
 	std::vector<Rectangle> reservations;
-	
 	for(auto r : msg.reservations) {
 		reservations.emplace_back(Point(r.posX, r.posY), Point(r.sizeX, r.sizeY), r.rotation, r.startTime, r.endTime, r.ownerId);
 	}
 	
-	map->addReservations(reservations);
+	return reservations;
 }
 
-void ReservationManager::updateHighestBid(ReservationBid newBid) {
-	if(newBid.bid > currentAuctionHighestBid.bid || (newBid.bid == currentAuctionHighestBid.bid && newBid.agentId > currentAuctionHighestBid.agentId)) {
-		currentAuctionHighestBid = newBid;
-	}
+void ReservationManager::publishEmergencyStop(Point pos) {
+	requestedEmergencyStop = true;
 	
-	currentAuctionReceivedBids++;
-
-	if(currentAuctionReceivedBids >= agentCount) {
-		closeAuction();
-	}
-}
-
-void ReservationManager::startNewAuction(int newAuctionId, double newAuctionStartTime) {
-	currentAuctionId = newAuctionId;
-	currentAuctionStartTime = newAuctionStartTime;
-	currentAuctionHighestBid = ReservationBid(-1.f, -1);
-	currentAuctionReceivedBids = 0;
+	auto_smart_factory::ReservationRequest msg;
+	msg.ownerId = agentId;
+	msg.isEmergencyStop = static_cast<unsigned char>(true);
+	double infiniteReservationStartTime = ros::Time::now().toSec() - 1000.f;
 	
-	// Send current bid if bidding, send emtpy bid otherwise
-	auto_smart_factory::ReservationCoordination msg;
-	msg.timestamp = ros::Time::now().toSec();
-	msg.robotId = agentId;
-	msg.auctionId = currentAuctionId;
-	msg.isReservationMessage = static_cast<unsigned char>(false);
+	auto_smart_factory::Rectangle rectangle;
+	rectangle.posX = pos.x;
+	rectangle.posY = pos.y;
+	rectangle.sizeX = Path::getReservationSize();
+	rectangle.sizeY = Path::getReservationSize();
+	rectangle.rotation = 0;
+	rectangle.startTime = infiniteReservationStartTime;
+	rectangle.endTime = Map::infiniteReservationTime;
+	rectangle.ownerId = agentId;
 
-	if(bidingForReservation) {
-		// Recalculate path to match timing
-		pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset, targetReservationDuration);
-
-		if(!pathToReserve.isValid()) {
-			ROS_ERROR("[ReservationManager %d] Tried to re-generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-		}
-	}
-
-	if(bidingForReservation) {
-		//ROS_INFO("[ReservationManager %d] Starting new auction %d - bidding", agentId, newAuctionId);
-		msg.bid = static_cast<float>(pathToReserve.getDuration());
-	} else {
-		msg.bid = -1.f;
-	}
-
-	// Update own bid
-	updateHighestBid(ReservationBid(msg.bid, agentId));
-	
-	publisher->publish(msg);	
-}
-
-void ReservationManager::closeAuction() {
-	if(currentAuctionHighestBid.agentId == agentId) {
-		if(bidingForReservation) {
-			ROS_INFO("[ReservationManager %d] Won auction %d for path with duration %f", agentId, currentAuctionId, pathToReserve.getDuration());
-			bidingForReservation = false;
-			hasReservedPath = true;
-			pathRetrievedCount = 0;
-
-			// Delete old reservations and add new
-			map->deleteReservationsFromAgent(agentId);
-			std::vector<Rectangle> reservations = pathToReserve.generateReservations(agentId);
-			map->addReservations(reservations);
-
-			publishReservations(reservations);
-			startNewAuction(currentAuctionId + 1, ros::Time::now().toSec());	
-		} else {
-			//ROS_INFO("[ReservationManager %d] Won empty auction %d initializing new auction", agentId, currentAuctionId);
-
-			// Agent with highest id starts new auction but delayed to avoid overhead
-			initializeNewDelayedAuction = true;
-			timestampToInitializeDelayedAuction = ros::Time::now().toSec() + emptyAuctionDelay;
-		}	
-	} 
-}
-
-void ReservationManager::publishReservations(std::vector<Rectangle> reservations) {
-	auto_smart_factory::ReservationCoordination msg;
-	msg.timestamp = ros::Time::now().toSec();
-	msg.robotId = agentId;
-	msg.auctionId = currentAuctionId;
-	msg.isReservationMessage = static_cast<unsigned char>(true);
-	
-	for(const auto& r : reservations) {
-		auto_smart_factory::Rectangle rectangle;
-		rectangle.posX = r.getPosition().x;
-		rectangle.posY = r.getPosition().y;
-		rectangle.sizeX = r.getSize().x;
-		rectangle.sizeY = r.getSize().y;
-		rectangle.rotation = r.getRotation();
-		rectangle.startTime = r.getStartTime();
-		rectangle.endTime = r.getEndTime();
-		rectangle.ownerId = r.getOwnerId();
-		
-		msg.reservations.push_back(rectangle);		
-	}		
-
+	msg.reservations.push_back(rectangle);
 	publisher->publish(msg);
 }
 
+void ReservationManager::saveReservationsAsLastReserved(const auto_smart_factory::ReservationBroadcast& msg) {
+	lastReservedPathReservations.clear();
+	for(auto r : msg.reservations) {
+		lastReservedPathReservations.emplace_back(Point(r.posX, r.posY), Point(r.sizeX, r.sizeY), r.rotation, r.startTime, r.endTime, r.ownerId);
+	}
+}
+
+void ReservationManager::requestPathReservation() {
+	if(pathToReserve.isValid()) {
+		auto_smart_factory::ReservationRequest msg;
+		msg.ownerId = agentId;
+		msg.bid = pathToReserve.getDuration();
+		msg.isEmergencyStop = static_cast<unsigned char>(false);
+		
+		bool startsAtTray = lastReservedPathReservations.size() > 1;
+
+		for(const auto& r : pathToReserve.generateReservations(agentId, startsAtTray)) {
+			auto_smart_factory::Rectangle rectangle;
+			rectangle.posX = r.getPosition().x;
+			rectangle.posY = r.getPosition().y;
+			rectangle.sizeX = r.getSize().x;
+			rectangle.sizeY = r.getSize().y;
+			rectangle.rotation = r.getRotation();
+			rectangle.startTime = r.getStartTime();
+			rectangle.endTime = r.getEndTime();
+			rectangle.ownerId = r.getOwnerId();
+
+			msg.reservations.push_back(rectangle);
+		}
+
+		publisher->publish(msg);	
+	}	
+}
+
 void ReservationManager::startBiddingForPathReservation(OrientedPoint startPoint, OrientedPoint endPoint, double targetReservationDuration) {
-	// Use Radiant here	
+	// Using Radiant here	
 	this->startPoint = startPoint;
 	this->endPoint = endPoint;	
 	this->targetReservationDuration = targetReservationDuration;
-	
-	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec() + pathReservationStartingTimeOffset, targetReservationDuration);
+	bidingForReservation = true;
 	hasReservedPath = false;
-	
-	if(pathToReserve.isValid()) {
-		bidingForReservation = true;
-	} else {
-		ROS_ERROR("[ReservationManager %d] Tried to generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-	}	
+
+	if(calculateNewPath()) {
+		requestPathReservation();
+	}
 }
 
 bool ReservationManager::isBidingForReservation() const {
@@ -210,9 +172,9 @@ bool ReservationManager::getHasReservedPath() const {
 	return hasReservedPath;
 }
 
-Path ReservationManager::getReservedPath() {
+Path ReservationManager::getLastReservedPath() {
 	if(!hasReservedPath) {
-		ROS_FATAL("[ReservationManager %d] Tried to get path but hasNoReservedPath!", agentId);
+		ROS_FATAL("[RM %d] Tried to get path but hasNoReservedPath!", agentId);
 	}
 	pathRetrievedCount++;
 	ROS_ASSERT_MSG(pathRetrievedCount == 1, "A reserved path may only be retrieved once!!");
@@ -220,13 +182,81 @@ Path ReservationManager::getReservedPath() {
 	return pathToReserve;
 }
 
-void ReservationManager::initializeNewAuction(int auctionId, double newAuctionStartTime) {
-	auto_smart_factory::ReservationCoordination msg;
-	msg.timestamp = newAuctionStartTime;
-	msg.robotId = agentId;
-	msg.auctionId = auctionId;
-	msg.isReservationMessage = static_cast<unsigned char>(true);
-	msg.reservations.clear();
+bool ReservationManager::calculateNewPath() {
+	pathToReserve = map->getThetaStarPath(startPoint, endPoint, ros::Time::now().toSec(), targetReservationDuration, true);
 
-	publisher->publish(msg);
+	if(pathToReserve.isValid()) {
+		return true;
+	} else {
+		bidingForReservation = false;
+		
+		ROS_FATAL("[RM %d] Tried to generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+		ROS_WARN("Reservations for start:");
+		map->listAllReservationsIn(Point(startPoint.x, startPoint.y));
+
+		ROS_WARN("Reservations for target:");
+		map->listAllReservationsIn(Point(endPoint.x, endPoint.y));
+		return false;
+	}
+}
+
+bool ReservationManager::isReplanningNecessary() const {
+	return replanningNecessary;
+}
+
+bool ReservationManager::isInOwnReservation(Point pos, double time) {
+	for(const Rectangle& r : lastReservedPathReservations) {
+		if(r.getStartTime() - 0.5f <= time && time <= r.getEndTime() + 0.5f && Math::isPointInRectangle(pos, r)) {
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+bool ReservationManager::hasRequestedEmergencyStop() const {
+	return requestedEmergencyStop; 
+}
+
+bool ReservationManager::doesEmergencyStopPreventsOwnPath(const std::vector<Rectangle>& emergencyStopReservations) const {
+	if(!pathToReserve.isValid()) {
+		return false;
+	}
+	
+	double now = ros::Time::now().toSec();
+	const std::vector<Point>& nodes = pathToReserve.getNodes();
+	const std::vector<double>& departureTimes = pathToReserve.getDepartureTimes();
+	
+    for(int i = 0; i < nodes.size() - 1; i++) {
+    	if(now > departureTimes[i + 1]) {
+		    continue;
+    	}
+    	
+    	for(const Rectangle& emergencyStop : emergencyStopReservations) {
+		    if(emergencyStop.doesOverlapTimeRange(departureTimes[i], departureTimes[i + 1], agentId) && Math::doesLineSegmentIntersectRectangle(nodes[i], nodes[i + 1], emergencyStop)) {
+				return true;
+		    }
+	    }
+    }
+    
+    return false;
+}
+
+bool ReservationManager::isReplanningBeneficialWithoutTheseReservations(const std::vector<Rectangle>& oldReservations) const {
+	if(!pathToReserve.isValid()) {
+		return false;
+	}
+
+	double pathFinishTime = pathToReserve.getDepartureTimes().back();
+	for(const Rectangle& r : oldReservations) {
+		if(Math::isPointInRectangle(Point(pathToReserve.getEnd().x, pathToReserve.getEnd().y), r) && r.getEndTime() - r.getStartTime() >= 45.f && std::abs(pathFinishTime - r.getEndTime()) <= 6.f) {
+			return true;
+		}	
+	}
+
+	return false;
+}
+
+bool ReservationManager::isReplanningBeneficial() const {
+	return replanningBeneficial;
 }

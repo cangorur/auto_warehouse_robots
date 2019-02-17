@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <include/agent/path_planning/Rectangle.h>
+
 #include "agent/path_planning/Rectangle.h"
 #include "Math.h"
 
@@ -23,6 +25,14 @@ Rectangle::Rectangle(Point pos_, Point size_, float rotation_, double startTime,
 		//color = sf::Color(200, 0, 200);
 	}
 
+	// Generate Points
+	Point diagonal = size * 0.5f;
+	Point diagonalMirrored = Point(diagonal.x, -diagonal.y);
+	pointsNonInflated[0] = pos + Math::rotateVector(diagonal, rotation);
+	pointsNonInflated[2] = pos + Math::rotateVector(diagonal, rotation + 180);
+	pointsNonInflated[1] = pos + Math::rotateVector(diagonalMirrored, rotation);
+	pointsNonInflated[3] = pos + Math::rotateVector(diagonalMirrored, rotation + 180);
+	
 	// Generate inflated points
 	Point sizeInflated = Point(size.x + ROBOT_RADIUS * 2, size.y + ROBOT_RADIUS * 2);
 	Point diagonalInflated = Point(size.x + ROBOT_RADIUS * 2, size.y + ROBOT_RADIUS * 2) * 0.5f;
@@ -42,31 +52,6 @@ Rectangle::Rectangle(Point pos_, Point size_, float rotation_, double startTime,
 Rectangle::Rectangle(Point pos, Point size, float rotation) :
 		Rectangle(pos, size, rotation, -1, -1, -1) {}
 
-bool Rectangle::isInsideInflated(const Point& point) const {
-	bool isInAxisAligned = isInsideAxisAlignedInflated(point);
-	
-	if(isAxisAligned) {
-		 return isInAxisAligned;
-	} else {
-		if(!isInAxisAligned) {
-			return false;
-		}
-		
-		Point ab = pointsInflated[1] - pointsInflated[0];
-		Point bc = pointsInflated[2] - pointsInflated[1];
-		Point ap = point - pointsInflated[0];
-		Point bp = point - pointsInflated[1];
-
-		return (0 <= Math::dotProduct(ab, ap) && Math::dotProduct(ab, ap) <= Math::dotProduct(ab, ab) &&
-		        0 <= Math::dotProduct(bc, bp) && Math::dotProduct(bc, bp) <= Math::dotProduct(bc, bc));	
-	}
-}
-
-bool Rectangle::isInsideAxisAlignedInflated(const Point& point) const {
-	return !(point.x < minXInflated || point.x > maxXInflated ||
-	         point.y < minYInflated || point.y > maxYInflated);
-}
-
 const Point* Rectangle::getPointsInflated() const {
 	return pointsInflated;
 }
@@ -79,19 +64,19 @@ Point Rectangle::getSize() const {
 	return size;
 }
 
-float Rectangle::getMinXInflated() const {
+double Rectangle::getMinXInflated() const {
 	return minXInflated;
 }
 
-float Rectangle::getMaxXInflated() const {
+double Rectangle::getMaxXInflated() const {
 	return maxXInflated;
 }
 
-float Rectangle::getMinYInflated() const {
+double Rectangle::getMinYInflated() const {
 	return minYInflated;
 }
 
-float Rectangle::getMaxYInflated() const {
+double Rectangle::getMaxYInflated() const {
 	return maxYInflated;
 }
 
@@ -123,4 +108,20 @@ int Rectangle::getOwnerId() const {
 	return ownerId;
 }
 
+const Point* Rectangle::getPointsNonInflated() const {
+	return pointsNonInflated;
+}
+
+bool operator ==(const Rectangle& left, const Rectangle& right) {
+	return left.getStartTime() == right.getStartTime() &&
+	       left.getEndTime() == right.getEndTime() &&
+	       left.getPosition() == right.getPosition() &&
+	       left.getSize() == right.getSize() &&
+	       left.getRotation() == right.getRotation() &&
+	       left.getOwnerId() == right.getOwnerId();			
+}
+
+bool operator !=(const Rectangle& left, const Rectangle& right) {
+	return !(left == right);
+}
 

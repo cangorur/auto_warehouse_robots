@@ -4,11 +4,12 @@
 #include "ros/ros.h"
 #include "agent/path_planning/OrientedPoint.h"
 #include "agent/path_planning/Path.h"
+#include "auto_smart_factory/TaskEvaluation.h"
 
 class Task {
 public:
 	enum class Type {CHARGING, TRANSPORTATION};
-	enum class State {WAITING, TO_SOURCE, APPROACH_SOURCE, PICKUP, LEAVE_SOURCE, RESERVING_TARGET, TO_TARGET, APPROACH_TARGET, DROPOFF, LEAVE_TARGET, FINISHED, CHARGING};
+	enum class State {WAITING, TO_SOURCE, APPROACH_SOURCE, PICKUP, RESERVING_TARGET, TO_TARGET, APPROACH_TARGET, DROPOFF, LEAVE_TARGET, FINISHED, CHARGING};
 
 	Task(uint32_t targetID, Path targetPath, Type type, double startTime);
 	virtual ~Task() = default;
@@ -30,6 +31,8 @@ public:
 
 	virtual double getDuration() = 0;
 
+	virtual void fillInEvaluationData(auto_smart_factory::TaskEvaluation* msg) = 0;
+
 	// returns the estimated end time of this task
 	double getEndTime();
 	
@@ -48,6 +51,11 @@ protected:
 	uint32_t targetId;
 	// target Tray position
 	OrientedPoint targetPosition;
+
+	// Time information for post-mortem analysis
+	double assignedAt;
+	double startedAt;
+	double finishedAt;
 };
 
 #endif /* AGENT_TASK_H_ */
