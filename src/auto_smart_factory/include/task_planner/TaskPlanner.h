@@ -70,7 +70,12 @@ public:
 	 */
 	const std::map<std::string, std::pair<auto_smart_factory::RobotConfiguration, bool> >& getRegisteredRobots() const;
 
-
+	/**
+	 * Function to publish a task announcement to the robots
+	 * @param sourceTrayCandidates, a vector of possible source trays
+	 * @param targetTrayandidates, a vector of possible target trays
+	 * @param requestId, the id of the request being announced
+	 */
 	void publishTask(const std::vector<auto_smart_factory::Tray>& sourceTrayCandidates,
                 	 const std::vector<auto_smart_factory::Tray>& targetTrayCandidates, 
 					 uint32_t requestId);
@@ -167,6 +172,10 @@ private:
 	 */
 	bool idleRobotAvailable() const;
 
+	/**
+	 * function for receiving responses to a task announcement
+	 * @param TaskRating message
+	 */
 	void receiveTaskResponse(const auto_smart_factory::TaskRating& tr);
 
 	/** 
@@ -177,11 +186,6 @@ private:
 	 * @param the taskAnnouncement message which should hold the tray ids
 	 */
 	void extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa);
-
-	/*
-	 * sends the evaluation data of the current task
-	 */
-	void sendEvaluationData();
 
 private:
 	/// flag indicating that something has changed and that the task planner should try to assign tasks
