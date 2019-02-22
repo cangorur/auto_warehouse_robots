@@ -100,7 +100,6 @@ class TaskHandler
 		 */
 		void announcementCallback(const auto_smart_factory::TaskAnnouncement& tA);
 
-	private:
 		/**
 		 * Add a transportation Task to the queue
 		 * @param id, the id of the task to be added
@@ -119,6 +118,8 @@ class TaskHandler
 		 * @param startTime, time at which the task is estimated to start
 		 */
     	void addChargingTask(uint32_t targetID, Path targetPath, double startTime);
+	
+	private:
 
 		/**
 		 * Advancing and Executing a task
