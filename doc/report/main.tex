@@ -482,12 +482,13 @@ Describing what the existing components are, what they do and which of them we'v
 Showing the architecture graph and describing the system architecture. How the components work together and what's their part in the system. No detailed explanation how the components work, as this is done in each components section.
 
 \subsection{Task Planning}
-\label{subsec:TaskPlanning}
+\label{subsec:Task Planning}
 Describing how the task planning works.
+% Two types of tasks: transportation(assigned by task planner), charging(assigned by taskHandler)
 
 \subsection{Path Planning}
-\label{subsec:PathPlanning}
-Describing how the path planning works. At the end of the planning the paths need to be reserved, what's described in the coordination section.
+\label{subsec:Path Planning}
+Describing how the path planning works. At the end of the planning the paths need to be reservated, beeing described in coordination.
 
 \subsection{Coordination}
 \label{subsec:Coordination}
@@ -498,22 +499,71 @@ Describe how the coordination between the robots work. This chapter describes th
 Describe how we implement the Motion Planner (PID, velocity, deceleration, departure times, ...).
 
 \subsection{Charging Management}
-\label{subsec:ChargingManagement}
+\label{subsec:charging_management}
 Describe the role of the charging management, what it does and how it does it (e.g. penalty factor).
+% charging behaviour -> when to go charging and when add charging tasks
 
 \subsection{Task Execution}
-\label{subsec:Task Execution}
-Describe how the Robot Agents operate (maybe call the section something like: Operation), how they work on the tasks, when they idle, ...
+\label{subsec:task_execution}
+% Describe how the Robot Agents operate (maybe call the section something like: Operation), how they work on the tasks, when they idle, ...
+After we have discussed all the needed submodules we take a look at the execution of a task. Task execution is done by the \textit{Task Handler}.
+\\
+It has access to the Path Planner, Reservation Manager, Motion Planner and Charging Management. In addition, it has a list, called queue, of tasks assigned by the Task Planner, as well as the task it is currently working on, called the current or active task. 
+\\
+The default state of the robot is idle. In this state it has neither an active task nor tasks waiting in its queue. 
+If the robot has no active task or the active task is finished but one or more tasks are in the robots queue it will start the first task in the queue.
+\\
+Depending on the type of the current task the execution consists of more or less steps. Important to note is that the robot only reserves paths that it is driving immediately after it receives the reservation and does not try to reserve paths further in the future. We decided on this behavior because planning far into the future costs computation time and more importatantly the environment is so uncertain that the probability that the plans have to be revised is high.
+\\
+If the current task is a transportation task the Task Handler will go through the following steps:
+\begin{enumerate}
+	\item request from the Reservation Manager a reserved path from the current robot position to the tray where it is supposed to pick up the assigned package
+	\item if it has received such a path hand it to the motion planner for driving
+	\item when the robot arrives at the tray pick up the package
+	\item when the package is loaded, request from the Reservation Manager a reserved path from the current position to the tray where it is supposed to drop the package off
+	\item if it has received such a path hand it to the motion planner for driving
+	\item when the robot arrives at the tray drop off the package
+	\item when the the package is delivered, mark the task as finished
+\end{enumerate}
+For a charging task the execution procedure looks very similar:
+\begin{enumerate}
+	\item find the nearest free charging station
+	\item request from the Reservation Manager a reserved path from the current robot position to the charging station
+	\item if it has received such a path hand it to the motion planner for driving
+	\item when the robot arrives at the charging station inititate the charging procedure
+	\item when the battery is full, mark the task as finished
+\end{enumerate}
+% path replanning if necessary
+\\
+\\
+While tasks are executed the Task Handler continuously checks if replanning is beneficial or necessary.
 
-\subsection{Prototyping Environment}
-\label{subsec:PrototypingEnvironment}
-Describe that we've used a prototyping environment to test all our path-planning and coordination algorithms in a simple and clean environment.
+\subsection{Path Replanning}
+\label{subsec:path_replanning}
+% replanning behavior -> when to replan and how does it work
+The \textit{Path Replanning} is part of the Task Handler component. \\
+Since all our reservations are based on estimations of the time a robot is in a specific area, it is possible that a robot is faster than anticipated. In this case another robot might be able to finish its current task earlier.
+There are many situations where such an improvement is possible. 
+We only consider the following situation for possible improvement:
+When a robot leaves a tray earlier than estimated and planned for, another robot waiting to access that particuar tray can access it earlier.
+\\ \\
+% describe behavior
+When replanning for a task the Task Handler computes and reserves a new path through the Reservation Manager.
+As long as the reservation is not yet granted it will continue with its current path.
+When the new path is received the Task Handler hands it to the Motion Planner to drive and the replanning is complete.
+\\
+% this behavior with one addition also allows us to recover from situations where a robot is to slow for its reservations and ends up outside of them
+In the case of a robot being slower than planned for or more generally in the case of a robot not being in a reservation of its, replanning is not only beneficial but necessary.
+The previously introduced behavior with a simple addition can be used for this case as well. Instead of the robot continuing on its current path while the reservation is not yet granted, the robot places an emergrncy reservation on its current position and stops driving until it receives a new reserved path.
 
 \section{Results}
 \label{sec:Results}
 Analysing the results is a very important validation for any project. But before that, one must define exact constraints for evaluation of these results. 
 
 \subsection{Evaluation Methodology}
+% mention evalutor as data collection unit, making easy evaluation of different configurations possible
+% export as csv -> compare different configurations, compare basic parameters
+% possible to simulate warehouse config to check for problems with tray placement etc.
 As mentioned in \ref{sec:Motivation},the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The first requirement was to able to successfully demonstrate the workability of our system. This can be separated in following sub requirements:
 \begin{itemize}
 \item A task should be correctly assigned to the nearest robot
