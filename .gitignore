@@ -4,9 +4,11 @@ install/*
 doc/html/*
 .catkin_workspace
 src/CMakeLists.txt
+*.aux
 *.log
 *.synctex.gz
 *.swp
 *.orig
 *.pyc
+doc/report/main.pdf
 \.metadata/
