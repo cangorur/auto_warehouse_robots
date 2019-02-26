@@ -295,7 +295,7 @@
 %
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
-\title{Final Project Report \\ Warehouse and Task Planning}
+\title{Hybrid Multi-Robot Coordination in Smart Factory Warehouses}
 %
 %
 % author names and IEEE memberships
@@ -310,8 +310,8 @@
 %TODO
 %Add your names here (alphabetically):
 
-\author{Shreyas Gokhale, Uros..; Group 5}
-        
+\author{Vincent W\"olfer, Florian Ziesche, Patrick Denzler, Shreyas Gokhale, Uros Petkovic: Group3}
+
 % note the % following the last \IEEEmembership and also \thanks - 
 % these prevent an unwanted space from occurring between the last author name
 % and the end of the author line. i.e., if you had this:
@@ -336,7 +336,7 @@
 %\markboth{Journal of \LaTeX\ Class Files,~Vol.~6, No.~1, January~2007}%
 %{Shell \MakeLowercase{\textit{et al.}}: Bare Demo of IEEEtran.cls for %Journals}
 
-\markboth{Final Project Report}%
+\markboth{App-Ras: Final Project Report}%
 {Application of Robotics and Autonomous Systems}
 
 
@@ -404,11 +404,9 @@ IEEEtran, journal, \LaTeX, paper, template.
 \section{Introduction}
 \subsection{Motivation}
 \label{sec:Motivation}
-A smart factory environment is an important aspect of "Industry 4.0" where products can be ordered, produced, sorted, stored in a warehouse and finally delivered to the recipient. The different
-parts of the scenario are modular and hence the information exchange between the modules is limited.
+A smart factory environment is an important aspect of "Industry 4.0" where products can be ordered, produced, sorted and stored in a warehouse to be finally delivered to the recipient. The different components of the scenario are modular and hence the information exchange between them is limited.
 \\
-The goal of our project is to implement a scalable system for cooperative multi-agent task and path planning. The project is used in a warehouse scenario, where robot agents have to store packages into shelves as per the tasks issued. 
-These packages theoretically arrive without any pre-planning and hence the system should be able to accommodate for the unpredictable demand. 
+The goal of our project is to implement a scalable system for cooperative multi-agent task and path planning. The project is used in a warehouse scenario, where robot agents have to store packages into shelves as per the tasks issued. These packages theoretically arrive without any pre-planning and hence the system should be able to accommodate for the unpredictable demand.
 \\
 To increase efficiency the transportation, multiple robots have to work in parallel in a limited driving space of a warehouse and with co-ordination with the other robots to avoid collisions.
 \\
@@ -422,7 +420,7 @@ randomly. The technical challenge here is to find an algorithm can assign a pack
 The path planning is concerned with finding and traversing an optimal path for a robot between two points in the known area of indoor warehouse, with consideration of the other moving robots, non-holonomity criteria for optimality reasons and a continuous, non-linear environment. The technical problem is to find an algorithm which plans an optimal path for a robot under the
 previously mentioned considerations.
 \\
-\subsection{Problem Defination}
+\subsection{Problem Definition}
 A successful implementation of the project will go through following steps:
 \begin{itemize}
 \item The project starts with receiving a package that is to be stored in the warehouse.
@@ -471,41 +469,41 @@ Based on the properties of described approaches we decided to use the cooperativ
 FROM CAN:
 Please inspire from your SDS, but this time make it more elaborated. It should be clear that how the problems you stated was approached in general, and how you approached with a brief paragraph. Which studies were really inspiring to you and in what sense. You should mention those. Do not forget to cite the works, both in introduction and here [1].
 
+
 \section{Methodology}
 \label{sec:Methodology}
 
+\subsection{Foundation}
+\label{subsec:Foundation}
+Describing what the existing components are, what they do and which of them we've changed and why.
 
-\subsection{Overview}
-FROM CAN:
-\\
-You should start with describing your project, how you approach the problems state under introduction (now in detail), overall architecture and briefly describing each part of the architecture. Your architecture drawing (with its last version) will be placed here. An example figure is shown in Fig. 1. 
-%TODO Architecture Drawing
+\subsection{Architecture}
+\label{subsec:Architecture}
+Showing the architecture graph and describing the system architecture. How the components work together and what's their part in the system. No detailed explanation how the components work, as this is done in each components section.
 
-\subsection{Main Components of the system}
-FROM CAN:
-\\
-Now that you described the overall architecture, it is time to elaborate more the subparts you set out above. Answer the question of how you implemented each part. What this module involves and the clear methodology followed (e.g. “POMDP model is used here inspired from [?] as the robot’s planner”). 
-%TODO
-%Explain working of your component here
+\subsection{Task Planning}
+\label{subsec:Task Planning}
+Describing how the task planning works.
 
-\subsubsection{Path Planner}
-Short summary of I/O
-\\
-\textit{Gets x from taskplanner} 
-\\
-\textit{Generates a, b,c }
-\\
-In depth explanations of the component
+\subsection{Path Planning}
+\label{subsec:Path Planning}
+Describing how the path planning works. At the end of the planning the paths need to be reservated, beeing described in coordination.
 
-\subsubsection{Task Handler}
-Same as path planner
+\subsection{Coordination}
+\label{subsec:Coordination}
+Describe how the coordination between the robots work. This chapter describes the ReserverationManager and the Arbiter (and explains why we use the Arbiter).
 
-\subsection{Motion Planner}
+\subsection{Motion Planning}
+\label{subsec:Motion Planning}
+Describe how we implement the Motion Planner (PID, velocity, deceleration, departure times, ...).
 
-Eg what was improved from the default one
+\subsection{Charging Management}
+\label{subsec:Charging Management}
+Describe the role of the charging management, what it does and how it does it (e.g. penalty factor).
 
-\subsection{Warehouse and Robot Configuration}
-Eg map configuration, properties of individual robot, added colour to paths in RViz etc
+\subsection{Task Execution}
+\label{subsec:Task Execution}
+Describe how the Robot Agents operate (maybe call the section something like: Operation), how they work on the tasks, when they idle, ...
 
 \section{Results}
 \label{sec:Results}
