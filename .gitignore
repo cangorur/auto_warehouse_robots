@@ -4,6 +4,8 @@ install/*
 doc/html/*
 .catkin_workspace
 src/CMakeLists.txt
+*.log
+*.synctex.gz
 *.swp
 *.orig
 *.pyc
