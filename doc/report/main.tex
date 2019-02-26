@@ -149,6 +149,8 @@
 % Available at:
 % http://www.ctan.org/tex-archive/macros/latex/contrib/eqparbox/
 
+\usepackage[justification=centering]{caption}
+
 
 
 
@@ -310,7 +312,7 @@
 %TODO
 %Add your names here (alphabetically):
 
-\author{Vincent W\"olfer, Florian Ziesche, Patrick Denzler, Shreyas Gokhale, Uros Petkovic: Group3}
+\author{Group 3 - Vincent W\"olfer, Florian Ziesche, Patrick Denzler, Shreyas Gokhale, Uros Petkovic}
 
 % note the % following the last \IEEEmembership and also \thanks - 
 % these prevent an unwanted space from occurring between the last author name
@@ -403,7 +405,7 @@ IEEEtran, journal, \LaTeX, paper, template.
 
 \section{Introduction}
 \subsection{Motivation}
-\label{sec:Motivation}
+\label{sec:motivation}
 A smart factory environment is an important aspect of "Industry 4.0" where products can be ordered, produced, sorted and stored in a warehouse to be finally delivered to the recipient. The different components of the scenario are modular and hence the information exchange between them is limited.
 \\
 The goal of our project is to implement a scalable system for cooperative multi-agent task and path planning. The project is used in a warehouse scenario, where robot agents have to store packages into shelves as per the tasks issued. These packages theoretically arrive without any pre-planning and hence the system should be able to accommodate for the unpredictable demand.
@@ -443,12 +445,13 @@ The first step was to classify problem into different tasks. The main tasks were
 \item Decentralized Multi- Robot collaboration
 \item Hybrid (decentralized election but centralized assignment) task planner 
 \end{itemize}
-In the second step of planning, we started by analysing our top level goal: To successfully implement task and path planning with multi robot collaboration and then setting assigning it for milestone 2. For path planning the research and demo implementation of the algorithm was first step. We compared and demonstrated different path planning approaches such as Theta* and RRT* on a C++ based environment and decided our milestones for implementations on ROS. Another important aspect of our system was Multi-Robot collaboration, which we decided to implement after the second milestone.  A detail working of the system will be explained in \ref{sec:Methodology}.
+In the second step of planning, we started by analysing our top level goal: To successfully implement task and path planning with multi robot collaboration and then setting assigning it for milestone 2. For path planning the research and demo implementation of the algorithm was first step. We compared and demonstrated different path planning approaches such as Theta* and RRT* on a C++ based environment and decided our milestones for implementations on ROS. Another important aspect of our system was Multi-Robot collaboration, which we decided to implement after the second milestone.  A detail working of the system will be explained in \ref{sec:methodology}.
 %%MIlestone picture
 \\
-Finally, we decided to analyse the results based on a number of criterion which we thought might be useful for a warehousing scenario. For example: average time taken for a successful completion of the task and average time spent in different activities by each robot agent. These parameters are indicative of some interesting matrics such as what is the impact of increasing number of robots on the system and how often a robot agent needs charging. More evaluation methods and results will be explained in \ref{sec:Results} 
+Finally, we decided to analyse the results based on a number of criterion which we thought might be useful for a warehousing scenario. For example: average time taken for a successful completion of the task and average time spent in different activities by each robot agent. These parameters are indicative of some interesting matrics such as what is the impact of increasing number of robots on the system and how often a robot agent needs charging. More evaluation methods and results will be explained in \ref{sec:results} 
 
-\section{Related Works}
+\section{Related Work}
+\label{sec:related_work}
 %Paste from SDS
 %TODO check and improve
 %TODO Add references at the right places	
@@ -471,31 +474,43 @@ Please inspire from your SDS, but this time make it more elaborated. It should b
 
 
 \section{Methodology}
-\label{sec:Methodology}
+\label{sec:methodology}
 
 \subsection{Foundation}
-\label{subsec:Foundation}
+\label{subsec:foundation}
 Describing what the existing components are, what they do and which of them we've changed and why.
 
 \subsection{Architecture}
-\label{subsec:Architecture}
-Showing the architecture graph and describing the system architecture. How the components work together and what's their part in the system. No detailed explanation how the components work, as this is done in each components section.
+\label{subsec:architecture}
+The system consists of multiple components which encapsulate a specific functionality. An overview of these components is displayed in Figure \ref{fig:system_architecture}. The colors indicate groups of modules providing functionalities in a similar field. The purple components are part of the smart factory environment and given as the foundation of the project. The orange components are responsible for planning and executing tasks. The blue components provide path planning and the coordination between the robots on the map. The green components are the actuators allowing to interact with the environment and the yellow component monitors the battery level of the robot. Arrows describe communication and shared services between the components. \\
+The central unit in the robot agents is the \emph{Task Handler}. It is responsible for the communication with the central \emph{Task Planner}. The Task Planner announces tasks to all robots, which are scored by the Task Handler. Based on this score the Task Planner assigns each task to the best suiting robot. All tasks assigned to a robot are queued within the Task Handler and executed in that order. \\
+The \emph{Charging Management} tracks the battery level of the robots and calculates a penalty factor for the score. Robots with a low battery level should be less likely chosen for a task, if another robot with a higher battery level can handle the task similarly fast. In addition, the Charging Management makes the Task Handler add a specific charging task, when the battery is below a threshold. \\
+The \emph{Path Planning} offers an interface for path calculation given a start location, a destination and a departure time. It uses the \emph{Dynamic Map} to consider the obstacles and other robot's timed reservations. It returns a path as a list of points with associated departure times for each point, as waiting for a robot to pass might be faster than driving around. This path cannot be used for driving as it will not be reserved on the map. To reserve a path on the Dynamic Map, the \emph{Reservation Manager} needs to be used. The Reservation Manager uses the Path Planning to calculate the path, generates the reservations and broadcasts them to all other robots. \\
+The \emph{Motion Planner} takes a path as the input and follows it using a pid controller for angular velocity. The linear velocity is controlled based on the cross-track-error and the destination to the target. The Motion Planner keeps track of the departure times in the path to stay inside the timed reservations. It also offers interfaces for alignment and manual driving to allow precise and aligned approaches to the trays.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.45\textwidth]{resources/system_architecture}
+	\caption{System Architecture}
+	\label{fig:system_architecture}
+\end{figure}
+Test
 
 \subsection{Task Planning}
-\label{subsec:Task Planning}
+\label{subsec:task_planning}
 Describing how the task planning works.
 % Two types of tasks: transportation(assigned by task planner), charging(assigned by taskHandler)
 
 \subsection{Path Planning}
-\label{subsec:Path Planning}
-Describing how the path planning works. At the end of the planning the paths need to be reservated, beeing described in coordination.
+\label{subsec:path_planning}
+Describing how the path planning works. At the end of the planning the paths need to be reserved, what's described in the coordination section.
 
 \subsection{Coordination}
-\label{subsec:Coordination}
+\label{subsec:coordination}
 Describe how the coordination between the robots work. This chapter describes the ReserverationManager and the Arbiter (and explains why we use the Arbiter).
 
 \subsection{Motion Planning}
-\label{subsec:Motion Planning}
+\label{subsec:motion_planning}
 Describe how we implement the Motion Planner (PID, velocity, deceleration, departure times, ...).
 
 \subsection{Charging Management}
@@ -555,16 +570,23 @@ When the new path is received the Task Handler hands it to the Motion Planner to
 % this behavior with one addition also allows us to recover from situations where a robot is to slow for its reservations and ends up outside of them
 In the case of a robot being slower than planned for or more generally in the case of a robot not being in a reservation of its, replanning is not only beneficial but necessary.
 The previously introduced behavior with a simple addition can be used for this case as well. Instead of the robot continuing on its current path while the reservation is not yet granted, the robot places an emergrncy reservation on its current position and stops driving until it receives a new reserved path.
+\label{subsec:Task Execution}
+Describe how the Robot Agents operate (maybe call the section something like: Operation), how they work on the tasks, when they idle, ...
+
+\subsection{Prototyping Environment}
+\label{subsec:prototyping_environment}
+Describe that we've used a prototyping environment to test all our path-planning and coordination algorithms in a simple and clean environment.
 
 \section{Results}
-\label{sec:Results}
+\label{sec:results}
 Analysing the results is a very important validation for any project. But before that, one must define exact constraints for evaluation of these results. 
 
 \subsection{Evaluation Methodology}
+\label{evaluation_methodology}
 % mention evalutor as data collection unit, making easy evaluation of different configurations possible
 % export as csv -> compare different configurations, compare basic parameters
 % possible to simulate warehouse config to check for problems with tray placement etc.
-As mentioned in \ref{sec:Motivation},the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The first requirement was to able to successfully demonstrate the workability of our system. This can be separated in following sub requirements:
+As mentioned in \ref{sec:introduction}, the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The first requirement was to able to successfully demonstrate the workability of our system. This can be separated in following sub requirements:
 \begin{itemize}
 \item A task should be correctly assigned to the nearest robot
 \item The robot agent should complete the task by correctly following the path created by path planner.
@@ -575,7 +597,7 @@ As mentioned in \ref{sec:Motivation},the goal of our system was to design a \tex
 For successful simulation: A number of robots ( \textgreater 1) must be able to handle multiple tasks. 
 %TODO Add more
 
-\subsection{Evaluation Process }
+\subsection{Evaluation Process}
 Considering all the above points, we decided to go for the following evaluation:
 \\
 Time required per package averaged over 40 tasks.
