@@ -149,6 +149,8 @@
 % Available at:
 % http://www.ctan.org/tex-archive/macros/latex/contrib/eqparbox/
 
+\usepackage[justification=centering]{caption}
+
 
 
 
@@ -310,7 +312,7 @@
 %TODO
 %Add your names here (alphabetically):
 
-\author{Vincent W\"olfer, Florian Ziesche, Patrick Denzler, Shreyas Gokhale, Uros Petkovic: Group3}
+\author{Group 3 - Vincent W\"olfer, Florian Ziesche, Patrick Denzler, Shreyas Gokhale, Uros Petkovic}
 
 % note the % following the last \IEEEmembership and also \thanks - 
 % these prevent an unwanted space from occurring between the last author name
@@ -471,30 +473,41 @@ Please inspire from your SDS, but this time make it more elaborated. It should b
 
 
 \section{Methodology}
-\label{sec:Methodology}
+\label{sec:methodology}
 
 \subsection{Foundation}
-\label{subsec:Foundation}
+\label{subsec:foundation}
 Describing what the existing components are, what they do and which of them we've changed and why.
 
 \subsection{Architecture}
-\label{subsec:Architecture}
-Showing the architecture graph and describing the system architecture. How the components work together and what's their part in the system. No detailed explanation how the components work, as this is done in each components section.
+\label{subsec:architecture}
+The system consists of multiple components which encapsulate a specific functionality. An overview of these components is displayed in Figure \ref{fig:system_architecture}. The colors indicate groups of modules providing functionalities in a similar field. The purple components are part of the smart factory environment and given as the foundation of the project. The orange components are responsible for planning and executing tasks. The blue components provide path planning and the coordination between the robots on the map. The green components are the actuators allowing to interact with the environment and the yellow component monitors the battery level of the robot. Arrows describe communication and shared services between the components. \\
+The central unit in the robot agents is the \emph{Task Handler}. It is responsible for the communication with the central \emph{Task Planner}. The Task Planner announces tasks to all robots, which are scored by the Task Handler. Based on this score the Task Planner assigns each task to the best suiting robot. All tasks assigned to a robot are queued within the Task Handler and executed in that order. \\
+The \emph{Charging Management} tracks the battery level of the robots and calculates a penalty factor for the score. Robots with a low battery level should be less likely chosen for a task, if another robot with a higher battery level can handle the task similarly fast. In addition, the Charging Management makes the Task Handler add a specific charging task, when the battery is below a threshold. \\
+The \emph{Path Planning} offers an interface for path calculation given a start location, a destination and a departure time. It uses the \emph{Dynamic Map} to consider the obstacles and other robot's timed reservations. It returns a path as a list of points with associated departure times for each point, as waiting for a robot to pass might be faster than driving around. This path cannot be used for driving as it will not be reserved on the map. 
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.45\textwidth]{resources/system_architecture}
+	\caption{System Architecture}
+	\label{fig:system_architecture}
+\end{figure}
+Test
 
 \subsection{Task Planning}
-\label{subsec:TaskPlanning}
+\label{subsec:task_planning}
 Describing how the task planning works.
 
 \subsection{Path Planning}
-\label{subsec:PathPlanning}
+\label{subsec:path_planning}
 Describing how the path planning works. At the end of the planning the paths need to be reserved, what's described in the coordination section.
 
 \subsection{Coordination}
-\label{subsec:Coordination}
+\label{subsec:coordination}
 Describe how the coordination between the robots work. This chapter describes the ReserverationManager and the Arbiter (and explains why we use the Arbiter).
 
 \subsection{Motion Planning}
-\label{subsec:Motion Planning}
+\label{subsec:motion_planning}
 Describe how we implement the Motion Planner (PID, velocity, deceleration, departure times, ...).
 
 \subsection{Charging Management}
@@ -506,15 +519,16 @@ Describe the role of the charging management, what it does and how it does it (e
 Describe how the Robot Agents operate (maybe call the section something like: Operation), how they work on the tasks, when they idle, ...
 
 \subsection{Prototyping Environment}
-\label{subsec:PrototypingEnvironment}
+\label{subsec:prototyping_environment}
 Describe that we've used a prototyping environment to test all our path-planning and coordination algorithms in a simple and clean environment.
 
 \section{Results}
-\label{sec:Results}
+\label{sec:results}
 Analysing the results is a very important validation for any project. But before that, one must define exact constraints for evaluation of these results. 
 
 \subsection{Evaluation Methodology}
-As mentioned in \ref{sec:Motivation},the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The first requirement was to able to successfully demonstrate the workability of our system. This can be separated in following sub requirements:
+\label{evaluation_methodology}
+As mentioned in \ref{sec:introduction}, the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The first requirement was to able to successfully demonstrate the workability of our system. This can be separated in following sub requirements:
 \begin{itemize}
 \item A task should be correctly assigned to the nearest robot
 \item The robot agent should complete the task by correctly following the path created by path planner.
