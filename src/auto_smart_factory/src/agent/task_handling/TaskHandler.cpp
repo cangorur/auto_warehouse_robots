@@ -410,6 +410,7 @@ double TaskHandler::getApproachDistance(OrientedPoint robotPos, OrientedPoint pa
 void TaskHandler::sendEvaluationData() {
 	auto_smart_factory::TaskEvaluation msg;
 	msg.robot_id = agent->getAgentID();
+	msg.endBatteryLevel = chargingManagement->getCurrentBattery();
 	currentTask->fillInEvaluationData(&msg);
 	evalPub->publish(msg);
 }

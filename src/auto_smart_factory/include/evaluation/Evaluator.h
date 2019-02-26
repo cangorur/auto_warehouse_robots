@@ -17,7 +17,7 @@ private:
 
 	void writeEvaluationData(FILE* f, auto_smart_factory::TaskEvaluation& evalMsg);
 
-	const unsigned int writeNumber = 20;
+	const unsigned int writeNumber = 40;
 
 	unsigned int numberTransportationTasks;
 
