@@ -12,3 +12,4 @@ src/CMakeLists.txt
 *.pyc
 doc/report/main.pdf
 \.metadata/
+src/*.idea/*
