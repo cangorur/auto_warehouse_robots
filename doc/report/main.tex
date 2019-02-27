@@ -21,6 +21,10 @@
 \usepackage{blindtext}
 \usepackage{graphicx}
 
+% *** REF PACKAGES ***
+%
+\usepackage{hyperref}
+
 
 % *** CITATION PACKAGES ***
 %
@@ -365,6 +369,8 @@
 % use for special paper notices
 %\IEEEspecialpapernotice{(Invited Paper)}
 
+% new command for references
+\newcommand{\compRef}[1]{\autoref{#1} \nameref{#1}}
 
 
 
@@ -404,6 +410,8 @@ IEEEtran, journal, \LaTeX, paper, template.
 \IEEEpeerreviewmaketitle
 
 \section{Introduction}
+\label{sec:introduction}
+
 \subsection{Motivation}
 \label{sec:motivation}
 A smart factory environment is an important aspect of "Industry 4.0" where products can be ordered, produced, sorted and stored in a warehouse to be finally delivered to the recipient. The different components of the scenario are modular and hence the information exchange between them is limited.
@@ -588,7 +596,7 @@ Analysing the results is a very important validation for any project. But before
 % mention evalutor as data collection unit, making easy evaluation of different configurations possible
 % export as csv -> compare different configurations, compare basic parameters
 % possible to simulate warehouse config to check for problems with tray placement etc.
-As mentioned in \ref{sec:introduction}, the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The first requirement was to able to successfully demonstrate the workability of our system. This can be separated in following sub requirements:
+As mentioned in \autoref{sec:introduction} \nameref{sec:introduction}, the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The first requirement was to able to successfully demonstrate the workability of our system. This can be separated in following sub requirements:
 \begin{itemize}
 \item A task should be correctly assigned to the nearest robot
 \item The robot agent should complete the task by correctly following the path created by path planner.
