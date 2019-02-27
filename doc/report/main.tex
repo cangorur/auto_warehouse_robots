@@ -495,10 +495,25 @@ The Task Handler is responsible for computing the score of its robot for an anno
 
 There are two types of tasks: transportation tasks and charging tasks. Transportation tasks are announced and assigned by the Task Planner. In contrast charging tasks are not announced and instead assigned by the Task Handler of each robot without consulting the Task Planner.
 
-When the Task Planner receives a request to assign a (transportation) task, it will start by announcing the task to the robots and wait for them to answer. After that it sorts the answers by their score and assigns the task to the robot with the best score.
+When the Task Planner receives a request to assign a transportation task, it will announce the task to the robots and wait for them to answer.
+The announcement includes all possible source and target trays for this task.
+After receiving all answers or timing out, the Task Planner sorts the received answers by their score and assigns the task to the robot with the best score.
 
-A Task Handler receiving a task announcement will compute the best score out of all possible combinations of start and end trays. The answer to the announcement then includes the best score and the corresponding trays.
-% how is the score computed?
+Each Task Handler receiving the task announcement computes the score for all possible source and target tray combinations and answers with the best score and the corresponding trays.
+
+Since the score depends on the chosen source and target trays, the agent needs to estimate the following values: the duration to drive to the source tray $d_{source}$, the duration to drive to the target tray $d_{target}$ and the battery level after task completion $b$ in percent.
+
+The overall duration $d$ is computed by:
+$$d = d_{source} + d_{target} + d_{tasks}$$
+where $d_{tasks}$ is the estimation of the time to finish all queued tasks.
+
+As the estimated battery level itself would penalize the score linearly we instead use the factor $\alpha = f(b)$ computed by the Charging Management (cf. \compref{subsec:charging_management}).
+
+The score $s$ for the chosen source and target tray can then be computed as:
+$$ s = \frac{1}{\alpha} \cdot d$$
+where $\alpha \in [0, 1]$.
+
+A lower score therefore indicates a better combination of energy consumption and duration.
 
 
 \subsection{Path Planning}
@@ -523,6 +538,8 @@ For precise alignment and approach to the trays, the robot offers the functional
 \label{subsec:charging_management}
 Describe the role of the charging management, what it does and how it does it (e.g. penalty factor).
 % charging behaviour -> when to go charging and when add charging tasks
+
+% how is penalty factor computed and why
 
 \subsection{Task Execution}
 \label{subsec:task_execution}
