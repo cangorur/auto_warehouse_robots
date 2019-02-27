@@ -522,7 +522,10 @@ Describe how the coordination between the robots work. This chapter describes th
 
 \subsection{Motion Planning}
 \label{subsec:motion_planning}
-The \emph{Motion Planner} is responsible for linear and angular motion of the robot. It utilizes 
+The \emph{Motion Planner} is responsible for the linear and angular velocity of the robot. It utilizes a pid controller to calculate the angular velocity. There are cases where the pid controller doesn't provide an applicable solution. This includes sharp turns and turn arounds. For these cases the Motion Planner interrupts the pid controller and performs the rotation manually. The pid controller calculates the angular velocity based on the cross-track-error \emph{cte} with a sign to determine wether the robot is left or right off the track. \\
+The linear velocity is calculated by subtracting an exponential translation of the cte from the maximum driving speed $v = v_{max} - min(\exp(cte^2-1), (v_{max}-v_{min}))$. It combines this with the value calculated from the distance to the target and uses the minimum of both. Finally the linear velocity is clamped between minimum and the maximum driving speed of the robot. \\
+Whenever the robot reaches a waypoint of the path, the Motion Planner checks if the reservation for the next segment is active by comparing the departure time of the current waypoint with the real time. If the departure time is not passed yet, the robot waits at the waypoint. \\
+For precise alignment and approach to the trays, the robot offers the functionality to precisely align towards a specified target and drive straight for a given distance.
 
 \subsection{Charging Management}
 \label{subsec:charging_management}
