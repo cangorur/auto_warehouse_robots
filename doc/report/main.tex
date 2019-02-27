@@ -21,10 +21,6 @@
 \usepackage{blindtext}
 \usepackage{graphicx}
 
-% *** REF PACKAGES ***
-%
-\usepackage{hyperref}
-
 
 % *** CITATION PACKAGES ***
 %
@@ -281,6 +277,7 @@
 % http://www.ctan.org/tex-archive/macros/latex/contrib/misc/
 % Read the url.sty source comments for usage information. Basically,
 % \url{my_url_here}.
+\usepackage{hyperref}
 
 
 
@@ -523,7 +520,7 @@ Describe how the coordination between the robots work. This chapter describes th
 
 \subsection{Motion Planning}
 \label{subsec:motion_planning}
-Describe how we implement the Motion Planner (PID, velocity, deceleration, departure times, ...).
+The \emph{Motion Planner} is responsible for linear and angular motion of the robot. It utilizes 
 
 \subsection{Charging Management}
 \label{subsec:charging_management}
