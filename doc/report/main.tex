@@ -406,18 +406,18 @@ IEEEtran, journal, \LaTeX, paper, template.
 
 \section{Introduction}
 \label{sec:introduction}
-A smart factory environment is an important aspect of "Industry 4.0" where products can be ordered, produced, sorted and stored in a warehouse to be finally delivered to the recipient. The different components of the scenario are modular and hence the information exchange between them is essential. \\
-This work focuses on the transportation of products inside a warehouse. The goal is to implement a scalable system for cooperative multi-agent task and path planning. Products arrive unpredictably and need to be stored until they can be delivered to the customer. \\
-To handle a high demand of tasks, multiple robots have to coordinate their movement in a limited space and need to cooperate to minimize the overall time to deliver packages. \\
+A smart factory environment is an important aspect of "Industry 4.0" where products can be ordered, produced, sorted and stored in a warehouse to be finally delivered to the recipient. The different components of the scenario are modular and hence the information exchange between them is essential.
 
-This project strives to provide a solution for the problem of assigning packages to the robots, planning the driving paths of the robots and coordinating them. The problem can be split into two separate parts: the task planning and the path planning. Both parts have to incorporate the coordination aspect.
-\\
-The task planning is concerned with assigning incoming packages to the robots considering the time needed to store the package, energy consumption of the robots and overall optimality as far as possible given that the packages arrive
-randomly. The technical challenge here is to find an algorithm can assign a package to the best robot under the previously mentioned considerations.
-\\
-The path planning is concerned with finding and traversing an optimal path for a robot between two points in the known area of indoor warehouse, with consideration of the other moving robots, non-holonomity criteria for optimality reasons and a continuous, non-linear environment. The technical problem is to find an algorithm which plans an optimal path for a robot under the
-previously mentioned considerations.
-\\
+This work focuses on the transportation of products inside a warehouse. The goal is to implement a scalable system for cooperative multi-agent task and path planning. Products arrive unpredictably and need to be stored until they can be delivered to the customer.
+
+To handle a high demand of tasks, multiple robots have to coordinate their movement in a limited space and need to cooperate to minimize the overall time to deliver packages.
+
+A hybrid task planning enables the cooperation between the robots. A central task planner is used to assign tasks to the agents based on their combined feedback. The robots individually evaluate their ability to fulfil a task and report the result to the task planner which selects the most suitable agent for each task. This distributes the computational effort between the agents and the central instance.
+
+Furthermore, the robots coordinate their movements to avoid collisions and congestion based on a timed reservation system. Each robot reserves its path on a shared map using estimated driving times. This enables the decentralized path planning to consider both, waiting and detours to find the fastest route.
+
+MP ...
+
 \subsection{Problem Definition}
 A successful implementation of the project will go through following steps:
 \begin{itemize}
