@@ -612,21 +612,18 @@ Another important parameter is how each robot spends it's in time performing the
 
 The performance of the system must not be affected by evaluation in any way. Hence, we decided only to generate .csv files in simulation environment and do the analysis and graph generation in a separate python script. 
 
-For evaluating time required per package averaged over 40 tasks.
+For evaluating time required per package averaged over 40 tasks, the sequence is as follows:
 
-Environment Sequence:
-\begin{itemize}
+\begin{enumerate}
 \item We evaluated the system on map of 16x16 size, which is suited for around 8 robots.
 %TODO write for map2
 %Refer to map in methodology -> protyping env
 \item When simulation starts, the battery is randomized between 95 - 100.
 \item The robots perform tasks for package delivery from one tray to another. Occasional, they also perform charging tasks when their battery is lower or if they are idle. The information about time spent by each robot in various tasks and corresponding timestamps is recorded by the evaluator component of ros. 
 \item After 40 successful transportation tasks, the results of evaluation are stored in a .csv file.
-\end{itemize}
+\end{enumerate}
 
-Each evaluation is performed for particular number of robots ranging from 1 -10. 
-
-Evaluated Metrics:
+Each evaluation is performed for particular number of robots ranging from 1 -10 and following metrics are audited.
 
 \begin{itemize}
 \item Average time required to perform task from assignment to completion
@@ -639,7 +636,6 @@ Evaluated Metrics:
 \item Driving to drop off the package	
 \item Dropping off the package		
 \end{itemize}
-
 \end{itemize}
 
 Average run for 40 tasks takes around 10-15 minutes. We tried to make each run error free and we did not observe any package drop. However to accommodate for inconsistencies and remove outliers such as sudden congestion we performed each run for 3 times. 
@@ -652,7 +648,8 @@ For each instance, the ROS, MORSE and RViz environment was initialized with said
 \item Time since start of simulation
 \item Time durations for various activities like: assignment, driving to pickup, picking up, drive to drop-off and drop-off 
 \end{itemize}
-Then a MATLAB script converts this data into various intuitive graphs. 
+
+As a final step, a MATLAB script converts this data into various intuitive graphs. 
 
 \subsection{Evaluation results and interpretation}
 \begin{figure}[h]
@@ -683,37 +680,6 @@ In graph \ref{No_of_robots_vs_average_time_all_taks}, we can however see the pos
 
 
 
-
-
-
-
-
-
-Graphs and explanations
-\\
-FROM CAN:
-\\
-Think about how you can show your project’s performance. This is the most important section that will reflect your entire project, therefore it comes with the most weight on the grading of the Final Report. Therefore, analyse well what your project promises and how you can NUMERICALLY show this. Then, you discuss on the findings. Sub-sections can be created freely.
-\\
-Usually, the common metrics to be used are: 
-\begin{itemize}
-\item
-overall accuracy in estimation (of whatever you are estimating: e.g. human belief, human activity, object type + shape, object pose, comparing the estimated time to store a pkg of a robot and the real time of realization etc).
-Of course for such analysis you need multiple runs of the system
-Don’t forget to separate the training set from the test set (80% of your entire dataset is for training, 20% is to test)
-
-\item
-overall success / precision (of the overall decisions your system makes: e.g. robotA is the most suitable for loading and storing pkg, comparison of the average time a task is realized with or without this component shows the impact of the component.)
-
-\end{itemize}
-
-If you can show your results on graphics it is a BONUS. If you can show on such graphs that how changing of some parameters of your methods/env. conditions/the context in the scenario etc. would affect your system’s performance, then you will receive +10 points for your overall document. 
-\\
-As the first step, you start discussing on what sort of results you will show and we will definitely discuss them in the upcoming two weeks. Feel free to suggest and ask anything on that phase (be brave !).
-\\
-Finally, you will conclude with the discussion of these results you showed/described. Basically answer this question, what these results tell you? Even though they are bad /not significant then you need to comment on why it is how it is. There HAS TO BE A DISCUSSION even though it is short. 
-\\
-You can also criticize your approach and offer better ones if it would lead to better performances. You can also briefly discuss the points to be improved/extended in your system. You will get the GRADES FROM THE DISCUSSION more than the significance or the performance of your results. In the past some groups got the highest grades although their system didn’t work well. Your goal is not to build an end product, but to be aware of what you build, a strong code base and discussion points for us to improve on your code. Positive results are of course a plus.
 
 
 
