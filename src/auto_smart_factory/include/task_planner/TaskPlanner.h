@@ -123,8 +123,7 @@ private:
 	 * @param res Response object
 	 * @return Always true
 	 */
-	bool newOutputRequest(auto_smart_factory::NewPackageOutputRequest& req,
-	                      auto_smart_factory::NewPackageOutputResponse& res);
+	bool newOutputRequest(auto_smart_factory::NewPackageOutputRequest& req, auto_smart_factory::NewPackageOutputResponse& res);
 
 	/**
 	 * Called by robots. Registers a robot to the task planner.

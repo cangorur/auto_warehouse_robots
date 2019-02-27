@@ -68,6 +68,9 @@ bool Map::isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const {
 }
 
 TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, const std::vector<Rectangle>& smallerReservations) const {
+	// Todo make adaptive - for now assume that every reservation can be left in x seconds
+	double minTimeToLeave = 5;
+	
 	TimedLineOfSightResult result;
 
 	if(!isStaticLineOfSightFree(pos1, pos2)) {
@@ -88,8 +91,6 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 			// Upcoming obstacles			
 			if(Math::isPointInNonInflatedRectangle(pos2, reservation) && reservation.getStartTime() > endTime && reservation.getOwnerId() != ownerId) {
 				result.hasUpcomingObstacle = true;
-				// Todo make adaptive - for now assume that every reservation can be left in x seconds
-				double minTimeToLeave = 5;
 
 				double lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
 				if(lastValidEntryTime < result.lastValidEntryTime) {
@@ -108,9 +109,7 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 
 			// Upcoming obstacles			
 			if(Math::isPointInRectangle(pos2, reservation) && reservation.getStartTime() > endTime && reservation.getOwnerId() != ownerId) {
-				result.hasUpcomingObstacle = true;
-				// Todo make adaptive - for now assume that every reservation can be left in x seconds
-				double minTimeToLeave = 5;
+				result.hasUpcomingObstacle = true;				
 
 				double lastValidEntryTime = reservation.getStartTime() - minTimeToLeave;
 				if(lastValidEntryTime < result.lastValidEntryTime) {
@@ -160,18 +159,6 @@ bool Map::isTimedConnectionFree(const Point& pos1, const Point& pos2, double sta
 	}
 
 	return true;
-}
-
-Point Map::getRandomFreePoint() const {
-	Point point;
-	bool pointFound = false;
-	
-	while(!pointFound) {
-		point = Point(Math::getRandom(-width/2.f, width/2.f), Math::getRandom(-height/2.f, height/2.f));
-		pointFound = !isInsideAnyStaticInflatedObstacle(point);
-	}
-	
-	return point;	
 }
 
 float Map::getWidth() const {
@@ -330,7 +317,7 @@ visualization_msgs::Marker Map::getObstacleVisualization() {
 	return msg;
 }
 
-visualization_msgs::Marker Map::getInactiveReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type baseColor) {
+visualization_msgs::Marker Map::getInactiveReservationVisualization(visualization_msgs::Marker::_color_type baseColor) {
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";
 	msg.header.stamp = ros::Time::now();
@@ -399,7 +386,7 @@ visualization_msgs::Marker Map::getInactiveReservationVisualization(int ownerId,
 	return msg;
 }
 
-visualization_msgs::Marker Map::getActiveReservationVisualization(int ownerId, visualization_msgs::Marker::_color_type baseColor) {
+visualization_msgs::Marker Map::getActiveReservationVisualization(visualization_msgs::Marker::_color_type baseColor) {
 	visualization_msgs::Marker msg;
 	msg.header.frame_id = "map";
 	msg.header.stamp = ros::Time::now();
@@ -466,15 +453,6 @@ visualization_msgs::Marker Map::getActiveReservationVisualization(int ownerId, v
 	}
 
 	return msg;
-}
-
-void Map::listAllReservationsIn(Point p) {
-	ROS_INFO("Reservations for robot %d at point %f/%f", ownerId, p.x, p.y);
-	for(const auto& r : reservations) {
-		if(Math::isPointInRectangle(p, r)) {
-			ROS_INFO("Reservations At %f/%f | Size %f/%f | Rot: %f | ID: %d, from %f until %f", r.getPosition().x, r.getPosition().y, r.getSize().x, r.getSize().y, r.getRotation(), r.getOwnerId(), r.getStartTime(), r.getEndTime());	
-		}		
-	}
 }
 
 bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {

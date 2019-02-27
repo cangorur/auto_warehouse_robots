@@ -109,7 +109,7 @@ protected:
 	void setupTaskHandling();
 
 	/* Returns whether it's time for next heartbeat to send.
-	 * @return True if next heartbeat should be sended */
+	 * @return True if next heartbeat should be sent */
 	bool isTimeForHeartbeat();
 
 	/* Packs current agent state and some additional information & publishes it to the heartbeat topic.
