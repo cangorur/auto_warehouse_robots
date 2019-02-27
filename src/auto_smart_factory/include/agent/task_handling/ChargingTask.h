@@ -6,6 +6,10 @@
 #include "agent/path_planning/OrientedPoint.h"
 #include "agent/path_planning/Path.h"
 
+/**
+ * The charging task represents a subcategory of a task for
+ * which the robot drives to a charging tray and charges there
+ */
 class ChargingTask : public Task {
 public:
 	/**

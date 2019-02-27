@@ -5,6 +5,7 @@ double ChargingTask::chargingTime = 200.f;
 ChargingTask::ChargingTask(uint32_t targetID, Path targetPath, double startTime) : 
 	Task(targetID, targetPath, Type::CHARGING, startTime)
 {
+	arrivedAt = 0.0f;
 }
 
 double ChargingTask::getBatteryConsumption() {
@@ -30,15 +31,21 @@ void ChargingTask::setState(Task::State state) {
 	}
 	switch (state) {
 		case Task::State::TO_TARGET:
-			startedAt = ros::Time::now().toSec();
+			if(startedAt == 0.0f) {
+				startedAt = ros::Time::now().toSec();
+			}
 			break;
 		
 		case Task::State::APPROACH_TARGET:
-			arrivedAt = ros::Time::now().toSec();
+			if(arrivedAt == 0.0f) {
+				arrivedAt = ros::Time::now().toSec();
+			}
 			break;
 		
 		case Task::State::FINISHED:
-			finishedAt = ros::Time::now().toSec();
+			if (finishedAt == 0.0f) {
+				finishedAt = ros::Time::now().toSec();
+			}
 			break;
 	
 		default:

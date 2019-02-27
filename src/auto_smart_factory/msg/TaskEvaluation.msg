@@ -5,6 +5,7 @@ string task_type
 float64 finishedAt
 float64 assignedAt
 float64 startedAt
+float64 endBatteryLevel
 # transportation task only
 uint32 request_id
 float64 startedPickUpAt

@@ -4,6 +4,7 @@
 #include "geometry_msgs/Point.h"
 #include "OrientedPoint.h"
 
+/* Point class representing a 2d point */
 class Point {
 public:
 	explicit Point();
@@ -16,7 +17,7 @@ public:
 	double y;
 };
 
-// Overloaded operators
+// Overloaded operators for point comparison and operations
 Point operator -(const Point& right);
 Point operator -(const Point& left, const Point& right);
 Point operator +(const Point& left, const Point& right);
