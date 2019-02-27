@@ -279,7 +279,7 @@
 % \url{my_url_here}.
 \usepackage{hyperref}
 
-
+\newcommand{\compref}[1]{\autoref{#1} \nameref{#1}}
 
 
 
@@ -405,16 +405,11 @@ IEEEtran, journal, \LaTeX, paper, template.
 \IEEEpeerreviewmaketitle
 
 \section{Introduction}
-\subsection{Motivation}
-\label{sec:motivation}
-A smart factory environment is an important aspect of "Industry 4.0" where products can be ordered, produced, sorted and stored in a warehouse to be finally delivered to the recipient. The different components of the scenario are modular and hence the information exchange between them is limited.
-\\
-The goal of our project is to implement a scalable system for cooperative multi-agent task and path planning. The project is used in a warehouse scenario, where robot agents have to store packages into shelves as per the tasks issued. These packages theoretically arrive without any pre-planning and hence the system should be able to accommodate for the unpredictable demand.
-\\
-To increase efficiency the transportation, multiple robots have to work in parallel in a limited driving space of a warehouse and with co-ordination with the other robots to avoid collisions.
-\\
-Congestion is another conundrum that this system has to consider. The robots will lose valuable time if they have to wait due to congestion, reducing lower the overall effectiveness of the warehouse system.
-\\
+\label{sec:introduction}
+A smart factory environment is an important aspect of "Industry 4.0" where products can be ordered, produced, sorted and stored in a warehouse to be finally delivered to the recipient. The different components of the scenario are modular and hence the information exchange between them is essential. \\
+This work focuses on the transportation of products inside a warehouse. The goal is to implement a scalable system for cooperative multi-agent task and path planning. Products arrive unpredictably and need to be stored until they can be delivered to the customer. \\
+To handle a high demand of tasks, multiple robots have to coordinate their movement in a limited space and need to cooperate to minimize the overall time to deliver packages. \\
+
 This project strives to provide a solution for the problem of assigning packages to the robots, planning the driving paths of the robots and coordinating them. The problem can be split into two separate parts: the task planning and the path planning. Both parts have to incorporate the coordination aspect.
 \\
 The task planning is concerned with assigning incoming packages to the robots considering the time needed to store the package, energy consumption of the robots and overall optimality as far as possible given that the packages arrive
@@ -432,8 +427,6 @@ A successful implementation of the project will go through following steps:
 \item The agent should be able to successfully navigate through the environment using the path and task planner and deliver the package. Thus, finishing the task
 \item The system must be stable enough to be able to perform multiple tasks concurrently and accommodate for inter-robot interactions.  
 \end{itemize} 
-\subsection{Related Literature}
-how literature approaches to it (very briefly as we have a related works section)
 
 \subsection{Approach}
 To approach this problem, we first considered the state of the initial framework which was given. We received a morse-ros project which already included: 
@@ -583,7 +576,7 @@ Analysing the results is a very important validation for any project. But before
 % mention evaluator as data collection unit, making easy evaluation of different configurations possible
 % export as csv -> compare different configurations, compare basic parameters
 % possible to simulate warehouse config to check for problems with tray placement etc.
-As mentioned in \ref{sec:introduction}, the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The first requirement was to able to successfully demonstrate the workability of our system. This can be separated in following sub requirements:
+As mentioned in \compref{sec:introduction}, the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The first requirement was to able to successfully demonstrate the workability of our system. This can be separated in following sub requirements:
 \begin{itemize}
 \item A task should be correctly assigned to the nearest robot
 \item The robot agent should complete the task by correctly following the path created by path planner.
