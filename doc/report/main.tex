@@ -490,14 +490,21 @@ Test
 
 \subsection{Task Planning}
 \label{subsec:task_planning}
-The task planning is done via a hybrid approach. In particular this means that the task planning is done by different types of components.
-A central \textit{Task Planner} and decentral \textit{Task Handler} in each of the robots.
-The Task Planner is responsible for announcing new tasks to the robots, collecting their response, picking the best suited robot and assigning tasks.
-The Task Handler is responsible for computing the score of its robot for an announcement, answering to the Task Planner with that score and keeping track of tasks assigned to its robot. The Task Handler is also responsible for keeping the robot charged.
+The task planning is done via a hybrid approach. This means that the task planning is done by two different types of components: a central \textit{Task Planner} and decentral \textit{Task Handler} in each of the robots.
 \\
-There are two types of tasks: transportation tasks and charging tasks.
+The Task Planner is responsible for announcing new tasks to the robots, collecting their responses, picking the best suited robot and assigning tasks.
+\\
+The Task Handler is responsible for computing the score of its robot for an announcement, answering to the Task Planner with that score and queuing of tasks assigned to its robot. The Task Handler is also responsible for keeping the robot charged.
+\\
+\\
+There are two types of tasks: transportation tasks and charging tasks. Transportation tasks are announced and assigned by the Task Planner. In contrast charging tasks are not announced and instead assigned by the Task Handler of each robot without consulting the Task Planner.
+\\
+\\
+When the Task Planner receives a request to assign a (transportation) task, it will start by announcing the task to the robots and wait for them to answer. After that it sorts the answers by their score and assigns the task to the robot with the best score.
+\\
+A Task Handler receiving a task announcement will compute the best score out of all possible combinations of start and end trays. The answer to the announcement then includes the best score and the corresponding trays.
+% how is the score computed?
 
-% Two types of tasks: transportation(assigned by task planner), charging(assigned by taskHandler)
 
 \subsection{Path Planning}
 \label{subsec:path_planning}
@@ -552,7 +559,7 @@ For a charging task the execution procedure looks very similar:
 % path replanning if necessary
 While tasks are executed the Task Handler continuously checks if replanning is beneficial or necessary.
 
-\subsection{Path Replanning}
+\subsection{Path Re-planning}
 \label{subsec:path_replanning}
 % replanning behavior -> when to replan and how does it work
 The \textit{Path Replanning} is part of the Task Handler component. \\
