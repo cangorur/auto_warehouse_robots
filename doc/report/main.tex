@@ -529,7 +529,7 @@ It has access to the Path Planner, Reservation Manager, Motion Planner and Charg
 The default state of the robot is idle. In this state it has neither an active task nor tasks waiting in its queue. 
 If the robot has no active task or the active task is finished but one or more tasks are in the robots queue it will start the first task in the queue.
 \\
-Depending on the type of the current task the execution consists of more or less steps. Important to note is that the robot only reserves paths that it is driving immediately after it receives the reservation and does not try to reserve paths further in the future. We decided on this behavior because planning far into the future costs computation time and more importatantly the environment is so uncertain that the probability that the plans have to be revised is high.
+Depending on the type of the current task the execution consists of more or less steps. Important to note is that the robot only reserves paths that it is driving immediately after it receives the reservation and does not try to reserve paths further in the future. We decided on this behavior because planning far into the future costs computation time and more importantly the environment is so uncertain that the probability that the plans have to be revised is high.
 \\
 If the current task is a transportation task the Task Handler will go through the following steps:
 \begin{enumerate}
