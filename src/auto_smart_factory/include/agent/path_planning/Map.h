@@ -79,7 +79,7 @@ public:
 	 * @return TimedLineOfSighResult. Check @class TimedLineOfSightResult for more info*/ 
 	TimedLineOfSightResult whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, const std::vector<Rectangle>& smallerReservations) const;
 
-	/** Check if certain line of sight connection is free
+	/** Check if certain line of sight connection is actually free for both driving and waiting during the connection
 	 * @param pos1 Start point
 	 * @param pos2 End point
 	 * @param startTime time when the connection starts at the start point
