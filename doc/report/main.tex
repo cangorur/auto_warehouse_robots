@@ -455,7 +455,7 @@ Finally, we decided to analyse the results based on a number of criterion which 
 \label{sec:related_work}
 Different algorithms and approaches have been proposed an used in the past for both single robot path finding and multi robot coordinated path planning. 
 
-Hart et al.\cite{AStar} proposed A* as an optimal single robot path finding algorithm with a heuristic compoment. However, A* only operates on discrete graphs and therefore is only optimal on those graphs. When representing a continuous search space via a discrete graph, A* is not able to find optimal results in this continuous search space. Nash et al.\cite{ThetaStar} therefore proposed the Theta* algorithm which is able to connect any combination of those discrete grid points through a continuous line which is not limited to the graph edges. For such a connection to be made a continuous line of sight needs to be performed.
+Hart et al.\cite{AStar} proposed A* as an optimal single robot path finding algorithm with a heuristic component. However, A* only operates on discrete graphs and therefore is only optimal on those graphs. When representing a continuous search space via a discrete graph, A* is not able to find optimal results in this continuous search space. Nash et al.\cite{ThetaStar} therefore proposed the Theta* algorithm which is able to connect any combination of those discrete grid points through a continuous line which is not limited to the graph edges. For such a connection to be made a continuous line of sight needs to be performed.
 
 Kavraki et al. \cite{Roadmaps} proposed probabilistic roadmaps (PRM) as a sampling-based approach where random samples are taken and tested if they fulfil the constraints of the continuous space. Through connecting points that are near each other a roadmap is built. The path is then computed by a graph searching algorithm. Compared to other approaches, PRM is slower and takes more computational effort.
 
@@ -568,7 +568,7 @@ When the new path is received the Task Handler hands it to the Motion Planner to
 \\
 % this behavior with one addition also allows us to recover from situations where a robot is to slow for its reservations and ends up outside of them
 In the case of a robot being slower than planned for or more generally in the case of a robot not being in a reservation of its, replanning is not only beneficial but necessary.
-The previously introduced behavior with a simple addition can be used for this case as well. Instead of the robot continuing on its current path while the reservation is not yet granted, the robot places an emergrncy reservation on its current position and stops driving until it receives a new reserved path.
+The previously introduced behavior with a simple addition can be used for this case as well. Instead of the robot continuing on its current path while the reservation is not yet granted, the robot places an emergency reservation on its current position and stops driving until it receives a new reserved path.
 
 \subsection{Prototyping Environment}
 \label{subsec:prototyping_environment}
@@ -580,7 +580,7 @@ Analysing the results is a very important validation for any project. But before
 
 \subsection{Evaluation Methodology}
 \label{evaluation_methodology}
-% mention evalutor as data collection unit, making easy evaluation of different configurations possible
+% mention evaluator as data collection unit, making easy evaluation of different configurations possible
 % export as csv -> compare different configurations, compare basic parameters
 % possible to simulate warehouse config to check for problems with tray placement etc.
 As mentioned in \ref{sec:introduction}, the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The first requirement was to able to successfully demonstrate the workability of our system. This can be separated in following sub requirements:
@@ -636,7 +636,7 @@ For each instance, the ROS, MORSE and RViz environment was initialized with said
 \item ID of the robot agent  
 \item ID or sequence number of the task
 \item Time since start of simulation
-\item Time durations for various activities like: assignment, driving to pickup, picking up, drive to dropoff and dropoff 
+\item Time durations for various activities like: assignment, driving to pickup, picking up, drive to drop-off and drop-off 
 \end{itemize}
 Then a MATLAB script converts this data into various intuitive graphs. 
 
@@ -663,7 +663,7 @@ overall success / precision (of the overall decisions your system makes: e.g. ro
 
 \end{itemize}
 
-If you can show your results on graphics it is a BONUS. If you can show on such graphs that how changing of some parameters of your mehtods/env. conditions/the context in the scenario etc. would affect your system’s performance, then you will receive +10 points for your overall document. 
+If you can show your results on graphics it is a BONUS. If you can show on such graphs that how changing of some parameters of your methods/env. conditions/the context in the scenario etc. would affect your system’s performance, then you will receive +10 points for your overall document. 
 \\
 As the first step, you start discussing on what sort of results you will show and we will definitely discuss them in the upcoming two weeks. Feel free to suggest and ask anything on that phase (be brave !).
 \\
