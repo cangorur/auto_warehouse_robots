@@ -467,34 +467,35 @@ Describing what the existing components are, what they do and which of them we'v
 
 \subsection{Architecture}
 \label{subsec:architecture}
-The system consists of multiple components which encapsulate a specific functionality. An overview of these components is displayed in Figure \ref{fig:system_architecture}. The colors indicate groups of modules providing functionalities in a similar field. The purple components are part of the smart factory environment and given as the foundation of the project. The orange components are responsible for planning and executing tasks. The blue components provide path planning and the coordination between the robots on the map. The green components are the actuators allowing to interact with the environment and the yellow component monitors the battery level of the robot. Arrows describe communication and shared services between the components. \\
-The central unit in the robot agents is the \emph{Task Handler}. It is responsible for the communication with the central \emph{Task Planner}. The Task Planner announces tasks to all robots, which are scored by the Task Handler. Based on this score the Task Planner assigns each task to the best suiting robot. All tasks assigned to a robot are queued within the Task Handler and executed in that order. \\
-The \emph{Charging Management} tracks the battery level of the robots and calculates a penalty factor for the score. Robots with a low battery level should be less likely chosen for a task, if another robot with a higher battery level can handle the task similarly fast. In addition, the Charging Management makes the Task Handler add a specific charging task, when the battery is below a threshold. \\
-The \emph{Path Planning} offers an interface for path calculation given a start location, a destination and a departure time. It uses the \emph{Dynamic Map} to consider the obstacles and other robot's timed reservations. It returns a path as a list of points with associated departure times for each point, as waiting for a robot to pass might be faster than driving around. This path cannot be used for driving as it will not be reserved on the map. To reserve a path on the Dynamic Map, the \emph{Reservation Manager} needs to be used. The Reservation Manager uses the Path Planning to calculate the path, generates the reservations and broadcasts them to all other robots. \\
+The system consists of multiple components which encapsulate a specific functionality. An overview of these components is displayed in Figure \ref{fig:system_architecture}. The colors indicate groups of modules providing functionalities in a similar field. The purple components are part of the smart factory environment and given as the foundation of the project. The orange components are responsible for planning and executing tasks. The blue components provide path planning and the coordination between the robots on the map. The green components are the actuators allowing to interact with the environment and the yellow component monitors the battery level of the robot. Arrows describe communication and shared services between the components.
+
+The central unit in the robot agents is the \emph{Task Handler}. It is responsible for the communication with the central \emph{Task Planner}. The Task Planner announces tasks to all robots, which are scored by the Task Handler. Based on this score the Task Planner assigns each task to the best suiting robot. All tasks assigned to a robot are queued within the Task Handler and executed in that order.
+
+The \emph{Charging Management} tracks the battery level of the robots and calculates a penalty factor for the score. Robots with a low battery level should be less likely chosen for a task, if another robot with a higher battery level can handle the task similarly fast. In addition, the Charging Management makes the Task Handler add a specific charging task, when the battery is below a threshold.
+
+The \emph{Path Planning} offers an interface for path calculation given a start location, a destination and a departure time. It uses the \emph{Dynamic Map} to consider the obstacles and other robot's timed reservations. It returns a path as a list of points with associated departure times for each point, as waiting for a robot to pass might be faster than driving around. This path cannot be used for driving as it will not be reserved on the map. To reserve a path on the Dynamic Map, the \emph{Reservation Manager} needs to be used. The Reservation Manager uses the Path Planning to calculate the path, generates the reservations and broadcasts them to all other robots.
+
 The \emph{Motion Planner} takes a path as the input and follows it using a pid controller for angular velocity. The linear velocity is controlled based on the cross-track-error and the destination to the target. The Motion Planner keeps track of the departure times in the path to stay inside the timed reservations. It also offers interfaces for alignment and manual driving to allow precise and aligned approaches to the trays.
 
-\begin{figure}[h!]
+\begin{figure}[h]
 	\centering
 	\includegraphics[width=0.45\textwidth]{resources/system_architecture}
 	\caption{System Architecture}
 	\label{fig:system_architecture}
 \end{figure}
-Test
 
 \subsection{Task Planning}
 \label{subsec:task_planning}
 The task planning is done via a hybrid approach. This means that the task planning is done by two different types of components: a central \textit{Task Planner} and decentral \textit{Task Handler} in each of the robots.
-\\
+
 The Task Planner is responsible for announcing new tasks to the robots, collecting their responses, picking the best suited robot and assigning tasks.
-\\
+
 The Task Handler is responsible for computing the score of its robot for an announcement, answering to the Task Planner with that score and queuing of tasks assigned to its robot. The Task Handler is also responsible for keeping the robot charged.
-\\
-\\
+
 There are two types of tasks: transportation tasks and charging tasks. Transportation tasks are announced and assigned by the Task Planner. In contrast charging tasks are not announced and instead assigned by the Task Handler of each robot without consulting the Task Planner.
-\\
-\\
+
 When the Task Planner receives a request to assign a (transportation) task, it will start by announcing the task to the robots and wait for them to answer. After that it sorts the answers by their score and assigns the task to the robot with the best score.
-\\
+
 A Task Handler receiving a task announcement will compute the best score out of all possible combinations of start and end trays. The answer to the announcement then includes the best score and the corresponding trays.
 % how is the score computed?
 
@@ -509,9 +510,12 @@ Describe how the coordination between the robots work. This chapter describes th
 
 \subsection{Motion Planning}
 \label{subsec:motion_planning}
-The \emph{Motion Planner} is responsible for the linear and angular velocity of the robot. It utilizes a pid controller to calculate the angular velocity. There are cases where the pid controller doesn't provide an applicable solution. This includes sharp turns and turn arounds. For these cases the Motion Planner interrupts the pid controller and performs the rotation manually. The pid controller calculates the angular velocity based on the cross-track-error \emph{cte} with a sign to determine wether the robot is left or right off the track. \\
-The linear velocity is calculated by subtracting an exponential translation of the cte from the maximum driving speed $v = v_{max} - min(\exp(cte^2-1), (v_{max}-v_{min}))$. It combines this with the value calculated from the distance to the target and uses the minimum of both. Finally the linear velocity is clamped between minimum and the maximum driving speed of the robot. \\
-Whenever the robot reaches a waypoint of the path, the Motion Planner checks if the reservation for the next segment is active by comparing the departure time of the current waypoint with the real time. If the departure time is not passed yet, the robot waits at the waypoint. \\
+The \emph{Motion Planner} is responsible for the linear and angular velocity of the robot. It utilizes a pid controller to calculate the angular velocity. There are cases where the pid controller doesn't provide an applicable solution. This includes sharp turns and turn arounds. For these cases the Motion Planner interrupts the pid controller and performs the rotation manually. The pid controller calculates the angular velocity based on the cross-track-error \emph{cte} with a sign to determine wether the robot is left or right off the track.
+
+The linear velocity is calculated by subtracting an exponential translation of the cte from the maximum driving speed $v = v_{max} - min(\exp(cte^2-1), (v_{max}-v_{min}))$. It combines this with the value calculated from the distance to the target and uses the minimum of both. Finally the linear velocity is clamped between minimum and the maximum driving speed of the robot.
+
+Whenever the robot reaches a waypoint of the path, the Motion Planner checks if the reservation for the next segment is active by comparing the departure time of the current waypoint with the real time. If the departure time is not passed yet, the robot waits at the waypoint.
+
 For precise alignment and approach to the trays, the robot offers the functionality to precisely align towards a specified target and drive straight for a given distance.
 
 \subsection{Charging Management}
@@ -523,14 +527,13 @@ Describe the role of the charging management, what it does and how it does it (e
 \label{subsec:task_execution}
 % Describe how the Robot Agents operate (maybe call the section something like: Operation), how they work on the tasks, when they idle, ...
 After we have discussed all the needed submodules we take a look at the execution of a task. Task execution is done by the \textit{Task Handler}.
-\\
-It has access to the Path Planner, Reservation Manager, Motion Planner and Charging Management. In addition, it has a list, called queue, of tasks assigned by the Task Planner, as well as the task it is currently working on, called the current or active task. 
-\\
-The default state of the robot is idle. In this state it has neither an active task nor tasks waiting in its queue. 
-If the robot has no active task or the active task is finished but one or more tasks are in the robots queue it will start the first task in the queue.
-\\
+
+It has access to the Path Planner, Reservation Manager, Motion Planner and Charging Management. In addition, it has a list, called queue, of tasks assigned by the Task Planner, as well as the task it is currently working on, called the current or active task.
+
+The default state of the robot is idle. In this state it has neither an active task nor tasks waiting in its queue. If the robot has no active task or the active task is finished but one or more tasks are in the robots queue it will start the first task in the queue.
+
 Depending on the type of the current task the execution consists of more or less steps. Important to note is that the robot only reserves paths that it is driving immediately after it receives the reservation and does not try to reserve paths further in the future. We decided on this behaviour because planning far into the future costs computation time and more importantly the environment is so uncertain that the probability that the plans have to be revised is high.
-\\
+
 If the current task is a transportation task the Task Handler will go through the following steps:
 \begin{enumerate}
 	\item request from the Reservation Manager a reserved path from the current robot position to the tray where it is supposed to pick up the assigned package
@@ -560,12 +563,12 @@ Since all our reservations are based on estimations of the time a robot is in a 
 There are many situations where such an improvement is possible. 
 because of time constraints we only consider the following situation for beneficial replanning:
 When a robot leaves a tray earlier than estimated and planned for, another robot waiting to access that particular tray can access it earlier.
-\\ \\
+
 % describe behavior
 When replanning for a task the Task Handler computes and reserves a new path through the Reservation Manager.
 As long as the reservation is not yet granted it will continue with its current path.
 When the new path is received the Task Handler hands it to the Motion Planner to drive and the replanning is complete.
-\\
+
 % this behavior with one addition also allows us to recover from situations where a robot is to slow for its reservations and ends up outside of them
 In the case of a robot being slower than planned for or more generally in the case of a robot not being in a reservation of its, replanning is not only beneficial but necessary.
 The previously introduced behaviour with a simple addition can be used for this case as well. Instead of the robot continuing on its current path while the reservation is not yet granted, the robot places an emergency reservation on its current position and stops driving until it receives a new reserved path.
@@ -592,12 +595,12 @@ The first requirement was to able to successfully demonstrate the workability of
 \item The agent should be able to coordinate with other agents for reserving path space. 
 \item For successful simulation: A number of robots ( \textgreater 1) must be able to handle multiple tasks.
 \end{itemize}
-After testing the basic functionality, the interactions and behaviour of the system can be evaluated. As the goal of system is to reduce time required to perform tasks using multi robot collaboration, the most critical parameter is time taken to complete all the specified tasks. This parameter also considers situations where although individual time to perform task can be increased, the overall time can be reduced. 
-\\
+After testing the basic functionality, the interactions and behaviour of the system can be evaluated. As the goal of system is to reduce time required to perform tasks using multi robot collaboration, the most critical parameter is time taken to complete all the specified tasks. This parameter also considers situations where although individual time to perform task can be increased, the overall time can be reduced.
+
 Another important parameter is how each robot spends it's in time performing the task. Does it spend more time driving? Or is it more time consuming to pick up the packages. This helps in pin-pointing the key areas where possible improvements can be done. 
-\\
-To analyse clearly, only one parameter was changed at a time and all the other parameters were kept constant.    
-\\
+
+To analyse clearly, only one parameter was changed at a time and all the other parameters were kept constant.
+
 One thing that was consider when doing evaluations is that they must not hinder the performance of the system in any way. Hence, we decided only to generate .csv files in simulation environment and do the analysis and graph generation in a separate python script.
 
 \subsection{Evaluation Process}
