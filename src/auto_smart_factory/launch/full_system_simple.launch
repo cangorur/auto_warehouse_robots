@@ -16,9 +16,6 @@
 	
 	<!-- Task Planner -->
 	<node pkg="auto_smart_factory" type="task_planner" name="task_planner" />
-
-	<!-- Warehouse Gateway -->
-	<!--<node pkg="auto_smart_factory" type="warehouse_gateway" name="warehouse_gateway" /> -->
 	
 	<!-- Reservation Master -->
 	<node pkg="auto_smart_factory" type="reservation_master" name="reservation_master" />
