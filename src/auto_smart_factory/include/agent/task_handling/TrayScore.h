@@ -3,6 +3,9 @@
 
 #include "ros/ros.h"
 
+/**
+ * Class for holding data to compare between different source and target tray pairs
+ */
 class TrayScore {
 public:
 	TrayScore(uint32_t sourceTray, uint32_t targetTray, double score, double estimatedDuration);
@@ -12,8 +15,9 @@ public:
 	uint32_t sourceTray;
 	// the tray id of the target tray
 	uint32_t targetTray;
-	// the calculated score between source_tray and target_tray
-	double score;		
+	// the calculated score between robot position and source_tray as well as source_tray and target_tray
+	double score;
+	// the estimated duration between robot position and source_tray as well as source_tray and target_tray
 	double estimatedDuration;
 };
 

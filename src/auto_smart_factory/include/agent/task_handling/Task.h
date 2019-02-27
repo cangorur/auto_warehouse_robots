@@ -5,7 +5,11 @@
 #include "agent/path_planning/OrientedPoint.h"
 #include "agent/path_planning/Path.h"
 #include "auto_smart_factory/TaskEvaluation.h"
-
+/**
+ * The abstract Task class for the agent
+ * Form this class the task subcategories inherit  
+ * It contains the generic properties and functions of a task
+ */
 class Task {
 public:
 	/// Type for the different task types
