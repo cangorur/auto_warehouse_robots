@@ -570,8 +570,6 @@ When the new path is received the Task Handler hands it to the Motion Planner to
 % this behavior with one addition also allows us to recover from situations where a robot is to slow for its reservations and ends up outside of them
 In the case of a robot being slower than planned for or more generally in the case of a robot not being in a reservation of its, replanning is not only beneficial but necessary.
 The previously introduced behavior with a simple addition can be used for this case as well. Instead of the robot continuing on its current path while the reservation is not yet granted, the robot places an emergrncy reservation on its current position and stops driving until it receives a new reserved path.
-\label{subsec:Task Execution}
-Describe how the Robot Agents operate (maybe call the section something like: Operation), how they work on the tasks, when they idle, ...
 
 \subsection{Prototyping Environment}
 \label{subsec:prototyping_environment}
