@@ -482,10 +482,25 @@ The Task Handler is responsible for computing the score of its robot for an anno
 
 There are two types of tasks: transportation tasks and charging tasks. Transportation tasks are announced and assigned by the Task Planner. In contrast charging tasks are not announced and instead assigned by the Task Handler of each robot without consulting the Task Planner.
 
-When the Task Planner receives a request to assign a (transportation) task, it will start by announcing the task to the robots and wait for them to answer. After that it sorts the answers by their score and assigns the task to the robot with the best score.
+When the Task Planner receives a request to assign a transportation task, it will announce the task to the robots and wait for them to answer.
+The announcement includes all possible source and target trays for this task.
+After receiving all answers or timing out, the Task Planner sorts the received answers by their score and assigns the task to the robot with the best score.
 
-A Task Handler receiving a task announcement will compute the best score out of all possible combinations of start and end trays. The answer to the announcement then includes the best score and the corresponding trays.
-% how is the score computed?
+Each Task Handler receiving the task announcement computes the score for all possible source and target tray combinations and answers with the best score and the corresponding trays.
+
+Since the score depends on the chosen source and target trays, the agent needs to estimate the following values: the duration to drive to the source tray $d_{source}$, the duration to drive to the target tray $d_{target}$ and the battery level after task completion $b$ in percent.
+
+The overall duration $d$ is computed by:
+$$d = d_{source} + d_{target} + d_{tasks}$$
+where $d_{tasks}$ is the estimation of the time to finish all queued tasks.
+
+As the estimated battery level itself would penalize the score linearly we instead use the factor $\alpha = f(b)$ computed by the Charging Management (cf. \compref{subsec:charging_management}).
+
+The score $s$ for the chosen source and target tray can then be computed as:
+$$ s = \frac{1}{\alpha} \cdot d$$
+where $\alpha \in [0, 1]$.
+
+A lower score therefore indicates a better combination of energy consumption and duration.
 
 
 \subsection{Path Planning}
@@ -510,6 +525,8 @@ For precise alignment and approach to the trays, the robot offers the functional
 \label{subsec:charging_management}
 Describe the role of the charging management, what it does and how it does it (e.g. penalty factor).
 % charging behaviour -> when to go charging and when add charging tasks
+
+% how is penalty factor computed and why
 
 \subsection{Task Execution}
 \label{subsec:task_execution}
@@ -575,40 +592,25 @@ Analysing the results is a very important validation for any project. But before
 % export as csv -> compare different configurations, compare basic parameters
 % possible to simulate warehouse config to check for problems with tray placement etc.
 As mentioned in \compref{sec:introduction}, the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The evaluations are also necessary to identify the flaws and bugs present in the system.
-The first requirement was to able to successfully demonstrate the workability of our system. This can be separated in following sub requirements:
-\begin{itemize}
-\item A task should be correctly assigned to the nearest robot
-\item The robot agent should complete the task by correctly following the path created by path planner.
-\item The robot should be able to handle obstacles and should be able to place packages on the shelves.
-\item The agent should be able to coordinate with other agents for reserving path space. 
-\item For successful simulation: A number of robots ( \textgreater 1) must be able to handle multiple tasks.
-\end{itemize}
-After testing the basic functionality, the interactions and behaviour of the system can be evaluated. As the goal of system is to reduce time required to perform tasks using multi robot collaboration, the most critical parameter is time taken to complete all the specified tasks. This parameter also considers situations where although individual time to perform task can be increased, the overall time can be reduced.
 
-Another important parameter is how each robot spends it's in time performing the task. Does it spend more time driving? Or is it more time consuming to pick up the packages. This helps in pin-pointing the key areas where possible improvements can be done. 
+After testing the basic functionality, the interactions and behaviour of the system were evaluated. As the goal of system is to reduce time required to perform tasks using multi robot collaboration, the most critical parameter is time taken to complete all the specified tasks. This parameter also considers situations where although individual time to perform task can be increased, the overall time can be reduced.
 
-To analyse clearly, only one parameter was changed at a time and all the other parameters were kept constant.
+Another important parameter is how each robot spends it's in time performing the task. Does it spend more time driving? Or is it more time consuming to pick up the packages. This helps in pin-pointing the key areas where possible improvements can be done. To analyse this clearly, only one parameter was changed at a time and all the other parameters were kept constant.
 
-One thing that was consider when doing evaluations is that they must not hinder the performance of the system in any way. Hence, we decided only to generate .csv files in simulation environment and do the analysis and graph generation in a separate python script.
+The performance of the system must not be affected by evaluation in any way. Hence, we decided only to generate .csv files in simulation environment and do the analysis and graph generation in a separate python script. 
 
-\subsection{Evaluation Process}
-Considering all the above points, we decided to go for the following evaluation constraints:
-\\
-Time required per package averaged over 40 tasks.
-\begin{itemize}
-\item Constant Parameters:
+For evaluating time required per package averaged over 40 tasks, the sequence is as follows:
 
-\begin{itemize}
-\item Map: Standard
-\item Starting battery: Randomized between 95 - 100%
-\item Number of averaged transportation tasks: 40
-\item Robot type: Default, Pioneer P3-DX 
-\item Path planner: Smoothed-Theta*
-\item Number of repetitions per simulation: 3, to eleminate outliers
-\end{itemize}
+\begin{enumerate}
+\item We evaluated the system on map of 16x16 size, which is suited for around 8 robots.
+%TODO write for map2
+%Refer to map in methodology -> protyping env
+\item When simulation starts, the battery is randomized between 95 - 100.
+\item The robots perform tasks for package delivery from one tray to another. Occasional, they also perform charging tasks when their battery is lower or if they are idle. The information about time spent by each robot in various tasks and corresponding timestamps is recorded by the evaluator component of ros. 
+\item After 40 successful transportation tasks, the results of evaluation are stored in a .csv file.
+\end{enumerate}
 
-\item Variable Parameter: Number of robots
-\item Evaluated Metrics:
+Each evaluation is performed for particular number of robots ranging from 1 -10 and following metrics are audited.
 
 \begin{itemize}
 \item Average time required to perform task from assignment to completion
@@ -620,12 +622,10 @@ Time required per package averaged over 40 tasks.
 \item Picking up the package	
 \item Driving to drop off the package	
 \item Dropping off the package		
-
+\end{itemize}
 \end{itemize}
 
-\end{itemize}
-
-\end{itemize}
+Average run for 40 tasks takes around 10-15 minutes. We tried to make each run error free and we did not observe any package drop. However to accommodate for inconsistencies and remove outliers such as sudden congestion we performed each run for 3 times. 
 
 For each instance, the ROS, MORSE and RViz environment was initialized with said parameters. After 40 transportation tasks are successfully completed, a .csv file is generated with following parameters:
 \begin{itemize}
@@ -635,38 +635,38 @@ For each instance, the ROS, MORSE and RViz environment was initialized with said
 \item Time since start of simulation
 \item Time durations for various activities like: assignment, driving to pickup, picking up, drive to drop-off and drop-off 
 \end{itemize}
-Then a MATLAB script converts this data into various intuitive graphs. 
 
-%TODO Add info about graphs.
+As a final step, a MATLAB script converts this data into various intuitive graphs. 
 
 \subsection{Evaluation results and interpretation}
-%TODO Show and explain results here :
+\begin{figure}[h]
+\includegraphics[width=0.20\textwidth]{resources/graphs/graph2.png}
+\label{No_of_robots_vs_average_time}
+\includegraphics[width=0.20\textwidth]{resources/graphs/graph1.png}
+\label{No_of_robots_vs_time_whiskers}
+\caption{Number of Robots Vs Time per task}
+\end{figure}
 
-Graphs and explanations
-\\
-FROM CAN:
-\\
-Think about how you can show your project’s performance. This is the most important section that will reflect your entire project, therefore it comes with the most weight on the grading of the Final Report. Therefore, analyse well what your project promises and how you can NUMERICALLY show this. Then, you discuss on the findings. Sub-sections can be created freely.
-\\
-Usually, the common metrics to be used are: 
-\begin{itemize}
-\item
-overall accuracy in estimation (of whatever you are estimating: e.g. human belief, human activity, object type + shape, object pose, comparing the estimated time to store a pkg of a robot and the real time of realization etc).
-Of course for such analysis you need multiple runs of the system
-Don’t forget to separate the training set from the test set (80% of your entire dataset is for training, 20% is to test)
+The graph \ref{No_of_robots_vs_average_time} shows average package delivery time increases with increase in number of robots.  Initially for one robots, a task can be executed as fast as possible, without any obstacles in between. As more robots participate in the simulation, robots need to avoid paths of other robots. This increases the coordination overhead which in turn leads into congestions. From robot 4 onwards, the package delivery time increases quite linearly as number of robots increase.
 
-\item
-overall success / precision (of the overall decisions your system makes: e.g. robotA is the most suitable for loading and storing pkg, comparison of the average time a task is realized with or without this component shows the impact of the component.)
+Similarly, in \ref{No_of_robots_vs_time_whiskers}, we can see that the variance between average delivery times is increased significantly. The reason for this can be again attributed to the coordination. Robots which reserve the direct path first will have the lowest travel time. On the contrary, robots reserving the path later will have to avoid pre reserved spots, thus taking a longer, non direct path. Compared to 15 \% varience in robot 1,  in robot 10, it almost becomes 25 \%.  
 
-\end{itemize}
+\begin{figure}[h]
+\includegraphics[width=0.40\textwidth]{resources/graphs/graph6.png}
+\label{No_of_robots_vs_average_time_all_taks}
+\caption{Number of Robots Vs Time taken for 40 tasks}
+\end{figure}
 
-If you can show your results on graphics it is a BONUS. If you can show on such graphs that how changing of some parameters of your methods/env. conditions/the context in the scenario etc. would affect your system’s performance, then you will receive +10 points for your overall document. 
-\\
-As the first step, you start discussing on what sort of results you will show and we will definitely discuss them in the upcoming two weeks. Feel free to suggest and ask anything on that phase (be brave !).
-\\
-Finally, you will conclude with the discussion of these results you showed/described. Basically answer this question, what these results tell you? Even though they are bad /not significant then you need to comment on why it is how it is. There HAS TO BE A DISCUSSION even though it is short. 
-\\
-You can also criticize your approach and offer better ones if it would lead to better performances. You can also briefly discuss the points to be improved/extended in your system. You will get the GRADES FROM THE DISCUSSION more than the significance or the performance of your results. In the past some groups got the highest grades although their system didn’t work well. Your goal is not to build an end product, but to be aware of what you build, a strong code base and discussion points for us to improve on your code. Positive results are of course a plus.
+In graph \ref{No_of_robots_vs_average_time_all_taks}, we can however see the positive effect of adding number of robots. The total time to finish 40 tasks drops by more than 60 \% when we use 4 robots instead of 1. This certifies the goal of the system, that the multi robot collaboration significantly improves the performance of the system. Furthermore, we can see the performance improvement is incremental from 4 robots onwards. As number of robots is more, and available space remains the same, robots cancel the positive effect of collaboration with negative effect of congestion.
+
+%therefore at one point the time increases
+%to add after new graphs
+
+
+
+
+
+
 
 
 
