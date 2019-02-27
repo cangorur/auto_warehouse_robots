@@ -587,40 +587,28 @@ Analysing the results is a very important validation for any project. But before
 % export as csv -> compare different configurations, compare basic parameters
 % possible to simulate warehouse config to check for problems with tray placement etc.
 As mentioned in \compref{sec:introduction}, the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The evaluations are also necessary to identify the flaws and bugs present in the system.
-The first requirement was to able to successfully demonstrate the workability of our system. This can be separated in following sub requirements:
+
+After testing the basic functionality, the interactions and behaviour of the system were evaluated. As the goal of system is to reduce time required to perform tasks using multi robot collaboration, the most critical parameter is time taken to complete all the specified tasks. This parameter also considers situations where although individual time to perform task can be increased, the overall time can be reduced.
+
+Another important parameter is how each robot spends it's in time performing the task. Does it spend more time driving? Or is it more time consuming to pick up the packages. This helps in pin-pointing the key areas where possible improvements can be done. To analyse this clearly, only one parameter was changed at a time and all the other parameters were kept constant.
+
+The performance of the system must not be affected by evaluation in any way. Hence, we decided only to generate .csv files in simulation environment and do the analysis and graph generation in a separate python script. 
+
+For evaluating time required per package averaged over 40 tasks.
+
+Environment Sequence:
 \begin{itemize}
-\item A task should be correctly assigned to the nearest robot
-\item The robot agent should complete the task by correctly following the path created by path planner.
-\item The robot should be able to handle obstacles and should be able to place packages on the shelves.
-\item The agent should be able to coordinate with other agents for reserving path space. 
-\item For successful simulation: A number of robots ( \textgreater 1) must be able to handle multiple tasks.
-\end{itemize}
-After testing the basic functionality, the interactions and behaviour of the system can be evaluated. As the goal of system is to reduce time required to perform tasks using multi robot collaboration, the most critical parameter is time taken to complete all the specified tasks. This parameter also considers situations where although individual time to perform task can be increased, the overall time can be reduced.
-
-Another important parameter is how each robot spends it's in time performing the task. Does it spend more time driving? Or is it more time consuming to pick up the packages. This helps in pin-pointing the key areas where possible improvements can be done. 
-
-To analyse clearly, only one parameter was changed at a time and all the other parameters were kept constant.
-
-One thing that was consider when doing evaluations is that they must not hinder the performance of the system in any way. Hence, we decided only to generate .csv files in simulation environment and do the analysis and graph generation in a separate python script.
-
-\subsection{Evaluation Process}
-Considering all the above points, we decided to go for the following evaluation constraints:
-\\
-Time required per package averaged over 40 tasks.
-\begin{itemize}
-\item Constant Parameters:
-
-\begin{itemize}
-\item Map: Standard
-\item Starting battery: Randomized between 95 - 100%
-\item Number of averaged transportation tasks: 40
-\item Robot type: Default, Pioneer P3-DX 
-\item Path planner: Smoothed-Theta*
-\item Number of repetitions per simulation: 3, to eleminate outliers
+\item We evaluated the system on map of 16x16 size, which is suited for around 8 robots.
+%TODO write for map2
+%Refer to map in methodology -> protyping env
+\item When simulation starts, the battery is randomized between 95 - 100.
+\item The robots perform tasks for package delivery from one tray to another. Occasional, they also perform charging tasks when their battery is lower or if they are idle. The information about time spent by each robot in various tasks and corresponding timestamps is recorded by the evaluator component of ros. 
+\item After 40 successful transportation tasks, the results of evaluation are stored in a .csv file.
 \end{itemize}
 
-\item Variable Parameter: Number of robots
-\item Evaluated Metrics:
+Each evaluation is performed for particular number of robots ranging from 1 -10. 
+
+Evaluated Metrics:
 
 \begin{itemize}
 \item Average time required to perform task from assignment to completion
@@ -632,12 +620,11 @@ Time required per package averaged over 40 tasks.
 \item Picking up the package	
 \item Driving to drop off the package	
 \item Dropping off the package		
-
 \end{itemize}
 
 \end{itemize}
 
-\end{itemize}
+Average run for 40 tasks takes around 10-15 minutes. We tried to make each run error free and we did not observe any package drop. However to accommodate for inconsistencies and remove outliers such as sudden congestion we performed each run for 3 times. 
 
 For each instance, the ROS, MORSE and RViz environment was initialized with said parameters. After 40 transportation tasks are successfully completed, a .csv file is generated with following parameters:
 \begin{itemize}
@@ -649,10 +636,40 @@ For each instance, the ROS, MORSE and RViz environment was initialized with said
 \end{itemize}
 Then a MATLAB script converts this data into various intuitive graphs. 
 
-%TODO Add info about graphs.
-
 \subsection{Evaluation results and interpretation}
-%TODO Show and explain results here :
+\begin{figure}[h]
+\includegraphics[width=0.20\textwidth]{resources/graphs/graph2.png}
+\label{No_of_robots_vs_average_time}
+\includegraphics[width=0.20\textwidth]{resources/graphs/graph1.png}
+\label{No_of_robots_vs_time_whiskers}
+\caption{Number of Robots Vs Time per task}
+\end{figure}
+
+The graph \ref{No_of_robots_vs_average_time} shows average package delivery time increases with increase in number of robots.  Initially for one robots, a task can be executed as fast as possible, without any obstacles in between. As more robots participate in the simulation, robots need to avoid paths of other robots. This increases the coordination overhead which in turn leads into congestions. From robot 4 onwards, the package delivery time increases quite linearly as number of robots increase.
+
+Similarly, in \ref{No_of_robots_vs_time_whiskers}, we can see that the variance between average delivery times is increased significantly. The reason for this can be again attributed to the coordination. Robots which reserve the direct path first will have the lowest travel time. On the contrary, robots reserving the path later will have to avoid pre reserved spots, thus taking a longer, non direct path. Compared to 15 \% varience in robot 1,  in robot 10, it almost becomes 25 \%.  
+
+\begin{figure}[h]
+\includegraphics[width=0.40\textwidth]{resources/graphs/graph6.png}
+\label{No_of_robots_vs_average_time_all_taks}
+\caption{Number of Robots Vs Time taken for 40 tasks}
+\end{figure}
+
+In graph \ref{No_of_robots_vs_average_time_all_taks}, we can however see the positive effect of adding number of robots. The total time to finish 40 tasks drops by more than 60 \% when we use 4 robots instead of 1. This certifies the goal of the system, that the multi robot collaboration significantly improves the performance of the system. Furthermore, we can see the performance improvement is incremental from 4 robots onwards. As number of robots is more, and available space remains the same, robots cancel the positive effect of collaboration with negative effect of congestion.
+
+%therefore at one point the time increases
+%to add after new graphs
+
+
+
+
+
+
+
+
+
+
+
 
 Graphs and explanations
 \\
