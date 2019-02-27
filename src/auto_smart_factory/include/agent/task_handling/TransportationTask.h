@@ -6,6 +6,10 @@
 #include "agent/path_planning/OrientedPoint.h"
 #include "agent/path_planning/Path.h"
 
+/**
+ * The transportation task represents a subcategory of a task for 
+ * which robots have to drive to a source location and from there to a target location
+ */
 class TransportationTask : public Task {
 public:
 	/**

@@ -103,7 +103,9 @@ protected:
 
 	/**
 	 * Creates a list of possible robot candidates using lists of source and target tray candidates.
-	 * All idle robots are queried using the candidates.
+	 * All robots are queried using the candidates.
+	 * This function will wait for either a timeout or until all robots have answered the announcement made in this function.
+	 * NOTE: While the function is waiting it calls the spinOnce() function
 	 * @param robotCandidates Output vector for robot candidates
 	 * @param sourceTrayCandidates List of source tray candidates
 	 * @param targetTrayCandidates List of output tray candidates
@@ -145,7 +147,11 @@ protected:
 	/// generate new unique id
 	static unsigned int getNewId();
 
-	/// wait with a frequency until each robot has answered or a timeout occurs
+	/**
+	 * wait with a frequency until each robot has answered or a timeout occurs
+	 * @param timeout, maximum waiting time
+	 * @param frequency, the frequency with which the function will check if all answers were received
+	 */
 	void waitForRobotScores(ros::Duration timeout, ros::Rate frequency);
 };
 

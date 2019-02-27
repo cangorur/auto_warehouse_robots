@@ -22,6 +22,10 @@
 
 class Agent;
 
+/**
+ * The Taskhandler class implements the coordination and task execution component for a robot.
+ * It takes care of task execution as well as answering task announcements 
+ */
 class TaskHandler
 {
 	public:
@@ -41,13 +45,13 @@ class TaskHandler
     	explicit TaskHandler(Agent* agent, ros::Publisher* scorePublish, ros::Publisher* evalPub, ros::Publisher* startedPub, Map* map, MotionPlanner* mp, Gripper* gripper, ChargingManagement* cm, ReservationManager* rm);
 
 		/**
-		 * destructor
+		 * Destructor
 		 */
     	virtual ~TaskHandler();
 
 		/**
 		 * Manages the current state of the TaskHandler, executes tasks if one is assigned, answers taskAnnouncements
-		 * Should be called in an spin-one loop(see Agent.cpp)
+		 * Should be called in an spin-once loop(see Agent.cpp)
 		 */
 		void update();
 
@@ -173,7 +177,10 @@ class TaskHandler
 		void answerAnnouncement(auto_smart_factory::TaskAnnouncement& taskAnnouncement);
 
 		/**
-		 * TODO: VINCENT
+		 * calculate the distance from a position to a target position
+		 * @param robotPos, position of the robot
+		 * @param pathTargetPos, position of the target
+		 * @return the distance to drive between robotPos and pathTargetPos
 		 */
 		double getApproachDistance(OrientedPoint robotPos, OrientedPoint pathTargetPos) const;
 		
@@ -216,7 +223,7 @@ class TaskHandler
 		// the list of unanswered rask announcements
 		std::list<auto_smart_factory::TaskAnnouncement> announcements;
 		
-		// TODO: VINCENT
+		// distance from the current position (in front of a tray) to the targeted tray
 		double lastApproachDistance;
 };
 
