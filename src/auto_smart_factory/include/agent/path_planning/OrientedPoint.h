@@ -1,6 +1,7 @@
 #ifndef AGENT_ORIENTEDPOINT_H_
 #define AGENT_ORIENTEDPOINT_H_
 
+/* Class which represents a 2D point with an orientation in Rad */
 class OrientedPoint {
 public:
 	explicit OrientedPoint();
