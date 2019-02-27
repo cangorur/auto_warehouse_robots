@@ -492,7 +492,7 @@ Test
 \label{subsec:task_planning}
 The task planning is done via a hybrid approach. In particular this means that the task planning is done by different types of components.
 A central \textit{Task Planner} and decentral \textit{Task Handler} in each of the robots.
-The Task Planner is responsible for announcing new tasks to the robts, collecting their responseg, picking the best suited robot and assigning tasks.
+The Task Planner is responsible for announcing new tasks to the robots, collecting their response, picking the best suited robot and assigning tasks.
 The Task Handler is responsible for computing the score of its robot for an announcement, answering to the Task Planner with that score and keeping track of tasks assigned to its robot. The Task Handler is also responsible for keeping the robot charged.
 \\
 There are two types of tasks: transportation tasks and charging tasks.
@@ -546,7 +546,7 @@ For a charging task the execution procedure looks very similar:
 	\item find the nearest free charging station
 	\item request from the Reservation Manager a reserved path from the current robot position to the charging station
 	\item if it has received such a path hand it to the motion planner for driving
-	\item when the robot arrives at the charging station inititate the charging procedure
+	\item when the robot arrives at the charging station initiate the charging procedure
 	\item when the battery is full, mark the task as finished
 \end{enumerate}
 % path replanning if necessary
@@ -559,7 +559,7 @@ The \textit{Path Replanning} is part of the Task Handler component. \\
 Since all our reservations are based on estimations of the time a robot is in a specific area, it is possible that a robot is faster than anticipated. In this case another robot might be able to finish its current task earlier.
 There are many situations where such an improvement is possible. 
 because of time constraints we only consider the following situation for beneficial replanning:
-When a robot leaves a tray earlier than estimated and planned for, another robot waiting to access that particuar tray can access it earlier.
+When a robot leaves a tray earlier than estimated and planned for, another robot waiting to access that particular tray can access it earlier.
 \\ \\
 % describe behavior
 When replanning for a task the Task Handler computes and reserves a new path through the Reservation Manager.
