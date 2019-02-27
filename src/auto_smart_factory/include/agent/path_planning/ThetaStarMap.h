@@ -59,9 +59,6 @@ public:
 	 * @return True iff a new node was successfully added. Failure reasons include: Position is outside of the map, There already exists a GridNode at this exact position */
 	bool addAdditionalNode(Point pos);
 	
-	// Debugging
-	void listAllReservationsIn(Point p);
-	
 	/** Returns the owner if of the theta* Map
 	 * @return Owner Id*/
 	int getOwnerId() const;
