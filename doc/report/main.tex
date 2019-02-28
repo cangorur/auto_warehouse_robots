@@ -375,7 +375,7 @@
 
 \begin{abstract}
 %\boldmath
-Autonomous warehouses play an important role in smart factory environments which are an essential element of "Industry 4.0". The goal is to optimize the transportation of goods within the warehouse using multi-robot collaboration and coordination. This work uses hybrid task planning to improve the task assignment decisions and distributing the computational effort between the central task planner and the decentralized agents. A decentralized path planning with timed reservations using a shared map ensures the coordination between all robots while moving. The results show that this approach yields a fast and reliable way of transportating goods in a warehouse and remains efficient up to a relatively high density of robots. Due to the limited space an increasing amount of robots leads to congestions aswell as coordination overhead reducing the overall efficiency at some point. This point can be determined within our simulation to find the best suitable amount of robots for a given warehouse configuration.
+Autonomous warehouses play an important role in smart factory environments, which is an essential element of "Industry 4.0". The goal is to optimize the transportation of goods within the warehouse using multi-robot collaboration and coordination. This work uses hybrid task planning to improve the task assignment decisions and distributing the computational effort between the central task planner and the decentralized agents. A decentralized path planning with timed reservations, using a shared map, ensures the coordination between all robots while moving. The results show that this approach yields a fast and reliable way of transporting goods in a warehouse and remains efficient, up to a relatively high density of robots. Due to the limited space, an increasing amount of robots leads to congestions as well as coordination overhead, reducing the overall efficiency at some point. This point can be determined within our simulation to find the best suitable amount of robots for a given warehouse configuration.
 \end{abstract}
 % IEEEtran.cls defaults to using nonbold math in the Abstract.
 % This preserves the distinction between vectors and scalars. However,
@@ -432,8 +432,8 @@ Before we describe the related work (see \autoref{sec:related_work}) and our sys
 	% 	lose charge while driving and idling
 	% task generation (unpredictable)
 
-Our system expects as input a map of fixed size on which four different types of trays are placed.
-Trays where packages enter the warehouse are called \textit{input tray}s. Correspondingly trays where packages exit the warehouse are called \textit{output tray}s. 
+Our system expects input as a map of fixed size on which four different types of trays are placed.
+Trays where packages enter the warehouse are called \textit{input tray}s. Correspondingly, trays where packages exit the warehouse are called \textit{output tray}s. 
 One could consider input trays as conveyor belts on which machines put finished products, while output trays could be considered as loading locations for trucks.
 
 The third type of tray are \textit{storage tray}s in which packages can be stored.
@@ -442,9 +442,9 @@ Each input, output and storage tray can hold a maximum of one package at a time.
 \textit{Charging station}s are the last tray type. In front of a charging station a robot can recharge its battery. 
 Similarly to the other tray types only one robot can charge at a charging simultaneously.
 
-In addition to the environment we were given robots. 
+In addition to the environment, we were given robots. 
 These robots are capable of driving and have a gripper which allows them to pick up and drop off packages. 
-Robots have a battery with a charge that decreases over time when idling and faster when driving.
+Robots have a battery with a charge which decreases over time at a flat rate when idling and faster when driving.
 Each robot knows the static environment, meaning the map, but does not automatically know where the other robots are. 
 
 Tasks, which include a package transportation, are generated unpredictably and have to be handled by the system.
@@ -509,7 +509,7 @@ The \emph{Package Generator} is simply an auxiliary utility to generate the pack
 
 \subsection{Task Planning}
 \label{subsec:task_planning}
-The task planning is done via a hybrid approach. This means that the task planning is done by two different types of components: a central \textit{Task Planner} and decentral \textit{Task Handler} in each of the robots.
+The task planning is done via a hybrid approach. This means that the task planning is done by two different types of components: a centralized \textit{Task Planner} and decentralized \textit{Task Handler} in each of the robots.
 
 The Task Planner is responsible for announcing new tasks to the robots, collecting their responses, picking the best suited robot and assigning tasks.
 
@@ -540,29 +540,29 @@ A lower score therefore indicates a better combination of energy consumption and
 
 \subsection{Path Planning}
 \label{subsec:path_planning}
-The \emph{single agent path planning} is accomplished using the \emph{Theta*} algorithm which works on a grid of points covering the obstacle free areas of the map. To find pathes to exact start and end points new points can be inserted into this grid dynamically. In addition to this grid obstacles are represented as rotated rectangles. Since the Theta* algrorithm does not have a notion of robot size these rectangles sizes are inflated to divide the map into drivable and non-drivable areas. The line of sight checks for Theta* are performed against these rectangles.
+The \emph{single agent path planning} is accomplished using the \emph{Theta*} algorithm which works on a grid of points covering the obstacle free areas of the map. To find paths to the exact start and end points, new points can be inserted into this grid dynamically. Additionally, grid obstacles are represented as rotated rectangles. Since the Theta* algorithm does not have a notion of robot size, these rectangles sizes are inflated to divide the map into drivable and non-drivable areas. The line of sight checks for Theta* are performed against these rectangles.
 
-To allow multiple robots to coordinate their path planning, each robots reserves its path by broadcasting a list of timed obstacles covering its path. These reservations are obstacles which have a limited lifespan, the Theta* algorithm is then able to take other robots into consideration. With the notion of time the path planning is able to weight waiting for an area to become free against detouring. This allows agents to not only avoid collisions but to actually plan around each other, finding the fastest path to their target, not the shortest one.
+To allow multiple robots to coordinate their path planning, each robots reserves its path by broadcasting a list of timed obstacles covering its path. These reservations are obstacles which have a limited lifespan, the Theta* algorithm is then able to take other robots into consideration. With the notion of time the path planning is able to weight waiting for an area to become free against detouring. This allows agents to not only avoid collisions, but to actually plan around each other, finding the fastest path to their target, not the shortest one.
 
-By abstracting the other robots through timed reservations each agent is able to locally compute pathes which take the global dynamic environment into account. This avoids the need for a central path planner to handle the computational complexity of computing pathes for all robots at the same time.
+By abstracting the other robots through timed reservations, each agent is able to locally compute paths which take the global dynamic environment into account. This avoids the need for a central path planner to handle the computational complexity of computing paths for all robots at the same time.
 
-To generate these timed reservations the path planning estimates the duration of each path segment and takes driving, turning while driving, turning on spot and waiting into account. With this approach, accurate estimations can be made which are used to reserve path segments only for the calculated time span and avoid blocking large parts of the map over a long time. These estimated driving times are also used by the task plannings scoring mechanism.
+To generate these timed reservations, the path planning estimates the duration of each path segment and takes driving, turning while driving, turning on spot and waiting into account. With this approach, accurate estimations can be made which are used to reserve path segments only for the calculated timespan and avoid blocking large parts of the map over a long time. These estimated driving times are also used by the task planner's scoring mechanism.
 
 After the actual Theta* path is computed, a gradient decent smoothing algorithm is used to svoid sharp turns where possible. This enables the \emph{Motion Planner} to drive through these curves without stopping unnecessarily and reduces the overall driving time.
 
 \subsection{Coordination}
 \label{subsec:coordination}
-As explained in \compref{subsec:path_planning} the agents announce their current path with timed reservations to prevent other robots from planning a path through their current one. For this system to work the path planning needs knowledge of all current and upcoming reservations. Furthermore, a path is only guaranteed to be valid for the reservations known during its planning. To ensure that pathes by different agents do not conflict, only one agent at a time is allowed to reserve its path. Afterwards, every new path needs to be calculated with these new reservations in mind. The \emph{Reservation Manager} is responsible to handle both the communication and path recalculation. Each time new reservations from other agents are received the Reservation Manager recalculates the agents path to take these new reservations into account.
+As explained in \compref{subsec:path_planning} the agents announce their current path with timed reservations to prevent other robots from planning a path through their current one. For this system to work, the path planning needs knowledge of all current and upcoming reservations. Furthermore, a path is only guaranteed to be valid for the reservations which are known during its planning. To ensure that paths by different agents do not conflict, only one agent at a time is allowed to reserve its path. Afterwards, every new path needs to be calculated with these new reservations in mind. The \emph{Reservation Manager} is responsible to handle both the communications and path recalculations. Each time new reservations from other agents are received, the Reservation Manager recalculates the agents path to take these new reservations into account.
 
-To keep the path planning and coordination as decentralized as possible each agent handles the communication logic mostly locally. However, a \emph{central arbiter} is used to decide the order of almost simultaneously arriving reservation messages. This is necessary since some interactions with \emph{MORSE} may be blocking the robot for some time and therefore prevent a purely decentralized communication approach from being efficient and robust.
+To keep the path planning and coordination as decentralized as possible, each agent handles the communication logic mostly locally. However, a \emph{central arbiter} is used to decide the order of almost simultaneously arriving reservation messages. This is necessary since some interactions with \emph{MORSE} may be blocking the robot for some time and therefore prevent a purely decentralized communication approach from being efficient and robust.
 
-The Reservation Manager also checks if deleted reservations from other robots would allow a faster path to the robot's current target. In this case the Task Handling component is signaled that replanning would be beneficial.
+The Reservation Manager also checks if deleted reservations from other robots would allow a faster path to the robot's current target. In this case, the Task Handling component is signalled that replanning would be beneficial.
 
-The reservation master is also able to broadcast emergency stops to other robots to prevent crashes. These emergency reservations take precedence over all other reservation requests.
+The reservation master is also able to broadcast emergency stops to the other robots in order to prevent crashes. These emergency reservations take precedence over all the other reservation requests.
 
 \subsection{Motion Planning}
 \label{subsec:motion_planning}
-The \emph{Motion Planner} is responsible for the linear and angular velocity of the robot. It utilizes a pid controller to calculate the angular velocity. There are cases where the pid controller doesn't provide an applicable solution. This includes sharp turns and turn arounds. For these cases the Motion Planner interrupts the pid controller and performs the rotation manually. The pid controller calculates the angular velocity based on the cross-track-error \emph{cte} with a sign to determine wether the robot is left or right off the track.
+The \emph{Motion Planner} is responsible for the linear and angular velocity of the robot. It utilizes a pid controller to calculate the angular velocity. There are cases where the pid controller doesn't provide an applicable solution. This includes sharp turns and turn arounds. For these cases, the Motion Planner interrupts the pid controller and performs the rotation manually. The pid controller calculates the angular velocity based on the cross-track-error \emph{cte} with a sign to determine whether the robot is left or right off the track.
 
 The linear velocity is calculated by subtracting an exponential translation of the cte from the maximum driving speed $v = v_{max} - min(\exp(cte^2-1), (v_{max}-v_{min}))$. It combines this with the value calculated from the distance to the target and uses the minimum of both. Finally the linear velocity is clamped between minimum and the maximum driving speed of the robot.
 
@@ -581,15 +581,15 @@ The other case where robots should go charging is when the Task Handler receives
 A robot always charges until its battery is fully charged.
 
 % how to choose charging station
-Ideally robots needing to charge should only drive short pathes to consume less charge. 
-Therefore, the robots when needing to charge compute the nearest available charging station by checking if the space in front of the charging trays is reserved.
+Ideally robots needing to charge should only drive short paths to consume less charge. 
+Therefore, when a robot needs to charge, it computes the nearest available charging station by checking if the space in front of the charging tray is reserved.
 When a robot starts a charging task it computes the nearest charging station and reserves the path to it, with that it automatically reserves the charging station.
 
 % how is penalty factor computed and why
 The charging management is also responsible for computing the score factor which is dependent on the battery charge at the end of a task as mentioned in \compref{subsec:task_planning}.
-We dont want the score influenced linearly by the charge for the complete charge interval. 
+We don't want the score influenced linearly by the charge for the complete charge interval. 
 That is because for high charge levels we want the duration of the path being the deciding factor when comparing two possible solutions for a task.
-Conversely when a robot will probably have low charge when ending the announced task we want robots with a longer paths but more charge left to be assigned the task.
+Conversely, when a robot will probably have low charge when ending the announced task we want robots with a longer paths but more charge left to be assigned the task.
 
 We therefore created the following three-piece function $f(b) \in [0, 1]$, where $b$ is the battery level after task completion:
 \[ 
