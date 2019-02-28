@@ -665,25 +665,25 @@ For a realistic multi agent environment including communication and agent separa
 % Analysing the results is a very important validation for any project. But before that, one must define exact constraints for evaluation of these results. Also, the evaluations must be backed by scientific reasoning and empirical data. Therefore it is essential to first reason why particular parameters were chosen and how they are tested. Following sections explain the same.
 
 \subsection{Evaluation Methodology}
-\label{evaluation_methodology}
+\label{subsec:evaluation_methodology}
 % mention evaluator as data collection unit, making easy evaluation of different configurations possible
 % export as csv -> compare different configurations, compare basic parameters
 % possible to simulate warehouse config to check for problems with tray placement etc.
-The performance of our system was evaluated on two different maps (Table \ref{tab:maps}) of size 18x16 using different number of robots (1, 2, 4, 6, 8, 10 and 12) with the same characteristics. The simulation was repeated 3 times for each number of robots on each map. The simulation was declared as finished when 40 transportation tasks were done. With the start of simulation, the battery level of robots is randomized between 95 and 100.
+The performance of our system was evaluated on two different maps (Table \ref{tab:maps}) of size 18x16 using different number of robots (1, 2, 4, 6, 8, 10 and 12) with the same characteristics. The simulation was repeated 3 times for each number of robots on each map. It was declared as finished when 40 transportation tasks were completed. The initial battery level of the robots is randomized between 95 and 100.
 
-For transportation tasks we sampled a) time stamps when a task is assigned, b) execution time of a task, c) time of driving to pick up, d) pick up time, e) time of driving to drop off, f) drop off time and g) battery level at the end of task. For charging tasks we sampled  a) time stamps when a task is assigned, b) execution time of a task, c) time of driving to charge, and d) charging time.
+For transportation tasks we sampled a) the timestamp when the task is assigned, b) the execution time of the task, c) the time for driving to pickup, d) the pickup time, e) the time for driving to drop-off, f) the drop-off time and g) the battery level at the end of each task. For charging tasks we sampled a) the timestamp when the task is assigned, b) the execution time of the task, c) the time for driving to the charing station, and d) the charging time.
 
-The performance of the system can be seen in following Figures. In Figure \ref{fig:delivery_time} we compare average package delivery time by number of robots for both maps. In Figures \ref{fig:drive_pickup_dropoff}, \ref{fig:delivery_time2} and \ref{fig:trans_charg_idle} can be seen relative average time split of different states of robots.
+The performance of the system can be seen in following figures. In Figure \ref{fig:delivery_time} we compare the average package delivery time for each number of robots on both maps. Figures \ref{fig:drive_pickup_dropoff}, \ref{fig:delivery_time2} and \ref{fig:trans_charg_idle} display the relative average time split for each state of the robot.
 
-We tried to determinate the optimal amount of the robots for each map. Figure \ref{fig:time_to_finish_40_tasks} shows the average time to finish 40 tasks and figure \ref{fig:energy_consumption} presents energy consumption of the system for 40 tasks by number of the robots.
+An important evaluation goal was to determinate the optimal amount of robots for each map. Figure \ref{fig:time_to_finish_40_tasks} shows the average time to finish 40 tasks and Figure \ref{fig:energy_consumption} presents the energy consumption of the system for 40 tasks for each number of robots.
 
 \subsection{Evaluation Results and Interpretation}
-
-The Figure \ref{fig:delivery_time} shows average package delivery time increases with increase in number of robots.  Initially for one robot, a task can be executed as fast as possible, without any obstacles in between. As more robots participate in the simulation, robots need to avoid paths of other robots. This increases the coordination overhead which in turn leads into congestions. From robot 4 onwards, the package delivery time increases quite linearly as number of robots increase. The similar behaviour is observed for map 2, however the effect is quite pronounced. By increasing trays, the density of map is further increased, making further difficult for the robots to navigate. 
+\label{subsec:evaluation_results_interpretation}
+The Figure \ref{fig:delivery_time} shows that the average package delivery time increases with an increasing number of robots. Initially, for one robot, a task can be executed as fast as possible, without any obstacles in between. As more robots participate in the simulation, robots need to avoid paths of other robots. This increases the coordination overhead which can lead to congestions. From robot 4 onwards, the package delivery time increases quite linearly with the increasing number of robots. A similar behaviour is observed for Map 2. However, the effect is quite distinct. By increasing the amount of trays, the density of the map is further increased, making it more difficult for the robots to navigate. 
 %
 %Similarly, in \ref{No_of_robots_vs_time_whiskers}, we can see that the variance between average delivery times is increased significantly. The reason for this can be again attributed to the coordination. Robots which reserve the direct path first will have the lowest travel time. On the contrary, robots reserving the path later will have to avoid pre reserved spots, thus taking a longer, non direct path. Compared to 15 \% varience in robot 1,  in robot 10, it almost becomes 25 \%.  
 
-\begin{table}[h]
+\begin{table}[h!]
 \caption{Maps Configuration}
 \centering
 \begin{tabular}{cccccc}
@@ -697,14 +697,14 @@ Map & Shape & \# Storage & \# Input             & \# Output & \# Charging \\ \hl
 \end{table}
 
 
-\begin{figure}[h]
+\begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph2.png}
 	\caption{Average package delivery time by number of robots }
 	\label{fig:delivery_time}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph3_1.png}
 	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph3_2.png}
@@ -712,7 +712,7 @@ Map & Shape & \# Storage & \# Input             & \# Output & \# Charging \\ \hl
 	\label{fig:drive_pickup_dropoff}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph4_1.png}
 	\label{fig:trans_charg_idle}
@@ -722,7 +722,7 @@ Map & Shape & \# Storage & \# Input             & \# Output & \# Charging \\ \hl
 \end{figure}
 
 
-\begin{figure}[h]
+\begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph7_1.png}
 	\label{fig:trans_charg_idle}
@@ -732,14 +732,14 @@ Map & Shape & \# Storage & \# Input             & \# Output & \# Charging \\ \hl
 \end{figure}
 
 
-\begin{figure}[h]
+\begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph6.png}
 	\caption{Average time to finish 40 tasks}
 	\label{fig:time_to_finish_40_tasks}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph8.png}
 	\caption{Energy consumption for 40 tasks by number of robots}
@@ -747,15 +747,15 @@ Map & Shape & \# Storage & \# Input             & \# Output & \# Charging \\ \hl
 \end{figure}
 
 
-In Figure \ref{fig:time_to_finish_40_tasks}, we can however see the positive effect of adding number of robots. For map 1,  The total time to finish 40 tasks drops by more than 60 \% when we use 4 robots instead of 1. This certifies the goal of the system, that the multi robot collaboration significantly improves the performance of the system. Furthermore, we can see the performance improvement is just marginal from 8 robots onwards. As number of robots is more, and available space remains the same, robots cancel the positive effect of collaboration with negative effect of congestion. For optimized average time to finish all tasks, 8 (for map 2) or 10 (for map 1) robots are preferred.
+In Figure \ref{fig:time_to_finish_40_tasks} we can see the positive effect of adding robots. For Map 1 the total time to finish 40 tasks decreases by more than 60 \% when we use 4 robots instead of 1. This certifies the goal of the system that the multi-robot collaboration significantly improves the performance of the system. Furthermore, we can see the performance improvement is just marginal from 8 robots onwards. As the number of robots increases and the available space remains the same, robots cancel the positive effect of the collaboration with the negative effect of having more coordination overhead. For the optimal average time to finish all tasks, 8 (for Map 2) or 10 (for Map 1) robots are preferred.
 
 
-The Figures \ref{fig:drive_pickup_dropoff} and \ref{fig:delivery_time2} shed light on another aspect of the simulation: the bottleneck. Here, the time the task is in a queue is the waiting time. In Map 1, when the number of robots is significantly more than the pickup and delivery tray (for example when there are more than 8 robots) the pickup and dropoff tasks take substantially more time. As the trays available for pickup and dropoff are limited (4 and 5 respectively), robots have to coordinate among themselves to get a space in front of the trays. The situation is much better in Map 2, when we increase the pickup and dropoff trays, removing the bottleneck. The differences in maps is clearly seen in Figure \ref{fig:trans_charg_idle}, especially with robots more than 6. In first map, the robots spend more time in idle and in charging. In second map, as more trays are available, they are more ready to execute the task, instead of waiting. Hence, for optimum package delivery time with lowest waiting time, 10 robots are preferred.
+The Figures \ref{fig:drive_pickup_dropoff} and \ref{fig:delivery_time2} shed light on another aspect of the simulation: the bottleneck. Here, the time the task is in a queue is the waiting time. In Map 1, when the number of robots is significantly higher than the amount of pickup and delivery trays (e.g., when there are more than 8 robots), the pickup and drop-off tasks take substantially more time. As the available trays for pickup and drop-off are limited (4 and 5 respectively), robots have to coordinate themselves to get a space in front of the trays. This situation is much better in Map 2, when we increase the pickup and drop-off trays, removing the bottleneck. The differences between the maps is clearly seen in Figure \ref{fig:trans_charg_idle}, especially with more than 6 robots. In the first map, the robots spend more time in idle and charging. In the second map, as more trays are available, they are more of the time ready to execute the task instead of waiting. Hence, for the optimum package delivery time with the lowest waiting time, 10 robots are preferred.
 
-Increasing robots increases overall power, but if the tasks are done in shorter time, lower energy consumption can be achieved. This can be clearly seen from the energy consumption Figure \ref{fig:energy_consumption}. For least energy consumption, 2 robots are preferred.
+Increasing the number of robots increases the overall power consumption. But if the tasks are done in a shorter time, lower energy consumption can be achieved. This can be clearly seen in the energy consumption in Figure \ref{fig:energy_consumption}. For the least energy consumption, 2 robots are preferred.
 
 
-Analysing all the above points, we would suggest that for map of this particular size, 6 number of robots is optimum. It strikes a good balance between time taken to perform all the tasks, time spent in idling and the energy consumed. Also, it considers law of diminishing returns, when even if it provides slight improvement, it is probably not worth the additional hardware cost.
+Analysing all the above points, the suggestion for the optimal amount of robots on a map of this particular size and layout is 6. It strikes a good balance between the time taken to perform all tasks, the time spent in idling and the energy that is consumed. Also, it considers the law of \emph{diminishing returns}. Even if there is a slight improvement in the performance, it is probably not worth the additional costs for hardware and maintenance.
 
 %In graph \ref{fig:drive_pickup_dropoff} we can see what percent of time the robot has spent in various activities. As expected, the robot spends most of it's time in driving, either to pickup or dropoff. However, if we consider results of Map 1 in \ref{fig:delivery_time}, the combined percent time taken for pickup and dropoff is increased from 9 \% for 1 robot to around 22 \% for 12 robots.  As the trays available for pickup and dropoff are limited (4 and 5 respectively), robots have to coordinate among themselves to get a space in front of the trays. This creates a bottleneck for robots and often results in congestions. 
 %
@@ -764,9 +764,6 @@ Analysing all the above points, we would suggest that for map of this particular
 %
 %therefore at one point the time increases
 %to add after new graphs
-
-
-
 
 
 
