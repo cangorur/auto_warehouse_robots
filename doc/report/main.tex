@@ -857,7 +857,7 @@ Analysing all the above points, we would suggest that for map of this particular
 % Note that, LaTeX2e, unlike IEEE journals, places footnotes above bottom
 % floats. This can be corrected via the \fnbelowfloat command of the
 % stfloats package.
-
+\newpage
 \section{Conclusion}
 \label{sec:conclusion}
 This work combines hybrid task planning with decentralized path planning to provide a scalable system for multi-robot coordination and collaboration in smart factory warehouses. The task planning can handle unpredictable transportation task spawning and provides an applicable solution. The decentralized path planning can handle a high robot density in a limited space with a reasonable coordination overhead. Timed reservations ensure there is only a single robot at a time in the same area. Considering waiting as a valid solution when planning routes avoids unnecessarily long paths. Therefore, the total amount of reserved areas on the map is reduced leading to less congestions. When comparing different amounts of robots, the results show a decrease in the total time to transport a fixed amount of packages by adding robots. In the beginning this decrease is quite high, saturating with the increasing density of robots. There is a point when adding more robots increases the total time to complete the tasks. Therefore, it is possible to identify the optimal amount of robots given a specific warehouse configuration. As the time improvement in the saturated area is relatively low, the most economic amount of robots might differ from the optimal one.
@@ -871,14 +871,15 @@ Integrating the laser scanner based obstacle detection into the system can preve
 There are also improvements in terms of task planning. Queuing tasks in the central task planner to optimize over multiple task can improve the task assignment reducing the driving times for all robots. Implementing a task revocation procedure can return tasks to the task planner for reassignment if a robot experiences unexpected issues.
 
 % if have a single appendix:
-\appendix[System Architecture]
+%\newpage
+%\appendix[System Architecture]
 
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=0.45\textwidth]{resources/system_architecture}
-	\caption{System Architecture}
-	\label{fig:system_architecture}
-\end{figure}
+%\begin{figure}[h!]
+%	\centering
+%	\includegraphics[width=0.45\textwidth]{resources/system_architecture}
+%	\caption{System Architecture}
+%	\label{fig:system_architecture}
+%\end{figure}
 
 
 % or
@@ -905,7 +906,7 @@ There are also improvements in terms of task planning. Queuing tasks in the cent
 % number - used to balance the columns on the last page
 % adjust value as needed - may need to be readjusted if
 % the document is modified later
-%\IEEEtriggeratref{8}
+%\IEEEtriggeratref{1}
 % The "triggered" command can be changed if desired:
 %\IEEEtriggercmd{\enlargethispage{-5in}}
 
@@ -923,6 +924,7 @@ There are also improvements in terms of task planning. Queuing tasks in the cent
 % <OR> manually copy in the resultant .bbl file
 % set second argument of \begin to the number of references
 % (used to reserve space for the reference number labels box)
+
 \begin{thebibliography}{1}
 \bibitem{AStar}
 Hart, Peter E., Nils J. Nilsson, and Bertram Raphael. "A formal basis for the heuristic determination of minimum cost paths." IEEE transactions on Systems Science and Cybernetics 4.2 (1968): 100-107.
