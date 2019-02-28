@@ -658,7 +658,7 @@ The previously introduced behaviour with a simple addition can be used for this 
 
 \subsection{Prototyping Environment}
 \label{subsec:prototyping_environment}
-Describe that we've used a prototyping environment to test all our path-planning and coordination algorithms in a simple and clean environment.
+For a realistic multi agent environment including communication and agent separation the \emph{Robot Operating System} (ROS) is used in this project. However, this also adds a lot of overhead which makes rapid prototyping and and testing much harder and more time consuming. Therefore a prototyping environment was developed in C++ using \emph{SFML}\cite{sfml} as graphical interface. Since path planning yields results which are easy to validate given a good visual representation this yielded a much faster development.
 
 \section{Results}
 \label{sec:results}
@@ -854,14 +854,7 @@ Analysing all the above points, we can assert with high level of confidence that
 % floats. This can be corrected via the \fnbelowfloat command of the
 % stfloats package.
 
-
-\section{Conclusion}
-
-FROM CAN:
-\\
-A brief summary of your system, what was the problem, how you achieved, your objectives, and your methodologies you used very very briefly. Then again very briefly share your finding (the discussion you made). Finally, you will conclude with the possible extensions / changes to improve the performance, basically the future works. You can find more about the templates of IEEE on the internet.
-
-
+\newpage
 % if have a single appendix:
 \appendix[System Architecture]
 
@@ -887,9 +880,9 @@ A brief summary of your system, what was the problem, how you achieved, your obj
 
 % Can use something like this to put references on a page
 % by themselves when using endfloat and the captionsoff option.
-\ifCLASSOPTIONcaptionsoff
-  \newpage
-\fi
+%\ifCLASSOPTIONcaptionsoff
+  %\newpage
+%\fi
 
 
 
@@ -933,6 +926,8 @@ Karaman, Sertac, and Emilio Frazzoli. "Incremental sampling-based algorithms for
 Palmieri, Luigi, Sven Koenig, and Kai O. Arras. "Rrt-based nonholonomic motion planning using any-angle path biasing." 2016 IEEE International Conference on Robotics and Automation (ICRA). IEEE, 2016.
 \bibitem{DMA}
 Desaraju, Vishnu R., and Jonathan P. How. "Decentralized path planning for multi-agent teams in complex environments using rapidly-exploring random trees." 2011 IEEE International Conference on Robotics and Automation. IEEE, 2011.
+\bibitem{sfml}
+Laurent Gomila. "Simple Fast Multimedia Library" https://www.sfml-dev.org/
 \end{thebibliography}
 
 %\vfill
