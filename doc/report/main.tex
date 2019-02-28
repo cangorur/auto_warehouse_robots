@@ -524,18 +524,18 @@ For precise alignment and approach to the trays, the robot offers the functional
 \subsection{Charging Management}
 \label{subsec:charging_management}
 
-Charging management is present in every agent to keep a track of all the available charging stations and agent batteries. The location of charging stations is given by warehouse configuration messages by finding trays with charging station as a parameter. Charging management hosts various functions which help agent to get path to the nearest charging station and get charging time.  
+Charging management is present in every agent to keep a track of all the available charging stations and agent batteries. The location of charging stations is given by warehouse configuration messages by finding trays with charging station as a parameter. Charging management hosts various functions which help agent. It can give the agent a path to the nearest charging station from agent's current location. It can also return an accurate prediction of charging time based on agent's current battery.
 
-One of the important task of charging station is to determine when and how robots go to the charging. As decided by our design, the robots will charge to 100 \%, once started charging. As pre-empting the charging task is not possible, the robots must charge only if really necessary. Hence, the robots which have low battery should be given more prefrerence for charging than the ones with high battery. For this, a score profile is used to return a multiplier which is further used by the task planner (explained in \ref{subsec:task_planning}). The score profile is as follows :
+One of the important task of charging station is to determine when and how robots go to the charging. As decided by our design, the robots will charge to 100 \%, once started charging. As pre-empting the charging task is not possible, the robots must charge only if really necessary. Hence, the robots which have low battery should be given more preference for charging than the ones with higher percentage of battery. For this, a score profile is used to return a multiplier, which is further used by the task planner (explained in \ref{subsec:task_planning}). The score profile is as follows :
 \begin{itemize}
 \item Current battery of agent between 100 \% to upperThreshold value: return multiplier as 1. Thus, these robots will not assigned charging task at all. 
 \item Between lowerThreshold and upperThreshold: use a quadratic function
 
 \[y = (-0.01)x^2+2 *(lowerThreshold/100)*x -lowerThreshold\]
 
-This results in a curve which is asymptotic to 1 at upperThreshold but returns lowerThreshold *0.01 near lowerThreshold. Thus as the battery decreases, the probability of robot getting assigned for charging increases.
+This results in a curve which is asymptotic to 1 at upperThreshold but returns lowerThreshold * 0.01 near lowerThreshold. Thus as the battery decreases, the probability of robot getting assigned for charging increases.
 
-\item Battery between lowerThreshold to criticalMinimum : The value returned is lowerThreshold *0.01. Below criticalMinimum, robot will have to go to charging in order to perform any task.
+\item Battery between lowerThreshold to criticalMinimum : The value returned is lowerThreshold * 0.01. Below criticalMinimum, robot will have to go to charging in order to perform any task.
 \end{itemize}
   
 Such charging profile also ensures that the multiplier is always continuous over any battery range.
