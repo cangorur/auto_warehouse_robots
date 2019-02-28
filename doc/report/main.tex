@@ -504,7 +504,9 @@ The \emph{Motion Planner} takes a path as the input and follows it using a pid c
 \label{subsec:foundation}
 This work builds on top of an existing warehouse simulation. The physical simulation is done in the Modular OpenRobots Simulation Engine \emph{MORSE}. An interface allows the communication with the Robot Operating System \emph{ROS} which runs all the system components.
 
-The \emph{Warehouse Management} is the base of the system. It initializes most of the components (cf. config arrows in Figure \ref{fig:system_architecture}). It uses the \emph{Config Server} to read the robot, package and warehouse configurations and distributes them to the other nodes. Additionally, it collects robot status information and displays them in combination with the trays in RViz.
+The \emph{Warehouse Management} is the base of the system. It initializes most of the components (cf. config arrows in Figure \ref{fig:system_architecture}). It uses the \emph{Config Server} to read the robot, package and warehouse configurations and distributes them to the other nodes. Additionally, it collects robot status information and displays them in combination with the warehouse design in RViz.
+
+
 
 
 
@@ -728,7 +730,12 @@ Map & Shape & \# Storage & \# Input             & \# Output & \# Charging \\ \hl
 \end{figure}
 
 
-In graph \ref{No_of_robots_vs_average_time_all_taks}, we can however see the positive effect of adding number of robots. The total time to finish 40 tasks drops by more than 60 \% when we use 4 robots instead of 1. This certifies the goal of the system, that the multi robot collaboration significantly improves the performance of the system. Furthermore, we can see the performance improvement is incremental from 4 robots onwards. As number of robots is more, and available space remains the same, robots cancel the positive effect of collaboration with negative effect of congestion.
+In graph \ref{No_of_robots_vs_average_time_all_taks}, we can however see the positive effect of adding number of robots. The total time to finish 40 tasks drops by more than 60 \% when we use 4 robots instead of 1. This certifies the goal of the system, that the multi robot collaboration significantly improves the performance of the system. Furthermore, we can see the performance improvement is incremental from 4 robots onwards. As number of robots is more, and available space remains the same, robots cancel the positive effect of collaboration with negative effect of congestion. At 10 robots, we can see increase in time.
+
+In graph \ref{fig:drive_pickup_dropoff} we can see what percent of time the robot has spent in various activities. As expected, the robot spends most of it's time in driving, either to pickup or dropoff. However, if we consider results of Map 1 in \ref{fig:delivery_time}, the combined percent time taken for pickup and dropoff is increased from 9 \% for 1 robot to around 22 \% for 12 robots.  As the trays available for pickup and dropoff are limited (4 and 5 respectively), robots have to coordinate among themselves to get a space in front of the trays. This creates a bottleneck for robots and often results in congestions. 
+
+
+To find an even split between the times, the aforementioned parameters were  tweaked for optimum values which we can see in map2 \ref{fig:drive_pickup_dropoff}. Here, the distribution of time split almost similar even if number of robot agents was increased.  
 
 %therefore at one point the time increases
 %to add after new graphs
