@@ -72,7 +72,7 @@
 
 % *** MATH PACKAGES ***
 %
-%\usepackage[cmex10]{amsmath}
+\usepackage[cmex10]{amsmath}
 % A popular package from the American Mathematical Society that provides
 % many useful and powerful commands for dealing with mathematics. If using
 % it, be sure to load this package with the cmex10 option to ensure that
@@ -83,7 +83,7 @@
 %
 % Also, note that the amsmath package sets \interdisplaylinepenalty to 10000
 % thus preventing page breaks from occurring within multiline equations. Use:
-%\interdisplaylinepenalty=2500
+\interdisplaylinepenalty=2500
 % after loading amsmath to restore such page breaks as IEEEtran.cls normally
 % does. amsmath.sty is already installed on most LaTeX systems. The latest
 % version and documentation can be obtained at:
@@ -523,27 +523,40 @@ For precise alignment and approach to the trays, the robot offers the functional
 
 \subsection{Charging Management}
 \label{subsec:charging_management}
+The \textit{Charging Management} is responsible for tracking the battery level, deciding when and where to charge, and computing the penalty factor for score calculation.
 
-Charging management is present in every agent to keep a track of all the available charging stations and agent batteries. The location of charging stations is given by warehouse configuration messages by finding trays with charging station as a parameter. Charging management hosts various functions which help agent. It can give the agent a path to the nearest charging station from agent's current location. It can also return an accurate prediction of charging time based on agent's current battery.
-
-One of the important task of charging station is to determine when and how robots go to the charging. As decided by our design, the robots will charge to 100 \%, once started charging. As pre-empting the charging task is not possible, the robots must charge only if really necessary. Hence, the robots which have low battery should be given more preference for charging than the ones with higher percentage of battery. For this, a score profile is used to return a multiplier, which is further used by the task planner (explained in \ref{subsec:task_planning}). The score profile is as follows :
-\begin{itemize}
-\item Current battery of agent between 100 \% to upperThreshold value: return multiplier as 1. Thus, these robots will not assigned charging task at all. 
-\item Between lowerThreshold and upperThreshold: use a quadratic function
-
-\[y = (-0.01)x^2+2 *(lowerThreshold/100)*x -lowerThreshold\]
-
-This results in a curve which is asymptotic to 1 at upperThreshold but returns lowerThreshold * 0.01 near lowerThreshold. Thus as the battery decreases, the probability of robot getting assigned for charging increases.
-
-\item Battery between lowerThreshold to criticalMinimum : The value returned is lowerThreshold * 0.01. Below criticalMinimum, robot will have to go to charging in order to perform any task.
-\end{itemize}
-  
-Such charging profile also ensures that the multiplier is always continuous over any battery range.
-
-The actual charging process occurs automatically with the CustomBattery.py file, according to the charging rate decided in robot configs. The charging management also ensures safeguarding of charging/discharging by giving error messages when battery level of any agent goes below 0 or above 100. Lastly, charging management also  sets full charge percentage range, between 99.5 \% -100 \% to accommodate for latency. 
 % charging behaviour -> when to go charging and when add charging tasks
+When a robot is idle it still consumes energy. Therefore, it is possible for a robot to completely discharge while idling. 
+To prevent this and always keep the charge at a reasonable level robots go charging when their charge is lower than a threshold.
+The other case where robots should go charging is when the Task Handler receives a task announcement but can not find any combination of source and target tray with which the robot can finish the task with its remaining charge.
+A robot always charges until its battery is fully charged.
+
+% how to choose charging station
+Ideally robots needing to charge should only drive short pathes to consume less charge. 
+Therefore, the robots when needing to charge compute the nearest available charging station by checking if the space in front of the charging trays is reserved.
+When a robot starts a charging task it computes the nearest charging station and reserves the path to it, with that it automatically reserves the charging station.
 
 % how is penalty factor computed and why
+The charging management is also responsible for computing the score factor which is dependent on the battery charge at the end of a task as mentioned in \compref{subsec:task_planning}.
+We dont want the score influenced linearly by the charge for the complete charge interval. 
+That is because for high charge levels we want the duration of the path being the deciding factor when comparing two possible solutions for a task.
+Conversely when a robot will probably have low charge when ending the announced task we want robots with a longer paths but more charge left to be assigned the task.
+
+We therefore created the following three-piece function $f(b) \in [0, 1]$, where $b$ is the battery level after task completion:
+\[ 
+f(b) = 
+	\begin{cases}
+		1.0,&\quad \text{if } b \geq u_t \\
+		\frac{0.01 \cdot b^2 - (2 + 0.01 \cdot l_t) \cdot b - l_t}{100}, &\quad \text{if } u_t > b \geq l_t \\
+		0.01 \cdot b, &\quad \text{otherwise} \\
+	\end{cases}
+\]
+% describe upper and lower threshold
+Where $u_t$ describes the charge at which the score should not yet be penalized and $l_t$ describes the charge under which the penalty is most severe.
+In the system the values are set as $u_t = 50$ and $l_t = 35$.
+% function is contiuous
+This function has the benefit of being continuous and differentiable.
+
 
 \subsection{Task Execution}
 \label{subsec:task_execution}
