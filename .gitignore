@@ -5,6 +5,8 @@ doc/html/*
 .catkin_workspace
 src/CMakeLists.txt
 *.aux
+*.bbl
+*.blg
 *.out
 *.log
 *.synctex.gz
