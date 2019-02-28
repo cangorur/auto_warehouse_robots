@@ -836,11 +836,16 @@ To find an even split between the times, the aforementioned parameters were  twe
 
 
 \section{Conclusion}
+\label{sec:conclusion}
+This work combines hybrid task planning with decentralized path planning to provide a scalable system for multi-robot coordination and collaboration in smart factory warehouses. The task planning can handle unpredictable transportation task spawning and provides an applicable solution. The decentralized path planning can handle a high robot density in a limited space with a reasonable coordination overhead. Timed reservations ensure there is only a single robot at a time in the same area. Considering waiting as a valid solution when planning routes avoids unnecessarily long paths. Therefore, the total amount of reserved areas on the map is reduced leading to less congestions. When comparing different amounts of robots, the results show a decrease in the total time to transport a fixed amount of packages by adding robots. In the beginning this decrease is quite high, saturating with the increasing density of robots. There is a point when adding more robots increases the total time to complete the tasks. Therefore, it is possible to identify the optimal amount of robots given a specific warehouse configuration. As the time improvement in the saturated area is relatively low, the most economic amount of robots might differ from the optimal one.
 
-FROM CAN:
-\\
-A brief summary of your system, what was the problem, how you achieved, your objectives, and your methodologies you used very very briefly. Then again very briefly share your finding (the discussion you made). Finally, you will conclude with the possible extensions / changes to improve the performance, basically the future works. You can find more about the templates of IEEE on the internet.
+Even though the goals of the project are met, there is still potential to improve the system. A functionality that needs more work is the \emph{Path Replanning}. The robots can stop and replan their path to the target if this improves their overall performance or prevents blocking each other. They are required to do it if they are behind schedule. Defining and detecting these situations reliably improves the coordination and thereby the driving times. Caution is necessary as frequent replanning can worsen the performance when the stopping time exceeds the gained improvement.
 
+Implementing waiting areas close to trays when the robots are idle and charged can reduce the time for the robots to reach the source tray and increases the chances for the robot to be picked for the next task.
+
+Integrating the laser scanner based obstacle detection into the system can prevent crashes if robots pass by closely and one of them is just behind the schedule. Even though, these are rare cases in the system, it will improve the long-term stability of the system.
+
+There are also improvements in terms of task planning. Queuing tasks in the central task planner to optimize over multiple task can improve the task assignment reducing the driving times for all robots. Implementing a task revocation procedure can return tasks to the task planner for reassignment if a robot experiences unexpected issues.
 
 % if have a single appendix:
 \appendix[System Architecture]
