@@ -72,7 +72,7 @@
 
 % *** MATH PACKAGES ***
 %
-%\usepackage[cmex10]{amsmath}
+\usepackage[cmex10]{amsmath}
 % A popular package from the American Mathematical Society that provides
 % many useful and powerful commands for dealing with mathematics. If using
 % it, be sure to load this package with the cmex10 option to ensure that
@@ -83,7 +83,7 @@
 %
 % Also, note that the amsmath package sets \interdisplaylinepenalty to 10000
 % thus preventing page breaks from occurring within multiline equations. Use:
-%\interdisplaylinepenalty=2500
+\interdisplaylinepenalty=2500
 % after loading amsmath to restore such page breaks as IEEEtran.cls normally
 % does. amsmath.sty is already installed on most LaTeX systems. The latest
 % version and documentation can be obtained at:
@@ -525,27 +525,40 @@ For precise alignment and approach to the trays, the robot offers the functional
 
 \subsection{Charging Management}
 \label{subsec:charging_management}
+The \textit{Charging Management} is responsible for tracking the battery level, deciding when and where to charge, and computing the penalty factor for score calculation.
 
-Charging management is present in every agent to keep a track of all the available charging stations and agent batteries. The location of charging stations is given by warehouse configuration messages by finding trays with charging station as a parameter. Charging management hosts various functions which help agent. It can give the agent a path to the nearest charging station from agent's current location. It can also return an accurate prediction of charging time based on agent's current battery.
-
-One of the important task of charging station is to determine when and how robots go to the charging. As decided by our design, the robots will charge to 100 \%, once started charging. As pre-empting the charging task is not possible, the robots must charge only if really necessary. Hence, the robots which have low battery should be given more preference for charging than the ones with higher percentage of battery. For this, a score profile is used to return a multiplier, which is further used by the task planner (explained in \ref{subsec:task_planning}). The score profile is as follows :
-\begin{itemize}
-\item Current battery of agent between 100 \% to upperThreshold value: return multiplier as 1. Thus, these robots will not assigned charging task at all. 
-\item Between lowerThreshold and upperThreshold: use a quadratic function
-
-\[y = (-0.01)x^2+2 *(lowerThreshold/100)*x -lowerThreshold\]
-
-This results in a curve which is asymptotic to 1 at upperThreshold but returns lowerThreshold * 0.01 near lowerThreshold. Thus as the battery decreases, the probability of robot getting assigned for charging increases.
-
-\item Battery between lowerThreshold to criticalMinimum : The value returned is lowerThreshold * 0.01. Below criticalMinimum, robot will have to go to charging in order to perform any task.
-\end{itemize}
-  
-Such charging profile also ensures that the multiplier is always continuous over any battery range.
-
-The actual charging process occurs automatically with the CustomBattery.py file, according to the charging rate decided in robot configs. The charging management also ensures safeguarding of charging/discharging by giving error messages when battery level of any agent goes below 0 or above 100. Lastly, charging management also  sets full charge percentage range, between 99.5 \% -100 \% to accommodate for latency. 
 % charging behaviour -> when to go charging and when add charging tasks
+When a robot is idle it still consumes energy. Therefore, it is possible for a robot to completely discharge while idling. 
+To prevent this and always keep the charge at a reasonable level robots go charging when their charge is lower than a threshold.
+The other case where robots should go charging is when the Task Handler receives a task announcement but can not find any combination of source and target tray with which the robot can finish the task with its remaining charge.
+A robot always charges until its battery is fully charged.
+
+% how to choose charging station
+Ideally robots needing to charge should only drive short pathes to consume less charge. 
+Therefore, the robots when needing to charge compute the nearest available charging station by checking if the space in front of the charging trays is reserved.
+When a robot starts a charging task it computes the nearest charging station and reserves the path to it, with that it automatically reserves the charging station.
 
 % how is penalty factor computed and why
+The charging management is also responsible for computing the score factor which is dependent on the battery charge at the end of a task as mentioned in \compref{subsec:task_planning}.
+We dont want the score influenced linearly by the charge for the complete charge interval. 
+That is because for high charge levels we want the duration of the path being the deciding factor when comparing two possible solutions for a task.
+Conversely when a robot will probably have low charge when ending the announced task we want robots with a longer paths but more charge left to be assigned the task.
+
+We therefore created the following three-piece function $f(b) \in [0, 1]$, where $b$ is the battery level after task completion:
+\[ 
+f(b) = 
+	\begin{cases}
+		1.0,&\quad \text{if } b \geq u_t \\
+		\frac{0.01 \cdot b^2 - (2 + 0.01 \cdot l_t) \cdot b - l_t}{100}, &\quad \text{if } u_t > b \geq l_t \\
+		0.01 \cdot b, &\quad \text{otherwise} \\
+	\end{cases}
+\]
+% describe upper and lower threshold
+Where $u_t$ describes the charge at which the score should not yet be penalized and $l_t$ describes the charge under which the penalty is most severe.
+In the system the values are set as $u_t = 50$ and $l_t = 35$.
+% function is contiuous
+This function has the benefit of being continuous and differentiable.
+
 
 \subsection{Task Execution}
 \label{subsec:task_execution}
@@ -603,59 +616,20 @@ Describe that we've used a prototyping environment to test all our path-planning
 
 \section{Results}
 \label{sec:results}
-Analysing the results is a very important validation for any project. But before that, one must define exact constraints for evaluation of these results. Also, the evaluations must be backed by scientific reasoning and empirical data. Therefore it is essential to first reason why particular parameters were chosen and how they are tested. Following sections explain the same.
+% Analysing the results is a very important validation for any project. But before that, one must define exact constraints for evaluation of these results. Also, the evaluations must be backed by scientific reasoning and empirical data. Therefore it is essential to first reason why particular parameters were chosen and how they are tested. Following sections explain the same.
 
 \subsection{Evaluation Methodology}
 \label{evaluation_methodology}
 % mention evaluator as data collection unit, making easy evaluation of different configurations possible
 % export as csv -> compare different configurations, compare basic parameters
 % possible to simulate warehouse config to check for problems with tray placement etc.
-As mentioned in \compref{sec:introduction}, the goal of our system was to design a \textit{scalable} and \textit{collaborative} autonomous warehouse system. The evaluations are also necessary to identify the flaws and bugs present in the system.
+The performance of our system was evaluated on two different maps (Table \ref{tab:maps}) of size 18x16 using different number of robots (1, 2, 4, 6, 8, 10 and 12) with the same characteristics. The simulation was repeated 3 times for each number of robots on each map. The simulation was finished when 40 transportation tasks were done. With the start of simulation the battery level of robots is randomized between 95 and 100.
 
-After testing the basic functionality, the interactions and behaviour of the system were evaluated. As the goal of system is to reduce time required to perform tasks using multi robot collaboration, the most critical parameter is time taken to complete all the specified tasks. This parameter also considers situations where although individual time to perform task can be increased, the overall time can be reduced.
+For transportation tasks we sampled a) time stamps when a task is assigned, b) execution time of a task, c) time of driving to pick up, d) pick up time, e) time of driving to drop off, f) drop off time and g) battery level at the end of task. For charging tasks we sampled  a) time stamps when a task is assigned, b) execution time of a task, c) time of driving to charge, and d) charging time.
 
-Another important parameter is how each robot spends it's in time performing the task. Does it spend more time driving? Or is it more time consuming to pick up the packages. This helps in pin-pointing the key areas where possible improvements can be done. To analyse this clearly, only one parameter was changed at a time and all the other parameters were kept constant.
+The performance of the system can be seen in following Figures. In Figure \ref{fig:delivery_time} we compare average package delivery time by number of robots for both maps. In Figure \ref{fig:trans_charg_idle} can be seen relative average time split of the states (transportation, charging and idle).
 
-The performance of the system must not be affected by evaluation in any way. Hence, we decided only to generate .csv files in simulation environment and do the analysis and graph generation in a separate python script. 
-
-For evaluating time required per package averaged over 40 tasks, the sequence is as follows:
-
-\begin{enumerate}
-\item We evaluated the system on two maps of 18x16 size, which is suited for around 8 robots.
-%TODO write for map2
-%Refer to map in methodology -> protyping env
-\item When simulation starts, the battery is randomized between 95 - 100.
-\item The robots perform tasks for package delivery from one tray to another. Occasional, they also perform charging tasks when their battery is lower or if they are idle. The information about time spent by each robot in various tasks and corresponding timestamps is recorded by the evaluator component of ros. 
-\item After 40 successful transportation tasks, the results of evaluation are stored in a .csv file.
-\end{enumerate}
-
-Each evaluation is performed for particular number of robots ranging from 1 -10 and following metrics are audited.
-
-\begin{itemize}
-\item Average time required to perform task from assignment to completion
-\item Average time required to perform task from execution start to completion
-\item Individual time spent in:	
-\begin{itemize}
-\item Waiting for execution
-\item Driving to pick up the package	
-\item Picking up the package	
-\item Driving to drop off the package	
-\item Dropping off the package		
-\end{itemize}
-\end{itemize}
-
-Average run for 40 tasks takes around 10-15 minutes. We tried to make each run error free and we did not observe any package drop. However to accommodate for inconsistencies and remove outliers such as sudden congestion we performed each run for 3 times. 
-
-For each instance, the ROS, MORSE and RViz environment was initialized with said parameters. After 40 transportation tasks are successfully completed, a .csv file is generated with following parameters:
-\begin{itemize}
-\item Type of the task : If it is charging or transportation
-\item ID of the robot agent  
-\item ID or sequence number of the task
-\item Time since start of simulation
-\item Time durations for various activities like: assignment, driving to pickup, picking up, drive to drop-off and drop-off 
-\end{itemize}
-
-As a final step, a MATLAB script converts this data into various intuitive graphs. 
+We tried to determinate the optimal amount of the robots for each map. Figure \ref{fig:time_to_finish_40_tasks} shows the average time to finish 40 tasks and figure \ref{fig:energy_consumption} presents energy consumption of the system for 40 tasks by number of the robots.
 
 \subsection{Evaluation results and interpretation}
 
@@ -663,6 +637,18 @@ The graph \ref{No_of_robots_vs_average_time} shows average package delivery time
 
 Similarly, in \ref{No_of_robots_vs_time_whiskers}, we can see that the variance between average delivery times is increased significantly. The reason for this can be again attributed to the coordination. Robots which reserve the direct path first will have the lowest travel time. On the contrary, robots reserving the path later will have to avoid pre reserved spots, thus taking a longer, non direct path. Compared to 15 \% varience in robot 1,  in robot 10, it almost becomes 25 \%.  
 
+\begin{table}[h]
+\caption{Maps Configuration}
+\centering
+\begin{tabular}{cccccc}
+\hline
+Map & Shape & \# Storage & \# Input             & \# Output & \# Charging \\ \hline
+1   & 18x16 & 19         & 4                    & 5         & 8           \\
+2   & 18x16 & 20         & 6                    & 8         & 8           \\ \hline
+    &       &            & \multicolumn{1}{l}{} &           &            
+\end{tabular}
+\label{tab:maps}
+\end{table}
 
 
 \begin{figure}[h]
@@ -688,16 +674,16 @@ Similarly, in \ref{No_of_robots_vs_time_whiskers}, we can see that the variance 
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph6.png}
-	\caption{Average time to finish 40 tasks}
-	\label{fig:time_to_finish_40_tasks}
+	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph7.png}
+	\caption{Average time split: transportation, charging, idle}
+	\label{fig:trans_charg_idle}
 \end{figure}
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph7.png}
-	\caption{Average time split: transportation, charging, idle}
-	\label{fig:trans_charg_idle}
+	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph6.png}
+	\caption{Average time to finish 40 tasks}
+	\label{fig:time_to_finish_40_tasks}
 \end{figure}
 
 \begin{figure}[h]
@@ -708,7 +694,12 @@ Similarly, in \ref{No_of_robots_vs_time_whiskers}, we can see that the variance 
 \end{figure}
 
 
-In graph \ref{No_of_robots_vs_average_time_all_taks}, we can however see the positive effect of adding number of robots. The total time to finish 40 tasks drops by more than 60 \% when we use 4 robots instead of 1. This certifies the goal of the system, that the multi robot collaboration significantly improves the performance of the system. Furthermore, we can see the performance improvement is incremental from 4 robots onwards. As number of robots is more, and available space remains the same, robots cancel the positive effect of collaboration with negative effect of congestion.
+In graph \ref{No_of_robots_vs_average_time_all_taks}, we can however see the positive effect of adding number of robots. The total time to finish 40 tasks drops by more than 60 \% when we use 4 robots instead of 1. This certifies the goal of the system, that the multi robot collaboration significantly improves the performance of the system. Furthermore, we can see the performance improvement is incremental from 4 robots onwards. As number of robots is more, and available space remains the same, robots cancel the positive effect of collaboration with negative effect of congestion. At 10 robots, we can see increase in time.
+
+In graph \ref{fig:drive_pickup_dropoff} we can see what percent of time the robot has spent in various activities. As expected, the robot spends most of it's time in driving, either to pickup or dropoff. However, if we consider results of Map 1 in \ref{fig:delivery_time}, the combined percent time taken for pickup and dropoff is increased from 9 \% for 1 robot to around 22 \% for 12 robots.  As the trays available for pickup and dropoff are limited (4 and 5 respectively), robots have to coordinate among themselves to get a space in front of the trays. This creates a bottleneck for robots and often results in congestions. 
+
+
+To find an even split between the times, the aforementioned parameters were  tweaked for optimum values which we can see in map2 \ref{fig:drive_pickup_dropoff}. Here, the distribution of time split almost similar even if number of robot agents was increased.  
 
 %therefore at one point the time increases
 %to add after new graphs
