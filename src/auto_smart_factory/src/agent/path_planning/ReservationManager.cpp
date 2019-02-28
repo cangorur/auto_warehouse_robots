@@ -189,13 +189,6 @@ bool ReservationManager::calculateNewPath() {
 		return true;
 	} else {
 		bidingForReservation = false;
-		
-		ROS_FATAL("[RM %d] Tried to generate path but no valid path was found from %f/%f to %f/%f", agentId, startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-		ROS_WARN("Reservations for start:");
-		map->listAllReservationsIn(Point(startPoint.x, startPoint.y));
-
-		ROS_WARN("Reservations for target:");
-		map->listAllReservationsIn(Point(endPoint.x, endPoint.y));
 		return false;
 	}
 }

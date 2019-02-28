@@ -369,15 +369,6 @@ add_custom_target(${PROJECT_NAME}_doc
 		rosdoc_lite ${PROJECT_SOURCE_DIR}
 		)
 
-# Factory Gateway
-add_executable(factory_gateway_node
-		src/factory_gateway/FactoryGatewayNode.cpp
-		src/factory_gateway/FactoryGateway.cpp
-		)
-set_target_properties(factory_gateway_node PROPERTIES OUTPUT_NAME factory_gateway PREFIX "")
-add_dependencies(factory_gateway_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(factory_gateway_node ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OPENSSL_CRYPTO_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
-
 #############
 ## Install ##
 #############

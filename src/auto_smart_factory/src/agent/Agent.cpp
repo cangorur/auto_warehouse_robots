@@ -335,12 +335,12 @@ void Agent::publishVisualisation(const ros::TimerEvent& e) {
 	if(map != nullptr) {
 		visualisationPublisher.publish(map->getObstacleVisualization());
 		
-		auto reservationMsg = map->getInactiveReservationVisualization(agentIdInt, getAgentColor());
+		auto reservationMsg = map->getInactiveReservationVisualization(getAgentColor());
 		if(!reservationMsg.points.empty()) {
 			visualisationPublisher.publish(reservationMsg);
 		}
 
-		reservationMsg = map->getActiveReservationVisualization(agentIdInt, getAgentColor());
+		reservationMsg = map->getActiveReservationVisualization(getAgentColor());
 		if(!reservationMsg.points.empty()) {
 			visualisationPublisher.publish(reservationMsg);
 		}

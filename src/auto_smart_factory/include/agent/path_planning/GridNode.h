@@ -5,6 +5,7 @@
 
 #include "agent/path_planning/Point.h"
 
+/* Class to hold a theta star grid node data. Contains position and link to neighbours */
 class GridNode {
 public:
 	Point pos;

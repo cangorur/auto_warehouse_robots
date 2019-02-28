@@ -41,10 +41,10 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 
 	/* Align towards a point or direction (orientation) */
 	if (mode == Mode::ALIGN) {
-		if (alignDirection == -1.0) {
-			turnTowards(alignTarget);
-		} else {
+		if (useDirectionForAlignment) {
 			turnTowards(alignDirection);
+		} else {
+			turnTowards(alignTarget);
 		}
 		return;
 	}
@@ -109,10 +109,12 @@ void MotionPlanner::update(geometry_msgs::Point position, double orientation) {
 void MotionPlanner::followPath() {
 	mode = Mode::PID;
 	
+	// Use pid controller to calculate angular velocity
 	double cte = Math::getDistanceToLine(previousTarget, currentTarget, Point(pos.x, pos.y)) * Math::getDirectionToLineSegment(previousTarget, currentTarget, Point(pos.x, pos.y));
 	double angularVelocity = steerPid->calculate(cte, ros::Time::now().toSec());
 	angularVelocity = Math::clamp(angularVelocity, (double) -maxTurningSpeed, (double) maxTurningSpeed);
 
+	// Limit speed according to cross-track-error (exponential decay)
 	double linearVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte) - 1.0), (double) maxDrivingSpeed - minDrivingSpeed);
 	linearVelocity = Math::clamp(linearVelocity, minDrivingSpeed, maxDrivingSpeed);
 
@@ -124,12 +126,6 @@ void MotionPlanner::followPath() {
 	publishVelocity(linearVelocity, angularVelocity);
 }
 
-double MotionPlanner::calculateLinearVelocity(double cte) {
-	double maxCteVelocity = maxDrivingSpeed - std::min((std::exp(cte*cte) - 1.0), (double) maxDrivingSpeed - minDrivingSpeed);
-	double maxPreCurveVelocity = 0.0;
-	double maxTargetVelocity = Math::clamp(getDistanceToTarget()*0.5, minDrivingSpeed, maxDrivingSpeed);
-}
-
 double MotionPlanner::getDistanceToTarget() {
 	double distanceToNextWaypoint = Math::getDistance(Point(pos.x, pos.y), currentTarget);
 	double distanceToTarget = 0.0;
@@ -138,10 +134,6 @@ double MotionPlanner::getDistanceToTarget() {
 	}
 
 	return distanceToNextWaypoint+distanceToTarget;
-}
-
-double MotionPlanner::getNextCurveAngle(double distance) {
-
 }
 
 void MotionPlanner::turnTowards(Point target) {
@@ -177,12 +169,13 @@ void MotionPlanner::turnTowards(double direction) {
 void MotionPlanner::alignTowards(Point target) {
 	mode = Mode::ALIGN;
 	alignTarget = target;
-	alignDirection = -1.0;
+	useDirectionForAlignment = false;
 }
 
 void MotionPlanner::alignTowards(double direction) {
 	mode = Mode::ALIGN;
 	alignDirection = direction;
+	useDirectionForAlignment = true;
 }
 
 void MotionPlanner::driveForward(double distance) {

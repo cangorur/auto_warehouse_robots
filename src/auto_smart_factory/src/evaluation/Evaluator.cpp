@@ -42,9 +42,9 @@ void Evaluator::writeEvaluationData(FILE* f, auto_smart_factory::TaskEvaluation&
 		double pickup = msg.finishedPickUpAt - msg.startedPickUpAt;
 		double driveToDropOff = msg.startedDropOffAt - msg.finishedPickUpAt;
 		double dropOff = msg.finishedAt - msg.startedDropOffAt;
-		// taskType; robot id; id; time since start of simultion till assignment; total; execution; waiting; DriveToPickup; Pickup; DriveToDropOff; DropOff ((6+2)+2+7*6) = 52Bytes
-		sprintf(buffer, "%s;%s;%d;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f\n", msg.task_type.c_str(), msg.robot_id.c_str(), 
-				msg.request_id, assigned, total, execution, waiting, driveToPickUp, pickup, driveToDropOff, dropOff);
+		// taskType; robot id; id; time since start of simultion till assignment; total; execution; waiting; DriveToPickup; Pickup; DriveToDropOff; DropOff; Battery level at end
+		sprintf(buffer, "%s;%s;%d;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f\n", msg.task_type.c_str(), msg.robot_id.c_str(), 
+				msg.request_id, assigned, total, execution, waiting, driveToPickUp, pickup, driveToDropOff, dropOff, msg.endBatteryLevel);
 	} else if(msg.task_type == "charging") {
 		double driveToCharging = msg.arrived_at - msg.startedAt;
 		double charging = msg.finishedAt - msg.arrived_at;

@@ -37,8 +37,6 @@ ThetaStarMap::ThetaStarMap(Map* map, float resolution) :
 		linkToNode(element.second, element.second->pos + Point(+ resolution, - resolution));
 		linkToNode(element.second, element.second->pos + Point(+ resolution, + resolution));
 	}
-	
-	//ROS_INFO("[Theta*] Generated map with %d nodes", (int) nodes.size());
 }
 
 void ThetaStarMap::linkToNode(GridNode* node, Point targetPos) {
@@ -74,10 +72,6 @@ TimedLineOfSightResult ThetaStarMap::whenIsTimedLineOfSightFree(const Point& pos
 
 bool ThetaStarMap::isTimedConnectionFree(const Point& pos1, const Point& pos2, double startTime, double waitingTime, double drivingTime, const std::vector<Rectangle>& smallerReservations) const {
 	return map->isTimedConnectionFree(pos1, pos2, startTime, waitingTime, drivingTime, smallerReservations);
-}
-
-void ThetaStarMap::listAllReservationsIn(Point p) {
-	map->listAllReservationsIn(p);
 }
 
 bool ThetaStarMap::addAdditionalNode(Point pos) {

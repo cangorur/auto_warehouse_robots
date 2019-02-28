@@ -56,23 +56,33 @@ void TransportationTask::setState(Task::State state) {
 	}
 	switch (state) {
 		case Task::State::TO_SOURCE:
-			startedAt = ros::Time::now().toSec();
+			if(startedAt == 0.0f) {
+				startedAt = ros::Time::now().toSec();
+			}
 			break;
 		
 		case Task::State::APPROACH_SOURCE:
-			startedPickUpAt = ros::Time::now().toSec();
+			if(startedPickUpAt == 0.0f) {
+				startedPickUpAt = ros::Time::now().toSec();
+			}
 			break;
 		
 		case Task::State::TO_TARGET:
-			finishedPickUpAt = ros::Time::now().toSec();
+			if(finishedPickUpAt == 0.0f) {
+				finishedPickUpAt = ros::Time::now().toSec();
+			}
 			break;
 
 		case Task::State::APPROACH_TARGET:
-			startedDropOffAt = ros::Time::now().toSec();
+			if(startedDropOffAt == 0.0f) {
+				startedDropOffAt = ros::Time::now().toSec();
+			}
 			break;
 
 		case Task::State::FINISHED:
-			finishedAt = ros::Time::now().toSec();
+			if(finishedAt == 0.0f) {
+				finishedAt = ros::Time::now().toSec();
+			}
 			break;
 	
 		default:

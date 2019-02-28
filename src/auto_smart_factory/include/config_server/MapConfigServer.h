@@ -51,7 +51,7 @@ protected:
 	void setRectangularObstacle(std::vector<Rectangle>& rectangles, float x, float y, float width, float height, float rotation);
 
 	/**  Adds the static obstacles defined in the map configuration to the occupancy map.
-	 * This comprises trays and charging stations. */
+	 * This comprises trays and charging stations. Merges obstacles if mergeObstacles = true */
 	void addStaticObstacles();
 
 	auto_smart_factory::WarehouseConfiguration warehouseConfig;
@@ -61,6 +61,7 @@ protected:
 	static unsigned int getUniqueTrayId();
 	static unsigned int trayIdCounter;
 	
+	// Should static obstacles be merged top use fewer rectangles?
 	bool mergeObstacles = false;
 };
 
