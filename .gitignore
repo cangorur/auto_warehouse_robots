@@ -4,6 +4,12 @@ install/*
 doc/html/*
 .catkin_workspace
 src/CMakeLists.txt
+*.aux
+*.bbl
+*.blg
+*.out
+*.log
+*.synctex.gz
 *.swp
 *.orig
 *.pyc
@@ -18,3 +24,5 @@ src/CMakeLists.txt
 *.log
 
 \.metadata/
+doc/report/main.pdf
+src/*.idea/*
