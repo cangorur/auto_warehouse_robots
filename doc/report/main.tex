@@ -619,7 +619,7 @@ The performance of the system must not be affected by evaluation in any way. Hen
 For evaluating time required per package averaged over 40 tasks, the sequence is as follows:
 
 \begin{enumerate}
-\item We evaluated the system on map of 16x16 size, which is suited for around 8 robots.
+\item We evaluated the system on two maps of 18x16 size, which is suited for around 8 robots.
 %TODO write for map2
 %Refer to map in methodology -> protyping env
 \item When simulation starts, the battery is randomized between 95 - 100.
@@ -656,23 +656,55 @@ For each instance, the ROS, MORSE and RViz environment was initialized with said
 As a final step, a MATLAB script converts this data into various intuitive graphs. 
 
 \subsection{Evaluation results and interpretation}
-\begin{figure}[h]
-\includegraphics[width=0.20\textwidth]{resources/graphs/graph2.png}
-\label{No_of_robots_vs_average_time}
-\includegraphics[width=0.20\textwidth]{resources/graphs/graph1.png}
-\label{No_of_robots_vs_time_whiskers}
-\caption{Number of Robots Vs Time per task}
-\end{figure}
 
 The graph \ref{No_of_robots_vs_average_time} shows average package delivery time increases with increase in number of robots.  Initially for one robots, a task can be executed as fast as possible, without any obstacles in between. As more robots participate in the simulation, robots need to avoid paths of other robots. This increases the coordination overhead which in turn leads into congestions. From robot 4 onwards, the package delivery time increases quite linearly as number of robots increase.
 
 Similarly, in \ref{No_of_robots_vs_time_whiskers}, we can see that the variance between average delivery times is increased significantly. The reason for this can be again attributed to the coordination. Robots which reserve the direct path first will have the lowest travel time. On the contrary, robots reserving the path later will have to avoid pre reserved spots, thus taking a longer, non direct path. Compared to 15 \% varience in robot 1,  in robot 10, it almost becomes 25 \%.  
 
+
+
 \begin{figure}[h]
-\includegraphics[width=0.40\textwidth]{resources/graphs/graph6.png}
-\label{No_of_robots_vs_average_time_all_taks}
-\caption{Number of Robots Vs Time taken for 40 tasks}
+	\centering
+	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph2.png}
+	\caption{Average Package Delivery Time by Number of Robots}
+	\label{fig:delivery_time}
 \end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph3_2.png}
+	\caption{Average time split: drive to pick up / dropp off, pick up and drop off}
+	\label{fig:drive_pickup_dropoff}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph4.png}
+	\caption{Average Package Delivery Time by Number of Robots}
+	\label{fig:delivery_time}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph6.png}
+	\caption{Average time to finish 40 tasks}
+	\label{fig:time_to_finish_40_tasks}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph7.png}
+	\caption{Average time split: transportation, charging, idle}
+	\label{fig:trans_charg_idle}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.45\textwidth]{resources/Graphs-paper/graph8.png}
+	\caption{Energy consumption for 40 tasks by number of robots}
+	\label{fig:energy_consumption}
+\end{figure}
+
 
 In graph \ref{No_of_robots_vs_average_time_all_taks}, we can however see the positive effect of adding number of robots. The total time to finish 40 tasks drops by more than 60 \% when we use 4 robots instead of 1. This certifies the goal of the system, that the multi robot collaboration significantly improves the performance of the system. Furthermore, we can see the performance improvement is incremental from 4 robots onwards. As number of robots is more, and available space remains the same, robots cancel the positive effect of collaboration with negative effect of congestion.
 
@@ -862,3 +894,4 @@ Desaraju, Vishnu R., and Jonathan P. How. "Decentralized path planning for multi
 \end{document}
 
 
+\grid
