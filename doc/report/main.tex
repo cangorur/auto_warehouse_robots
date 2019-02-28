@@ -313,7 +313,7 @@
 %TODO
 %Add your names here (alphabetically):
 
-\author{Group 3 - Vincent W\"olfer, Florian Ziesche, Patrick Denzler, Shreyas Gokhale, Uros Petkovic}
+\author{Group 3 - Vincent W\"olfer, Florian Ziesche, Patrick Denzler, Uros Petkovic, Shreyas Gokhale}
 
 % note the % following the last \IEEEmembership and also \thanks - 
 % these prevent an unwanted space from occurring between the last author name
@@ -375,7 +375,7 @@
 
 \begin{abstract}
 %\boldmath
-Autonomous warehouses play an important role in smart factory environments which are an essential element of "Industry 4.0". The goal is to optimize the carriage of goods within the warehouse using multi-robot collaboration and coordination. Hybrid task planning is used to improve the task assignment decisions and distributing the computational effort between the central task planner and the decentralized agents. A decentralized path planning with timed reservations using a shared map ensures the coordination between all robots while moving. The results show that this approach provides reliable and quick transportations in the warehouse up to high density of robots. Due to the limited space an increasing amount of robots leads to congestions and a high coordination overhead at some point reducing the overall effectiveness. This point can be determined within our simulation to find the best suitable amount of robots for a given warehouse configuration.
+Autonomous warehouses play an important role in smart factory environments which are an essential element of "Industry 4.0". The goal is to optimize the carriage of goods within the warehouse using multi-robot collaboration and coordination. This work uses hybrid task planning to improve the task assignment decisions and distributing the computational effort between the central task planner and the decentralized agents. A decentralized path planning with timed reservations using a shared map ensures the coordination between all robots while moving. The results show that this approach provides reliable and quick transportations in the warehouse up to high density of robots. Due to the limited space an increasing amount of robots leads to congestions and a high coordination overhead at some point reducing the overall effectiveness. This point can be determined within our simulation to find the best suitable amount of robots for a given warehouse configuration.
 \end{abstract}
 % IEEEtran.cls defaults to using nonbold math in the Abstract.
 % This preserves the distinction between vectors and scalars. However,
@@ -465,17 +465,17 @@ This essentially means that if a robot needs to charge a charging station is ava
 
 \section{Related Work}
 \label{sec:related_work}
-Different algorithms and approaches have been proposed an used in the past for both single robot path finding and multi robot coordinated path planning. 
-
-Hart et al.\cite{AStar} proposed A* as an optimal single robot path finding algorithm with a heuristic component. However, A* only operates on discrete graphs and therefore is only optimal on those graphs. When representing a continuous search space via a discrete graph, A* is not able to find optimal results in this continuous search space. Nash et al.\cite{ThetaStar} therefore proposed the Theta* algorithm which is able to connect any combination of those discrete grid points through a continuous line which is not limited to the graph edges. For such a connection to be made a continuous line of sight needs to be performed.
+Different algorithms and approaches have been proposed and used in the past for both single robot path finding and multi robot coordinated path planning. 
 
 Kavraki et al. \cite{Roadmaps} proposed probabilistic roadmaps (PRM) as a sampling-based approach where random samples are taken and tested if they fulfil the constraints of the continuous space. Through connecting points that are near each other a roadmap is built. The path is then computed by a graph searching algorithm. Compared to other approaches, PRM is slower and takes more computational effort.
 
-In 1998 rapidly-exploring random trees (RRT) were proposed by LaValle et al.\cite{RRT}. Later, the algorithm was significantly improved with RRT*\cite{RRTStar}, which is a variant of RRT that converges towards an optimal solution. In recent years it is one of the most used algorithms and there are many variants of RRT* that try to optimize the search of the path. One of them is Theta*-RRT* proposed by Palmieri et al.\cite{ThetaStarRRTStar} which used a two-phase planning approach. In the first phase it uses Theta* to estimate the path, which is later used by the RRT* algorithm to limit the search space. Additionally, the RRT* algorithm limits the sampling space with non-holonomic constraints which represent the robots physical limitations.
+Hart et al.\cite{AStar} proposed A* as an optimal single robot path finding algorithm with a heuristic component. However, A* only operates on discrete graphs and therefore is only optimal on those graphs. When representing a continuous search space with a discrete graph, A* is not able to find optimal results in this continuous search space. Nash et al.\cite{ThetaStar} therefore proposed the Theta* algorithm which is able to connect any combination of those discrete grid points through a continuous line which is not limited to the graph edges. For such a connection to be made, a continuous line of sight check needs to be performed.
 
-For multi-agent path planning decentralization is necessary to split the complexity and computational effort onto all agents. Moreover, decentralization enables the use of single-agent path planners, which can simplify the estimation, but some coordination between the decision makers should be provided. Due to the non-linearity of system where delays or other unexpected events can happen, the method should include the possibility of updating the plans according to current situation.
+In 1998 rapidly-exploring random trees (RRT) were proposed by LaValle et al.\cite{RRT}, later the algorithm was significantly improved with RRT*\cite{RRTStar}, which is a variant of RRT that converges towards an optimal solution. Both algorithms work on a continuous search space from which valid configurations are sampled randomly. The algorithm then tries to connect these configurations to the nearest part of the existing search tree. This way additional constrains like non-holonomic properties of a physical robot can be represented. In recent years it is one of the most used algorithms and there are many variants of RRT* that try to optimize different aspects of the algorithm. One of them is Theta*-RRT*, proposed by Palmieri et al.\cite{ThetaStarRRTStar} which uses a two-phase planning approach. In the first phase it uses Theta* to find a grid-based path which is later used by the RRT* algorithm to limit the search space and therefore improve both speed and accuracy.
 
-One of the possible forms of coordination is the round-robin approach, where one agent in each iteration is allowed to replan his path. Due to the fixed planning order the method is inefficient in a situation with many agents. The method was improved with the merit-based token passing coordination strategy by Desaraju et al.\cite{DMA}, where in each iteration the agent with the highest potential path improvement (PPI) updates its plan and passes the token to the agent with the next highest PPI. The method uses  RRT* as sampling based path planning algorithm and was named distributed multi-agent RRT* (DMA-RRT*). Due to the fact that each agent minimizes just its own cost while selecting the path DMA-RRT was improved with cooperative DMA-RRT\cite{DMA} by adding the possibility for other robots to request so called emergency stops for other robots. These stops can then be used to improve the overall path planning results for multiple agents compared to each agent optimizing his own path.
+For multi agent path planning these single agent approaches are complemented by a coordination component which enables the agents to take other agents plans into account. Some approaches are based on some kind of reservation system where agents communicate their plans so others can treat these as obstacles. Different variants of this approach were presented by Desaraju et al.\cite{DMA} where agents take turns to announce their non conflicting path to others which can then take this path into consideration then planning their own. The method uses  RRT* as sampling based path planning algorithm and was named distributed multi-agent RRT* (DMA-RRT*). In a simple approach a round robin scheduling was used to determine the agents order. Due to the fixed planning order the method is inefficient in a situation with many agents. A more sophisticated approach used a merit based token passing system where in each iteration the agent with the highest potential path improvement (PPI) updates its plan and passes the token to the agent with the next highest PPI.
+
+Due to the fact that each agent only optimizes its own path DMA-RRT was improved with cooperative DMA-RRT*\cite{DMA} by adding the possibility for agents to request so called emergency stops for other agents if a solution is found which is more optimal for both of them. These stops can then be used to improve the overall path planning results for multiple agents compared to each agent optimizing his own path.
 
 \section{The System}
 \label{sec:system}
@@ -544,6 +544,9 @@ A lower score therefore indicates a better combination of energy consumption and
 
 \subsection{Path Planning}
 \label{subsec:path_planning}
+
+
+
 Describing how the path planning works. At the end of the planning the paths need to be reserved, what's described in the coordination section.
 
 \subsection{Coordination}
@@ -668,7 +671,7 @@ The performance of the system can be seen in following Figures. In Figure \ref{f
 
 We tried to determinate the optimal amount of the robots for each map. Figure \ref{fig:time_to_finish_40_tasks} shows the average time to finish 40 tasks and figure \ref{fig:energy_consumption} presents energy consumption of the system for 40 tasks by number of the robots.
 
-\subsection{Evaluation results and interpretation}
+\subsection{Evaluation Results and Interpretation}
 
 The graph \ref{fig:delivery_time} shows average package delivery time increases with increase in number of robots.  Initially for one robot, a task can be executed as fast as possible, without any obstacles in between. As more robots participate in the simulation, robots need to avoid paths of other robots. This increases the coordination overhead which in turn leads into congestions. From robot 4 onwards, the package delivery time increases quite linearly as number of robots increase. The similar behaviour is observed for map 2, however the effect is quite pronounced. By increasing trays, the density of map is further increased, making further difficult for the robots to navigate. 
 %
@@ -846,19 +849,22 @@ Analysing all the above points, we can assert with high level of confidence that
 % stfloats package.
 
 
-
 \section{Conclusion}
+
 FROM CAN:
 \\
 A brief summary of your system, what was the problem, how you achieved, your objectives, and your methodologies you used very very briefly. Then again very briefly share your finding (the discussion you made). Finally, you will conclude with the possible extensions / changes to improve the performance, basically the future works. You can find more about the templates of IEEE on the internet.
 
 
-
-
 % if have a single appendix:
-\appendix[Class Diagram]
+\appendix[System Architecture]
 
-Here I would like to see your final class diagram. It doesn’t require any description (unless it is complicated). It will be sufficient and necessary to mention at least once inside the methodology part that your class diagram is attached as an appendix. Also give figure caption to it.
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.45\textwidth]{resources/system_architecture}
+	\caption{System Architecture}
+	\label{fig:system_architecture}
+\end{figure}
 
 
 % or
