@@ -375,9 +375,7 @@
 
 \begin{abstract}
 %\boldmath
-Autonomous warehouses play an important role in smart factory environments representing the "Industry 4.0". The goal is to optimize the carriage of goods within the warehouse using multi-robot collaboration and coordination. Hybrid task planning is used to improve the task assignment decisions and distributing the computational effort between the central task planner and the decentralized agents. A decentralized task planning with timed reservations using a shared map ensures the coordination between all robots while moving.
-
-You should summarize your work here. A good intro with one sentence: e.g. This technology is needed due to …. Then how you approached to the problem. What is your contribution/the most valuable part of the work emphasis that. What methodologies you used. How you demonstrated your results. How was the system performance. It should not be too short or too long
+Autonomous warehouses play an important role in smart factory environments representing the "Industry 4.0". The goal is to optimize the carriage of goods within the warehouse using multi-robot collaboration and coordination. Hybrid task planning is used to improve the task assignment decisions and distributing the computational effort between the central task planner and the decentralized agents. A decentralized task planning with timed reservations using a shared map ensures the coordination between all robots while moving. The results show that this approach provides reliable and quick transportations in the warehouse up to high density of robots. Due to the limited space an increasing amount of robots leads to congestions and an high coordination overhead at some point reducing the overall effectiveness. This point can be determined within our simulation to find the best suitable amount of robots for a given warehouse configuration.
 \end{abstract}
 % IEEEtran.cls defaults to using nonbold math in the Abstract.
 % This preserves the distinction between vectors and scalars. However,
@@ -508,8 +506,9 @@ This work builds on top of an existing warehouse simulation. The physical simula
 
 The \emph{Warehouse Management} is the base of the system. It initializes most of the components (cf. config arrows in Figure \ref{fig:system_architecture}). It uses the \emph{Config Server} to read the robot, package and warehouse configurations and distributes them to the other nodes. Additionally, it collects robot status information and displays them in combination with the warehouse design in RViz.
 
+The \emph{Storage Management} keeps track of all trays in the warehouse. Trays can allocated and deallocated via the Storage Management and their status can be queried. Therefore, it can be considered as the database for the packages' storage location. 
 
-
+The \emph{Package Generator} is simply an auxiliary utility to generate the packages and inform the Task Planner to create an associated task. The \emph{Package Detector} is a MORSE utility to physically detect packages in the trays.
 
 
 \subsection{Task Planning}
