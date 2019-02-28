@@ -610,34 +610,34 @@ This function has the benefit of being continuous and differentiable.
 \subsection{Task Execution}
 \label{subsec:task_execution}
 % Describe how the Robot Agents operate (maybe call the section something like: Operation), how they work on the tasks, when they idle, ...
-After we have discussed all the needed submodules we take a look at the execution of a task. Task execution is done by the \textit{Task Handler}.
+After we have discussed all the required submodules, we take a look at the execution of a task. Task execution is done by the \textit{Task Handler}.
 
 It has access to the Path Planner, Reservation Manager, Motion Planner and Charging Management. In addition, it has a list, called queue, of tasks assigned by the Task Planner, as well as the task it is currently working on, called the current or active task.
 
 The default state of the robot is idle. In this state it has neither an active task nor tasks waiting in its queue. If the robot has no active task or the active task is finished but one or more tasks are in the robots queue it will start the first task in the queue.
 
-Depending on the type of the current task the execution consists of more or less steps. Important to note is that the robot only reserves paths that it is driving immediately after it receives the reservation and does not try to reserve paths further in the future. We decided on this behaviour because planning far into the future costs computation time and more importantly the environment is so uncertain that the probability that the plans have to be revised is high.
+Depending on the type of the current task the execution consists of more or less steps. Important point to note is that the robot only reserves paths that it is driving immediately after it receives the reservation and does not try to reserve paths further in the future. We decided on this behaviour because planning far into the future costs computation time and more importantly the environment is so uncertain that the probability that the plans have to be revised is high.
 
-If the current task is a transportation task the Task Handler will go through the following steps:
+If the current task is a transportation task then the Task Handler will go through the following steps:
 \begin{enumerate}
-	\item request from the Reservation Manager a reserved path from the current robot position to the tray where it is supposed to pick up the assigned package
-	\item if it has received such a path hand it to the motion planner for driving
-	\item when the robot arrives at the tray pick up the package
+	\item request the Reservation Manager for a reserved path from the current robot position to the tray where it is supposed to pick up the assigned package
+	\item if it has received such a path, hand it to the motion planner for driving
+	\item when the robot arrives at the tray, pick up the package
 	\item when the package is loaded, request from the Reservation Manager a reserved path from the current position to the tray where it is supposed to drop the package off
-	\item if it has received such a path hand it to the motion planner for driving
-	\item when the robot arrives at the tray drop off the package
+	\item if it has received such a path, hand it to the motion planner for driving
+	\item when the robot arrives at the tray, drop off the package
 	\item when the the package is delivered, mark the task as finished
 \end{enumerate}
 For a charging task the execution procedure looks very similar:
 \begin{enumerate}
 	\item find the nearest free charging station
 	\item request from the Reservation Manager a reserved path from the current robot position to the charging station
-	\item if it has received such a path hand it to the motion planner for driving
+	\item if it has received such a path, hand it to the motion planner for driving
 	\item when the robot arrives at the charging station initiate the charging procedure
 	\item when the battery is full, mark the task as finished
 \end{enumerate}
 % path replanning if necessary
-While tasks are executed the Task Handler continuously checks if replanning is beneficial or necessary.
+While tasks are executed, the Task Handler continuously checks if replanning is beneficial or necessary.
 
 \subsection{Path Re-planning}
 \label{subsec:path_replanning}
@@ -645,16 +645,16 @@ While tasks are executed the Task Handler continuously checks if replanning is b
 The \textit{Path Replanning} is part of the Task Handler component.
 Since all our reservations are based on estimations of the time a robot is in a specific area, it is possible that a robot is faster than anticipated. In this case another robot might be able to finish its current task earlier.
 There are many situations where such an improvement is possible. Because of time constraints we only consider the following situation for beneficial replanning:
-When a robot leaves a tray earlier than estimated and another robot is waiting to access that particular tray replanning is performed so this robot is able to access the tray earlier.
+When a robot leaves a tray earlier than estimated and another robot is waiting to access that particular tray, replanning is performed in order to make this robot able to access the ahead of the time.
 
 % describe behavior
-When replanning for a task the Task Handler computes and reserves a new path through the Reservation Manager.
+When replanning for a task, the Task Handler computes and reserves a new path through the Reservation Manager.
 As long as the reservation is not yet granted it will continue with its current path.
 When the new path is received the Task Handler hands it to the Motion Planner to drive and the replanning is complete.
 
 % this behavior with one addition also allows us to recover from situations where a robot is to slow for its reservations and ends up outside of them
-In the case of a robot being slower than planned for or more generally in the case of a robot not being in a reservation of its own, replanning is not only beneficial but necessary.
-The previously introduced behaviour with a simple addition can be used for this case as well. Instead of the robot continuing on its current path while the reservation is not yet granted, the robot places an emergency reservation on its current position and stops driving until it receives a new reserved path.
+When a robot being slower than it is planned for, or in the case of a robot not being present on its reservation, replanning is not only beneficial but necessary.
+The previously introduced behaviour with a small addition can be used for this case as well. Instead of the robot continuing on its current path while the reservation is not yet granted, the robot places an emergency reservation on its current position and stops driving until it receives a new reserved path.
 
 \subsection{Prototyping Environment}
 \label{subsec:prototyping_environment}
@@ -669,7 +669,7 @@ For a realistic multi agent environment including communication and agent separa
 % mention evaluator as data collection unit, making easy evaluation of different configurations possible
 % export as csv -> compare different configurations, compare basic parameters
 % possible to simulate warehouse config to check for problems with tray placement etc.
-The performance of our system was evaluated on two different maps (Table \ref{tab:maps}) of size 18x16 using different number of robots (1, 2, 4, 6, 8, 10 and 12) with the same characteristics. The simulation was repeated 3 times for each number of robots on each map. The simulation was finished when 40 transportation tasks were done. With the start of simulation the battery level of robots is randomized between 95 and 100.
+The performance of our system was evaluated on two different maps (Table \ref{tab:maps}) of size 18x16 using different number of robots (1, 2, 4, 6, 8, 10 and 12) with the same characteristics. The simulation was repeated 3 times for each number of robots on each map. The simulation was declared as finished when 40 transportation tasks were done. With the start of simulation, the battery level of robots is randomized between 95 and 100.
 
 For transportation tasks we sampled a) time stamps when a task is assigned, b) execution time of a task, c) time of driving to pick up, d) pick up time, e) time of driving to drop off, f) drop off time and g) battery level at the end of task. For charging tasks we sampled  a) time stamps when a task is assigned, b) execution time of a task, c) time of driving to charge, and d) charging time.
 
