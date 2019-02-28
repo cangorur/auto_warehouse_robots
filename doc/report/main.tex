@@ -425,7 +425,7 @@ Results, ...
 \section{Problem Setting}
 \label{sec:problem_setting}
 As mentioned in \compref{sec:introduction} the goal is to implement a scalable cooperative multi-agent task and path planning system. 
-Before we describe the related work(see \compref{sec:related_work}) and our system in specific (see \compref{sec:system}) we have to establish the frame conditions and constraints.
+Before we describe the related work (see \autoref{sec:related_work}) and our system in specific (see \autoref{sec:system}) we have to establish the frame conditions and constraints.
 % given:
 	% environment
 	% 	map with limited space
@@ -451,7 +451,7 @@ These robots are capable of driving and have a gripper which allows them to pick
 Robots have a battery with a charge that decreases over time when idling and faster when driving.
 Each robot knows the static environment, meaning the map, but does not automatically know where the other robots are. 
 
-A unpredictable task generation generates packages that have to be transported.
+Tasks, which include a package transportation, are generated unpredictably and have to be handled by the system.
 
 % assumptions/constraints:
 % 	perfect sensor data
@@ -631,7 +631,7 @@ While tasks are executed the Task Handler continuously checks if replanning is b
 \subsection{Path Re-planning}
 \label{subsec:path_replanning}
 % replanning behavior -> when to replan and how does it work
-The \textit{Path Replanning} is part of the Task Handler component. \\
+The \textit{Path Replanning} is part of the Task Handler component.
 Since all our reservations are based on estimations of the time a robot is in a specific area, it is possible that a robot is faster than anticipated. In this case another robot might be able to finish its current task earlier.
 There are many situations where such an improvement is possible. 
 because of time constraints we only consider the following situation for beneficial replanning:
