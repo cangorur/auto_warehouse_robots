@@ -468,7 +468,9 @@ The \emph{Motion Planner} takes a path as the input and follows it using a pid c
 \label{subsec:foundation}
 This work builds on top of an existing warehouse simulation. The physical simulation is done in the Modular OpenRobots Simulation Engine \emph{MORSE}. An interface allows the communication with the Robot Operating System \emph{ROS} which runs all the system components.
 
-The \emph{Warehouse Management} is the base of the system. It initializes most of the components (cf. config arrows in Figure \ref{fig:system_architecture}). It uses the \emph{Config Server} to read the robot, package and warehouse configurations and distributes them to the other nodes. Additionally, it collects robot status information and displays them in combination with the trays in RViz.
+The \emph{Warehouse Management} is the base of the system. It initializes most of the components (cf. config arrows in Figure \ref{fig:system_architecture}). It uses the \emph{Config Server} to read the robot, package and warehouse configurations and distributes them to the other nodes. Additionally, it collects robot status information and displays them in combination with the warehouse design in RViz.
+
+
 
 
 
