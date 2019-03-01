@@ -155,12 +155,12 @@ Task Planner agent consists of multiple classes to ease the process.
 - TaskPlanner has the main operation. In general, `newInputRequest and newOutputRequest` are the service functions to start the main operation
 - These are advertised services, and they are called currently by the `PackageGenerator` agent.
 - So PackageGenerator creates a random package and input/output request, then it calls the TaskPlanner's `new_input_task`, `new_output_task` services. Feel free to change this random creation under `PackageGenerator.cpp`.
-- Carefully examine these service functions under TaskPlanner.
-- Under these functions, new `Request` objects are created for each request. Please examine the `Request.cpp`
+- New `Request` objects are created for each request. Examine the `Request.cpp`
 - Requests are created with the `InputTaskRequirements` and `OutputTaskRequirements`. Feel free to edit these classes too, to define new properties and make the planning fun.
 - You will notice under Request class that there is the function called `allocateResources`.
 - This function first finds an available trays under `findTargetCandidates`, then a robot to assign under `getRobotCandidates`.
-- These two functions are the core of your work. The strategies are to be developed under them.
+- The `getRobotCandidates` function will publish a `taskAnnouncement` message on the `task_broadcast` topic to which the `TaskHandlers` in the agents will answer with a `TaskRating` message on the `task_Response` topic. 
+- The Task Planner will then sort the answers according to their score and assign the task to the best robot
 
 #### For Motion and Path Planner Updates
 
