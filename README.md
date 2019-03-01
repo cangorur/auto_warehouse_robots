@@ -3,24 +3,15 @@ Auto-Smart-Factory
 
 by Orhan Can Görür* (orhan-can.goeruer@dai-labor.de), Jacob Seibert, Marc Schmidt, Malte Siemers, Utku Özmü, Ansgar Rösig, Hafiz Hamza, Paul Dieterich, Jonathan Regef, Mohannad Al Dakhil, Puriwat Khantiviriya.
 
-We present a closed solution for a simulated autonomous smart factory.
-The environment consists of two parts: production, warehousing. This project involves the warehousing part of it, but it is the development version. That is, some nodes are missing/left for the students to develop their own solutions (please refer to the architecture drawing below). The nodes to be adjusted are simply listed here:
-* agent/Agent.cpp
-* task_planner/Request.cpp
-* charging_management/ChargingManagement.cpp
-* agent/path_planning/ThetaStarPathPlanner.cpp
-* * agent/path_planning/ReservationManager.cpp
-* task_planner/TaskPlanner.cpp
-* agent/ObstacleDetection.cpp
-More information are given under their source files (headers). For simplicity you can build the project code documentation and see what is expected from you to develop on these nodes (please refer to 'Additional Tools' section)
+Extended with decentralized multi-robot coordination and collaboration by Vincent Wölfer, Patrick Denzler, Florian Ziesche, Shreyas Gokhale and Uros Petkovic.
 
-Warehousing is an essential part of smart factories that tries to cope with the challenges of modern consumer behavior. The autonomous warehousing comes with a range of problems, i.e. Task Management (if not a part of overall planning), roadmap planning, finding feasible trajectories for and perception of the local environment of automated vehicles.
-We show, that our solution scales well for warehouses of different sizes under mild constraints and in the number of robots.
-We use a road map based approach for the planning of local and global paths and a semi-hierarchical model for task planning (to be integrated into overall planning).
-The agent domain used for communication between the agents is ROS and we simulate the environments with MORSE.
+A smart factory environment is an important aspect of "Industry 4.0" where products can be ordered, produced, sorted and stored in a warehouse to be finally delivered to the recipient. The different components of the scenario are modular and hence the information exchange between them is essential.
+This work focuses on the transportation of products inside a warehouse. The goal is to implement a scalable system for cooperative multi-agent task and path planning. Products arrive unpredictably and need to be stored until they can be delivered to the customer.
+To handle a high demand of tasks, multiple robots have to coordinate their movement in a limited space and need to cooperate to minimize the overall time to deliver packages.
+A hybrid task planning enables the cooperation between the robots. A central task planner is used to assign tasks to the agents based on their combined feedback. The robots individually evaluate their ability to fulfil a task and report the result to the task planner which selects the most suitable agent for each task. This distributes the computational effort between the agents and the central instance.
+Furthermore, the robots coordinate their movements to avoid collisions and congestion based on a timed reservation system. Each robot reserves its path on a shared map using estimated driving times. This enables the decentralized path planning to consider both, waiting and detours to find the fastest route.
+A specialist motion planning ensures quick driving and accurate path following while considering all reservations.
 
-An old documentation of the system describing the components and some services can be found under `doc/old_docs/`. NOTE: These documentations date back to the first design of the system, but most components are still there (slides are up-to-date).
-For a new code documentation please refer to the section `Build code documentation` below.
 
 ---
 
@@ -99,6 +90,7 @@ It is recommended that you run simple versions of the environments as below:
 
 Finally, robot and package configurations can be changed to embed specifications to the robots used in motion / task planning (e.g. package carrying capabilities, discharging / charging rates of the robots, see more under `configs`).
 
+
 #### Running MORSE:
 
 Make sure morse knows the simulation by importing it ONCE (from within the main directory):
@@ -147,6 +139,10 @@ Then you can launch the system (with MORSE already started) by running (DON'T FO
 roslaunch auto_smart_factory full_system.launch
 ```
 
+#### Running via run script (tmux)
+When tmux is installed (`sudo apt install tmux`) the run.sh script (`./run.sh`) runs the whole environment. It can be exited by pressing `CTRL+B` followed by `&` (`SHIFT+6`). With `CTRL+B` and the arrow keys the active tmux split can be selected and `CTRL+B` and `[` enables scrolling. Pressing `q` exists scroll mode. Google for `tmux cheatsheet` for more information on how to use tmux.
+
+
 ### Hints for the Developers
 
 #### For Task Planner Updates
@@ -159,29 +155,21 @@ Task Planner agent consists of multiple classes to ease the process.
 - Requests are created with the `InputTaskRequirements` and `OutputTaskRequirements`. Feel free to edit these classes too, to define new properties and make the planning fun.
 - You will notice under Request class that there is the function called `allocateResources`.
 - This function first finds an available trays under `findTargetCandidates`, then a robot to assign under `getRobotCandidates`.
-- The `getRobotCandidates` function will publish a `taskAnnouncement` message on the `task_broadcast` topic to which the `TaskHandlers` in the agents will answer with a `TaskRating` message on the `task_Response` topic. 
+- The `getRobotCandidates` function will publish a `taskAnnouncement` message on the `task_broadcast` topic to which the `TaskHandlers` in the agents will answer with a `TaskRating` message on the `task_response` topic. 
 - The Task Planner will then sort the answers according to their score and assign the task to the best robot
 
 #### For Motion and Path Planner Updates
 
-- Task Planner assigns a task to the Agent by calling `assignTask()` function in the `Agent.cpp`. It only sends 2 information, ids of input tray and output tray.
 - Then in `assignTask()`, each task is basically divided into 2 paths, one from current position to the source tray and the other from source tray to the target tray.
-- Afterwards, it initiates a path query via the `ThetaStarPathPlanner` which returns a `Path` object (see Path.cpp) with all these parameters. Theta* is used to plan pathes.
+- A path query is initialized via the `ThetaStarPathPlanner` which returns a `Path` object (see Path.cpp) with all parameters. Theta* is used to find paths.
 - Be careful, if no path was found a path object is still returned but is invalid. This MUST be check with path.isValid().
-- This path is only used by the 
+- This path is only used to calculate distances and estimated driving times. Paths that should be driven must be requested and registered with the Reservation Manager.
+- When a Task is beeing executed the `TaskHandler` requests the next path from the Reservation Manager.
 
-- The Agent then start driving this `Plan` by sending corresponding information to the `MotionPlanner`.
-- On every call to `update()` function of Agent, which btw is called under the `poseCallback` or `gpsCallback` in another version, the Agent checks whether the current `Plan` is done or not. If not, it keeps on driving it
-- If the current `Plan` is done (with the approach behavior also executed), then it checks whether the current `Path` is done. If not, then it asks for the next chunk (`Plan`) of the current `Path`. If the current `Path` is done (which is the first path to the source tray or to the charging station), there would be a `Load`, `Unload` or `Charge` taking place. See how those are arranged under `getTheNextPath()`.
-- Finally, we pop out the next `Path` (if a package taken, then this would be to place to a target tray) from the stack that we pushed earlier and then the whole process is repeated.
-- The `laserCallback` and `poseCallback` are the callback functions for the subscribed sensors. They trigger updates on `ObstacleDetection` and `MotionPlanner` objects created. To update a robot's driving behaviors, please refer to the `update` functions of both of the classes.
-- `driveCurrentPath` will hold your driving strategies, and under ObstacleDetection `analyzeLaserScan` will hold your obstacle detection and avoiding strategies.
+- The MotionPlanner gets the reserved path from the `TaskHandler` which is in charge of handing over the corret path and manually handle the approach and leave routines.
+- On every call to `update()` function of Agent, which is called in the `poseCallback`, the MotionPlanner goes through a state machine to perform the appropriate action. By default it follows the path using a pid controller.
+- When the current `Path` is finished, the MotionPlanner switches into the finished mode.
 
-### ISSUES
-
-This section will be extended with some more limitations and issues the current version holds:
-* Tray numbering in the code is different than the labels written on the ground of the simulation environment. Even the charging stations are created from the trays, therefore they are all numbered together in the morse environment (see `factory_morse/auto_smart_factory/src/map_setup.py`). First charging stations (#0-7), inputs (#8-11), storages (#12-30, UPPER STORAGES ARE NOT NUMBERED and REGISTERED), outputs (#31-35).
-* RELEVANT TO DEMO VERSION (NOT THIS ONE): Package generator, `src/auto_smart_factory/src/package_generator/PackageGenerator.cpp`, generates new pkgs on conveyor-1, which then always fall into input tray-1 (tray#8 in code numbering, see line 322 for the hard-coded x,y,z coordinates). The service `newPackageInputOnConveyor` in line 290 is the generator service and is directly connected to the websocket (see factory_gateway node), or can be called from terminal. For the other input trays, the packages are generated randomly by `newPackageInput` service see line 363 (it is only called in PackageGenerator.cpp).
 
 ### Additional Tools
 
@@ -193,62 +181,14 @@ This visualization is launched by the following command:
 ```
 roslaunch auto_smart_factory visualization.launch
 ```
-#### WebSocket Interface
-
-The sensors and actuators are open to the outside world (outside of morse and ros) through a websocket connection. The source code responsible for this is the "factory_gateway" ROS node. The node simply subscribes/requests the existing services for sensors and actuators on the system and sends all the information through websocket when requested (the node is the web service). By working on this node, you can simply add new services and define a .json file to introduce new interfaces to the system elements.
-
-The node is NOT running by default (if you want you can add it to launch files). So run the node:
-
-```
-rosrun auto_smart_factory factory_gateway
-```
-
-Navigate to `src/auto_smart_factory/test_websocket` to test this connection easily (even from your PC, see more from the readme file there)
 
 #### Record results
 
-To analyze the results of the system, i.e. finished tasks, timings, robot states, the relevant messages can be saved to a bag file using **rosbag**.
-The record can be started by launching rosbag with the prepared launch file (preferably before you start the system itself):
+The system is evaluated with the Evaluator node. It can be configured in its respective header file.
 
-```
-roslaunch auto_smart_factory log_results.launch
-```
+The results are saved to the home directory.
+This file can be imported into any spreadsheet or matlab tool as it is a simple csv file. Data samples are automatically taken during the simulation. Information is displayed in the terminal.
 
-The results are saved to `logs/auto_smart_factory.bag`.
-This bag file can then easily be analyzed using rosbag's Python/C++ API ([http://wiki.ros.org/rosbag/Code API](http://wiki.ros.org/rosbag/Code%20API)).
-
-#### Test run the robots
-The robots can be moved around for test purposes. Additionally, they can interact with packages. First we need to activate the test mode for the robot:
-```
-rosparam set /motion_planner_robot_<INTEGER_ID>/activate_tests true # Ex. /motion_planner_robot_2
-```
-This command will stop the robot even if it was following a given path. Once the parameters is set `false`, the robot automatically keeps following the previous track.
-Then, we are able to control the robot motion with the following publisher command. This publishes to the robot motor model in the MORSE environment. The part of the command starting with the quotation marks are the argument of the publisher. You can press **tab** twice to retrieve the argument automatically. For the linear motion, we should always use only `X` axis and the value entered is the speed. For the angular motion please use only `Z` axis for CW or CCW rotation.
-```
-rostopic pub /robot_2/motion geometry_msgs/Twist
-"linear:
-  x: 1.0
-  y: 0.0
-  z: 0.0
-angular:
-  x: 0.0
-  y: 0.0
-  z: 0.0"
-```
-Additionally, we can activate a robot's gripper to grip (suck) or release a package.
-To activate the gripper, the robot should be very close to the package. Use the following rosservice call
-```
-rosservice call /robot_2/gripper/load  # replace load with unload to release a package
-```
-In addition, in case it is needed somehow, one can move a package to anywhere on the world map.
-```
-# To move a package (as always, the commands between quotation marks are arguments and can be retrieved by doing double tab)
-rosservice call /package_manipulator/move_package "package_id: '<STRING_ID_OF_A_PKG>'
-x: 3.0
-y: 5.0
-z: 3.0"
-# Examples of package IDs: pkg1_3, pkg2_8 . pkg1 is for light and pkg2 is for heavy packages.
-```
 
 #### Build code documentation
 
@@ -311,15 +251,14 @@ Note: The package weights and the robots carriage capacities are not currently c
 ## Brief overview of the system
 
 System Architecture drawing of the new version of the project, also showing the nodes to be updated for the student developments
-![ngrok](https://gitlab.tubit.tu-berlin.de/app-ras/smart_factory_ws14_g3/raw/master/doc/system_architecture.png)
+![ngrok](https://gitlab.tubit.tu-berlin.de/app-ras/smart_factory_ws14_g3/raw/master/doc/architecture/system_architecture.png)
 
 Advertised services/topics are listed below the corresponding node (THE LIST IS OLD, NEEDS TO BE UPDATED, see the ros service documentation folder under code documentation !!!).
 
 - `config_server`: Provides services to get map configuration and robot configurations (package configurations will follow).
-    - **Topic** `occupancy_map`: Publishes the occupancy map but is only meant to be used for visualization purposes.
     - **Service** `get_map_configuration`: Retrieves the warehouse configuration.
     - **Service** `get_robot_configurations`: Retrieves the robot configurations.
-    - **Service** `get_package_configurations`: Retrieves the robot configurations.
+    - **Service** `get_package_configurations`: Retrieves the package configurations.
 - `package_generator`: Generates inputs & outputs. This simulates a context for the warehousing system.
     - **Service** `init`: Initializes the package generator.
 - `package_manipulator`: Manipulates the position of packages.
@@ -337,11 +276,15 @@ Advertised services/topics are listed below the corresponding node (THE LIST IS 
     - **Service** `get_tray_state`: Returns the current state of a specific tray.
 - `task_planner`: Plans and supervises the tasks.
     - **Topic** `status`: Publishes the current status of the task planner containing the states of all current requests and tasks.
+    - **Topic** `task_broadcast` : Announce tasks to the agents.
+    - **Topic** `task_rating` : Collect answers to announcements.
     - **Service** `init`: Initializes the task planner.
     - **Service** `register_agent`: Registers agents.
     - **Service** `new_input_task`: Try to add new input request.
     - **Service** `new_output_task`: Try to add new output request.
 - `agent`: Handles a robot. Can be launched using `rosrun auto_smart_factory agent robot_<number>`.
+    - **Topic** `task_broadcast` : Receive task announcements.
+    - **Topic** `task_rating` : Publish ratings for task announcements.
     - **Topic** `/robot/heartbeats`: Publishes regular status update messages from all robots.
     - **Topic** `robot_<number>/battery`: Publishes the current battery level of the robot.
     - **Topic** `robot_<number>/gripper_state`: Publishes load or unload events of the robot's gripper.
@@ -349,25 +292,22 @@ Advertised services/topics are listed below the corresponding node (THE LIST IS 
     - **Topic** `robot_<number>/motion`: Publishes motion commands for the actuator.
     - **Topic** `robot_<number>/pose`: Publishes the robot's ground truth pose in space.
     - **Service** `robot_<number>/init`: Initializes the agent.
-    - **Service** `robot_<number>/store_package`: Requests agent to calculate the plan to store a package.
-    - **Service** `robot_<number>/retrieve_package`: Requests agent to calculate the plan to retrieve a package.
     - **Service** `robot_<number>/assign_task`: Requests agent to execute the task with the given id.
     - **Service** `robot_<number>/gripper/get_gripper_status`: Retrieves the current gripper status.
     - **Service** `robot_<number>/gripper/load`: Grabs a package if one is near.
     - **Service** `robot_<number>/gripper/unload`: Releases a grabbed package.
+- `reservation_manager`: handle the timed reservations on the dynmaic map
+    - **Topic** `/reservation_request`: Request turn to add reservation at reservation arbiter
+    - **Topic** `/reservation_broadcast`: Broadcasts the reservations among all robots
+
 - `charging_management`: automatically tracks the battery levels of all the robots
     - **Topic** `/robot/heartbeats`: Publishes regular status update messages from all robots.
-    - **Service** `get_free_charging_stations`: Returns the available charging stations.
-    - **Service** `register_agent_charging_management`: Registers a robot agent to the management for battery tracking. Agent.cpp handles this at the start.
     - **Service** `robot_<number>/gripper/load`: Grabs a package if one is near.
     - **Service** `robot_<number>/gripper/unload`: Releases a grabbed package.
 - `gripper_manipulator`: Manipulates the position of a robot's gripper.
     - **Service** `move_gripper`: Moves the gripper of a robot to a given position. Expects the gripper ID (same as robot IDs) and x,y,z positions
 - `warehouse_management`: Initializes all system components & starts the simulation.
-    - **Topic** `occupancy_map`: The occupancy map of the warehouse containing static obstacles. For visualization purposes.
     - **Topic** `abstract_visualization`: Visualization markers of the warehouse interior used for the rviz visualization.
-- `roadmap_generator`:
-    - **Topic** `roadmap_graph`: Publishing the roadmap generated.
-    - **Service** `trigger_roadmap_generator`: Initializes and initiates the roadmap generation
+    - **Topic** `robot_<number>_visualization`: Visualization markers of the individual robots like paths and reservations.
 - Additional MORSE topics
     - **Topic** `/warehouse/tray_sensors`: Each tray has a sensor to detect packages that are put into it. Changes are published to this topic.
