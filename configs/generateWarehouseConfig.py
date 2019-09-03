@@ -1,9 +1,8 @@
 #!/usr/bin/env python
+import rospy
 
 import json
 import copy
-
-from auto_warehousing.msg import Tray
 
 class WarehouseConfigGenerator(object):
 
@@ -13,6 +12,33 @@ class WarehouseConfigGenerator(object):
         'y' : 0.0,
         'orientation' : 0.0,
         'max_load' : 50.0,
+        'package_type': 0
+    }
+
+    trayPrototype2 = {
+        'type' : 'charging station',
+        'x' : 0.0,
+        'y' : 0.0,
+        'orientation' : 0.0,
+        'max_load' : 70.0,
+        'package_type': 0
+    }
+    
+    trayPrototype3 = {
+        'type' : 'input',
+        'x' : 0.0,
+        'y' : 0.0,
+        'orientation' : 0.0,
+        'max_load' : 70.0,
+        'package_type': 0
+    }
+
+    trayPrototype4 = {
+        'type' : 'output',
+        'x' : 0.0,
+        'y' : 0.0,
+        'orientation' : 0.0,
+        'max_load' : 70.0,
         'package_type': 0
     }
 
@@ -37,6 +63,35 @@ class WarehouseConfigGenerator(object):
 
         self.trays.append(t)
 
+
+
+    def generateChargingTray(self, x, y, orientation):
+        t = copy.deepcopy(WarehouseConfigGenerator.trayPrototype2)
+
+        t['x'] = x
+        t['y'] = y
+        t['orientation'] = orientation
+
+        self.trays.append(t)
+
+
+    def generateInputTray(self, x, y, orientation):
+        t = copy.deepcopy(WarehouseConfigGenerator.trayPrototype3)
+
+        t['x'] = x
+        t['y'] = y
+        t['orientation'] = orientation
+
+        self.trays.append(t)
+    
+    def generateOutputTray(self, x, y, orientation):
+        t = copy.deepcopy(WarehouseConfigGenerator.trayPrototype4)
+
+        t['x'] = x
+        t['y'] = y
+        t['orientation'] = orientation
+
+        self.trays.append(t)
     def generateTrayRow(self, x, y, n, facingUp = True):
         for i in range(n):
             if facingUp:
@@ -53,6 +108,22 @@ class WarehouseConfigGenerator(object):
                 orientation = 0.0
             self.generateTray(x, y + i * WarehouseConfigGenerator.trayGeometry['height'], orientation)
 
+    def generateInputTrayColumn(self, x, y, n, facingLeft = True):
+        for i in range(n):
+            if facingLeft:
+                orientation = 180.0
+            else:
+                orientation = 0.0
+            self.generateInputTray(x, y + i * WarehouseConfigGenerator.trayGeometry['height'], orientation)
+
+    def generateOutputTrayColumn(self, x, y, n, facingLeft = True):
+        for i in range(n):
+            if facingLeft:
+                orientation = 180.0
+            else:
+                orientation = 0.0
+            self.generateOutputTray(x, y + i * WarehouseConfigGenerator.trayGeometry['height'], orientation)
+
     def generateHBar(self, x, y, n):
         self.generateTrayRow(x, y, n, False)
         self.generateTrayRow(x, y + WarehouseConfigGenerator.trayGeometry['height'], n, True)
@@ -61,10 +132,9 @@ class WarehouseConfigGenerator(object):
         self.generateTrayColumn(x, y, n, True)
         self.generateTrayRow(x + WarehouseConfigGenerator.trayGeometry['width'], y, n, False)
         
-    def generateRobot(self, startx, starty, type_name):
+    def generateRobot(self, startx, starty, robotId, type_name):
         robot = {}
-        robot['name'] = 'robot_' + str(self.robotId)
-        self.robotId += 1
+        robot['name'] = 'robot_' + str(robotId)
         robot['type'] = type_name
         robot['idle_position'] = {}
         robot['idle_position']['x'] = startx
@@ -80,11 +150,14 @@ class WarehouseConfigGenerator(object):
         config = {
             'map' : {
                 'width' : self.mapWidth,
-                'height' : self.mapHeight
+                'height' : self.mapHeight,
+            	"margin" : 0.5,
+	            "theta_star_resolution" : 0.5,
+	            "mergeObstacles" : True
             },
             'package_pool' : {
                 'location' : {
-                    "x" : -10.0,
+                    "x" : -5.0,
                     "y" : 4.0,
                     "z" : 0.0
                 },
@@ -105,72 +178,95 @@ class WarehouseConfigGenerator(object):
                 'width' : WarehouseConfigGenerator.trayGeometry['width'],
                 'height' : WarehouseConfigGenerator.trayGeometry['height']
             },
+            "human_robot_collaboration": {
+            "conveyors": [],
+            "humans": [],
+            "pr2_robots": []
+            },
             'trays' : self.trays,
-            'robots' : self.robots
+            'robots' : self.robots,
+            'kuka_robots' : []
         }
 
         with open(file, 'w') as f:
             json.dump(config, f, indent = 4)
 
 def main():
-    gen = WarehouseConfigGenerator(18, 11)
-    
-    #gen.generateRobot(1, 1, 'Pioneer P3-DX')
 
-    # left part
+    trayWidth = 0.5
+    mapWidth = 18
+    mapHeight = 16
+    numberOfTraysInARow = 5
+    robotRadius = 0.25 # Same as in robot_config
+    robotSize = 2*robotRadius
+    
+    numberofChargingStations = 2
+    numberofInputTrays = 12
+    numberOfRows = 3
+    numberOfRobots = 4
 
-    gen.generateTrayRow(0.75, 2.25, 4, True)
+    midPointWidth = mapWidth /2
+    midPointHeight = mapHeight /2
+    spaceBetweenRows = robotSize *2 
+    spaceBetweenCols = robotSize * 5 
+    rowLength = trayWidth * numberOfTraysInARow
+
+
+    gen = WarehouseConfigGenerator(mapWidth, mapHeight)
     
-    gen.generateTrayRow(0.75, 4.75, 4, False)
-    gen.generateTrayRow(0.75, 5.25, 4, True)
+    # Hack for shifiting
+    rowOffset = 6
+    columnOffset = 3
+    distBetwChgandRows = 2
+
+    for k in range(1,numberOfRobots+1):
+        gen.generateRobot(k+4,2,k, 'Pioneer P3-DX')
+        gen.generateRobot(k+4+4,2,k+4, 'Pioneer P3-DX Light')
+
+
+
+    for i in range (numberOfRows):
+        
+        # Row i,0
+
+        gen.generateTrayRow(midPointWidth-(spaceBetweenRows+rowLength), spaceBetweenCols * i + columnOffset, numberOfTraysInARow, False)
+        gen.generateTrayRow(midPointWidth-(spaceBetweenRows+rowLength), spaceBetweenCols * i + columnOffset+ trayWidth, numberOfTraysInARow, True)
+
+        # Row i,1
+
+        gen.generateTrayRow(midPointWidth+(spaceBetweenRows), spaceBetweenCols* i +columnOffset, numberOfTraysInARow, False)
+        gen.generateTrayRow(midPointWidth+(spaceBetweenRows), spaceBetweenCols * i + columnOffset+ trayWidth, numberOfTraysInARow, True)
+
+
+    for j in range(numberofChargingStations):
+
+        # Charging Stations Top
+        gen.generateChargingTray(midPointWidth - j*2 - trayWidth, columnOffset - distBetwChgandRows, 90.0)
+        # gen.generateRobot(midPointWidth - j - trayWidth ,columnOffset - distBetwChgandRows + 2*robotSize, j+1, 'Pioneer P3-DX')
+
+        gen.generateChargingTray(midPointWidth + j*2 + trayWidth, columnOffset - distBetwChgandRows, 90.0)
+        # gen.generateRobot(midPointWidth + j + trayWidth ,columnOffset - distBetwChgandRows + 2*robotSize, j+1 + 4 , 'Pioneer P3-DX Light')
+
+        # Charging Stations Bottom
+        gen.generateChargingTray(midPointWidth - j*2 - trayWidth, mapHeight - columnOffset, 180.0)
+        # gen.generateRobot(midPointWidth - j - trayWidth ,mapHeight - columnOffset + 2*robotSize, j+1+6, 'Pioneer P3-DX')
+
+        gen.generateChargingTray(midPointWidth + j*2 + trayWidth, mapHeight - columnOffset, 180.0)
+        # gen.generateRobot(midPointWidth + j + trayWidth ,mapHeight - columnOffset + 2*robotSize, j+1 + 2, 'Pioneer P3-DX Light')
+
+
     
-    gen.generateTrayRow(0.75, 7.75, 4, False)
-    gen.generateTrayRow(0.75, 8.25, 4, True)
-    
-    gen.generateTrayRow(0.75, 10.75, 4, False)
-    
-    # lower part
-    
-    gen.generateTrayColumn(7.25, 0.75, 4, False)
-    
-    gen.generateTrayColumn(11.75, 0.75, 4, True)
-    
-    # middle part
-    
-    gen.generateTrayColumn(7.25, 5.25, 6, False)
-    
-    gen.generateTrayColumn(11.75, 5.25, 6, True)
-    
-    # upper part
-    
-    gen.generateTrayRow(7.25, 8.25, 20, True)
-    
-    gen.generateTrayRow(7.25, 10.75, 20, False)
-    
-    # charging stations
-    
-    gen.generateTray(12.25, 5.25, 0)
-    gen.generateTray(12.25, 6.25, 0)
-    gen.generateTray(12.25, 7.25, 0)
-    
-    gen.generateTray(16.75, 5.25, 180)
-    gen.generateTray(16.75, 6.25, 180)
-    gen.generateTray(16.75, 7.25, 180)
-    
-    gen.generateTray(12.25, 1.25, 0)
-    gen.generateTray(12.25, 2.25, 0)
-    
-    gen.generateTray(16.75, 1.25, 180)
-    gen.generateTray(16.75, 2.25, 180)
-    
-    #gen.generateHBar(5.25, 4.0, 20)
+    gen.generateInputTrayColumn(3, 6, 5, False)
+    gen.generateOutputTrayColumn(16, 5, 10, True)
+
+    # gen.generateHBar(5.25, 4.0, 20)
     #gen.generateTrayRow(5.25, 9.75, 20, False)
     
     #gen.generateTrayRow(5.25, 10.25, 20, True)
     #gen.generateHBar(5.25, 14.0, 20)
     #gen.generateTrayRow(5.25, 19.75, 20, False)
 
-    gen.saveConfig('large_warehouse_config_gen.json')
+    gen.saveConfig('dummy_test_config.json')
 
 if __name__ == '__main__':
     main()

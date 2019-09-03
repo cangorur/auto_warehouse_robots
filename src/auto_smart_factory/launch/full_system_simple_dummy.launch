@@ -1,0 +1,81 @@
+<launch>
+	<!-- Warehouse Management -->
+	<node pkg="auto_smart_factory" type="warehouse_management" name="warehouse_management" output="screen" />
+	
+	<!-- Package Generator -->
+	<node pkg="auto_smart_factory" type="package_generator" name="package_generator" />
+
+	<!-- Package Manipulator -->
+	<node pkg="auto_smart_factory" type="PackageManipulator.py" name="package_manipulator" />
+
+	<!-- Gripper Manipulator -->
+	<node pkg="auto_smart_factory" type="GripperManipulator.py" name="gripper_manipulator" />
+	
+	<!-- Storage Management -->
+	<node pkg="auto_smart_factory" type="storage_management" name="storage_management" />
+	
+	<!-- Task Planner -->
+	<node pkg="auto_smart_factory" type="task_planner" name="task_planner" />
+	
+	<!-- Reservation Master -->
+	<node pkg="auto_smart_factory" type="reservation_master" name="reservation_master" />
+
+	<!-- Evaluation Node -->
+	<node pkg="auto_smart_factory" type="evaluator" name="evaluator" />
+
+	<!-- Configuration Server -->
+	<node pkg="auto_smart_factory" type="config_server" name="config_server">
+        	<!-- configuration files -->
+	        <param name="map_config_file" value="$(find auto_smart_factory)/../../configs/dummy_test_config.json" />
+	        <param name="robot_config_file" value="$(find auto_smart_factory)/../../configs/robot_config.json" />
+	        <param name="package_config_file" value="$(find auto_smart_factory)/../../configs/package_config.json" />
+	</node>
+        
+	<!-- Agents -->
+	<node pkg="auto_smart_factory" type="agent" name="robot_1" args="robot_1">
+		<param name="color_r" value="255" />
+		<param name="color_g" value="0" />
+		<param name="color_b" value="0" />
+	</node>
+	<node pkg="auto_smart_factory" type="agent" name="robot_2" args="robot_2">
+		<param name="color_r" value="0" />
+		<param name="color_g" value="255" />
+		<param name="color_b" value="0" />
+	</node>
+	<node pkg="auto_smart_factory" type="agent" name="robot_3" args="robot_3">
+		<param name="color_r" value="0" />
+		<param name="color_g" value="0" />
+		<param name="color_b" value="255" />
+	</node>
+	<!-- grey -->
+	<node pkg="auto_smart_factory" type="agent" name="robot_4" args="robot_4">
+		<param name="color_r" value="230" />
+		<param name="color_g" value="230" />
+		<param name="color_b" value="230" />
+	</node>
+	<!-- pink -->
+	<node pkg="auto_smart_factory" type="agent" name="robot_5" args="robot_5">
+		<param name="color_r" value="255" />
+		<param name="color_g" value="0" />
+		<param name="color_b" value="255" />
+	</node>
+	<!-- Cyan -->
+	<node pkg="auto_smart_factory" type="agent" name="robot_6" args="robot_6">
+		<param name="color_r" value="0" />
+		<param name="color_g" value="220" />
+		<param name="color_b" value="220" />
+	</node>
+	<!-- purple -->
+	<node pkg="auto_smart_factory" type="agent" name="robot_7" args="robot_7">
+		<param name="color_r" value="120" />
+		<param name="color_g" value="0" />
+		<param name="color_b" value="170" />
+	</node>
+	<!-- yellow -->
+	<node pkg="auto_smart_factory" type="agent" name="robot_8" args="robot_8">
+		<param name="color_r" value="220" />
+		<param name="color_g" value="220" />
+		<param name="color_b" value="0" />
+	</node>
+
+</launch>

@@ -26,3 +26,7 @@ src/CMakeLists.txt
 \.metadata/
 doc/report/main.pdf
 src/*.idea/*
+
+.vscode/
+smart_factory_ws14_g3.code-workspace
+.vscode/settings.json
