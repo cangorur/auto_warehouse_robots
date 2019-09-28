@@ -209,6 +209,7 @@ def main():
     midPointHeight = mapHeight /2
     spaceBetweenRows = robotSize *2 
     spaceBetweenCols = robotSize * 5 
+    spaceBetweenCS = trayWidth * 4
     rowLength = trayWidth * numberOfTraysInARow
 
 
@@ -218,6 +219,8 @@ def main():
     rowOffset = 6
     columnOffset = 3
     distBetwChgandRows = 2
+    topOffset = 6
+    bottomOffset = 1
 
     for k in range(1,numberOfRobots+1):
         gen.generateRobot(k+4,2,k, 'Pioneer P3-DX')
@@ -238,26 +241,27 @@ def main():
         gen.generateTrayRow(midPointWidth+(spaceBetweenRows), spaceBetweenCols * i + columnOffset+ trayWidth, numberOfTraysInARow, True)
 
 
-    for j in range(numberofChargingStations):
+    # Charging Stations Top
+    gen.generateChargingTray((midPointWidth - spaceBetweenCS), bottomOffset, 90.0)
+    gen.generateChargingTray((midPointWidth - spaceBetweenCS) - 3 * trayWidth, bottomOffset, 90.0)
 
-        # Charging Stations Top
-        gen.generateChargingTray(midPointWidth - j*2 - trayWidth, columnOffset - distBetwChgandRows, 90.0)
-        # gen.generateRobot(midPointWidth - j - trayWidth ,columnOffset - distBetwChgandRows + 2*robotSize, j+1, 'Pioneer P3-DX')
+    gen.generateChargingTray((midPointWidth + spaceBetweenCS) , bottomOffset, 90.0)
+    gen.generateChargingTray((midPointWidth + spaceBetweenCS) + 3 * trayWidth , bottomOffset, 90.0)
 
-        gen.generateChargingTray(midPointWidth + j*2 + trayWidth, columnOffset - distBetwChgandRows, 90.0)
-        # gen.generateRobot(midPointWidth + j + trayWidth ,columnOffset - distBetwChgandRows + 2*robotSize, j+1 + 4 , 'Pioneer P3-DX Light')
+    # Charging Stations Bottom
+    gen.generateChargingTray((midPointWidth - spaceBetweenCS) - 3 * trayWidth , mapHeight - topOffset, 180.0)
+    gen.generateChargingTray((midPointWidth - spaceBetweenCS)  , mapHeight - topOffset, 180.0)
 
-        # Charging Stations Bottom
-        gen.generateChargingTray(midPointWidth - j*2 - trayWidth, mapHeight - columnOffset, 180.0)
-        # gen.generateRobot(midPointWidth - j - trayWidth ,mapHeight - columnOffset + 2*robotSize, j+1+6, 'Pioneer P3-DX')
-
-        gen.generateChargingTray(midPointWidth + j*2 + trayWidth, mapHeight - columnOffset, 180.0)
-        # gen.generateRobot(midPointWidth + j + trayWidth ,mapHeight - columnOffset + 2*robotSize, j+1 + 2, 'Pioneer P3-DX Light')
+    gen.generateChargingTray((midPointWidth + spaceBetweenCS) + 3 * trayWidth, mapHeight - topOffset, 180.0)
+    gen.generateChargingTray((midPointWidth + spaceBetweenCS), mapHeight - topOffset, 180.0)
 
 
     
-    gen.generateInputTrayColumn(3, 6, 5, False)
-    gen.generateOutputTrayColumn(16, 5, 10, True)
+    gen.generateInputTrayColumn(3, 4.5, 5, False)
+    gen.generateInputTrayColumn(2.5, 4.5, 5, True)
+
+    gen.generateOutputTrayColumn(14, 4.5, 5, True)
+    gen.generateOutputTrayColumn(14, 4.5, 5, False)
 
     # gen.generateHBar(5.25, 4.0, 20)
     #gen.generateTrayRow(5.25, 9.75, 20, False)
