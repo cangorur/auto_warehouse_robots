@@ -15,6 +15,23 @@ A specialist motion planning ensures quick driving and accurate path following w
 
 ---
 
+## Docker Instructions
+
+1. Install docker engine (CE) by following the instructions [here](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-engine---community).
+2. Run follwing command on your terminal:
+
+```
+docker run -it -p 5901:5901 -p 6901:6901 -v <full local path of this repo>:/headless/catkin_ws  shreyasgokhale/app-ras-smart-factory
+```
+
+3. Docker will pull the latest image from [Dockerhub](https://hub.docker.com/r/shreyasgokhale/app-ras-smart-factory) and mount your folder inside the container. The container already has VNC and noVNC installed. You can find out how container builds in [this Dockerfile](https://github.com/shreyasgokhale/APP-RAS-Docker/blob/master/Dockerfile). 
+4. On command line, you can find out the URL where you can see the Xface UI of the container. For example: http://172.17.0.2:6901/vnc.html. Enter the password as ```vncpassword```.
+5. Inside the container, execute ```sh /headless/catkin_ws/importProject.sh``` to import our project and set up paths.
+6. Run the project by executing ```sh /headless/catkin_ws/run.sh```
+
+
+---
+
 ## Prerequisites
 
 ### MORSE
