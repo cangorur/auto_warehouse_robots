@@ -123,7 +123,7 @@
         "pr2_robots": []
     },
     "trays": [
-        {
+        { 
             "package_type": 0,
             "orientation": -90.0,
             "type": "storage",
@@ -203,6 +203,14 @@
             "x": 7.5,
             "y": 3.5
         },
+        { 
+            "package_type": 0,
+            "orientation": -90.0,
+            "type": "storage",
+            "max_load": 50.0,
+            "x": 9.5,
+            "y": 3.0
+        },
         {
             "package_type": 0,
             "orientation": -90.0,
@@ -237,11 +245,11 @@
         },
         {
             "package_type": 0,
-            "orientation": -90.0,
+            "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 12.0,
-            "y": 3.0
+            "x": 9.5,
+            "y": 3.5
         },
         {
             "package_type": 0,
@@ -275,21 +283,13 @@
             "x": 11.5,
             "y": 3.5
         },
-        {
-            "package_type": 0,
-            "orientation": 90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 12.0,
-            "y": 3.5
-        },
-        {
+        { 
             "package_type": 0,
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
             "x": 5.5,
-            "y": 5.5
+            "y": 6.5
         },
         {
             "package_type": 0,
@@ -297,7 +297,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 6.0,
-            "y": 5.5
+            "y": 6.5
         },
         {
             "package_type": 0,
@@ -305,7 +305,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 6.5,
-            "y": 5.5
+            "y": 6.5
         },
         {
             "package_type": 0,
@@ -313,7 +313,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 7.0,
-            "y": 5.5
+            "y": 6.5
         },
         {
             "package_type": 0,
@@ -321,7 +321,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 7.5,
-            "y": 5.5
+            "y": 6.5
         },
         {
             "package_type": 0,
@@ -329,7 +329,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 5.5,
-            "y": 6.0
+            "y": 7.0
         },
         {
             "package_type": 0,
@@ -337,7 +337,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 6.0,
-            "y": 6.0
+            "y": 7.0
         },
         {
             "package_type": 0,
@@ -345,7 +345,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 6.5,
-            "y": 6.0
+            "y": 7.0
         },
         {
             "package_type": 0,
@@ -353,7 +353,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 7.0,
-            "y": 6.0
+            "y": 7.0
         },
         {
             "package_type": 0,
@@ -361,7 +361,15 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 7.5,
-            "y": 6.0
+            "y": 7.0
+        },
+        { 
+            "package_type": 0,
+            "orientation": -90.0,
+            "type": "storage",
+            "max_load": 50.0,
+            "x": 9.5,
+            "y": 6.5
         },
         {
             "package_type": 0,
@@ -369,7 +377,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 10.0,
-            "y": 5.5
+            "y": 6.5
         },
         {
             "package_type": 0,
@@ -377,7 +385,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 10.5,
-            "y": 5.5
+            "y": 6.5
         },
         {
             "package_type": 0,
@@ -385,7 +393,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 11.0,
-            "y": 5.5
+            "y": 6.5
         },
         {
             "package_type": 0,
@@ -393,15 +401,15 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 11.5,
-            "y": 5.5
+            "y": 6.5
         },
         {
             "package_type": 0,
-            "orientation": -90.0,
+            "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 12.0,
-            "y": 5.5
+            "x": 9.5,
+            "y": 7.0
         },
         {
             "package_type": 0,
@@ -409,7 +417,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 10.0,
-            "y": 6.0
+            "y": 7.0
         },
         {
             "package_type": 0,
@@ -417,7 +425,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 10.5,
-            "y": 6.0
+            "y": 7.0
         },
         {
             "package_type": 0,
@@ -425,7 +433,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 11.0,
-            "y": 6.0
+            "y": 7.0
         },
         {
             "package_type": 0,
@@ -433,23 +441,15 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 11.5,
-            "y": 6.0
+            "y": 7.0
         },
-        {
-            "package_type": 0,
-            "orientation": 90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 12.0,
-            "y": 6.0
-        },
-        {
+        { 
             "package_type": 0,
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
             "x": 5.5,
-            "y": 8.0
+            "y": 10.0
         },
         {
             "package_type": 0,
@@ -457,7 +457,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 6.0,
-            "y": 8.0
+            "y": 10.0
         },
         {
             "package_type": 0,
@@ -465,7 +465,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 6.5,
-            "y": 8.0
+            "y": 10.0
         },
         {
             "package_type": 0,
@@ -473,7 +473,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 7.0,
-            "y": 8.0
+            "y": 10.0
         },
         {
             "package_type": 0,
@@ -481,7 +481,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 7.5,
-            "y": 8.0
+            "y": 10.0
         },
         {
             "package_type": 0,
@@ -489,7 +489,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 5.5,
-            "y": 8.5
+            "y": 10.5
         },
         {
             "package_type": 0,
@@ -497,7 +497,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 6.0,
-            "y": 8.5
+            "y": 10.5
         },
         {
             "package_type": 0,
@@ -505,7 +505,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 6.5,
-            "y": 8.5
+            "y": 10.5
         },
         {
             "package_type": 0,
@@ -513,7 +513,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 7.0,
-            "y": 8.5
+            "y": 10.5
         },
         {
             "package_type": 0,
@@ -521,7 +521,15 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 7.5,
-            "y": 8.5
+            "y": 10.5
+        },
+        { 
+            "package_type": 0,
+            "orientation": -90.0,
+            "type": "storage",
+            "max_load": 50.0,
+            "x": 9.5,
+            "y": 10.0
         },
         {
             "package_type": 0,
@@ -529,7 +537,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 10.0,
-            "y": 8.0
+            "y": 10.0
         },
         {
             "package_type": 0,
@@ -537,7 +545,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 10.5,
-            "y": 8.0
+            "y": 10.0
         },
         {
             "package_type": 0,
@@ -545,7 +553,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 11.0,
-            "y": 8.0
+            "y": 10.0
         },
         {
             "package_type": 0,
@@ -553,15 +561,15 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 11.5,
-            "y": 8.0
+            "y": 10.0
         },
         {
             "package_type": 0,
-            "orientation": -90.0,
+            "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 12.0,
-            "y": 8.0
+            "x": 9.5,
+            "y": 10.5
         },
         {
             "package_type": 0,
@@ -569,7 +577,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 10.0,
-            "y": 8.5
+            "y": 10.5
         },
         {
             "package_type": 0,
@@ -577,7 +585,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 10.5,
-            "y": 8.5
+            "y": 10.5
         },
         {
             "package_type": 0,
@@ -585,7 +593,7 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 11.0,
-            "y": 8.5
+            "y": 10.5
         },
         {
             "package_type": 0,
@@ -593,15 +601,31 @@
             "type": "storage",
             "max_load": 50.0,
             "x": 11.5,
-            "y": 8.5
+            "y": 10.5
+        },
+        { 
+            "package_type": 0,
+            "orientation": 90.0,
+            "type": "charging station",
+            "max_load": 70.0,
+            "x": 5.5,
+            "y": 0.0
         },
         {
             "package_type": 0,
             "orientation": 90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 12.0,
-            "y": 8.5
+            "type": "charging station",
+            "max_load": 70.0,
+            "x": 6,
+            "y": 0.0
+        },
+        {
+            "package_type": 0,
+            "orientation": 90.0,
+            "type": "charging station",
+            "max_load": 70.0,
+            "x": 6.5,
+            "y": 0.0
         },
         {
             "package_type": 0,
@@ -609,70 +633,46 @@
             "type": "charging station",
             "max_load": 70.0,
             "x": 7.0,
-            "y": 1
+            "y": 0.0
         },
-        {
+        { 
             "package_type": 0,
-            "orientation": 90.0,
-            "type": "charging station",
-            "max_load": 70.0,
-            "x": 5.5,
-            "y": 1
-        },
-        {
-            "package_type": 0,
-            "orientation": 90.0,
-            "type": "charging station",
-            "max_load": 70.0,
-            "x": 7.0,
-            "y": 1
-        },
-        {
-            "package_type": 0,
-            "orientation": 90.0,
-            "type": "charging station",
-            "max_load": 70.0,
-            "x": 8.5,
-            "y": 1
-        },
-        {
-            "package_type": 0,
-            "orientation": 180.0,
+            "orientation": 270.0,
             "type": "charging station",
             "max_load": 70.0,
             "x": 9.5,
-            "y": 10
+            "y": 13.5
         },
         {
             "package_type": 0,
-            "orientation": 180.0,
+            "orientation": 270.0,
+            "type": "charging station",
+            "max_load": 70.0,
+            "x": 10.0,
+            "y": 13.5
+        },
+        {
+            "package_type": 0,
+            "orientation": 270.0,
+            "type": "charging station",
+            "max_load": 70.0,
+            "x": 10.5,
+            "y": 13.5
+        },
+        {
+            "package_type": 0,
+            "orientation": 270.0,
             "type": "charging station",
             "max_load": 70.0,
             "x": 11.0,
-            "y": 10
+            "y": 13.5
         },
-        {
-            "package_type": 0,
-            "orientation": 180.0,
-            "type": "charging station",
-            "max_load": 70.0,
-            "x": 12.5,
-            "y": 10
-        },
-        {
-            "package_type": 0,
-            "orientation": 180.0,
-            "type": "charging station",
-            "max_load": 70.0,
-            "x": 11.0,
-            "y": 10
-        },
-        {
+        { 
             "package_type": 0,
             "orientation": 0.0,
             "type": "input",
             "max_load": 70.0,
-            "x": 3,
+            "x": 3.0,
             "y": 4.5
         },
         {
@@ -680,7 +680,7 @@
             "orientation": 0.0,
             "type": "input",
             "max_load": 70.0,
-            "x": 3,
+            "x": 3.0,
             "y": 5.0
         },
         {
@@ -688,7 +688,7 @@
             "orientation": 0.0,
             "type": "input",
             "max_load": 70.0,
-            "x": 3,
+            "x": 3.0,
             "y": 5.5
         },
         {
@@ -696,7 +696,7 @@
             "orientation": 0.0,
             "type": "input",
             "max_load": 70.0,
-            "x": 3,
+            "x": 3.0,
             "y": 6.0
         },
         {
@@ -704,63 +704,63 @@
             "orientation": 0.0,
             "type": "input",
             "max_load": 70.0,
-            "x": 3,
+            "x": 3.0,
             "y": 6.5
         },
         {
             "package_type": 0,
-            "orientation": 180.0,
+            "orientation": 0.0,
             "type": "input",
             "max_load": 70.0,
-            "x": 2.5,
+            "x": 3.0,
+            "y": 7.0
+        },
+        {
+            "package_type": 0,
+            "orientation": 0.0,
+            "type": "input",
+            "max_load": 70.0,
+            "x": 3.0,
+            "y": 7.5
+        },
+        {
+            "package_type": 0,
+            "orientation": 0.0,
+            "type": "input",
+            "max_load": 70.0,
+            "x": 3.0,
+            "y": 8.0
+        },
+        {
+            "package_type": 0,
+            "orientation": 0.0,
+            "type": "input",
+            "max_load": 70.0,
+            "x": 3.0,
+            "y": 8.5
+        },
+        {
+            "package_type": 0,
+            "orientation": 0.0,
+            "type": "input",
+            "max_load": 70.0,
+            "x": 3.0,
+            "y": 9.0
+        },
+        { 
+            "package_type": 0,
+            "orientation": 180.0,
+            "type": "output",
+            "max_load": 70.0,
+            "x": 14.5,
             "y": 4.5
         },
         {
             "package_type": 0,
             "orientation": 180.0,
-            "type": "input",
-            "max_load": 70.0,
-            "x": 2.5,
-            "y": 5.0
-        },
-        {
-            "package_type": 0,
-            "orientation": 180.0,
-            "type": "input",
-            "max_load": 70.0,
-            "x": 2.5,
-            "y": 5.5
-        },
-        {
-            "package_type": 0,
-            "orientation": 180.0,
-            "type": "input",
-            "max_load": 70.0,
-            "x": 2.5,
-            "y": 6.0
-        },
-        {
-            "package_type": 0,
-            "orientation": 180.0,
-            "type": "input",
-            "max_load": 70.0,
-            "x": 2.5,
-            "y": 6.5
-        },
-        {
-            "package_type": 0,
-            "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14,
-            "y": 4.5
-        },
-        {
-            "package_type": 0,
-            "orientation": 180.0,
-            "type": "output",
-            "max_load": 70.0,
-            "x": 14,
+            "x": 14.5,
             "y": 5.0
         },
         {
@@ -768,7 +768,7 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14,
+            "x": 14.5,
             "y": 5.5
         },
         {
@@ -776,7 +776,7 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14,
+            "x": 14.5,
             "y": 6.0
         },
         {
@@ -784,48 +784,48 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14,
+            "x": 14.5,
             "y": 6.5
         },
         {
             "package_type": 0,
-            "orientation": 0.0,
+            "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14,
-            "y": 4.5
+            "x": 14.5,
+            "y": 7.0
         },
         {
             "package_type": 0,
-            "orientation": 0.0,
+            "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14,
-            "y": 5.0
+            "x": 14.5,
+            "y": 7.5
         },
         {
             "package_type": 0,
-            "orientation": 0.0,
+            "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14,
-            "y": 5.5
+            "x": 14.5,
+            "y": 8.0
         },
         {
             "package_type": 0,
-            "orientation": 0.0,
+            "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14,
-            "y": 6.0
+            "x": 14.5,
+            "y": 8.5
         },
         {
             "package_type": 0,
-            "orientation": 0.0,
+            "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14,
-            "y": 6.5
+            "x": 14.5,
+            "y": 9.0
         }
     ],
     "map": {
