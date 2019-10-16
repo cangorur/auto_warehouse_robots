@@ -17,9 +17,9 @@ tmux split-window -d -t rosc
 tmux resize-pane -t rosc.0 -U 15 
 tmux resize-pane -t rosc.2 -D 20 
 
-tmux send-keys -t rosc.0 "morse run auto_smart_factory auto_factory_simple_dummy.py" enter
+tmux send-keys -t rosc.0 "morse run auto_smart_factory auto_factory_paper.py" enter
 
-tmux send-keys -t rosc.1 "sleep 2 && roslaunch --screen auto_smart_factory full_system_simple_dummy.launch $grep" enter
+tmux send-keys -t rosc.1 "sleep 2 && roslaunch --screen auto_smart_factory full_system_paper.launch $grep" enter
 
 tmux send-keys -t rosc.2 "sleep 4 && roslaunch auto_smart_factory visualization.launch" enter
 
