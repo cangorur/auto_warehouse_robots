@@ -21,7 +21,8 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 	if(infiniteReservationTime == 0) {
 		infiniteReservationTime = ros::Time::now().toSec() + 100000.f;
 	}
-	
+	Point sizeOffset = Point(0.5, 0.5);
+
 	this->obstacles.clear();
 	for(const Rectangle& o : obstacles) {
 		this->obstacles.emplace_back(o.getPosition(), o.getSize(), o.getRotation());

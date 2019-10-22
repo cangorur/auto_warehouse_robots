@@ -110,11 +110,41 @@ void MapConfigServer::readMapConfig(std::string file) {
 
 void MapConfigServer::addStaticObstacles() {
 	std::vector<Rectangle> rectangles;
-	
+
 	for(const auto_smart_factory::Tray& tray : warehouseConfig.trays) {
 		setRectangularObstacle(rectangles, tray.x, tray.y, warehouseConfig.tray_geometry.width, warehouseConfig.tray_geometry.height, 0);
 	}
-	
+
+
+
+	// Version 1
+	// setRectangularObstacle(rectangles, 6.50, 9.25, 2.75, 0.25, 0);
+	// setRectangularObstacle(rectangles, 10.50, 9.25, 2.75, 0.25, 0);
+
+
+	// setRectangularObstacle(rectangles, 6.50, 7.75, 2.75, 0.25, 0);
+	// setRectangularObstacle(rectangles, 10.50, 7.75, 2.75, 0.25, 0);
+
+
+	// setRectangularObstacle(rectangles, 6.50, 5.75, 2.75, 0.25, 0);
+	// setRectangularObstacle(rectangles, 10.50, 5.75, 2.75, 0.25, 0);
+
+
+	// setRectangularObstacle(rectangles, 6.50, 4.25, 2.75, 0.25, 0);
+	// setRectangularObstacle(rectangles, 10.50, 4.25, 2.75, 0.25, 0);
+
+	// Version 2
+	setRectangularObstacle(rectangles, 6.50, 8.50, 2.75, 0.20, 0);
+	setRectangularObstacle(rectangles, 10.50, 8.50, 2.75, 0.20, 0);
+
+	setRectangularObstacle(rectangles, 6.50, 5, 2.75, 0.20, 0);
+	setRectangularObstacle(rectangles, 10.50, 5, 2.75, 0.20, 0);
+
+
+
+
+
+	//
 	// Convert
 	warehouseConfig.map_configuration.obstacles.clear();
 	
