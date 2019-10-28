@@ -116,6 +116,9 @@ void MapConfigServer::addStaticObstacles() {
 	for(const auto_smart_factory::Tray& tray : warehouseConfig.trays) {
 		setRectangularObstacle(rectangles, tray.x, tray.y, warehouseConfig.tray_geometry.width, warehouseConfig.tray_geometry.height, 0);
 	}
+	// Changed By shreyas
+	//TODO
+	//!left start point, up start point, x width, y height
 
 	if(warehouseConfig.lineFollowing) {
 		setRectangularObstacle(rectangles, 6.50, 9.25, 2.75, 0.25, 0);
@@ -129,6 +132,14 @@ void MapConfigServer::addStaticObstacles() {
 
 		setRectangularObstacle(rectangles, 6.50, 4.25, 2.75, 0.25, 0);
 		setRectangularObstacle(rectangles, 10.50, 4.25, 2.75, 0.25, 0);
+	
+		// Left , Right
+		setRectangularObstacle(rectangles,1.4, warehouseConfig.map_configuration.height/2, 2.8,warehouseConfig.map_configuration.height, 0);
+		setRectangularObstacle(rectangles,16, (warehouseConfig.map_configuration.height/2), 2,warehouseConfig.map_configuration.height, 0);
+		// Top and Bottom
+		setRectangularObstacle(rectangles, 8, 14, 6, 1, 0);
+		setRectangularObstacle(rectangles, 8, 0, 6, 1, 0);
+	
 	}
 
 	// Convert
