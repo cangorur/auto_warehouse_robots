@@ -21,7 +21,8 @@ Map::Map(auto_smart_factory::WarehouseConfiguration warehouseConfig, std::vector
 	if(infiniteReservationTime == 0) {
 		infiniteReservationTime = ros::Time::now().toSec() + 100000.f;
 	}
-	
+	Point sizeOffset = Point(0.5, 0.5);
+
 	this->obstacles.clear();
 	for(const Rectangle& o : obstacles) {
 		this->obstacles.emplace_back(o.getPosition(), o.getSize(), o.getRotation());
@@ -251,7 +252,12 @@ OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 	float trayRadius = 0.25f;
 	float robotRadius = ROBOT_RADIUS; // Real radius, not including margin for reservations
 	
-	float offset = trayRadius + APPROACH_DISTANCE + DISTANCE_WHEN_APPROACHED + robotRadius;
+	float offset;
+	if(warehouseConfig.lineFollowing) {
+		offset = trayRadius + APPROACH_DISTANCE_LINE_FOLLOWING + DISTANCE_WHEN_APPROACHED + robotRadius;
+	} else {
+		offset = trayRadius + APPROACH_DISTANCE + DISTANCE_WHEN_APPROACHED + robotRadius;
+	}
 	
 	double inputDx = std::cos(tray.orientation * PI / 180);
 	double inputDy = std::sin(tray.orientation * PI / 180);
@@ -467,6 +473,10 @@ bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 
 int Map::getOwnerId() const {
 	return ownerId;
+}
+
+bool Map::getLineFollowingFlag() const {
+	return warehouseConfig.lineFollowing;
 }
 
 std::vector<Rectangle> Map::getRectanglesOnStartingPoint(Point p) const {

@@ -133,6 +133,7 @@ public:
 	float getHeight() const;
 	float getMargin() const;
 	int getOwnerId() const;
+	bool getLineFollowingFlag() const;
 
 	std::vector<Rectangle> getRectanglesOnStartingPoint(Point p) const;
 
