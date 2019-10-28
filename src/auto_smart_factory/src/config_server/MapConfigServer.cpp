@@ -39,6 +39,8 @@ void MapConfigServer::readMapConfig(std::string file) {
 		ROS_FATAL("Cannot read warehouse configuration file %s. Message: %s", file.c_str(), e.what());
 		return;
 	}
+	// read line following flag
+	warehouseConfig.lineFollowing = configTree.get<bool>("line_following.active");
 
 	// read general info
 	warehouseConfig.width = configTree.get<float>("map.width");
@@ -115,36 +117,20 @@ void MapConfigServer::addStaticObstacles() {
 		setRectangularObstacle(rectangles, tray.x, tray.y, warehouseConfig.tray_geometry.width, warehouseConfig.tray_geometry.height, 0);
 	}
 
+	if(warehouseConfig.lineFollowing) {
+		setRectangularObstacle(rectangles, 6.50, 9.25, 2.75, 0.25, 0);
+		setRectangularObstacle(rectangles, 10.50, 9.25, 2.75, 0.25, 0);
 
+		setRectangularObstacle(rectangles, 6.50, 7.75, 2.75, 0.25, 0);
+		setRectangularObstacle(rectangles, 10.50, 7.75, 2.75, 0.25, 0);
 
-	// Version 1
-	// setRectangularObstacle(rectangles, 6.50, 9.25, 2.75, 0.25, 0);
-	// setRectangularObstacle(rectangles, 10.50, 9.25, 2.75, 0.25, 0);
+		setRectangularObstacle(rectangles, 6.50, 5.75, 2.75, 0.25, 0);
+		setRectangularObstacle(rectangles, 10.50, 5.75, 2.75, 0.25, 0);
 
+		setRectangularObstacle(rectangles, 6.50, 4.25, 2.75, 0.25, 0);
+		setRectangularObstacle(rectangles, 10.50, 4.25, 2.75, 0.25, 0);
+	}
 
-	// setRectangularObstacle(rectangles, 6.50, 7.75, 2.75, 0.25, 0);
-	// setRectangularObstacle(rectangles, 10.50, 7.75, 2.75, 0.25, 0);
-
-
-	// setRectangularObstacle(rectangles, 6.50, 5.75, 2.75, 0.25, 0);
-	// setRectangularObstacle(rectangles, 10.50, 5.75, 2.75, 0.25, 0);
-
-
-	// setRectangularObstacle(rectangles, 6.50, 4.25, 2.75, 0.25, 0);
-	// setRectangularObstacle(rectangles, 10.50, 4.25, 2.75, 0.25, 0);
-
-	// Version 2
-	setRectangularObstacle(rectangles, 6.50, 8.50, 2.75, 0.20, 0);
-	setRectangularObstacle(rectangles, 10.50, 8.50, 2.75, 0.20, 0);
-
-	setRectangularObstacle(rectangles, 6.50, 5, 2.75, 0.20, 0);
-	setRectangularObstacle(rectangles, 10.50, 5, 2.75, 0.20, 0);
-
-
-
-
-
-	//
 	// Convert
 	warehouseConfig.map_configuration.obstacles.clear();
 	
