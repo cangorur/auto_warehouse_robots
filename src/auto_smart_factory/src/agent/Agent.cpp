@@ -216,18 +216,11 @@ void Agent::sendHeartbeat() {
 	p.y = position.y;
 	p.z = 0.f;
 	msg.points.push_back(p);
-	
-	
-	
+		
 	visualisationPublisher.publish(msg);
-
 
 	updateTimer();
 	ROS_DEBUG("[%s]: Heartbeat: idle=%s!", agentID.c_str(), taskHandler->isIdle() ? "true" : "false");
-
-
-
-
 }
 
 void Agent::updateTimer() {
