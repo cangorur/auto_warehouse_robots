@@ -7,7 +7,7 @@
 #include "auto_smart_factory/TaskEvaluation.h"
 /**
  * The abstract Task class for the agent
- * Form this class the task subcategories inherit  
+ * From this class the task subcategories inherit  
  * It contains the generic properties and functions of a task
  */
 class Task {
@@ -15,7 +15,7 @@ public:
 	/// Type for the different task types
 	enum class Type {CHARGING, TRANSPORTATION};
 	/// Type for the different states of a task
-	enum class State {WAITING, TO_SOURCE, APPROACH_SOURCE, PICKUP, RESERVING_TARGET, TO_TARGET, APPROACH_TARGET, DROPOFF, LEAVE_TARGET, FINISHED, CHARGING};
+	enum class State {WAITING, TO_SOURCE, APPROACH_SOURCE, PICKUP, RESERVE_SOURCE_APPROACH_POINT, RESERVING_TARGET, TO_TARGET, APPROACH_TARGET, DROPOFF, RESERVE_TARGET_APPROACH_POINT, LEAVE_TARGET, FINISHED, CHARGING};
 
 	/**
 	 * Constructor

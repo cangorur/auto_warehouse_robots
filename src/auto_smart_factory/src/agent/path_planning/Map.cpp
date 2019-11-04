@@ -466,8 +466,17 @@ bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId && r.getEndTime() - r.getStartTime() >= 150.f) {
 			return true;
 		}		
+	}	
+	return false;
+}
+
+bool Map::isPointReservedByAnotherRobot(OrientedPoint pos, double startingTime, double duration){
+	double endTime = startingTime + duration;
+	for(const auto& r : reservations) {
+		if(Math::isPointInRectangle(Point(pos.x, pos.y), r) && r.getOwnerId() != ownerId && r.doesOverlapTimeRange(startingTime, endTime, ownerId)) {
+				return true;
+		}
 	}
-	
 	return false;
 }
 
