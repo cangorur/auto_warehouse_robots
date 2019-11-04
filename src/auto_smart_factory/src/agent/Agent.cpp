@@ -186,6 +186,39 @@ void Agent::sendHeartbeat() {
 	}
 	heartbeat.battery_level = batteryLevel;
 	heartbeat_pub.publish(heartbeat);
+	
+	// TODO make separate pub-sub
+	//! Not working as expected
+	visualization_msgs::Marker msg;
+	msg.header.frame_id = "map";
+	msg.header.stamp = ros::Time::now();
+	msg.ns = "AgentPoint";
+	msg.action = visualization_msgs::Marker::ADD;
+	msg.pose.orientation.w = 1.0;
+
+	msg.id = 3;
+	msg.type = visualization_msgs::Marker::POINTS;
+	msg.scale.x = 1.f;
+	msg.scale.y = 1.f;
+	msg.scale.z = 1.f;
+	msg.lifetime = ros::Duration(0);
+
+	msg.color.r = 1.0f;
+	msg.color.g = 0.0f;
+	msg.color.b = 1.0f;
+	msg.color.a = 1.0f;
+
+	// msg.pose.position.x = position.x;
+	// msg.pose.position.y = position.y;
+	// msg.pose.position.z = 0.f;
+	geometry_msgs::Point p;
+	p.x = position.x;
+	p.y = position.y;
+	p.z = 0.f;
+	msg.points.push_back(p);
+		
+	visualisationPublisher.publish(msg);
+
 	updateTimer();
 	ROS_DEBUG("[%s]: Heartbeat: idle=%s!", agentID.c_str(), taskHandler->isIdle() ? "true" : "false");
 }

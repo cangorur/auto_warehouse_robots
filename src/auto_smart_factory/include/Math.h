@@ -15,6 +15,7 @@
 // Defined as 0.25 + error margin
 #define ROBOT_RADIUS 0.275f
 #define APPROACH_DISTANCE 0.1f
+#define APPROACH_DISTANCE_LINE_FOLLOWING 0.95f
 #define DISTANCE_WHEN_APPROACHED 0.05f
 
 // Rotation  0  = >

@@ -402,7 +402,12 @@ void TaskHandler::answerAnnouncement(auto_smart_factory::TaskAnnouncement& taskA
 }
 
 double TaskHandler::getApproachDistance(OrientedPoint robotPos, OrientedPoint pathTargetPos) const {
-	Point pointInFrontOfTray = Point(pathTargetPos.x, pathTargetPos.y) + Math::getVectorFromOrientation(pathTargetPos.o) * APPROACH_DISTANCE;
+	Point pointInFrontOfTray;
+	if(map->getLineFollowingFlag()){
+		pointInFrontOfTray = Point(pathTargetPos.x, pathTargetPos.y) + Math::getVectorFromOrientation(pathTargetPos.o) * APPROACH_DISTANCE_LINE_FOLLOWING;
+	} else {
+		pointInFrontOfTray = Point(pathTargetPos.x, pathTargetPos.y) + Math::getVectorFromOrientation(pathTargetPos.o) * APPROACH_DISTANCE;
+	}
 	return Math::getDistance(Point(robotPos.x, robotPos.y), pointInFrontOfTray);
 }
 

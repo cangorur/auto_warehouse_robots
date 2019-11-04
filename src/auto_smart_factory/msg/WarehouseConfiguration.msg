@@ -20,3 +20,5 @@ Robot[] robots
 # Idle positions of the robots
 IdlePosition[] idle_positions
 
+# Line following
+bool lineFollowing
