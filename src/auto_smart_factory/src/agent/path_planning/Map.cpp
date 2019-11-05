@@ -67,13 +67,30 @@ bool Map::isStaticLineOfSightFree(const Point& pos1, const Point& pos2) const {
 	return true;
 }
 
+bool Map::arePointsConnected(const Point& pos1, const Point& pos2) const {
+	auto node1 = thetaStarMap.getNodeClosestTo(pos1);
+	auto node2 = thetaStarMap.getNodeClosestTo(pos2);
+
+	if(std::find(node1->neighbours.begin(), node1->neighbours.end(), node2) != node1->neighbours.end()) {
+		return true;
+	}
+
+	return false;
+}
+
 TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double startTime, const Point& pos2, double endTime, const std::vector<Rectangle>& smallerReservations) const {
 	// Todo make adaptive - for now assume that every reservation can be left in x seconds
 	double minTimeToLeave = 5;
 	
 	TimedLineOfSightResult result;
 
+	/*
 	if(!isStaticLineOfSightFree(pos1, pos2)) {
+		result.blockedByStatic = true;
+		return result;
+	}
+	*/
+	if(!arePointsConnected(pos1, pos2)) {
 		result.blockedByStatic = true;
 		return result;
 	}
