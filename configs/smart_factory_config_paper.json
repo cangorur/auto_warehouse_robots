@@ -26,7 +26,7 @@
             "idle_position": {
                 "orientation": 0,
                 "x": 5,
-                "y": 2
+                "y": 1.5
             },
             "start_x": 5,
             "type": "Pioneer P3-DX",
@@ -38,7 +38,7 @@
             "idle_position": {
                 "orientation": 0,
                 "x": 9,
-                "y": 2
+                "y": 1.5
             },
             "start_x": 9,
             "type": "Pioneer P3-DX Light",
@@ -50,7 +50,7 @@
             "idle_position": {
                 "orientation": 0,
                 "x": 6,
-                "y": 2
+                "y": 1.5
             },
             "start_x": 6,
             "type": "Pioneer P3-DX",
@@ -62,7 +62,7 @@
             "idle_position": {
                 "orientation": 0,
                 "x": 10,
-                "y": 2
+                "y": 1.5
             },
             "start_x": 10,
             "type": "Pioneer P3-DX Light",
@@ -74,7 +74,7 @@
             "idle_position": {
                 "orientation": 0,
                 "x": 7,
-                "y": 2
+                "y": 1.5
             },
             "start_x": 7,
             "type": "Pioneer P3-DX",
@@ -86,7 +86,7 @@
             "idle_position": {
                 "orientation": 0,
                 "x": 11,
-                "y": 2
+                "y": 1.5
             },
             "start_x": 11,
             "type": "Pioneer P3-DX Light",
@@ -98,7 +98,7 @@
             "idle_position": {
                 "orientation": 0,
                 "x": 8,
-                "y": 2
+                "y": 1.5
             },
             "start_x": 8,
             "type": "Pioneer P3-DX",
@@ -110,7 +110,7 @@
             "idle_position": {
                 "orientation": 0,
                 "x": 12,
-                "y": 2
+                "y": 1.5
             },
             "start_x": 12,
             "type": "Pioneer P3-DX Light",
@@ -833,7 +833,7 @@
         "height": 16,
         "margin": 0.5,
         "width": 18,
-        "mergeObstacles": true
+        "mergeObstacles": false
     },
     "tray_geometry": {
         "height": 0.5,
