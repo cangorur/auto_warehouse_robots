@@ -91,7 +91,7 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 		return result;
 	}
 	*/
-	if(!arePointsConnected(pos1, pos2)) {
+	if(!isStaticLineOfSightFree(pos1, pos2) || !arePointsConnected(pos1, pos2)) {
 		result.blockedByStatic = true;
 		return result;
 	}
