@@ -127,6 +127,12 @@ public:
 	 * @param pos The position to check 
 	 * @return True iff the position is the current target of any other robot */
 	bool isPointTargetOfAnotherRobot(OrientedPoint pos);
+
+	/** Checks whether the closest GridNodes to two points are neighbors in the ThetaStarMap
+	 * @param pos1 The position of the first node
+	 * @param pos2 The position of the second node
+	 * @return True or False */
+	bool arePointsConnected(const Point& pos1, const Point& pos2) const;
 	
 	// Getter
 	float getWidth() const;
