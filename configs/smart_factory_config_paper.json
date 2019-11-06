@@ -752,7 +752,7 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14.5,
+            "x": 14,
             "y": 4.5
         },
         {
@@ -760,7 +760,7 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14.5,
+            "x": 14,
             "y": 5.0
         },
         {
@@ -768,7 +768,7 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14.5,
+            "x": 14,
             "y": 5.5
         },
         {
@@ -776,7 +776,7 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14.5,
+            "x": 14,
             "y": 6.0
         },
         {
@@ -784,7 +784,7 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14.5,
+            "x": 14,
             "y": 6.5
         },
         {
@@ -792,7 +792,7 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14.5,
+            "x": 14,
             "y": 7.0
         },
         {
@@ -800,7 +800,7 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14.5,
+            "x": 14,
             "y": 7.5
         },
         {
@@ -808,7 +808,7 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14.5,
+            "x": 14,
             "y": 8.0
         },
         {
@@ -816,7 +816,7 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14.5,
+            "x": 14,
             "y": 8.5
         },
         {
@@ -824,7 +824,7 @@
             "orientation": 180.0,
             "type": "output",
             "max_load": 70.0,
-            "x": 14.5,
+            "x": 14,
             "y": 9.0
         }
     ],
