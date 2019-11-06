@@ -134,6 +134,13 @@ public:
 	 * @return True or False */
 	bool arePointsConnected(const Point& pos1, const Point& pos2) const;
 	
+	/** Checks whether a position is reserved by another robot for a time period
+	 * @param pos The position to check
+	 * @param startingTime The time to check at
+	 * @param duration The Duration the position has to be free 
+	 * @return True iff the position is reserved by another robot in the time between the startingTime and the startingTime+duration*/
+	bool isPointReservedByAnotherRobot(OrientedPoint pos, double startingTime, double duration);
+	
 	// Getter
 	float getWidth() const;
 	float getHeight() const;

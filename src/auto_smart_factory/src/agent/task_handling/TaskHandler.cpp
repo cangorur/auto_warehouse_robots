@@ -11,6 +11,7 @@ TaskHandler::TaskHandler(Agent* agent, ros::Publisher* scorePub, ros::Publisher*
 	chargingManagement(cm),
 	reservationManager(rm)
 {
+	lineFollowing = map->getLineFollowingFlag();
 }
 
 void TaskHandler::publishScore(unsigned int requestId, double score, uint32_t startTrayId, uint32_t endTrayId, double estimatedDuration) {
@@ -119,7 +120,12 @@ void TaskHandler::executeTask() {
 			} else {
 				// Start to bid for path reservations
 				if(currentTask->isTransportation()) {
-					reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), ((TransportationTask*) currentTask)->getSourcePosition(), TransportationTask::getPickUpTime());
+					// if line following other approach behaviour
+					if(lineFollowing) {
+						reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), ((TransportationTask*) currentTask)->getSourcePosition(), LINE_FOLLOWING_TRAY_APPROACH_TIME);
+					} else {
+						reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), ((TransportationTask*) currentTask)->getSourcePosition(), TransportationTask::getPickUpTime());
+					}
 				} else if(currentTask->isCharging()) {
 					double now = ros::Time::now().toSec();
 					std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(motionPlanner->getPositionAsOrientedPoint(), now);
@@ -129,7 +135,11 @@ void TaskHandler::executeTask() {
 						ROS_FATAL("[Agent %d] Could not find a valid path to any charging station!", agent->getAgentIdInt());
 						return;
 					}
-					reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), ChargingTask::getChargingTime());
+					if(lineFollowing) {
+						reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), LINE_FOLLOWING_TRAY_APPROACH_TIME);
+					} else {
+						reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), ChargingTask::getChargingTime());
+					}
 				} else {
 					ROS_FATAL("[%s] Task is neither TransportationTask nor ChargingTask!", agent->getAgentID().c_str());
 				}
@@ -156,8 +166,31 @@ void TaskHandler::executeTask() {
 		case Task::State::PICKUP:
 			if (motionPlanner->isDone()) {
 				gripper->loadPackage(true);
-				motionPlanner->driveBackward(lastApproachDistance);
-				currentTask->setState(Task::State::RESERVING_TARGET);
+				if(lineFollowing) {
+					motionPlanner->driveBackward(lastApproachDistance-2*ROBOT_RADIUS);
+					currentTask->setState(Task::State::RESERVE_SOURCE_APPROACH_POINT);
+				} else {
+					motionPlanner->driveBackward(lastApproachDistance);
+					currentTask->setState(Task::State::RESERVING_TARGET);
+				}
+			}
+			break;
+		
+		case Task::State::RESERVE_SOURCE_APPROACH_POINT:
+			// we are in line following mode in a transportation task
+			if (motionPlanner->isDone() || motionPlanner->isStopped()) {
+				if(reservationManager->isBidingForReservation()) {
+					break;
+				}
+				if(reservationManager->getHasReservedPath() && hasTriedToReserveSourceApproachPoint) {
+					currentTask->setState(Task::State::RESERVING_TARGET);
+					motionPlanner->driveBackward(2*ROBOT_RADIUS);
+					motionPlanner->start();
+				} else {
+					// bid for a reservation if reservation failed
+					reservationManager->startBiddingForPathReservation(((TransportationTask*) currentTask)->getSourcePosition(), ((TransportationTask*) currentTask)->getSourcePosition(), LINE_FOLLOWING_TRAY_LEAVE_TIME);
+					hasTriedToReserveSourceApproachPoint = true;
+				}
 			}
 			break;
 
@@ -172,7 +205,11 @@ void TaskHandler::executeTask() {
 					motionPlanner->start();
 				} else {
 					// bid for a reservation if reservation failed
-					reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
+					if(lineFollowing) {
+						reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), LINE_FOLLOWING_TRAY_APPROACH_TIME);
+					} else {
+						reservationManager->startBiddingForPathReservation(motionPlanner->getPositionAsOrientedPoint(), currentTask->getTargetPosition(), TransportationTask::getDropOffTime());
+					}
 					hasTriedToReservePathToTarget = true;
 					isReplanning = false;
 				}
@@ -202,8 +239,13 @@ void TaskHandler::executeTask() {
 		case Task::State::DROPOFF:
 			if (motionPlanner->isDone()) {
 				gripper->loadPackage(false);
-				currentTask->setState(Task::State::LEAVE_TARGET);
-				motionPlanner->driveBackward(lastApproachDistance);
+				if(lineFollowing) {
+					currentTask->setState(Task::State::RESERVE_TARGET_APPROACH_POINT);
+					motionPlanner->driveBackward(lastApproachDistance-2*ROBOT_RADIUS);
+				} else {
+					currentTask->setState(Task::State::LEAVE_TARGET);
+					motionPlanner->driveBackward(lastApproachDistance);
+				}
 			}
 			break;
 
@@ -211,8 +253,30 @@ void TaskHandler::executeTask() {
 			// Check charging progress
 			if (motionPlanner->isDone()) {
 				if (this->chargingManagement->isCharged()) {
+					if(lineFollowing) {
+						currentTask->setState(Task::State::RESERVE_TARGET_APPROACH_POINT);
+						motionPlanner->driveBackward(lastApproachDistance-2*ROBOT_RADIUS);
+					} else {
+						currentTask->setState(Task::State::LEAVE_TARGET);
+						motionPlanner->driveBackward(lastApproachDistance);
+					}
+				}
+			}
+			break;
+
+		case Task::State::RESERVE_TARGET_APPROACH_POINT:
+			if (motionPlanner->isDone() || motionPlanner->isStopped()) {
+				if(reservationManager->isBidingForReservation()) {
+					break;
+				}
+				if(reservationManager->getHasReservedPath() && hasTriedToReserveTargetApproachPoint) {
 					currentTask->setState(Task::State::LEAVE_TARGET);
-					motionPlanner->driveBackward(lastApproachDistance);
+					motionPlanner->driveBackward(2*ROBOT_RADIUS);
+					motionPlanner->start();
+				} else {
+					// bid for a reservation if reservation failed
+					reservationManager->startBiddingForPathReservation(currentTask->getTargetPosition(), currentTask->getTargetPosition(), LINE_FOLLOWING_TRAY_LEAVE_TIME);
+					hasTriedToReserveTargetApproachPoint = true;
 				}
 			}
 			break;
@@ -244,6 +308,8 @@ void TaskHandler::nextTask() {
 		queue.pop_front();
 		isNextTask = true;
 		hasTriedToReservePathToTarget = false;
+		hasTriedToReserveSourceApproachPoint = false;
+		hasTriedToReserveTargetApproachPoint = false;
 	} else {
 		currentTask = nullptr;
 	}
@@ -386,24 +452,12 @@ void TaskHandler::answerAnnouncement(auto_smart_factory::TaskAnnouncement& taskA
 	} else {
 		// reject task
 		rejectTask(taskAnnouncement.request_id);
-		
-		// Queue charging task if not already present
-		/*if(lastTask == nullptr || !lastTask->isCharging()) {
-			ROS_INFO("[Agent %d] Adding charging task because new task could not be taken", agent->getAgentIdInt());
-			std::pair<Path, uint32_t> pathToCS = chargingManagement->getPathToNearestChargingStation(lastTask->getTargetPosition(), lastTask->getEndTime());
-			
-			if(pathToCS.first.isValid()) {
-				addChargingTask(pathToCS.second, pathToCS.first, lastTask->getEndTime());	
-			} else {
-				ROS_FATAL("[Agent %d] Could not find a valid path to any charging station!", agent->getAgentIdInt());	
-			}		
-		}*/
 	}
 }
 
 double TaskHandler::getApproachDistance(OrientedPoint robotPos, OrientedPoint pathTargetPos) const {
 	Point pointInFrontOfTray;
-	if(map->getLineFollowingFlag()){
+	if(lineFollowing){
 		pointInFrontOfTray = Point(pathTargetPos.x, pathTargetPos.y) + Math::getVectorFromOrientation(pathTargetPos.o) * APPROACH_DISTANCE_LINE_FOLLOWING;
 	} else {
 		pointInFrontOfTray = Point(pathTargetPos.x, pathTargetPos.y) + Math::getVectorFromOrientation(pathTargetPos.o) * APPROACH_DISTANCE;
