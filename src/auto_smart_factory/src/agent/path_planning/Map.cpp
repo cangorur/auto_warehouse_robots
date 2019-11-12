@@ -91,7 +91,7 @@ TimedLineOfSightResult Map::whenIsTimedLineOfSightFree(const Point& pos1, double
 		return result;
 	}
 	*/
-	if(!isStaticLineOfSightFree(pos1, pos2) || !arePointsConnected(pos1, pos2)) {
+	if(!arePointsConnected(pos1, pos2)) {
 		result.blockedByStatic = true;
 		return result;
 	}
@@ -269,12 +269,7 @@ OrientedPoint Map::getPointInFrontOfTray(const auto_smart_factory::Tray& tray) {
 	float trayRadius = 0.25f;
 	float robotRadius = ROBOT_RADIUS; // Real radius, not including margin for reservations
 	
-	float offset;
-	if(warehouseConfig.lineFollowing) {
-		offset = trayRadius + APPROACH_DISTANCE_LINE_FOLLOWING + DISTANCE_WHEN_APPROACHED + robotRadius;
-	} else {
-		offset = trayRadius + APPROACH_DISTANCE + DISTANCE_WHEN_APPROACHED + robotRadius;
-	}
+	float offset = trayRadius + APPROACH_DISTANCE + DISTANCE_WHEN_APPROACHED + robotRadius;
 	
 	double inputDx = std::cos(tray.orientation * PI / 180);
 	double inputDy = std::sin(tray.orientation * PI / 180);
@@ -478,6 +473,14 @@ visualization_msgs::Marker Map::getActiveReservationVisualization(visualization_
 	return msg;
 }
 
+visualization_msgs::Marker Map::getGridVisualization() {
+	return thetaStarMap.getGridVisualization();
+}
+
+visualization_msgs::Marker Map::getLinkVisualization() {
+	return thetaStarMap.getLinkVisualization();
+}
+
 bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 	for(const auto& r : reservations) {
 		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId && r.getEndTime() - r.getStartTime() >= 150.f) {
@@ -501,8 +504,8 @@ int Map::getOwnerId() const {
 	return ownerId;
 }
 
-bool Map::getLineFollowingFlag() const {
-	return warehouseConfig.lineFollowing;
+std::vector<auto_smart_factory::Tray> Map::getTrays() const {
+	return warehouseConfig.trays;
 }
 
 std::vector<Rectangle> Map::getRectanglesOnStartingPoint(Point p) const {

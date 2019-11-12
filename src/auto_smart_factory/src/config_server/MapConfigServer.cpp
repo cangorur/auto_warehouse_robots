@@ -39,8 +39,6 @@ void MapConfigServer::readMapConfig(std::string file) {
 		ROS_FATAL("Cannot read warehouse configuration file %s. Message: %s", file.c_str(), e.what());
 		return;
 	}
-	// read line following flag
-	warehouseConfig.lineFollowing = configTree.get<bool>("line_following.active");
 
 	// read general info
 	warehouseConfig.width = configTree.get<float>("map.width");
@@ -116,40 +114,35 @@ void MapConfigServer::addStaticObstacles() {
 	for(const auto_smart_factory::Tray& tray : warehouseConfig.trays) {
 		setRectangularObstacle(rectangles, tray.x, tray.y, warehouseConfig.tray_geometry.width, warehouseConfig.tray_geometry.height, 0);
 	}
-	// Changed By shreyas
-	//TODO
-	//!left start point, up start point, x width, y height
 
-	if(warehouseConfig.lineFollowing) {
+	// Obstacles for line following corridors
+	setRectangularObstacle(rectangles, 6.50, 11.25, 2.75, 0.25, 0);
+	setRectangularObstacle(rectangles, 10.50, 11.25, 2.75, 0.25, 0);
 
-		setRectangularObstacle(rectangles, 6.50, 11.25, 2.75, 0.25, 0);
-		setRectangularObstacle(rectangles, 10.50, 11.25, 2.75, 0.25, 0);
+	setRectangularObstacle(rectangles, 6.50, 9.25, 2.75, 0.25, 0);
+	setRectangularObstacle(rectangles, 10.50, 9.25, 2.75, 0.25, 0);
 
-		setRectangularObstacle(rectangles, 6.50, 9.25, 2.75, 0.25, 0);
-		setRectangularObstacle(rectangles, 10.50, 9.25, 2.75, 0.25, 0);
+	setRectangularObstacle(rectangles, 6.50, 7.75, 2.75, 0.25, 0);
+	setRectangularObstacle(rectangles, 10.50, 7.75, 2.75, 0.25, 0);
 
-		setRectangularObstacle(rectangles, 6.50, 7.75, 2.75, 0.25, 0);
-		setRectangularObstacle(rectangles, 10.50, 7.75, 2.75, 0.25, 0);
+	setRectangularObstacle(rectangles, 6.50, 5.75, 2.75, 0.25, 0);
+	setRectangularObstacle(rectangles, 10.50, 5.75, 2.75, 0.25, 0);
 
-		setRectangularObstacle(rectangles, 6.50, 5.75, 2.75, 0.25, 0);
-		setRectangularObstacle(rectangles, 10.50, 5.75, 2.75, 0.25, 0);
+	setRectangularObstacle(rectangles, 6.50, 4.25, 2.75, 0.25, 0);
+	setRectangularObstacle(rectangles, 10.50, 4.25, 2.75, 0.25, 0);
 
-		setRectangularObstacle(rectangles, 6.50, 4.25, 2.75, 0.25, 0);
-		setRectangularObstacle(rectangles, 10.50, 4.25, 2.75, 0.25, 0);
-
-		setRectangularObstacle(rectangles, 6.50, 2.25, 2.75, 0.25, 0);
-		setRectangularObstacle(rectangles, 10.50, 2.25, 2.75, 0.25, 0);
+	setRectangularObstacle(rectangles, 6.50, 2.25, 2.75, 0.25, 0);
+	setRectangularObstacle(rectangles, 10.50, 2.25, 2.75, 0.25, 0);
 
 
-		// Left , Right
-		setRectangularObstacle(rectangles,2.5, warehouseConfig.map_configuration.height/2, 2.8,warehouseConfig.map_configuration.height, 0);
-		setRectangularObstacle(rectangles,14, (warehouseConfig.map_configuration.height/2), 1.8,warehouseConfig.map_configuration.height, 0);
-		
-		// Top and Bottom
-		setRectangularObstacle(rectangles, warehouseConfig.map_configuration.width/2, 13,  warehouseConfig.map_configuration.width, 0.5, 0);
-		setRectangularObstacle(rectangles, warehouseConfig.map_configuration.width/2, 0.5, warehouseConfig.map_configuration.width, 0.5, 0);
+	// Left and right map margin
+	setRectangularObstacle(rectangles,2.5, warehouseConfig.map_configuration.height/2, 2.8,warehouseConfig.map_configuration.height, 0);
+	setRectangularObstacle(rectangles,14, (warehouseConfig.map_configuration.height/2), 1.8,warehouseConfig.map_configuration.height, 0);
 	
-	}
+	// Top and bottom map margin
+	setRectangularObstacle(rectangles, warehouseConfig.map_configuration.width/2, 13,  warehouseConfig.map_configuration.width, 0.5, 0);
+	setRectangularObstacle(rectangles, warehouseConfig.map_configuration.width/2, 0.5, warehouseConfig.map_configuration.width, 0.5, 0);
+	
 
 	// Convert
 	warehouseConfig.map_configuration.obstacles.clear();

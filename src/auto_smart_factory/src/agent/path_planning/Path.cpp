@@ -216,7 +216,7 @@ void Path::generateReservationForTray(std::vector<Rectangle>& reservations, Orie
 
 	// Block approach space		
 	double offset = APPROACH_DISTANCE + DISTANCE_WHEN_APPROACHED;
-	double lengthMargin = 0.3f;
+	double lengthMargin = 0.2f;
 	double widthMargin = 0.1f;
 	Point center = Point(pos.x, pos.y) + Math::getVectorFromOrientation(pos.o) * offset;
 	double length = (ROBOT_RADIUS + offset + lengthMargin) * 2.f;
@@ -225,11 +225,13 @@ void Path::generateReservationForTray(std::vector<Rectangle>& reservations, Orie
 	reservations.emplace_back(center, Point(length, width), Math::toDeg(pos.o), startTime, endTime, ownerId);
 
 	// Block neighbour trays space
+	/*
 	widthMargin = 0.23f; // Cover neighbouring trays too
 	length = (ROBOT_RADIUS) * 2.f;
 	width = (ROBOT_RADIUS + widthMargin) * 2.f;
 	
 	reservations.emplace_back(center, Point(length, width), Math::toDeg(pos.o), startTime, endTime, ownerId);
+	*/
 }
 
 const std::vector<Point>& Path::getNodes() const {

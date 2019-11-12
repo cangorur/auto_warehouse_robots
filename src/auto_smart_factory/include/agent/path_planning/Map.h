@@ -59,6 +59,10 @@ public:
 	 * @param baseColor color the reservations shall have in RVIZ */
 	visualization_msgs::Marker getActiveReservationVisualization(visualization_msgs::Marker::_color_type baseColor);
 
+	/** Construct RViz visualisation marker message containing the visual representation of the underlaying theta* map grid and links */
+	visualization_msgs::Marker getGridVisualization();
+	visualization_msgs::Marker getLinkVisualization();
+
 	/** Checks whether a point is inside any static obstacle
 	 * @param point the point to check
 	 * @return true/false if the point is inside any static obstacle */
@@ -146,7 +150,8 @@ public:
 	float getHeight() const;
 	float getMargin() const;
 	int getOwnerId() const;
-	bool getLineFollowingFlag() const;
+
+	std::vector<auto_smart_factory::Tray> getTrays() const;
 
 	std::vector<Rectangle> getRectanglesOnStartingPoint(Point p) const;
 

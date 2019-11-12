@@ -20,11 +20,6 @@
 #include "agent/Gripper.h"
 #include "agent/ChargingManagement.h"
 
-// time the robots block the space in front of a tray when arriving
-#define LINE_FOLLOWING_TRAY_APPROACH_TIME 3.0f
-// time the robots reserve space when leaving a tray
-#define LINE_FOLLOWING_TRAY_LEAVE_TIME 5.0f
-
 class Agent;
 
 /**
@@ -222,12 +217,6 @@ class TaskHandler
 		// the current task has tried to reserve a path to target
 		bool hasTriedToReservePathToTarget = false;
 
-		// the current task has tried to reserve the source approach point
-		bool hasTriedToReserveSourceApproachPoint = false;
-
-		// the current task has tried to reserve the target approach point
-		bool hasTriedToReserveTargetApproachPoint = false;
-
 		// is currently replanning
 		bool isReplanning = false;
 
@@ -236,9 +225,6 @@ class TaskHandler
 		
 		// distance from the current position (in front of a tray) to the targeted tray
 		double lastApproachDistance;
-
-		// fag if line following is enabled
-		bool lineFollowing;
 };
 
 #endif /* AGENT_TASKHANDLER_H_ */

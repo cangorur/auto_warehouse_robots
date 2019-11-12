@@ -3,6 +3,8 @@
 
 #include <map>
 
+#include "visualization_msgs/Marker.h"
+
 #include "Math.h"
 #include "agent/path_planning/GridNode.h"
 #include "agent/path_planning/TimedLineOfSightResult.h"
@@ -24,6 +26,11 @@ private:
 public:
 	ThetaStarMap() = default;
 	ThetaStarMap(Map* map, float resolution);
+
+	/** Construct RViz visualisation marker message containing the visual representation of the underlaying theta* map grid and links */
+	visualization_msgs::Marker getGridVisualization();
+	visualization_msgs::Marker getLinkVisualization();
+
 
 	/** Compute if and when a certain line of sight connection is free
 	 * @param pos1 Start point
@@ -48,6 +55,7 @@ public:
 	 * @param pos Position to search from 
 	 * @return Closest grid node, nullptr if none could be found */
 	const GridNode* getNodeClosestTo(const Point& pos) const;
+	GridNode* getNodeClosestTo(const Point& pos);
 
 	/** Returns a list of rectangles which contain the specified point
 	 * @param p The point
