@@ -24,7 +24,7 @@ setup_warehouse_map(map_config, robot_config, simplfy_flag)
 add_packages(map_config, package_configs)
 
 # set 'fastmode' to True to switch to wireframe mode
-env = Environment('empty_environment.blend', fastmode = False)
+env = Environment('empty_environment.blend', fastmode = True)
 
 map_size_x = map_config['map']['width']
 map_size_y = map_config['map']['height']
