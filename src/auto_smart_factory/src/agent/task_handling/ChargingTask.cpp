@@ -72,4 +72,5 @@ void ChargingTask::fillInEvaluationData(auto_smart_factory::TaskEvaluation* msg)
 	msg->assignedAt = assignedAt;
 	msg->startedAt = startedAt;
 	msg->arrived_at = arrivedAt;
+	msg->consumedBattery = batteryStart-batteryFinish;
 }

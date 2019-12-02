@@ -6,6 +6,7 @@ float64 finishedAt
 float64 assignedAt
 float64 startedAt
 float64 endBatteryLevel
+float64 consumedBattery
 # transportation task only
 uint32 request_id
 float64 startedPickUpAt
