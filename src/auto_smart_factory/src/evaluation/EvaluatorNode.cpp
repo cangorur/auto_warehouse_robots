@@ -18,6 +18,7 @@ int main(int argc, char** argv) {
 	ros::Rate r(20);
 	while(ros::ok()){
 		ros::spinOnce();
+		eval.checkWrite();
 		r.sleep();
 	}
 }

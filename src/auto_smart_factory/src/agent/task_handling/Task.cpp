@@ -11,6 +11,8 @@ Task::Task(uint32_t targetId, Path pathToTarget, Type type, double startTime) :
 	startedAt = 0.0f;
 	finishedAt = 0.0f;
 	assignedAt = ros::Time::now().toSec();
+	batteryStart = 0.0f;
+	batteryFinish = 100.0f;
 }
 
 uint32_t Task::getTargetTrayId() {
@@ -39,4 +41,19 @@ bool Task::isCharging() {
 
 double Task::getEndTime() {
 	return startTime + this->getDuration();
+}
+
+void Task::setStartBatteryLevel(double batteryLevel) {
+	if (this->state == Task::State::WAITING) {
+		batteryStart = batteryLevel;
+	}
+}
+
+void Task::setFinishBatteryLevel(double batteryLevel) {
+	if (this->type == Task::Type::TRANSPORTATION && this->state == Task::State::FINISHED) {
+		batteryFinish = batteryLevel;
+	}
+	if (this->type == Task::Type::CHARGING && this->state == Task::State::TO_TARGET && batteryLevel < batteryFinish) {
+		batteryFinish = batteryLevel;
+	}
 }

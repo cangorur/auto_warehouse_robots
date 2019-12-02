@@ -180,6 +180,7 @@ void TaskHandler::executeTask() {
 			break;
 
 		case Task::State::TO_TARGET:
+			currentTask->setFinishBatteryLevel(chargingManagement->getCurrentBattery());
 			if (motionPlanner->isDone()) {
 				currentTask->setState(Task::State::APPROACH_TARGET);
 				motionPlanner->alignTowards(currentTask->getTargetPosition().o);
@@ -236,6 +237,7 @@ void TaskHandler::executeTask() {
 
 void TaskHandler::nextTask() {
 	if (currentTask != nullptr) {
+		currentTask->setFinishBatteryLevel(chargingManagement->getCurrentBattery());
 		sendEvaluationData();
 		delete currentTask;
 	}
@@ -244,6 +246,7 @@ void TaskHandler::nextTask() {
 		queue.pop_front();
 		isNextTask = true;
 		hasTriedToReservePathToTarget = false;
+		currentTask->setStartBatteryLevel(chargingManagement->getCurrentBattery());
 	} else {
 		currentTask = nullptr;
 	}

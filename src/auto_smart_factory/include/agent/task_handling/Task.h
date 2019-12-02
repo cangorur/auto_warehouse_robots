@@ -94,7 +94,24 @@ public:
 	 * @return estimated end time
 	 */
 	double getEndTime();
-	
+
+	/**
+	 * Sets the battery level at the beginning of a task.
+	 * Will only change something if the task is in the WAITING state
+	 * sets the batteryStart variable
+	 * @param batteryLevel the current charge of the battery
+	 */
+	void setStartBatteryLevel(double batteryLevel);	
+
+	/**
+	 * Sets the battery level at the end of a task.
+	 * Will only change something if the task is in the FINISHED state for a transportation task
+	 * Will only change something if the task is in the TO_TARGET state for a charging task (do this continuously while in that state)
+	 * sets the batteryFinish variable
+	 * @param batteryLevel the current charge of the battery
+	 */
+	void setFinishBatteryLevel(double batteryLevel);
+
 protected:
 	// type of the task	
 	Task::Type type;
@@ -117,6 +134,9 @@ protected:
 	double assignedAt;
 	double startedAt;
 	double finishedAt;
+	// battery information for post-mortem analysis and evaluation
+	double batteryStart;
+	double batteryFinish;
 };
 
 #endif /* AGENT_TASK_H_ */

@@ -108,4 +108,5 @@ void TransportationTask::fillInEvaluationData(auto_smart_factory::TaskEvaluation
 	msg->startedPickUpAt = startedPickUpAt;
 	msg->finishedPickUpAt = finishedPickUpAt;
 	msg->startedDropOffAt = startedDropOffAt;
+	msg->consumedBattery = batteryStart-batteryFinish;
 }
