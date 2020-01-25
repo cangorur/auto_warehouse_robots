@@ -880,8 +880,5 @@
     "tray_geometry": {
         "height": 0.5,
         "width": 0.5
-    },
-    "line_following": {
-        "active": true
     }
 }

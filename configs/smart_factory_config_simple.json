@@ -430,10 +430,7 @@
         }
 	
     ],
-    "kuka_robots" : [],
-    "line_following": {
-        "active": true
-    }
+    "kuka_robots" : []
 }
 
 
