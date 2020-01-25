@@ -226,13 +226,13 @@ Path ThetaStarPathPlanner::constructPath(double startingTime, ThetaStarGridNodeI
 	std::reverse(pathNodes.begin(), pathNodes.end());
 	std::reverse(waitTimes.begin(), waitTimes.end());
 	
-	if(pathNodes.size() <= 1) {
+	if(pathNodes.size() < 1) {
 		ROS_FATAL("[Agent %d] PathNodesSize: %d", map->getOwnerId(), (int) pathNodes.size());
 		ROS_WARN("Start: %f/%f | Target: %f/%f", start.x, start.y, target.x, target.y);
 		for(int j = 0; j < pathNodes.size(); j++) {
 			ROS_WARN("[%d] %f/%f", j, pathNodes[j].x, pathNodes[j].y);	
 		}	
-		ROS_ASSERT(pathNodes.size() > 1);
+		ROS_ASSERT(pathNodes.size() > 0);
 	}
 
 	// Convert orientation to rad

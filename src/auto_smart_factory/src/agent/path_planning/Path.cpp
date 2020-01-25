@@ -24,7 +24,7 @@ Path::Path(double startTimeOffset, std::vector<Point> nodes_, std::vector<double
 		ROS_FATAL("[Agent %d] nodes.size() != waitTimes.size()", agentId);
 		isValidPath = false;
 	}
-	if(nodes.size() < 2) {
+	if(nodes.size() < 1) {
 		ROS_FATAL("[Agent %d] Tried to construct path with no node points", agentId);
 		isValidPath = false;
 	}
