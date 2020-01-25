@@ -178,6 +178,20 @@ Path ThetaStarPathPlanner::findPath() {
 							queue.push(std::make_pair(neighbour->time + heuristic, neighbour));
 							//ROS_INFO("[Agent %d] Made connection only after second attempt", map->getOwnerId());
 						}
+						// Allow robot to create reservations when it is currently in another robots reservation!
+						// OUR FIX START
+						else {
+							if(prevNotNull == false) {
+								double heuristic = getHeuristic(neighbour, targetNode->pos);
+
+								neighbour->time = newPrev->time + drivingTime;
+								neighbour->prev = newPrev;
+								neighbour->waitTimeAtPrev = 0;
+								queue.push(std::make_pair(neighbour->time + heuristic, neighbour));
+								ROS_INFO("[Agent %d] Made connection ignoring start node reservation", map->getOwnerId());
+							}
+						}
+						// OUR FIX END
 					}
 				}
 			}
@@ -188,7 +202,7 @@ Path ThetaStarPathPlanner::findPath() {
 		Path path = constructPath(startingTime, targetInformation, targetReservationTime);
 		return smoothPath(path);
 	} else {
-		//ROS_WARN("[Agent %d] No path found from node %f/%f to node %f/%f!", map->getOwnerId(), startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
+		ROS_WARN("[Agent %d] No path found from node %f/%f to node %f/%f!", map->getOwnerId(), startNode->pos.x,startNode->pos.y, targetNode->pos.x, targetNode->pos.y);
 		//ROS_WARN("Reservations for start:");
 		//map->listAllReservationsIn(startNode->pos);
 
