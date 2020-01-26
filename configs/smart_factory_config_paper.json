@@ -136,7 +136,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 5.25,
+            "x": 5.5,
             "y": 3.0
         },
         {
@@ -144,15 +144,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 6.0,
-            "y": 3.0
-        },
-        {
-            "package_type": 0,
-            "orientation": -90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 6.75,
+            "x": 6.5,
             "y": 3.0
         },
         {
@@ -176,7 +168,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 5.25,
+            "x": 5.5,
             "y": 3.5
         },
         {
@@ -184,15 +176,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 6.0,
-            "y": 3.5
-        },
-        {
-            "package_type": 0,
-            "orientation": 90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 6.75,
+            "x": 6.5,
             "y": 3.5
         },
         {
@@ -216,7 +200,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 10.25,
+            "x": 10.5,
             "y": 3.0
         },
         {
@@ -224,7 +208,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 11,
+            "x": 11.5,
             "y": 3.0
         },
         {
@@ -232,15 +216,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 11.75,
-            "y": 3.0
-        },
-        {
-            "package_type": 0,
-            "orientation": -90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 12.50,
+            "x": 12.5,
             "y": 3.0
         },
         {
@@ -256,7 +232,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 10.25,
+            "x": 10.5,
             "y": 3.5
         },
         {
@@ -264,15 +240,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 11.00,
-            "y": 3.5
-        },
-        {
-            "package_type": 0,
-            "orientation": 90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 11.75,
+            "x": 11.5,
             "y": 3.5
         },
         {
@@ -311,7 +279,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 5.25,
+            "x": 5.5,
             "y": 6.5
         },
         {
@@ -319,15 +287,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 6.0,
-            "y": 6.5
-        },
-        {
-            "package_type": 0,
-            "orientation": -90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 6.75,
+            "x": 6.5,
             "y": 6.5
         },
         {
@@ -351,7 +311,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 5.25,
+            "x": 5.5,
             "y": 7.0
         },
         {
@@ -359,15 +319,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 6.0,
-            "y": 7.0
-        },
-        {
-            "package_type": 0,
-            "orientation": 90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 6.75,
+            "x": 6.5,
             "y": 7.0
         },
         {
@@ -391,7 +343,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 10.25,
+            "x": 10.5,
             "y": 6.5
         },
         {
@@ -399,15 +351,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 11,
-            "y": 6.5
-        },
-        {
-            "package_type": 0,
-            "orientation": -90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 11.75,
+            "x": 11.5,
             "y": 6.5
         },
         {
@@ -423,7 +367,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 9.50,
+            "x": 9.5,
             "y": 7.0
         },
         {
@@ -431,7 +375,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 10.25,
+            "x": 10.5,
             "y": 7.0
         },
         {
@@ -439,15 +383,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 11,
-            "y": 7.0
-        },
-        {
-            "package_type": 0,
-            "orientation": 90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 11.75,
+            "x": 11.5,
             "y": 7.0
         },
         {
@@ -488,7 +424,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 5.25,
+            "x": 5.5,
             "y": 10.0
         },
         {
@@ -496,15 +432,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 6.0,
-            "y": 10.0
-        },
-        {
-            "package_type": 0,
-            "orientation": -90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 6.75,
+            "x": 6.5,
             "y": 10.0
         },
         {
@@ -528,7 +456,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 5.25,
+            "x": 5.5,
             "y": 10.5
         },
         {
@@ -536,15 +464,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 6.0,
-            "y": 10.5
-        },
-        {
-            "package_type": 0,
-            "orientation": 90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 6.75,
+            "x": 6.5,
             "y": 10.5
         },
         {
@@ -568,7 +488,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 10.25,
+            "x": 10.5,
             "y": 10.0
         },
         {
@@ -576,15 +496,7 @@
             "orientation": -90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 11,
-            "y": 10.0
-        },
-        {
-            "package_type": 0,
-            "orientation": -90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 11.75,
+            "x": 11.5,
             "y": 10.0
         },
         {
@@ -608,7 +520,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 10.25,
+            "x": 10.5,
             "y": 10.5
         },
         {
@@ -616,15 +528,7 @@
             "orientation": 90.0,
             "type": "storage",
             "max_load": 50.0,
-            "x": 11,
-            "y": 10.5
-        },
-        {
-            "package_type": 0,
-            "orientation": 90.0,
-            "type": "storage",
-            "max_load": 50.0,
-            "x": 11.75,
+            "x": 11.5,
             "y": 10.5
         },
         {
