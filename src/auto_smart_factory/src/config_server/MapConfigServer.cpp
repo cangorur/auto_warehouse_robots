@@ -116,31 +116,31 @@ void MapConfigServer::addStaticObstacles() {
 	}
 
 	setRectangularObstacle(rectangles, 6, 11.25, 3.5, 0.25, 0);
-	setRectangularObstacle(rectangles, 10.75, 11.25, 3.5, 0.25, 0);
+	setRectangularObstacle(rectangles, 11, 11.25, 3.5, 0.25, 0);
 
 	setRectangularObstacle(rectangles, 6, 9.25, 3.5, 0.25, 0);
-	setRectangularObstacle(rectangles, 10.75, 9.25, 3.5, 0.25, 0);
+	setRectangularObstacle(rectangles, 11, 9.25, 3.5, 0.25, 0);
 
 	setRectangularObstacle(rectangles, 6, 7.75, 3.5, 0.25, 0);
-	setRectangularObstacle(rectangles, 10.75, 7.75, 3.5, 0.25, 0);
+	setRectangularObstacle(rectangles, 11, 7.75, 3.5, 0.25, 0);
 
 	setRectangularObstacle(rectangles, 6, 5.75, 3.5, 0.25, 0);
-	setRectangularObstacle(rectangles, 10.75, 5.75, 3.5, 0.25, 0);
+	setRectangularObstacle(rectangles, 11, 5.75, 3.5, 0.25, 0);
 
 	setRectangularObstacle(rectangles, 6, 4.25, 3.5, 0.25, 0);
-	setRectangularObstacle(rectangles, 10.75, 4.25, 3.5, 0.25, 0);
+	setRectangularObstacle(rectangles, 11, 4.25, 3.5, 0.25, 0);
 
 	setRectangularObstacle(rectangles, 6, 2.25, 3.5, 0.25, 0);
-	setRectangularObstacle(rectangles, 10.75, 2.25, 3.5, 0.25, 0);
+	setRectangularObstacle(rectangles, 11, 2.25, 3.5, 0.25, 0);
 
 
 	// Left and right map margin
 	setRectangularObstacle(rectangles,1.75, warehouseConfig.map_configuration.height/2, 2,warehouseConfig.map_configuration.height, 0);
-	setRectangularObstacle(rectangles,14.75, (warehouseConfig.map_configuration.height/2), 2,warehouseConfig.map_configuration.height, 0);
+	setRectangularObstacle(rectangles,15.25, (warehouseConfig.map_configuration.height/2), 2,warehouseConfig.map_configuration.height, 0);
 	
 	// Top and bottom map margin
-	setRectangularObstacle(rectangles, warehouseConfig.map_configuration.width/2, 13.5,  warehouseConfig.map_configuration.width, 2.0, 0);
-	setRectangularObstacle(rectangles, warehouseConfig.map_configuration.width/2, 0.0, warehouseConfig.map_configuration.width, 2.0, 0);
+	setRectangularObstacle(rectangles, warehouseConfig.map_configuration.width/2, 13.5,  warehouseConfig.map_configuration.width, 1.75, 0);
+	setRectangularObstacle(rectangles, warehouseConfig.map_configuration.width/2, 0.0, warehouseConfig.map_configuration.width, 1.75, 0);
 	
 
 	// Convert
