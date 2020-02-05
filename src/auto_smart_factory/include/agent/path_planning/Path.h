@@ -13,14 +13,14 @@
 class Path {
 public:
 	// Max duration a reservation (which is not a waiting reservation) may last
-	double maxDrivingReservationDuration = 1.75f;
+	double maxDrivingReservationDuration = 2.0f;
 	
 	// Duration Margin a reservations lasts longer than necessary to add safety leeway
-	double reservationTimeMarginAhead = 0.15f;
-	double reservationTimeMarginBehind = 0.1f;
+	double reservationTimeMarginAhead = 0.3f;
+	double reservationTimeMarginBehind = 0.2f;
 	
 	// Additional time included to approach the final path point due to motion planner precision mode
-	double finalPointAdditionalTime = 0.35f;
+	double finalPointAdditionalTime = 0.5f;
 	
 private:
 	// The starting time of this path
