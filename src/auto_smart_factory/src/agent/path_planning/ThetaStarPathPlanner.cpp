@@ -180,6 +180,7 @@ Path ThetaStarPathPlanner::findPath() {
 						}
 						// Allow robot to create reservations when it is currently in another robots reservation!
 						// OUR FIX START
+						/*
 						else {
 							if(prevNotNull == false) {
 								double heuristic = getHeuristic(neighbour, targetNode->pos);
@@ -191,6 +192,7 @@ Path ThetaStarPathPlanner::findPath() {
 								ROS_INFO("[Agent %d] Made connection ignoring start node reservation", map->getOwnerId());
 							}
 						}
+						*/
 						// OUR FIX END
 					}
 				}
