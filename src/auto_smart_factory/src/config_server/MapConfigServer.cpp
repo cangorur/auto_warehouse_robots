@@ -117,14 +117,13 @@ void MapConfigServer::addStaticObstacles() {
 	
 
 	// Left and right map margin
-	setRectangularObstacle(rectangles,1.75, warehouseConfig.map_configuration.height/2, 2,warehouseConfig.map_configuration.height, 0);
-	setRectangularObstacle(rectangles,14.75, (warehouseConfig.map_configuration.height/2), 2,warehouseConfig.map_configuration.height, 0);
+	setRectangularObstacle(rectangles,2, warehouseConfig.map_configuration.height/2, 0.5,warehouseConfig.map_configuration.height, 0);
+	setRectangularObstacle(rectangles,15, (warehouseConfig.map_configuration.height/2), 0.5,warehouseConfig.map_configuration.height, 0);
 	
 	// Top and bottom map margin
-	setRectangularObstacle(rectangles, warehouseConfig.map_configuration.width/2, 13.5,  warehouseConfig.map_configuration.width, 2.0, 0);
-	setRectangularObstacle(rectangles, warehouseConfig.map_configuration.width/2, 0.0, warehouseConfig.map_configuration.width, 2.0, 0);
-
-
+	setRectangularObstacle(rectangles, warehouseConfig.map_configuration.width/2, 13.5,  warehouseConfig.map_configuration.width, 0.5, 0);
+	setRectangularObstacle(rectangles, warehouseConfig.map_configuration.width/2, 0, warehouseConfig.map_configuration.width, 0.5, 0);
+	
 	// Convert
 	warehouseConfig.map_configuration.obstacles.clear();
 	
