@@ -334,6 +334,9 @@ OrientedPoint Agent::getCurrentOrientedPosition() const {
 void Agent::publishVisualisation(const ros::TimerEvent& e) {
 	if(map != nullptr) {
 		visualisationPublisher.publish(map->getObstacleVisualization());
+
+		visualisationPublisher.publish(map->getGridVisualization());
+		visualisationPublisher.publish(map->getLinkVisualization());
 		
 		auto reservationMsg = map->getInactiveReservationVisualization(getAgentColor());
 		if(!reservationMsg.points.empty()) {

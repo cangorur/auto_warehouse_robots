@@ -109,3 +109,85 @@ int ThetaStarMap::getOwnerId() const {
 std::vector<Rectangle> ThetaStarMap::getRectanglesOnStartingPoint(Point p) const {
 	return map->getRectanglesOnStartingPoint(p);
 }
+
+visualization_msgs::Marker ThetaStarMap::getGridVisualization() {
+	visualization_msgs::Marker msg;
+	msg.header.frame_id = "map";
+	msg.header.stamp = ros::Time::now();
+	msg.ns = "Grid";
+	msg.action = visualization_msgs::Marker::MODIFY;
+	msg.pose.orientation.w = 1.0;
+
+	msg.id = 0;
+	msg.type = visualization_msgs::Marker::SPHERE_LIST;
+
+	msg.scale.x = 0.1f;
+	msg.scale.y = 0.1f;
+	msg.scale.z = 0.1f;
+
+	msg.color.r = 0.1f;
+	msg.color.g = 0.1f;
+	msg.color.b = 0.1f;
+	msg.color.a = 0.3;
+
+	geometry_msgs::Point p;
+	p.z = 0.f;
+
+	// Nodes
+	int i = 0;
+	for(const auto& node : nodes) {
+		const Point* point = &node.first;
+
+		p.x = point->x;
+		p.y = point->y;
+		msg.points.push_back(p);
+	}
+
+
+	return msg;	
+}
+
+visualization_msgs::Marker ThetaStarMap::getLinkVisualization() {
+	visualization_msgs::Marker msg;
+	msg.header.frame_id = "map";
+	msg.header.stamp = ros::Time::now();
+	msg.ns = "Links";
+	msg.action = visualization_msgs::Marker::MODIFY;
+	msg.pose.orientation.w = 1.0;
+
+	msg.id = 0;
+	msg.type = visualization_msgs::Marker::LINE_LIST;
+
+	msg.scale.x = 0.02f;
+	msg.scale.y = 0.02f;
+	msg.scale.z = 0.02f;
+
+	msg.color.r = 0.1f;
+	msg.color.g = 0.1f;
+	msg.color.b = 0.1f;
+	msg.color.a = 0.15;
+
+	geometry_msgs::Point p;
+	p.z = 0.f;
+
+	// Nodes
+	int i = 0;
+	for(const auto& node : nodes) {
+		const Point* start = &node.first;
+
+		for(const auto& neighbour : node.second->neighbours) {
+			const Point* end = &neighbour->pos;
+
+			p.x = start->x;
+			p.y = start->y;
+			msg.points.push_back(p);
+
+			p.x = end->x;
+			p.y = end->y;
+			msg.points.push_back(p);
+		}
+	}
+
+
+	return msg;	
+}

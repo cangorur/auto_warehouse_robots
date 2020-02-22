@@ -7,6 +7,8 @@
 #include "agent/path_planning/GridNode.h"
 #include "agent/path_planning/TimedLineOfSightResult.h"
 
+#include "visualization_msgs/Marker.h"
+
 class Map;
 
 // Collection of Theta* Grid Nodes for Theta* Path Planning
@@ -62,6 +64,11 @@ public:
 	/** Returns the owner if of the theta* Map
 	 * @return Owner Id*/
 	int getOwnerId() const;
+
+	/** Construct RViz visualisation marker message containing the visual representation of the underlaying theta* map grid and links */
+	visualization_msgs::Marker getGridVisualization();
+	visualization_msgs::Marker getLinkVisualization();
+
 
 private:
 	/** Connect the specified Grid Node to the node at the target position

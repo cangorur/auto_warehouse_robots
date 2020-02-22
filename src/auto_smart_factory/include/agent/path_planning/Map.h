@@ -13,6 +13,8 @@
 #include "agent/path_planning/RobotHardwareProfile.h"
 #include "agent/path_planning/TimedLineOfSightResult.h"
 
+#include "visualization_msgs/Marker.h"
+
 /* Represents the agents local copy of the map. Contains static obstacles, timed reservations and a theta star map (collection of theta star grid nodes) */
 class Map {
 public:
@@ -58,6 +60,11 @@ public:
 	/** Construct RViz visualisation marker message containing the visual representation of the current active reservations
 	 * @param baseColor color the reservations shall have in RVIZ */
 	visualization_msgs::Marker getActiveReservationVisualization(visualization_msgs::Marker::_color_type baseColor);
+
+	/** Construct RViz visualisation marker message containing the visual representation of the underlaying theta* map grid and links */
+	visualization_msgs::Marker getGridVisualization();
+	visualization_msgs::Marker getLinkVisualization();
+
 
 	/** Checks whether a point is inside any static obstacle
 	 * @param point the point to check

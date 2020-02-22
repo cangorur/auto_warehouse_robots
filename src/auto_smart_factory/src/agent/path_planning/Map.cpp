@@ -455,6 +455,14 @@ visualization_msgs::Marker Map::getActiveReservationVisualization(visualization_
 	return msg;
 }
 
+visualization_msgs::Marker Map::getGridVisualization() {
+	return thetaStarMap.getGridVisualization();
+}
+
+visualization_msgs::Marker Map::getLinkVisualization() {
+	return thetaStarMap.getLinkVisualization();
+}
+
 bool Map::isPointTargetOfAnotherRobot(OrientedPoint p) {
 	for(const auto& r : reservations) {
 		if(Math::isPointInRectangle(Point(p.x, p.y), r) && r.getOwnerId() != ownerId && r.getEndTime() - r.getStartTime() >= 150.f) {

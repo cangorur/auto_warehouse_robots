@@ -17,12 +17,14 @@ ThetaStarPathPlanner::ThetaStarPathPlanner(ThetaStarMap* thetaStarMap, RobotHard
 {
 	isValidPathQuery = true;
 	
+	/*
 	if(!map->addAdditionalNode(Point(start.x, start.y))) {
 		ROS_FATAL("[Agent %d] Node at StartPoint %f/%f could not be created. Taking nearest other point instead", map->getOwnerId(), start.x, start.y);
 	}
 	if(!map->addAdditionalNode(Point(target.x, target.y))) {
 		ROS_FATAL("[Agent %d] Node at TargetPoint %f/%f could not be created. Taking nearest other point instead", map->getOwnerId(), target.x, target.y);
 	}
+	*/
 
 	startNode = map->getNodeClosestTo(Point(start));
 	targetNode = map->getNodeClosestTo(Point(target));
