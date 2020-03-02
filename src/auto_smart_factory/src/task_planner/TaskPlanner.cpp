@@ -6,6 +6,7 @@
  */
 
 #include "task_planner/TaskPlanner.h"
+#include <algorithm>
 
 using namespace auto_smart_factory;
 
@@ -371,23 +372,36 @@ void TaskPlanner::publishTask(const std::vector<auto_smart_factory::Tray>& sourc
 	tsa.request_id = requestId;
 	tsa.timeout = (ros::Time::now() + Request::timeoutDuration);
 	extractData(sourceTrayCandidates, targetTrayCandidates, &tsa);
-	//ROS_INFO("[Task Planner]: Publishing Request %d with %d start Trays and %d end Trays", tsa.request_id, (unsigned int)tsa.start_ids.size(), (unsigned int)tsa.end_ids.size());
+	ROS_INFO("[Task Planner]: Publishing Request %d with %d start Trays and %d end Trays", tsa.request_id, (unsigned int)tsa.start_ids.size(), (unsigned int)tsa.end_ids.size());
 	taskAnnouncerPub.publish(tsa);
 }
 
 void TaskPlanner::extractData(const std::vector<auto_smart_factory::Tray>& sourceTrays, const std::vector<auto_smart_factory::Tray>& targetTrays, auto_smart_factory::TaskAnnouncement* tsa){
-	unsigned int i = 0;
+	std::vector<uint32_t> sourceIDs;
+	std::vector<uint32_t> targetIDs;
+	// copy ids to temp vectors
 	for(Tray t : sourceTrays) {
-		if (i <= maxTrays || maxTrays == 0) {
-			tsa->start_ids.push_back(t.id);
+		sourceIDs.push_back(t.id);
+	}
+	for(Tray t : targetTrays) {
+		targetIDs.push_back(t.id);
+	}
+	// shuffle ids
+	std::random_shuffle(sourceIDs.begin(), sourceIDs.end());
+	std::random_shuffle(targetIDs.begin(), targetIDs.end());
+	// copy ids to tsa
+	unsigned int i = 0;
+	for(uint32_t t : sourceIDs) {
+		if(maxTrays == 0 || i < maxTrays) {
+			tsa->start_ids.push_back(t);
+			i++;
 		}
-		i++;
 	}
 	i = 0;
-	for(Tray t : targetTrays) {
-		if(i <= maxTrays || maxTrays == 0) {
-			tsa->end_ids.push_back(t.id);
+	for(uint32_t t : targetIDs) {
+		if(maxTrays == 0 || i < maxTrays) {
+			tsa->end_ids.push_back(t);
+			i++;
 		}
-		i++;
 	}
 }
