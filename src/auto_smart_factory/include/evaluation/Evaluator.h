@@ -56,7 +56,7 @@ private:
 	void writeConsumedBattery(FILE* f, std::map<std::string, std::pair<double, double> >::iterator it);
 
 	// duration in minutes after which the evauator should write the evaluation data
-	const double duration = 15;
+	const double duration = 10;
 
 	// has already written
 	bool hasWritten = false;
