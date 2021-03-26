@@ -9,7 +9,7 @@ sleep 5
 rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y 
 
 cd factory_morse 
-morse import auto_smart_factory
+morse import auto_warehouse
 cd ${HOME}/catkin_ws/
 
 echo "source /opt/ros/${ROS_DISTRO}/setup.bash"; catkin_make
