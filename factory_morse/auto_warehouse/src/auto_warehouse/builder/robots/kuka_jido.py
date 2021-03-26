@@ -1,5 +1,5 @@
 from morse.builder import *
-from auto_smart_factory_sim.builder.sensors import Custombattery
+from auto_warehouse.builder.sensors import Custombattery
 
 def create_robot(name, x, y, orientation, robot_config):
     robot = Jido(name)

@@ -96,7 +96,7 @@ The following configurations are included as examples and are located in `config
 - smart_factory_config_simple.json
 
 You can simply delete/add from the .json file the robots, human (tested) and the trays (not tested) to change the system complexity if you have issues running with your PC. If you want to run different .json files, change these below:
-* auto_factory.py line 9 (the main MORSE builder script which is used to launch the MORSE simulator)(see all builder scripts under `factory_morse/auto_smart_factory`). NOTE: Optionally create a new builder script with each config you prepare, see the examples under the given directory.
+* auto_factory.py line 9 (the main MORSE builder script which is used to launch the MORSE simulator)(see all builder scripts under `factory_morse/auto_warehouse`). NOTE: Optionally create a new builder script with each config you prepare, see the examples under the given directory.
 * full_system.launch line 33 (ros parameters) (see `src/auto_smart_factory/launch`)
 
 Additionally, some other example builder scripts for large and simple warehouse configurations, or the same factory but with simple configuration (`smart_factory_config_simple.json`) are also available.
@@ -114,7 +114,7 @@ Make sure morse knows the simulation by importing it ONCE (from within the main 
 
 ```
 cd factory_morse
-morse import auto_smart_factory
+morse import auto_warehouse
 ```
 
 Before starting the simulation also start a **roscore**. This is not a must (as roslaunch in the next step automatically runs it) but it allows you to freely navigate in the environment.
@@ -137,7 +137,7 @@ source devel/setup.bash
 Then you can start the environment by running
 
 ```
-morse run auto_smart_factory auto_factory.py
+morse run auto_warehouse auto_factory.py
 ```
 
 **NOTE:** For lesser graphics and CPU requirements, you can run the simple version of the environment <auto_factory_simple.py>. In that case, please run <full_system_simple.launch> for the roslaunch below.

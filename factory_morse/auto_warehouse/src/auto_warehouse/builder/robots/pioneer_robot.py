@@ -1,5 +1,6 @@
 from morse.builder import *
-from auto_smart_factory_sim.builder.sensors import Custombattery
+from auto_warehouse.builder.sensors import Custombattery
+import logging; logger = logging.getLogger("morse." + __name__)
 
 def create_robot(name, x, y, orientation, robot_config):
     robot = Pioneer3DX(name)
@@ -16,10 +17,12 @@ def create_robot(name, x, y, orientation, robot_config):
 
     # add gripper
     gripper = Gripper()
-    gripper.translate(-0.0, 0.0, 0.23) #0.23
+    gripper.translate(0.0, 0.0, 0.23) #0.23
     gripper.rotate(-0.0, math.pi / 2.0, 0.0)
     gripper.properties(Angle=0.0, Distance=20.0)
-    gripper.add_overlay('ros', 'gripper_overlays.LoadUnloadOverlay')
+    gripper.add_overlay('ros', 'auto_warehouse.overlays.gripper_overlays.LoadUnloadOverlay')
+    #gripper.id = "Gripper_" + name
+    #logger.warning("Gripper %s", gripper.id)
     robot.append(gripper)
 
     # Add a pose sensor
@@ -30,9 +33,9 @@ def create_robot(name, x, y, orientation, robot_config):
     # add battery
     battery = Custombattery()
     battery.frequency(1)
-    battery.add_overlay('ros', 'battery_overlay.RandomInitBatteryOverlay')
-    #battery.properties(DischargingRate = robot_config['discharging_rate'], ChargingRate = robot_config['charging_rate'])
+    battery.add_overlay('ros', 'auto_warehouse.overlays.battery_overlay.RandomInitBatteryOverlay')
     battery.properties(DischargingRate = robot_config['discharging_rate'], ChargingRate = robot_config['charging_rate'], MotorDrainingRate = robot_config['motor_draining_rate'])
+    #battery.properties(MotorDrainingRate = robot_config['motor_draining_rate'])
     battery.add_stream('ros', 'morse.middleware.ros.battery.Float32Publisher')
     robot.append(battery)
 
@@ -47,7 +50,7 @@ def create_robot(name, x, y, orientation, robot_config):
     hokuyo.frequency(3.0)
     robot.append(hokuyo)
 
-    label = PassiveObject('robot_labels/label_pioneer_light_' + name + '.blend', 'Label')
+    label = PassiveObject('robot_labels/label_pioneer_' + name + '.blend', 'Label')
     label.translate(0.0, 0.0, 0.15)
-    label.rotate(0.0, 0.0, -1 * math.pi / 2)
+    label.rotate(0.0, 0.0, math.pi / 2)
     robot.append(label)

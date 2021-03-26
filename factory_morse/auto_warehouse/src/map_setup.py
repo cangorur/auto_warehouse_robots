@@ -1,12 +1,10 @@
 import math
 from morse.builder import *
-import pioneer_robot
-import pioneer_light_robot
-import kuka_jido
+from auto_warehouse.builder.robots import pioneer_robot, pioneer_light_robot, kuka_jido
 import add_human_robot
-from morse.builder.robots.conveyor import *
+from auto_warehouse.builder.robots.conveyor import *
 #from morse.builder.robots.rotating_table import *
-from morse.builder.robots.conveyor_distributor import *
+from auto_warehouse.builder.robots.conveyor_distributor import *
 
 # width is size in x direction, height is size in y direction
 
@@ -150,9 +148,9 @@ def create_conveyor(map_config):
                                 0)  # -1.36
             conveyor3.rotate(((conveyor['rotation'] * math.pi) / 180) + 1.57)
 
-            conveyor1.add_overlay('ros', 'conveyor_overlay.ConveyorControlOverlay')
-            conveyor2.add_overlay('ros', 'conveyor_overlay.ConveyorControlOverlay')
-            conveyor3.add_overlay('ros', 'conveyor_overlay.ConveyorControlOverlay')
+            conveyor1.add_overlay('ros', 'auto_warehouse.overlays.conveyor_overlay.ConveyorControlOverlay')
+            conveyor2.add_overlay('ros', 'auto_warehouse.overlays.conveyor_overlay.ConveyorControlOverlay')
+            conveyor3.add_overlay('ros', 'auto_warehouse.overlays.conveyor_overlay.ConveyorControlOverlay')
 
         elif conveyor['type'] == "D":
             conveyor1 = ConveyorDistributor(conveyor['id'] + '/assembly_part')
@@ -162,8 +160,8 @@ def create_conveyor(map_config):
             conveyor2.translate(conveyor['location']['x'], conveyor['location']['y'] - 2.25,
                                 0)  # -1.36
             conveyor2.rotate(z = (conveyor['rotation'] * math.pi) / 180)
-            conveyor1.add_overlay('ros', 'conveyor_overlay.ConveyorControlOverlay')
-            conveyor2.add_overlay('ros', 'conveyor_overlay.ConveyorControlOverlay')
+            conveyor1.add_overlay('ros', 'auto_warehouse.overlays.conveyor_overlay.ConveyorControlOverlay')
+            conveyor2.add_overlay('ros', 'auto_warehouse.overlays.conveyor_overlay.ConveyorControlOverlay')
 
         elif conveyor['type'] == "Object_Inspection":
             conveyor1_x = conveyor['location']['x']
@@ -219,8 +217,8 @@ def create_conveyor(map_config):
             conveyor2.translate(conveyor2_x, conveyor2_y, 0)
             conveyor2.rotate(z = (conveyor['rotation'] * math.pi) / 180)
 
-            conveyor1.add_overlay('ros', 'conveyor_overlay.ConveyorControlOverlay')
-            conveyor2.add_overlay('ros', 'conveyor_overlay.ConveyorControlOverlay')
+            conveyor1.add_overlay('ros', 'auto_warehouse.overlays.conveyor_overlay.ConveyorControlOverlay')
+            conveyor2.add_overlay('ros', 'auto_warehouse.overlays.conveyor_overlay.ConveyorControlOverlay')
 
         else:  # tip to tip connection of the belts
             conveyor1 = Conveyor(conveyor['id'] + '/first_part')
@@ -230,8 +228,8 @@ def create_conveyor(map_config):
             conveyor2 = Conveyor(conveyor['id'] + '/second_part')
             conveyor2.translate(conveyor['location']['x'], conveyor['location']['y'] - 1.8, 0)
             conveyor2.rotate((conveyor['rotation'] * math.pi) / 180)
-            conveyor1.add_overlay('ros', 'conveyor_overlay.ConveyorControlOverlay')
-            conveyor2.add_overlay('ros', 'conveyor_overlay.ConveyorControlOverlay')
+            conveyor1.add_overlay('ros', 'auto_warehouse.overlays.conveyor_overlay.ConveyorControlOverlay')
+            conveyor2.add_overlay('ros', 'auto_warehouse.overlays.conveyor_overlay.ConveyorControlOverlay')
         # adding 3D printer objects on the scene
         adding_printer = PassiveObject('printer.blend', 'printer')
         adding_printer.translate(conveyor['location']['x'], conveyor['location']['y'] - 3.95, 0.60)
