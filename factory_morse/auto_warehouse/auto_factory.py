@@ -6,7 +6,7 @@ from package_setup import add_packages
 import json
 
 # specify configuration files
-warehouse_config_file = os.path.join(os.path.dirname(__file__), '../../configs/smart_factory_config_paper.json')
+warehouse_config_file = os.path.join(os.path.dirname(__file__), '../../configs/smart_factory_config.json')
 robot_config_file = os.path.join(os.path.dirname(__file__), '../../configs/robot_config.json')
 package_config_file = os.path.join(os.path.dirname(__file__), '../../configs/package_config.json')
 

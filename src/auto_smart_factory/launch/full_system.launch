@@ -28,7 +28,7 @@
 	<!-- Configuration Server -->
 	<node pkg="auto_smart_factory" type="config_server" name="config_server">
         	<!-- configuration files -->
-	        <param name="map_config_file" value="$(find auto_smart_factory)/../../configs/smart_factory_config_paper.json" />
+	        <param name="map_config_file" value="$(find auto_smart_factory)/../../configs/smart_factory_config.json" />
 	        <param name="robot_config_file" value="$(find auto_smart_factory)/../../configs/robot_config.json" />
 	        <param name="package_config_file" value="$(find auto_smart_factory)/../../configs/package_config.json" />
 	</node>

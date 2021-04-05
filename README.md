@@ -1,9 +1,9 @@
 Auto-Smart-Factory                         
 ============
 
-by Orhan Can Görür* (orhan-can.goeruer@dai-labor.de), Jacob Seibert, Marc Schmidt, Malte Siemers, Utku Özmü, Ansgar Rösig, Hafiz Hamza, Paul Dieterich, Jonathan Regef, Mohannad Al Dakhil, Puriwat Khantiviriya.
+by Orhan Can Görür* (cangorur88@gmail.com), Hafiz Hamza, Jacob Seibert, Marc Schmidt, Malte Siemers, Utku Özmü, Ansgar Rösig, Paul Dieterich, Jonathan Regef, Mohannad Al Dakhil, Puriwat Khantiviriya.
 
-Extended with decentralized multi-robot coordination and collaboration by Vincent Wölfer, Patrick Denzler, Florian Ziesche, Shreyas Gokhale and Uros Petkovic.
+Extended with decentralized multi-robot coordination and collaboration by Patrick Denzler, Florian Ziesche, Shreyas Gokhale, Vincent Wölfer, and Uros Petkovic.
 
 A smart factory environment is an important aspect of "Industry 4.0" where products can be ordered, produced, sorted and stored in a warehouse to be finally delivered to the recipient. The different components of the scenario are modular and hence the information exchange between them is essential.
 This work focuses on the transportation of products inside a warehouse. The goal is to implement a scalable system for cooperative multi-agent task and path planning. Products arrive unpredictably and need to be stored until they can be delivered to the customer.
