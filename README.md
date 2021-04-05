@@ -1,19 +1,13 @@
 Auto-Smart-Factory                         
 ============
 
-by Orhan Can Görür* (orhan-can.goeruer@dai-labor.de), Jacob Seibert, Marc Schmidt, Malte Siemers, Utku Özmü, Ansgar Rösig, Hafiz Hamza, Paul Dieterich, Jonathan Regef, Mohannad Al Dakhil, Puriwat Khantiviriya.
-
-Extended with decentralized multi-robot coordination and collaboration by Vincent Wölfer, Patrick Denzler, Florian Ziesche, Shreyas Gokhale and Uros Petkovic.
-
-A smart factory environment is an important aspect of "Industry 4.0" where products can be ordered, produced, sorted and stored in a warehouse to be finally delivered to the recipient. The different components of the scenario are modular and hence the information exchange between them is essential.
-This work focuses on the transportation of products inside a warehouse. The goal is to implement a scalable system for cooperative multi-agent task and path planning. Products arrive unpredictably and need to be stored until they can be delivered to the customer.
+A smart factory environment is an important aspect of "Industry 4.0" where products can be ordered, produced, sorted and stored in a warehouse to be finally delivered to the recipient.
+We present a closed solution for a simulated autonomous smart factory. The work focuses on the transportation of products inside a warehouse. The goal is to implement a scalable system for cooperative multi-agent task and path planning. Products arrive unpredictably and need to be stored until they can be delivered to the customer.
 To handle a high demand of tasks, multiple robots have to coordinate their movement in a limited space and need to cooperate to minimize the overall time to deliver packages.
 A hybrid task planning enables the cooperation between the robots. A central task planner is used to assign tasks to the agents based on their combined feedback. The robots individually evaluate their ability to fulfil a task and report the result to the task planner which selects the most suitable agent for each task. This distributes the computational effort between the agents and the central instance.
 Furthermore, the robots coordinate their movements to avoid collisions and congestion based on a timed reservation system. Each robot reserves its path on a shared map using estimated driving times. This enables the decentralized path planning to consider both, waiting and detours to find the fastest route.
-A specialist motion planning ensures quick driving and accurate path following while considering all reservations.
-
-
----
+A motion planning ensures quick driving and accurate path following while considering all reservations.
+**TODO**: Mention about the branches, add new architecture figures, add figures from morse environment, update the emails of the authors
 
 ## Docker Instructions
 
@@ -328,3 +322,10 @@ Advertised services/topics are listed below the corresponding node (THE LIST IS 
     - **Topic** `robot_<number>_visualization`: Visualization markers of the individual robots like paths and reservations.
 - Additional MORSE topics
     - **Topic** `/warehouse/tray_sensors`: Each tray has a sensor to detect packages that are put into it. Changes are published to this topic.
+
+## Credits
+Copyright (c) is held by Orhan Can Görür and Technische Universität Berlin (TUB). Copyright (c) 2017-2018 contributions are held by Orhan Can Görür, Jacob Seibert, Marc Schmidt, Malte Siemers, Utku Özmü, Ansgar Rösig, Hafiz Hamza, Paul Dieterich, Jonathan Regef, Mohannad Al Dakhil, Puriwat Khantiviriya. Copyright (c) 2019-2021 contributions are held by Orhan Can Görür, Hafiz Hamza, Patrick Denzler, Florian Ziesche, Shreyas Gokhale, and Vincent Wölfer.
+Below is the list of authors:
+- Orhan Can Görür (cangorur88@gmail.com, goeruer@tu-berlin.de)
+- Hafiz Hamza
+- ... 
