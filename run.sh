@@ -17,12 +17,12 @@ tmux split-window -d -t rosc
 tmux resize-pane -t rosc.0 -U 15 
 tmux resize-pane -t rosc.2 -D 20 
 
-tmux send-keys -t rosc.0 "morse run auto_warehouse auto_factory_paper.py" enter
+tmux send-keys -t rosc.0 "morse run auto_warehouse auto_factory.py" enter
 
-tmux send-keys -t rosc.1 "sleep 4 && roslaunch --screen auto_smart_factory full_system_paper.launch $grep" enter
+tmux send-keys -t rosc.1 "sleep 4 && roslaunch --screen auto_smart_factory full_system.launch $grep" enter
 
 tmux send-keys -t rosc.2 "sleep 10 && roslaunch auto_smart_factory visualization.launch" enter
 
 tmux a
 
-# Exit with CTRL+B followed by & and cofirm with y
+# Exit with CTRL+B followed by & and confirm with y
