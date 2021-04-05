@@ -1,0 +1,5 @@
+# the tray ID
+uint32 id
+---
+# success of reservation
+bool success

@@ -1,0 +1,4 @@
+<launch>
+	<!-- Run Rviz with the prepared config file -->
+	<node pkg="rviz" type="rviz" name="abstract_visualization_rviz" args="-d $(find auto_smart_factory)/launch/abstract_visualization.rviz" />
+</launch>

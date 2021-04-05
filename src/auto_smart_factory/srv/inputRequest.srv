@@ -1,0 +1,9 @@
+geometry_msgs/Point posStart
+uint32[] idTrays
+uint32[] idInput
+RobotConfiguration robot
+---
+geometry_msgs/Point[] pointsToInput
+geometry_msgs/Point[] pointsToTray
+uint32 idBest
+float64 length

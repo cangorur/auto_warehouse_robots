@@ -1,0 +1,8 @@
+# id of output tray
+uint32 output_tray_id
+
+# the package
+Package package
+---
+bool success
+

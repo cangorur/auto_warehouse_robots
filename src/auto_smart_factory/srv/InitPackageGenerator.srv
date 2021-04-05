@@ -1,0 +1,5 @@
+WarehouseConfiguration warehouse_configuration
+PackageConfiguration[] package_configurations
+---
+bool success
+

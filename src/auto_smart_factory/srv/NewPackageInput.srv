@@ -1,0 +1,8 @@
+# id of input tray
+uint32 input_tray_id
+
+# the package
+Package package
+---
+bool success
+

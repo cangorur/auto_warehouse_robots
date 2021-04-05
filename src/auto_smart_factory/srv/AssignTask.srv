@@ -1,0 +1,5 @@
+uint32 task_id
+uint32 input_tray
+uint32 storage_tray
+---
+bool success

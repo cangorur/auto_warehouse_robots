@@ -1,0 +1,5 @@
+# speed
+float32 speed
+---
+# success of reservation
+bool success

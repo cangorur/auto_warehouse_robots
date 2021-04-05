@@ -1,0 +1,92 @@
+actions: []
+authors: "Orhan Can G\xF6r\xFCr <orhan-can.goeruer@dai-labor.de>, Marc Schmidt <m@example.com>,\
+  \ Jacob Seibert <j@example.com>, Malte Siemers <m@example.com>, Ansgar R\xF6ssig\
+  \ <m@example.com>, Yuan Yao <m@example.com>"
+brief: ''
+bugtracker: ''
+depends:
+- nav_msgs
+- message_runtime
+- catkin
+- roscpp
+- std_msgs
+- roslib
+- sensor_msgs
+- tf
+- rospy
+- message_generation
+- geometry_msgs
+description: The auto_smart_factory package
+license: TODO
+maintainers: "Orhan Can G\xF6r\xFCr <orhan-can.goeruer@dai-labor.de>"
+msgs:
+- RoadmapGraph
+- RobotConfiguration
+- RobotHeartbeat
+- TakeTask
+- Tray
+- Package
+- GripperState
+- PackagePool
+- Path
+- PlannedPath
+- WarehouseConfiguration
+- StorageState
+- PerformTask
+- TrayState
+- TraySensor
+- StorageUpdate
+- TaskPlannerState
+- TaskState
+- TrayGeometry
+- IdlePosition
+- PackageConfiguration
+- RequestStatus
+- AdditionalTime
+- Robot
+- LocalTraffic
+package_type: package
+repo_url: ''
+srvs:
+- SetPackage
+- SetConveyorSpeed
+- triggerRoadmapGenerator
+- MovePackage
+- ChargingPathsRequest
+- GetPackage
+- GetStorageState
+- RetrievePackage
+- NewPackageOutput
+- StorePackage
+- bestGoal
+- NewPackageInput
+- RequestNewPath
+- StorePackageAgent
+- PerformTaskTest
+- NewPackageGenerator
+- InitStorageManagement
+- InitTaskPlanner
+- RegisterAgent
+- RegisterAgentCharging
+- localPath
+- getCurrentTraffic
+- GetTrayState
+- AssignTask
+- GetRobotConfigurations
+- ReserveStorageTray
+- outputRequest
+- InitPathPlanner
+- shortestPath
+- GetLocalPath
+- InitPackageGenerator
+- InitAgent
+- RotateTable
+- GetPackageConfigurations
+- AssignChargingTask
+- InitChargingManagement
+- testService
+- GetWarehouseConfig
+- inputRequest
+- initRoadmapPlanner
+- GetFreeChargingStations
+url: ''

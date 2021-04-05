@@ -1,0 +1,4 @@
+WarehouseConfiguration warehouse_configuration
+RobotConfiguration robot_configuration
+---
+bool success

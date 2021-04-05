@@ -1,0 +1,55 @@
+<launch>
+	<!-- Warehouse Management -->
+	<node pkg="auto_smart_factory" type="warehouse_management" name="warehouse_management" output="screen" />
+
+	<!-- Roadmap Generator: NEW, comes with V2 -->
+	<node pkg="auto_smart_factory" type="RoadmapGenerator.py" name="roadmap_generator" />
+
+	<!-- Path Planner: NEW, comes with V2 -->
+	<node pkg="auto_smart_factory" type="path_planner" name="path_planner"/>
+
+	<!-- Package Generator -->
+	<node pkg="auto_smart_factory" type="package_generator" name="package_generator"/>
+
+	<!-- Package Manipulator -->
+	<node pkg="auto_smart_factory" type="PackageManipulator.py" name="package_manipulator" />
+
+	<!-- Gripper Manipulator -->
+  <node pkg="auto_smart_factory" type="GripperManipulator.py" name="gripper_manipulator" />
+
+	<!-- Storage Management -->
+	<node pkg="auto_smart_factory" type="storage_management" name="storage_management"  />
+
+	<!-- Task Planner -->
+	<node pkg="auto_smart_factory" type="task_planner" name="task_planner" />
+
+	<!-- Charging Management -->
+	<node pkg="auto_smart_factory" type="charging_management" name="charging_management" />
+
+	<!-- Warehouse Gateway -->
+	<!--<node pkg="auto_smart_factory" type="warehouse_gateway" name="warehouse_gateway" /> -->
+
+	<!-- Configuration Server -->
+	<node pkg="auto_smart_factory" type="config_server" name="config_server">
+
+        <!-- configuration files -->
+        <param name="map_config_file" value="$(find auto_smart_factory)/../../configs/smart_factory_config_storages.json" />
+        <param name="robot_config_file" value="$(find auto_smart_factory)/../../configs/robot_config.json" />
+        <param name="package_config_file" value="$(find auto_smart_factory)/../../configs/package_config.json" />
+
+        <!-- resolution (meters per cell) of the occupancy map -->
+        <param name="occupancy_map_resolution" value="0.5" />
+	</node>
+
+	<!-- Agents -->
+	<node pkg="auto_smart_factory" type="agent"  name="robot_1" args="robot_1" />
+	<node pkg="auto_smart_factory" type="agent"  name="robot_2" args="robot_2" />
+	<node pkg="auto_smart_factory" type="agent"  name="robot_3" args="robot_3" />
+	<node pkg="auto_smart_factory" type="agent"  name="robot_4" args="robot_4" />
+	<node pkg="auto_smart_factory" type="agent"  name="robot_5" args="robot_5" />
+	<node pkg="auto_smart_factory" type="agent"  name="robot_6" args="robot_6" />
+  <node pkg="auto_smart_factory" type="agent"  name="robot_7" args="robot_7" />
+  <node pkg="auto_smart_factory" type="agent"  name="robot_8" args="robot_8" />
+
+
+</launch>

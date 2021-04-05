@@ -1,0 +1,6 @@
+uint32 task_id
+uint32[] input_tray_ids
+uint32[] storage_tray_ids
+---
+uint32 storage_id
+float64 estimated_time
