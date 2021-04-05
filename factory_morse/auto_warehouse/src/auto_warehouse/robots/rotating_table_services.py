@@ -5,8 +5,8 @@ from morse.middleware.ros_request_manager import ros_service
 from morse.core import blenderapi
 
 from std_srvs.srv import Trigger, TriggerResponse
-from auto_warehouse.srv import SetConveyorSpeed
-from auto_warehouse.srv import RotateTable
+from auto_smart_factory.srv import SetConveyorSpeed
+from auto_smart_factory.srv import RotateTable
 
 class RotatingTable(FakeRobot):
 

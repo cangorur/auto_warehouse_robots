@@ -3,7 +3,7 @@ from morse.builder import *
 from auto_warehouse.builder.robots import pioneer_robot, pioneer_light_robot, kuka_jido
 import add_human_robot
 from auto_warehouse.builder.robots.conveyor import *
-#from morse.builder.robots.rotating_table import *
+#from auto_warehouse.builder.robots.rotating_table import *
 from auto_warehouse.builder.robots.conveyor_distributor import *
 
 # width is size in x direction, height is size in y direction
@@ -274,11 +274,12 @@ def setup_warehouse_map(map_config, robot_config, simplfy_flag):
     create_floor(map_config['map']['width'], map_config['map']['height'])
 
     if (not simplfy_flag): # the flag is only used to put walls or not, but significantly saves computation
-
     # create walls
-        for wall in enumerate(map_config['walls']):
-            create_walls(wall[1], map_config['map']['width'], map_config['map']['height'])
-
+        try:
+            for wall in enumerate(map_config['walls']):
+                create_walls(wall[1], map_config['map']['width'], map_config['map']['height'])
+        except:
+            print("Walls are not defined in the config file")
     # add conveyor belts
     create_conveyor(map_config)
 

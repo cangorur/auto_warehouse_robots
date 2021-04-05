@@ -23,8 +23,8 @@
 	<!-- Evaluation Node -->
 	<node pkg="auto_smart_factory" type="evaluator" name="evaluator" />
 
-	<!-- Record the task_status message -->
-	<node pkg="rosbag" type="record" name="rosbag_record_task" args="-o $(find auto_smart_factory)/../../results/freeRoaming /task_evaluation"/>
+	<!-- Record the task_status message. Default disabled. Enable to record the statistics and for analysis -->
+	<!-- <node pkg="rosbag" type="record" name="rosbag_record_task" args="-o $(find auto_smart_factory)/../../results/freeRoaming /task_evaluation"/>-->
 
 	<!-- Configuration Server -->
 	<node pkg="auto_smart_factory" type="config_server" name="config_server">

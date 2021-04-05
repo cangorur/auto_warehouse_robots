@@ -5,7 +5,7 @@ import time
 
 from std_srvs.srv import Trigger, TriggerResponse
 from std_msgs.msg import Float32
-from auto_warehouse.srv import SetConveyorSpeed
+from auto_smart_factory.srv import SetConveyorSpeed
 
 
 class ConveyorControlOverlay(MorseOverlay):
