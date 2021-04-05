@@ -1,7 +1,7 @@
 {
     "map": {
         "theta_star_resolution": 0.5,
-        "height": 15,
+        "height": 16,
         "margin": 0.5,
         "width": 16,
         "mergeObstacles": false
