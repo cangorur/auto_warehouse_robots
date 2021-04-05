@@ -19,7 +19,7 @@ with open(robot_config_file, 'r') as f:
 with open(package_config_file, 'r') as f:
     package_configs = json.load(f)
 
-# setup map
+# setup map. simply_flag decides to put walls around the map. False for a scenario with walls (harder computation)
 setup_warehouse_map(map_config, robot_config, simplfy_flag = False)
 add_packages(map_config, package_configs)
 

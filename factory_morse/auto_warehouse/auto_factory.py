@@ -6,8 +6,7 @@ from package_setup import add_packages
 import json
 
 # specify configuration files
-#warehouse_config_file = os.path.join(os.path.dirname(__file__), '../../configs/smart_factory_config.json')
-warehouse_config_file = os.path.join(os.path.dirname(__file__), '../../configs/smart_factory_config.json')
+warehouse_config_file = os.path.join(os.path.dirname(__file__), '../../configs/smart_factory_config_paper.json')
 robot_config_file = os.path.join(os.path.dirname(__file__), '../../configs/robot_config.json')
 package_config_file = os.path.join(os.path.dirname(__file__), '../../configs/package_config.json')
 
@@ -19,8 +18,10 @@ with open(robot_config_file, 'r') as f:
 with open(package_config_file, 'r') as f:
     package_configs = json.load(f)
 
+# this flag decides to put walls around the map. False for a scenario with walls (harder computation)
+simplfy_flag = True
 # setup map
-setup_warehouse_map(map_config, robot_config, simplfy_flag = False)
+setup_warehouse_map(map_config, robot_config, simplfy_flag)
 add_packages(map_config, package_configs)
 
 # set 'fastmode' to True to switch to wireframe mode

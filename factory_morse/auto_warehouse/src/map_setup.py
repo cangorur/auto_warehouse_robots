@@ -274,7 +274,6 @@ def setup_warehouse_map(map_config, robot_config, simplfy_flag):
     create_floor(map_config['map']['width'], map_config['map']['height'])
 
     if (not simplfy_flag): # the flag is only used to put walls or not, but significantly saves computation
-
     # create walls
         for wall in enumerate(map_config['walls']):
             create_walls(wall[1], map_config['map']['width'], map_config['map']['height'])
