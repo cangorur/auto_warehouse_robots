@@ -9,6 +9,9 @@ Furthermore, the robots coordinate their movements to avoid collisions and conge
 A motion planning ensures quick driving and accurate path following while considering all reservations.
 **TODO**: Mention about the branches, add new architecture figures, add figures from morse environment, update the emails of the authors
 
+Multi-agent planning in free roaming env. (higher uncertainty): https://drive.google.com/file/d/1AYt4Dh8DFovb4Kjwdjfp571lD-n4fy7X/view?usp=sharing 
+Smart factory integration: https://drive.google.com/file/d/1QUMt3UhKa35j-W0HZqoHU2Gg8qAuC8GJ/view?usp=sharing
+
 ## Docker Instructions
 
 1. Install docker engine (CE) by following the instructions [here](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-engine---community).
