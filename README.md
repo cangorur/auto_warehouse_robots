@@ -5,18 +5,20 @@ A smart factory environment is an important aspect of "Industry 4.0" where produ
 We present a closed solution for a simulated autonomous warehousing. The work focuses on the transportation of products inside a warehouse by mobile robots. The goal is to implement a scalable system for cooperative online multi-agent task and path planning. Products and delivery requests arrive at an unknown time and frequency and need to be stored.
 To handle a high demand of tasks, multiple robots have to coordinate their movement in a limited space and need to cooperate to minimize the overall time to deliver packages.
 
-A hybrid task planning enables the cooperation between the robots. A central task planner is used to assign tasks to the agents based on their combined feedback. The robots individually evaluate their ability to fulfil a task (i.e., current workload, ETA, battery conditions) and report the result to the task planner which selects the most suitable agent for each task. This distributes the computational effort between the agents and the central instance. Once a task is received, each robot coordinates and negotiates with the other robots to dynamically plan their paths with less or no congestion based on a timed reservation system. This enables the decentralized path planning to consider both waiting and detours to find the fastest route. A motion planning ensures quick driving and accurate path following while considering all reservations. With this hybrid planning structure, the robots are able to dynamically plan their ways in a free-roaming environment with no certain lines to follow/cross. This provides a more efficient spacing in a factory and less distance to cover for each robot for the pickup and delivery. The project's details are to be reported/published as a paper soon. 
+A hybrid task planning enables the cooperation between the robots. A central task planner is used to assign tasks to the agents based on their combined feedback. The robots individually evaluate their ability to fulfil a task (i.e., current workload, ETA, battery conditions) and report the result to the task planner which selects the most suitable agent for each task. This distributes the computational effort between the agents and the central instance. Once a task is received, each robot coordinates and negotiates with the other robots to dynamically plan their paths with less or no congestion based on a timed reservation system. This enables the decentralized path planning to consider both waiting and detours to find the fastest route. A motion planning ensures quick driving and accurate path following while considering all reservations. With this hybrid planning structure, the robots are able to dynamically plan their ways in a free-roaming environment with no certain lines to follow/cross. This provides a more efficient spacing in a factory and less distance to cover for each robot for the pickup and delivery. 
+
+For now, we provided a system architecture showing the agents and the process flow on a coarse level [here](#brief-overview-of-the-system). The project's details are to be reported/published as a paper soon.
 
 Demo videos:
 - Multi-agent planning in free roaming env. (higher uncertainty): https://drive.google.com/file/d/1AYt4Dh8DFovb4Kjwdjfp571lD-n4fy7X/view?usp=sharing 
 - Smart factory integration: https://drive.google.com/file/d/1QUMt3UhKa35j-W0HZqoHU2Gg8qAuC8GJ/view?usp=sharing
 
 Here are the current branches and the descriptions:
-1. main: free-roaming scenario where the robots are free to move to anywhere in the environment
-2. line-following: we run the same system on a line-following (SoTA) warehouse system for comparison
-3. develop: actively improving the free-roaming scenario to add more features: e.g., when a robot dies (dynamically handle its task, take the robot as a static obstacle), decentralized obstacle avoidance.
-4. iot_gateway: a gateway agent added to the system to interface (control and monitor) the entire warehouse system from outside of ROS (through our REST API). Documentation on the json formats to interface is provided under `src/auto_smart_factory/test_websocket/readme_socketInt.md`.
-
+1. `main`: free-roaming scenario where the robots are free to move to anywhere in the environment
+2. `line-following`: we run the same system on a line-following (SoTA) warehouse system for comparison
+3. `develop`: actively improving the free-roaming scenario to add more features: e.g., when a robot dies (dynamically handle its task, take the robot as a static obstacle), decentralized obstacle avoidance.
+4. (to be added) `iot_gateway`: a gateway agent added to the system to interface (control and monitor) the entire warehouse system from outside of ROS (through our REST API). Documentation on the json formats to interface is provided under `src/auto_smart_factory/test_websocket/readme_socketInt.md`.
+5. (to be added) `template`: a version of the system for the developers to easily integrate their own solutions to the environment.
 
 ---
 
@@ -270,9 +272,11 @@ Note: The package weights and the robots carriage capacities are not currently c
 
 ## Brief overview of the system
 
-System Architecture drawing of the new version of the project:
+System Architecture drawing of the project:
 
 ![ngrok](https://github.com/cangorur/auto_warehouse_robots/blob/main/doc/architecture/system_architecture.png)
+
+
 
 Advertised services/topics are listed below the corresponding node (THE LIST IS OLD, NEEDS TO BE UPDATED, see the ros service documentation folder under code documentation !!!).
 
