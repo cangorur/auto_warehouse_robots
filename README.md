@@ -7,7 +7,7 @@ To handle a high demand of tasks, multiple robots have to coordinate their movem
 
 A hybrid task planning enables the cooperation between the robots. A central task planner is used to assign tasks to the agents based on their combined feedback. The robots individually evaluate their ability to fulfil a task (i.e., current workload, ETA, battery conditions) and report the result to the task planner which selects the most suitable agent for each task. This distributes the computational effort between the agents and the central instance. Once a task is received, each robot coordinates and negotiates with the other robots to dynamically plan their paths with less or no congestion based on a timed reservation system. This enables the decentralized path planning to consider both waiting and detours to find the fastest route. A motion planning ensures quick driving and accurate path following while considering all reservations. With this hybrid planning structure, the robots are able to dynamically plan their ways in a free-roaming environment with no certain lines to follow/cross. This provides a more efficient spacing in a factory and less distance to cover for each robot for the pickup and delivery. 
 
-For now, we provided a system architecture showing the agents and the process flow on a coarse level [here](#brief-overview-of-the-system). The project's details are to be reported/published as a paper soon.
+For now, we provided a system architecture showing the agents and the process flow on a coarse level [here](#brief-overview-of-the-system). The project's details are to be reported/published as a paper soon. Please refer to the [Credits](#credits) section for any intended use of this code.
 
 Demo videos:
 - Multi-agent planning in free roaming env. (higher uncertainty): https://drive.google.com/file/d/1AYt4Dh8DFovb4Kjwdjfp571lD-n4fy7X/view?usp=sharing 
@@ -340,6 +340,9 @@ Advertised services/topics are listed below the corresponding node (THE LIST IS 
 ---
 
 ## Credits
+
+The project is developed by Technische Universität Berlin (TUB) students through the graduate course 'Applications of Robotics and Autonomous Systems'. In any use of this code, please let the author know. 
+
 - Copyright (c) is held by Orhan Can Görür and Technische Universität Berlin (TUB). 
 - Copyright (c) 2017-2018 contributions are held by Orhan Can Görür, Jacob Seibert, Marc Schmidt, Malte Siemers, Utku Özmü, Ansgar Rösig, Hafiz Hamza, Paul Dieterich, Jonathan Regef, Mohannad Al Dakhil, Puriwat Khantiviriya. 
 - Copyright (c) 2019-2021 contributions are held by Orhan Can Görür, Hafiz Hamza, Patrick Denzler, Florian Ziesche, Shreyas Gokhale, and Vincent Wölfer.
